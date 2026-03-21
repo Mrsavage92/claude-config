@@ -1,4 +1,4 @@
-﻿---
+---
 name: cs-ux-researcher
 description: "UX Research specialist for research planning, user persona generation, journey mapping, usability test design, and insight synthesis. Spawn when users need to plan user research, create personas from data, map user journeys, design usability tests, or synthesise interview findings into actionable insights."
 domain: product
@@ -27,8 +27,8 @@ The cs-ux-researcher agent ensures that user needs drive product development. It
 
 ## Do NOT Use When
 
-- User needs product analytics or A/B testing â€” use cs-product-analyst
-- User needs full product requirements â€” use cs-product-manager
+- User needs product analytics or A/B testing — use cs-product-analyst
+- User needs full product requirements — use cs-product-manager
 ## Skill Integration
 
 **Primary Skill:** `../../product-team/ux-researcher-designer/`
@@ -521,7 +521,7 @@ echo "See: ../../product-team/ui-design-system/references/developer-handoff.md"
 ## Related Agents
 
 - [cs-product-manager](cs-product-manager.md) - Product management lifecycle, interview analysis, PRD development
-- [cs-product-manager](cs-product-manager.md) - Translating research findings into user stories
+- [cs-agile-product-owner](cs-agile-product-owner.md) - Translating research findings into user stories
 - [cs-product-strategist](cs-product-strategist.md) - Strategic research to validate product vision and positioning
 - UI Design System - Design handoff and component recommendations (see `../../product-team/ui-design-system/`)
 

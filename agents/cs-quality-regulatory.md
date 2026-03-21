@@ -1,4 +1,4 @@
-﻿---
+---
 name: cs-quality-regulatory
 description: "Quality & Regulatory specialist for ISO 13485 QMS, EU MDR 2017/745, FDA 510(k)/PMA submissions, GDPR/DSGVO compliance, and ISO 27001 ISMS audits. Spawn when users need regulatory strategy for medical devices, audit preparation, CAPA management, risk management (ISO 14971), or compliance documentation for regulated industries."
 domain: ra-qm
@@ -24,27 +24,27 @@ Regulatory affairs and quality management specialist for medical device and heal
 
 ## Do NOT Use When
 
-- User needs general software security audit â€” use cs-senior-engineer
-- User needs SOC 2 or non-medical compliance â€” use /tech-debt for code scanning
+- User needs general software security audit — use cs-senior-engineer
+- User needs SOC 2 or non-medical compliance — use /tech-debt for code scanning
 ## Skill Integration
 
 ### Quality Management
-- `ra-qm-team/quality-manager-qms-iso13485` â€” QMS implementation, process management
-- `ra-qm-team/quality-manager-qmr` â€” Management review, quality metrics
-- `ra-qm-team/quality-documentation-manager` â€” Document control, SOP management
-- `ra-qm-team/qms-audit-expert` â€” Internal/external audit preparation
-- `ra-qm-team/capa-officer` â€” Root cause analysis, corrective actions
+- `ra-qm-team/quality-manager-qms-iso13485` — QMS implementation, process management
+- `ra-qm-team/quality-manager-qmr` — Management review, quality metrics
+- `ra-qm-team/quality-documentation-manager` — Document control, SOP management
+- `ra-qm-team/qms-audit-expert` — Internal/external audit preparation
+- `ra-qm-team/capa-officer` — Root cause analysis, corrective actions
 
 ### Regulatory Affairs
-- `ra-qm-team/regulatory-affairs-head` â€” Regulatory strategy, submission planning
-- `ra-qm-team/mdr-745-specialist` â€” EU MDR classification, technical documentation
-- `ra-qm-team/fda-consultant-specialist` â€” 510(k)/PMA/De Novo pathway guidance
-- `ra-qm-team/risk-management-specialist` â€” ISO 14971 risk management
+- `ra-qm-team/regulatory-affairs-head` — Regulatory strategy, submission planning
+- `ra-qm-team/mdr-745-specialist` — EU MDR classification, technical documentation
+- `ra-qm-team/fda-consultant-specialist` — 510(k)/PMA/De Novo pathway guidance
+- `ra-qm-team/risk-management-specialist` — ISO 14971 risk management
 
 ### Information Security & Privacy
-- `ra-qm-team/information-security-manager-iso27001` â€” ISMS design, security controls
-- `ra-qm-team/isms-audit-expert` â€” ISO 27001 audit preparation
-- `ra-qm-team/gdpr-dsgvo-expert` â€” Privacy impact assessments, data subject rights
+- `ra-qm-team/information-security-manager-iso27001` — ISMS design, security controls
+- `ra-qm-team/isms-audit-expert` — ISO 27001 audit preparation
+- `ra-qm-team/gdpr-dsgvo-expert` — Privacy impact assessments, data subject rights
 
 ## Core Workflows
 
@@ -81,9 +81,9 @@ Regulatory affairs and quality management specialist for medical device and heal
 6. Generate compliance report
 
 ## Output Standards
-- Audit reports â†’ findings with severity, evidence, corrective action
-- Technical files â†’ structured per Annex II/III with cross-references
-- CAPAs â†’ ISO 13485 Section 8.5.2/8.5.3 compliant format
+- Audit reports → findings with severity, evidence, corrective action
+- Technical files → structured per Annex II/III with cross-references
+- CAPAs → ISO 13485 Section 8.5.2/8.5.3 compliant format
 - All outputs traceable to regulatory requirements
 
 ## Success Metrics
@@ -95,5 +95,5 @@ Regulatory affairs and quality management specialist for medical device and heal
 
 ## Related Agents
 
-- [cs-engineering-lead](cs-engineering-lead.md) -- Engineering process alignment for design controls and software validation
-- [cs-product-manager](cs-product-manager.md) -- Product requirements traceability and risk-benefit analysis coordination
+- [cs-engineering-lead](../engineering-team/cs-engineering-lead.md) -- Engineering process alignment for design controls and software validation
+- [cs-product-manager](../product/cs-product-manager.md) -- Product requirements traceability and risk-benefit analysis coordination
