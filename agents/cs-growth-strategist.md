@@ -1,7 +1,6 @@
 ﻿---
 name: cs-growth-strategist
 description: "Revenue lifecycle specialist covering lead-to-revenue: pipeline health, sales engineering, churn prevention, customer health scoring, expansion/upsell opportunities, and GTM playbooks. Spawn when the user needs pipeline analysis, forecast accuracy, churn risk identification, expansion scoring, POC planning, or commercial proposals. Does NOT cover paid acquisition or channel CAC (use cs-demand-gen-specialist) or financial modelling/DCF (use cs-financial-analyst)."
-skills: business-growth
 domain: business-growth
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]

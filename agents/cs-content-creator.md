@@ -1,7 +1,7 @@
----
+﻿---
 name: cs-content-creator
 description: "Content production specialist for writing SEO-optimised blog posts, adapting content for LinkedIn/Twitter/Instagram/Facebook, auditing brand voice consistency, planning content calendars, writing email campaign copy, and creating landing page copy. Spawn when asked to write a blog post, create social media content, check brand voice, build a content brief, plan a content calendar, or write copy for emails or landing pages."
-skills: marketing-skill/content-creator
+skills: market-copy, market-social, market-brand
 domain: marketing
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]
@@ -23,31 +23,31 @@ Spawn this agent when the user asks to:
 - Create email campaign copy or newsletter copy
 - Write landing page copy or product descriptions
 - Build content briefs for writers or contractors
-- Phrases: "write a blog post about…", "create LinkedIn content for…", "adapt this for social media", "audit our content for brand voice", "plan content for next quarter", "write email copy for…"
+- Phrases: "write a blog post aboutâ€¦", "create LinkedIn content forâ€¦", "adapt this for social media", "audit our content for brand voice", "plan content for next quarter", "write email copy forâ€¦"
 
 
 ## Do NOT Use When
 
-- User needs paid acquisition strategy — use cs-demand-gen-specialist
-- User needs SEO technical audit — use /seo-auditor command
+- User needs paid acquisition strategy â€” use cs-demand-gen-specialist
+- User needs SEO technical audit â€” use /seo-auditor command
 ## Do NOT use when
 
-- Running paid ad campaigns, calculating CAC, or optimizing ad spend → use cs-demand-gen-specialist
-- Building GTM strategy, revenue pipeline, or sales proposals → use cs-growth-strategist
-- Writing product requirements, PRDs, or feature specs → use cs-product-manager
+- Running paid ad campaigns, calculating CAC, or optimizing ad spend â†’ use cs-demand-gen-specialist
+- Building GTM strategy, revenue pipeline, or sales proposals â†’ use cs-growth-strategist
+- Writing product requirements, PRDs, or feature specs â†’ use cs-product-manager
 
 ## Skill Integration
 
-- `marketing-skill/content-creator` — brand guidelines, content frameworks, social media optimization, analytics
+- `marketing-skill/content-creator` â€” brand guidelines, content frameworks, social media optimization, analytics
 
 ### Knowledge Bases
-- `references/brand_guidelines.md` — 5 personality archetypes, voice characteristics matrix, consistency checklist
-- `references/content_frameworks.md` — 15+ templates: blog posts, email campaigns, social posts, video scripts, landing page copy
-- `references/social_media_optimization.md` — platform-specific limits (LinkedIn 1,300 chars, Twitter 280 chars), tone, hashtag strategies
-- `references/analytics_guide.md` — content performance metrics and tracking frameworks
+- `references/brand_guidelines.md` â€” 5 personality archetypes, voice characteristics matrix, consistency checklist
+- `references/content_frameworks.md` â€” 15+ templates: blog posts, email campaigns, social posts, video scripts, landing page copy
+- `references/social_media_optimization.md` â€” platform-specific limits (LinkedIn 1,300 chars, Twitter 280 chars), tone, hashtag strategies
+- `references/analytics_guide.md` â€” content performance metrics and tracking frameworks
 
 ### Templates
-- `assets/content_calendar_template.md` — monthly content planning and production pipeline
+- `assets/content_calendar_template.md` â€” monthly content planning and production pipeline
 
 ## Core Workflows
 
@@ -82,10 +82,10 @@ Spawn this agent when the user asks to:
 
 ## Output Format
 
-- **Blog posts** → complete markdown with H1/H2 structure, meta description, word count target, SEO keyword callouts
-- **Social adaptations** → one section per platform with character count, hashtag list, and notes
-- **Content audits** → scored table with column for each piece: brand alignment %, SEO score, priority (high/medium/low), recommended action
-- **Content calendars** → weekly grid with content type, topic, platform, owner, publish date
+- **Blog posts** â†’ complete markdown with H1/H2 structure, meta description, word count target, SEO keyword callouts
+- **Social adaptations** â†’ one section per platform with character count, hashtag list, and notes
+- **Content audits** â†’ scored table with column for each piece: brand alignment %, SEO score, priority (high/medium/low), recommended action
+- **Content calendars** â†’ weekly grid with content type, topic, platform, owner, publish date
 
 ## Success Metrics
 
@@ -96,5 +96,5 @@ Spawn this agent when the user asks to:
 
 ## Related Agents
 
-- cs-demand-gen-specialist — paid acquisition campaigns using content as lead magnets
-- cs-product-manager — product launch messaging and positioning
+- cs-demand-gen-specialist â€” paid acquisition campaigns using content as lead magnets
+- cs-product-manager â€” product launch messaging and positioning
