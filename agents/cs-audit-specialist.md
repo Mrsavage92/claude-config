@@ -2,7 +2,7 @@
 name: cs-audit-specialist
 description: "Full-site audit specialist orchestrating technical, security, privacy, GEO, marketing, reputation, employer brand, and AI readiness audits. Spawn when the user needs a comprehensive website audit, client audit deliverable, technical health check, security posture review, privacy compliance check, or a combined multi-suite audit report. Use for client-facing audit work across any domain."
 skills: full-audit, techaudit, security, privacy, geo-audit, market-audit, reputation-audit, ai-ready-audit, employer-audit
-domain: marketing
+domain: audit
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]
 ---

@@ -19,7 +19,6 @@
     "saas-health.md": "0bccebaa",
     "scroll-stop-build.md": "abcea540",
     "scroll-stop-prompt.md": "dfece4e3",
-    "seo-auditor.md": "bf70164c",
     "seo-strategy.md": "0a1e5667",
     "sprint-health.md": "8d7d0a7a",
     "sprint-plan.md": "3d5608e1",
@@ -48,10 +47,13 @@
     "cs-seo-specialist.md": "c2f0d49e",
     "cs-sre.md": "e65d7ccd",
     "cs-ux-researcher.md": "3d91dfbd",
-    "cs-workspace-admin.md": "3a353092"
+    "cs-workspace-admin.md": "3a353092",
+    "cs-employer-brand.md": "new",
+    "cs-ai-advisor.md": "new"
   },
   "skills": [
     ".git",
+    "competitive-matrix",
     "ai-ready",
     "ai-ready-adoption",
     "ai-ready-audit",
@@ -118,8 +120,8 @@
     "techaudit-speed"
   ],
   "counts": {
-    "commands": 25,
-    "agents": 20,
-    "skills": 65
+    "commands": 24,
+    "agents": 22,
+    "skills": 66
   }
 }

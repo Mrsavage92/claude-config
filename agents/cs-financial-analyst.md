@@ -1,7 +1,7 @@
----
+﻿---
 name: cs-financial-analyst
-description: "Financial Analyst for DCF valuation, financial modelling, budgeting, forecasting, SaaS metrics (ARR, MRR, churn, CAC, LTV, NRR), and ratio analysis. Spawn when users need financial analysis, valuation models, budget planning, financial ratio analysis, SaaS health checks, or unit economics projections."
-skills: finance
+description: "Financial modelling specialist for DCF valuation, ratio analysis, budgeting, forecasting, and SaaS unit economics (ARR, MRR, LTV, CAC, NRR, quick ratio). Spawn when the user needs a valuation model, financial health assessment, budget variance analysis, 12-month unit economics projection, or SaaS metric benchmarking. Does NOT cover sales pipeline or churn operations (use cs-growth-strategist) or fundraising narrative/investor comms (use cs-ceo-advisor)."
+skills: financial-health, saas-health
 domain: finance
 model: opus
 tools: [Read, Write, Bash, Grep, Glob]
@@ -24,15 +24,15 @@ Financial analyst covering valuation, ratio analysis, forecasting, and industry-
 
 ## Do NOT Use When
 
-- User needs fundraising strategy or investor narrative — use cs-ceo-advisor
-- User needs revenue pipeline/sales analysis — use cs-growth-strategist
+- User needs fundraising strategy or investor narrative â€” use cs-ceo-advisor
+- User needs revenue pipeline/sales analysis â€” use cs-growth-strategist
 ## Skill Integration
 
-### finance/financial-analyst — Traditional Financial Analysis
+### finance/financial-analyst â€” Traditional Financial Analysis
 - Scripts: `dcf_valuation.py`, `ratio_calculator.py`, `forecast_builder.py`, `budget_variance_analyzer.py`
 - References: `financial-ratios-guide.md`, `valuation-methodology.md`, `forecasting-best-practices.md`, `industry-adaptations.md`
 
-### finance/saas-metrics-coach — SaaS Financial Health
+### finance/saas-metrics-coach â€” SaaS Financial Health
 - Scripts: `metrics_calculator.py`, `quick_ratio_calculator.py`, `unit_economics_simulator.py`
 - References: `formulas.md`, `benchmarks.md`
 - Assets: `input-template.md`
@@ -82,9 +82,9 @@ Financial analyst covering valuation, ratio analysis, forecasting, and industry-
 5. Present monthly projections with summary and risk flags
 
 ## Output Standards
-- Valuations → range with methodology stated (DCF, comparables, precedent)
-- Ratios → benchmarked against industry with trend arrows
-- Forecasts → 3 scenarios with probability weights
+- Valuations â†’ range with methodology stated (DCF, comparables, precedent)
+- Ratios â†’ benchmarked against industry with trend arrows
+- Forecasts â†’ 3 scenarios with probability weights
 - All models include key assumptions section
 
 ## Success Metrics
@@ -97,12 +97,12 @@ Financial analyst covering valuation, ratio analysis, forecasting, and industry-
 ## Integration Examples
 
 ```bash
-# SaaS health check — full metrics from raw numbers
+# SaaS health check â€” full metrics from raw numbers
 python ../../finance/saas-metrics-coach/scripts/metrics_calculator.py \
   --mrr 80000 --mrr-last 75000 --customers 200 --churned 3 \
   --new-customers 15 --sm-spend 25000 --gross-margin 72 --json
 
-# Quick ratio — growth efficiency
+# Quick ratio â€” growth efficiency
 python ../../finance/saas-metrics-coach/scripts/quick_ratio_calculator.py \
   --new-mrr 10000 --expansion 2000 --churned 3000 --contraction 500
 
@@ -119,5 +119,5 @@ python ../../finance/financial-analyst/scripts/dcf_valuation.py valuation_data.j
 
 ## Related Agents
 
-- [cs-ceo-advisor](../c-level/cs-ceo-advisor.md) -- Strategic financial decisions, board reporting, and fundraising planning
-- [cs-growth-strategist](../business-growth/cs-growth-strategist.md) -- Revenue operations data and pipeline forecasting inputs
+- [cs-ceo-advisor](cs-ceo-advisor.md) -- Strategic financial decisions, board reporting, and fundraising planning
+- [cs-growth-strategist](cs-growth-strategist.md) -- Revenue operations data and pipeline forecasting inputs

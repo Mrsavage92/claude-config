@@ -1,7 +1,7 @@
----
+﻿---
 name: cs-demand-gen-specialist
-description: "Demand generation and paid acquisition specialist for lead generation campaigns, conversion optimisation, CAC analysis, multi-channel acquisition strategy, and campaign ROI measurement. Spawn when the user needs a paid ads strategy, lead gen funnel design, CAC/LTV analysis, landing page conversion optimisation, or acquisition channel prioritisation."
-skills: marketing-skill/marketing-demand-acquisition
+description: "Demand generation and paid acquisition specialist covering awareness-to-lead: paid ads (Google, Meta, LinkedIn), lead gen funnel design, landing page CRO, channel CAC analysis, and campaign ROI. Spawn when the user needs a paid ads strategy, lead magnet campaign, CAC by channel, conversion funnel analysis, or acquisition channel prioritisation. Stops at the qualified lead â€” for what happens after the lead (pipeline, churn, expansion) use cs-growth-strategist. For financial modelling use cs-financial-analyst."
+skills: market-ads, market-landing, market-funnel
 domain: marketing
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]
@@ -28,8 +28,8 @@ The cs-demand-gen-specialist agent bridges the gap between marketing strategy an
 
 ## Do NOT Use When
 
-- User needs organic content or social posts — use cs-content-creator
-- User needs revenue/pipeline analysis — use cs-growth-strategist
+- User needs organic content or social posts â€” use cs-content-creator
+- User needs revenue/pipeline analysis â€” use cs-growth-strategist
 ## Skill Integration
 
 **Skill Location:** `../../marketing-skill/marketing-demand-acquisition/`
@@ -69,7 +69,7 @@ The cs-demand-gen-specialist agent bridges the gap between marketing strategy an
 
 ### Templates
 
-No asset templates currently available — use campaign-templates.md reference for campaign structure guidance.
+No asset templates currently available â€” use campaign-templates.md reference for campaign structure guidance.
 
 ## Workflows
 
@@ -116,10 +116,10 @@ No asset templates currently available — use campaign-templates.md reference f
    cat ../../marketing-skill/marketing-demand-acquisition/references/campaign-templates.md
    ```
 4. **Identify Bottlenecks** - Analyze conversion rates at each funnel stage:
-   - Awareness → Interest (CTR)
-   - Interest → Consideration (landing page conversion)
-   - Consideration → Intent (form completion)
-   - Intent → Purchase/MQL (qualification rate)
+   - Awareness â†’ Interest (CTR)
+   - Interest â†’ Consideration (landing page conversion)
+   - Consideration â†’ Intent (form completion)
+   - Intent â†’ Purchase/MQL (qualification rate)
 5. **Reference Attribution Guide** - Review attribution models to identify problem areas
    ```bash
    cat ../../marketing-skill/marketing-demand-acquisition/references/attribution-guide.md
@@ -214,7 +214,7 @@ cat cac-report.txt
 
 DATE=$(date +%Y-%m-%d)
 
-echo "📊 Demand Gen Dashboard - $DATE"
+echo "ðŸ“Š Demand Gen Dashboard - $DATE"
 echo "========================================"
 
 # Calculate yesterday's CAC by channel
@@ -222,11 +222,11 @@ python ../../marketing-skill/marketing-demand-acquisition/scripts/calculate_cac.
   daily-spend.csv daily-conversions.csv
 
 echo ""
-echo "💰 Budget Status:"
+echo "ðŸ’° Budget Status:"
 cat budget-tracking.txt
 
 echo ""
-echo "🎯 Today's Priorities:"
+echo "ðŸŽ¯ Today's Priorities:"
 cat optimization-priorities.txt
 ```
 
@@ -253,7 +253,7 @@ CAC_THRESHOLD=50
 
 # Alert if CAC exceeds threshold
 if (( $(echo "$CAC_RESULT > $CAC_THRESHOLD" | bc -l) )); then
-  echo "🚨 Alert: CAC ($CAC_RESULT) exceeds threshold ($CAC_THRESHOLD)!" | \
+  echo "ðŸš¨ Alert: CAC ($CAC_RESULT) exceeds threshold ($CAC_THRESHOLD)!" | \
     mail -s "CAC Alert" demand-gen-team@company.com
 fi
 ```
