@@ -37,6 +37,12 @@ Since subagents don't inherit conversation history, each agent prompt must inclu
 ### Step 3 — Spawn in Parallel
 Use the Agent tool for each workstream simultaneously. Set `run_in_background: true` for all workstreams that don't depend on each other.
 
+For workstreams that write files (code, reports, configs), use `isolation: "worktree"` so each agent works in a sandboxed git branch. Changes land in an isolated worktree and can be reviewed before merging — no live repo pollution. Example:
+```
+Agent tool: { subagent_type: "cs-financial-analyst", isolation: "worktree", run_in_background: true, prompt: "[brief] + [task]" }
+```
+The worktree path and branch are returned when the agent completes — merge or discard as needed.
+
 ### Step 4 — Synthesise
 Once all subagents return:
 1. Review each output for quality and consistency

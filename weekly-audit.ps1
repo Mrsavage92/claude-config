@@ -46,6 +46,12 @@ If all checks pass, say so clearly — do not invent problems.
 Fix any critical issues found automatically, then push to GitHub.
 "@
 
-# Launch Claude Code with the prompt (non-interactive)
+# Launch Claude Code and log output
 $claudeExe = "$env:USERPROFILE\.vscode\extensions\anthropic.claude-code-2.1.81-win32-x64\resources\native-binary\claude.exe"
-& $claudeExe --print $prompt
+$logDir    = "$env:USERPROFILE\.claude\logs"
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
+$logFile   = "$logDir\$(Get-Date -Format 'yyyy-MM-dd')-weekly-audit.md"
+
+$output = & $claudeExe --print $prompt
+$output | Out-File -FilePath $logFile -Encoding UTF8
+$output
