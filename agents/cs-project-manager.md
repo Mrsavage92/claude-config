@@ -1,4 +1,4 @@
-﻿---
+---
 name: cs-project-manager
 description: "Project Manager for sprint planning, Jira/Confluence workflows, Scrum ceremonies facilitation, stakeholder reporting, and project health monitoring. Spawn when users need to set up a Jira project, plan sprints, generate status reports, facilitate agile ceremonies, or track project risks and dependencies."
 skills: project-management
@@ -28,8 +28,8 @@ The cs-project-manager agent bridges the gap between project execution and strat
 
 ## Do NOT Use When
 
-- User needs user story writing â€” use cs-product-manager
-- User needs product roadmap or prioritisation â€” use cs-product-manager
+- User needs user story writing — use cs-agile-product-owner
+- User needs product roadmap or prioritisation — use cs-product-manager
 ## Skill Integration
 
 ### Senior PM
@@ -507,8 +507,8 @@ echo "Template: ../../project-management/senior-pm/assets/executive_report_templ
 
 ## Related Agents
 
-- [cs-product-manager](cs-product-manager.md) -- Product prioritization with RICE, customer discovery, PRD development
-- [cs-product-manager](cs-product-manager.md) -- User story generation, backlog management, acceptance criteria (planned)
+- [cs-product-manager](../product/cs-product-manager.md) -- Product prioritization with RICE, customer discovery, PRD development
+- [cs-agile-product-owner](../product/cs-agile-product-owner.md) -- User story generation, backlog management, acceptance criteria (planned)
 - cs-scrum-master -- Dedicated Scrum ceremony facilitation and team coaching (planned)
 
 ## References

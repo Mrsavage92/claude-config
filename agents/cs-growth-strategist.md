@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-growth-strategist
-description: "Revenue lifecycle specialist covering lead-to-revenue: pipeline health, sales engineering, churn prevention, customer health scoring, expansion/upsell opportunities, and GTM playbooks. Spawn when the user needs pipeline analysis, forecast accuracy, churn risk identification, expansion scoring, POC planning, or commercial proposals. Does NOT cover paid acquisition or channel CAC (use cs-demand-gen-specialist) or financial modelling/DCF (use cs-financial-analyst)."
+description: "Growth Strategist for revenue operations, sales engineering, customer success, expansion scoring, churn prevention, pipeline analysis, and business development. Spawn when users need pipeline health analysis, churn prevention strategies, expansion revenue opportunities, sales demo support, proposal writing, or go-to-market strategy."
 skills: business-growth
 domain: business-growth
 model: sonnet
@@ -24,14 +24,14 @@ Growth-focused operator covering the full revenue lifecycle: pipeline management
 
 ## Do NOT Use When
 
-- User needs paid ads/CAC analysis â€” use cs-demand-gen-specialist
-- User needs financial modelling â€” use cs-financial-analyst
+- User needs paid ads/CAC analysis — use cs-demand-gen-specialist
+- User needs financial modelling — use cs-financial-analyst
 ## Skill Integration
 
-- `business-growth/revenue-operations` â€” Pipeline analysis, forecast accuracy, GTM efficiency
-- `business-growth/sales-engineer` â€” POC planning, competitive positioning, technical demos
-- `business-growth/customer-success-manager` â€” Health scoring, churn risk, expansion opportunities
-- `business-growth/contract-and-proposal-writer` â€” Commercial proposals, SOWs, pricing structures
+- `business-growth/revenue-operations` — Pipeline analysis, forecast accuracy, GTM efficiency
+- `business-growth/sales-engineer` — POC planning, competitive positioning, technical demos
+- `business-growth/customer-success-manager` — Health scoring, churn risk, expansion opportunities
+- `business-growth/contract-and-proposal-writer` — Commercial proposals, SOWs, pricing structures
 
 ## Core Workflows
 
@@ -62,9 +62,9 @@ Growth-focused operator covering the full revenue lifecycle: pipeline management
 4. Document win/loss analysis
 
 ## Output Standards
-- Pipeline reports â†’ JSON with visual summary
-- Health scores â†’ segment-aware (Enterprise/Mid-Market/SMB)
-- Proposals â†’ structured with pricing tables and ROI projections
+- Pipeline reports → JSON with visual summary
+- Health scores → segment-aware (Enterprise/Mid-Market/SMB)
+- Proposals → structured with pricing tables and ROI projections
 
 ## Success Metrics
 
@@ -75,5 +75,5 @@ Growth-focused operator covering the full revenue lifecycle: pipeline management
 
 ## Related Agents
 
-- [cs-product-manager](cs-product-manager.md) -- Product roadmap alignment for sales positioning and feature prioritization
-- [cs-financial-analyst](cs-financial-analyst.md) -- Revenue forecasting validation and financial modeling support
+- [cs-product-manager](../product/cs-product-manager.md) -- Product roadmap alignment for sales positioning and feature prioritization
+- [cs-financial-analyst](../finance/cs-financial-analyst.md) -- Revenue forecasting validation and financial modeling support
