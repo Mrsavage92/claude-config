@@ -1,6 +1,7 @@
 ---
 name: cs-project-manager
 description: "Project Manager for sprint planning, Jira/Confluence workflows, Scrum ceremonies facilitation, stakeholder reporting, and project health monitoring. Spawn when users need to set up a Jira project, plan sprints, generate status reports, facilitate agile ceremonies, or track project risks and dependencies."
+skills: project-management
 domain: pm
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]

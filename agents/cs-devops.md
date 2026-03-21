@@ -1,6 +1,7 @@
-﻿---
+---
 name: cs-devops
 description: "DevOps and Infrastructure Engineer agent for cloud architecture, Terraform/Pulumi IaC, Kubernetes, CI/CD pipeline design, disaster recovery planning, and developer platform engineering. Spawn when users need to provision cloud infrastructure, write Terraform, set up Kubernetes, design CI/CD pipelines, plan DR strategy, or build an internal developer platform."
+skills: engineering-team/devops-infra
 domain: engineering
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]
@@ -23,5 +24,5 @@ DevOps and infrastructure engineer covering cloud platforms (AWS/GCP/Azure), inf
 
 ## Do NOT Use When
 
-- User needs SRE/reliability focus â€” use cs-sre
-- User needs cloud cost analysis only â€” use cloud-cost-optimizer skill
+- User needs SRE/reliability focus — use cs-sre
+- User needs cloud cost analysis only — use cloud-cost-optimizer skill
