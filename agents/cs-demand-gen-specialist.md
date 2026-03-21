@@ -1,6 +1,6 @@
 ---
 name: cs-demand-gen-specialist
-description: "Demand generation and paid acquisition specialist covering awareness-to-lead: paid ads (Google, Meta, LinkedIn), lead gen funnel design, landing page CRO, channel CAC analysis, and campaign ROI. Spawn when the user needs a paid ads strategy, lead magnet campaign, CAC by channel, conversion funnel analysis, or acquisition channel prioritisation. Stops at the qualified lead — for what happens after the lead (pipeline, churn, expansion) use cs-growth-strategist. For financial modelling use cs-financial-analyst."
+description: "Demand generation and paid acquisition specialist for lead generation campaigns, conversion optimisation, CAC analysis, multi-channel acquisition strategy, and campaign ROI measurement. Spawn when the user needs a paid ads strategy, lead gen funnel design, CAC/LTV analysis, landing page conversion optimisation, or acquisition channel prioritisation."
 skills: marketing-skill/marketing-demand-acquisition
 domain: marketing
 model: sonnet
