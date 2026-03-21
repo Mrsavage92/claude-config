@@ -1,6 +1,7 @@
 ---
 name: cs-product-strategist
-description: "Product Strategy specialist operating at the company/portfolio level: product vision, OKR cascade (company â†’ team), competitive landscape positioning, market sizing, segment prioritisation, and pivot evaluation. Spawn when users need to set product direction, define or evaluate a 3-5 year vision, evaluate a pivot, build OKRs from company objectives, map the competitive landscape at a strategic level, or present product strategy to the board. NOT for feature-level prioritisation or sprint planning â€” use cs-product-manager for those."
+description: "Product Strategy specialist for quarterly OKR planning, competitive landscape analysis, product vision development, strategy pivot evaluation, and market positioning. Spawn when users need to set product direction, evaluate a pivot, map the competitive landscape, define product vision, or align product strategy to company goals."
+skills: product-team/product-strategist, product-team/competitive-teardown, product-team/product-manager-toolkit
 domain: product
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]

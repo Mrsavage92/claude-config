@@ -1,6 +1,7 @@
 ---
 name: cs-quality-regulatory
 description: "Quality & Regulatory specialist for ISO 13485 QMS, EU MDR 2017/745, FDA 510(k)/PMA submissions, GDPR/DSGVO compliance, and ISO 27001 ISMS audits. Spawn when users need regulatory strategy for medical devices, audit preparation, CAPA management, risk management (ISO 14971), or compliance documentation for regulated industries."
+skills: ra-qm-team
 domain: ra-qm
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]

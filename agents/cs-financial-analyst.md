@@ -1,6 +1,7 @@
 ---
 name: cs-financial-analyst
-description: "Financial modelling specialist for DCF valuation, ratio analysis, budgeting, forecasting, and SaaS unit economics (ARR, MRR, LTV, CAC, NRR, quick ratio). Spawn when the user needs a valuation model, financial health assessment, budget variance analysis, 12-month unit economics projection, or SaaS metric benchmarking. Does NOT cover sales pipeline or churn operations (use cs-growth-strategist) or fundraising narrative/investor comms (use cs-ceo-advisor)."
+description: "Financial Analyst for DCF valuation, financial modelling, budgeting, forecasting, SaaS metrics (ARR, MRR, churn, CAC, LTV, NRR), and ratio analysis. Spawn when users need financial analysis, valuation models, budget planning, financial ratio analysis, SaaS health checks, or unit economics projections."
+skills: finance
 domain: finance
 model: opus
 tools: [Read, Write, Bash, Grep, Glob]
