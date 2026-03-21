@@ -1,7 +1,6 @@
 ﻿---
 name: cs-engineering-lead
 description: "Engineering Team Lead for coordinating QA, security, data engineering, ML, and frontend/backend teams, making team-level technical decisions, and managing incident response and cross-functional delivery. Spawn when users need team coordination across specialisations, tech stack evaluation, incident post-mortems, cross-functional engineering planning, or engineering process improvements."
-skills: engineering-team
 domain: engineering
 model: opus
 tools: [Read, Write, Bash, Grep, Glob]

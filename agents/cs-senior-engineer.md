@@ -1,7 +1,6 @@
 ﻿---
 name: cs-senior-engineer
 description: "Senior Engineer for architecture decisions, system design, code review, DevOps pipelines, API design, and infrastructure decisions. Spawn when users need system design, code quality review, CI/CD pipeline setup, infrastructure architecture, security hardening, or technical implementation guidance across any language or stack."
-skills: engineering
 domain: engineering
 model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]
