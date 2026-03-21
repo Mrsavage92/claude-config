@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 $RepoDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ClaudeDir = "$env:USERPROFILE\.claude"
 $SkillsRepo = "https://github.com/Mrsavage92/skills-library.git"
-$SkillsDir = "$ClaudeDir\skills\claude-skills"
+$SkillsDir = "$ClaudeDir\skills"
 
 Write-Host "=== Claude Config Sync ===" -ForegroundColor Cyan
 Write-Host "Repo:   $RepoDir"
@@ -40,7 +40,7 @@ New-Item -ItemType Directory -Force -Path "$ClaudeDir\skills" | Out-Null
 if (Test-Path "$SkillsDir\.git") {
     Write-Host "Updating existing skills library..."
     Set-Location $SkillsDir
-    git pull origin main
+    git pull origin master
 } else {
     Write-Host "Cloning skills library (first time, may take a minute)..."
     git clone $SkillsRepo $SkillsDir
