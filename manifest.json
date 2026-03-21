@@ -32,7 +32,9 @@
     "sync-knowledge-base.md": "3768acbe",
     "tdd.md": "45e07a83",
     "tech-debt.md": "a76aabdd",
-    "user-story.md": "43ceaa09"
+    "user-story.md": "43ceaa09",
+    "agent-brief.md": "f0a9e19f",
+    "parallel-audit.md": "f379b48c"
   },
   "agents": {
     "cs-ai-advisor.md": "483497a5",
@@ -61,7 +63,8 @@
     "cs-seo-specialist.md": "8552a175",
     "cs-sre.md": "e65d7ccd",
     "cs-ux-researcher.md": "3d91dfbd",
-    "cs-workspace-admin.md": "990b73e7"
+    "cs-workspace-admin.md": "990b73e7",
+    "cs-orchestrator.md": "e21cbec8"
   },
   "skills": [
     "ai-ready",
@@ -131,8 +134,8 @@
     "techaudit-speed"
   ],
   "counts": {
-    "commands": 31,
-    "agents": 27,
+    "commands": 33,
+    "agents": 28,
     "skills": 65
   }
 }
