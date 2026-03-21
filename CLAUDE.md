@@ -12,7 +12,7 @@ This repository is the **shared source of truth** for Claude Code configuration 
 | `sync.sh` | Mac/Linux: pull latest config from this repo |
 | `sync.ps1` | Windows: pull latest config from this repo |
 
-Skills (SKILL.md files) live in a separate repo: `Mrsavage92/skills-library`, installed at `~/.claude/skills/claude-skills/`.
+Skills live in a separate repo: `Mrsavage92/skills-library`, installed at `~/.claude/skills/` (flat structure — skill directories directly under skills/, no subdirectory).
 
 ## How sync works
 
@@ -76,7 +76,7 @@ Then add the hooks below to `~/.claude/settings.json` (Mac) or `%USERPROFILE%\.c
       "hooks": [
         {
           "type": "command",
-          "command": "LOG=~/.claude/sync-errors.log; (cd ~/Documents/Git/claude-config && git pull origin main --rebase && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git pull origin main) 2>>$LOG || true",
+          "command": "LOG=~/.claude/sync-errors.log; REPO=~/Documents/Git/claude-config; (cd $REPO && git fetch origin main && git pull origin main --rebase && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md) 2>>$LOG; (cd ~/.claude/skills && git fetch origin master && git pull origin master --rebase) 2>>$LOG || true",
           "async": true
         }
       ]
@@ -87,7 +87,7 @@ Then add the hooks below to `~/.claude/settings.json` (Mac) or `%USERPROFILE%\.c
       "hooks": [
         {
           "type": "command",
-          "command": "MACHINE=$(hostname -s); LOG=~/.claude/sync-errors.log; MSG=\"auto-sync: $MACHINE $(date +%Y-%m-%d)\"; (cd ~/Documents/Git/claude-config && git pull origin main --rebase && cp ~/.claude/commands/*.md commands/ && cp ~/.claude/agents/*.md agents/ && git add commands/ agents/ && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git add -A && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG || true",
+          "command": "MACHINE=$(hostname -s); LOG=~/.claude/sync-errors.log; MSG=\"auto-sync: $MACHINE $(date +%Y-%m-%d)\"; REPO=~/Documents/Git/claude-config; MANIFEST=$REPO/manifest.json; (cd $REPO && git fetch origin main && git pull origin main --rebase && python3 -c \"import json,hashlib,os,shutil; m=json.load(open('$MANIFEST')) if os.path.exists('$MANIFEST') else {'agents':{},'commands':{}}; [shutil.copy(os.path.expanduser('~/.claude/agents/')+f, 'agents/'+f) for f in os.listdir(os.path.expanduser('~/.claude/agents/')) if f.endswith('.md') and hashlib.md5(open(os.path.expanduser('~/.claude/agents/')+f,'rb').read()).hexdigest()[:8] != m.get('agents',{}).get(f,'')]; [shutil.copy(os.path.expanduser('~/.claude/commands/')+f, 'commands/'+f) for f in os.listdir(os.path.expanduser('~/.claude/commands/')) if f.endswith('.md') and hashlib.md5(open(os.path.expanduser('~/.claude/commands/')+f,'rb').read()).hexdigest()[:8] != m.get('commands',{}).get(f,'')]\" && cp ~/.claude/CLAUDE.md global-context.md && git add agents/ commands/ global-context.md && git diff --cached --quiet || git commit -m \"$MSG\" && git fetch origin main && git rebase origin/main && git push origin main) 2>>$LOG; (cd ~/.claude/skills && git fetch origin master && git rebase origin/master && git add -A && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin master) 2>>$LOG || true",
           "async": true
         }
       ]
