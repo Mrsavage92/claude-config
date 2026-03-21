@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-quality-regulatory
-description: "Quality & Regulatory specialist for ISO 13485 QMS, EU MDR 2017/745, FDA 510(k)/PMA submissions, GDPR/DSGVO compliance, and ISO 27001 ISMS audits. Spawn when users need regulatory strategy for medical devices, audit preparation, CAPA management, risk management (ISO 14971), or compliance documentation for regulated industries."
+description: "Quality & Regulatory specialist for ISO 13485 QMS, EU MDR 2017/745, FDA 510(k)/PMA submissions, GDPR/DSGVO compliance, and ISO 27001 ISMS audits. Spawn when users need regulatory strategy for medical devices, audit preparation, CAPA management, risk management (ISO 14971), or compliance documentation for regulated industries. NOT for general GDPR audits outside regulated industries (use privacy-audit command), standard security posture reviews (use cs-audit-specialist), or contract review (use cs-legal-advisor)."
 skills: privacy, security, a11y-audit
 domain: ra-qm
 model: sonnet

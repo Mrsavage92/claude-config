@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-ux-researcher
-description: "UX Research specialist for research planning, user persona generation, journey mapping, usability test design, and insight synthesis. Spawn when users need to plan user research, create personas from data, map user journeys, design usability tests, or synthesise interview findings into actionable insights."
+description: "UX Research specialist for research planning, user persona generation, journey mapping, usability test design, and insight synthesis. Spawn when users need to plan user research, create personas from data, map user journeys, design usability tests, or synthesise interview findings into actionable insights. NOT for product backlog prioritisation (use cs-product-manager), funnel metrics analysis (use cs-data-analyst), or content writing (use cs-content-creator)."
 skills: persona, user-story
 domain: product
 model: sonnet

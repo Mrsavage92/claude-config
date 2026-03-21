@@ -1,6 +1,6 @@
 ---
 name: cs-data-analyst
-description: "Data and analytics specialist for interpreting product and marketing data, building dashboards, running cohort analysis, funnel diagnostics, attribution modelling, and producing data-driven recommendations. Spawn when the user needs to analyse GA4, Mixpanel, Amplitude, or raw CSV data; diagnose a conversion drop; build a metrics framework; or turn numbers into a clear narrative for stakeholders."
+description: "Data and analytics specialist for interpreting product and marketing data, building dashboards, running cohort analysis, funnel diagnostics, attribution modelling, and producing data-driven recommendations. Spawn when the user needs to analyse GA4, Mixpanel, Amplitude, or raw CSV data; diagnose a conversion drop; build a metrics framework; or turn numbers into a clear narrative for stakeholders. NOT for product KPI definition or A/B test design (use cs-product-analyst), financial modelling (use cs-financial-analyst), or pipeline/revenue ops (use cs-growth-strategist)."
 skills: saas-health, market-funnel, financial-health, rice
 domain: data
 model: sonnet

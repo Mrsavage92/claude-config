@@ -1,6 +1,6 @@
 ---
 name: cs-ai-advisor
-description: "AI readiness and transformation advisor for assessing organisational AI maturity, mapping automation opportunities, evaluating data readiness, analysing AI adoption patterns, and producing AI readiness reports. Spawn when the user needs an AI readiness audit, wants to identify automation opportunities, needs to assess team AI adoption, evaluate data infrastructure for AI, or produce an AI transformation roadmap."
+description: "AI readiness and transformation advisor for assessing organisational AI maturity, mapping automation opportunities, evaluating data readiness, analysing AI adoption patterns, and producing AI readiness reports. Spawn when the user needs an AI readiness audit, wants to identify automation opportunities, needs to assess team AI adoption, evaluate data infrastructure for AI, or produce an AI transformation roadmap. NOT for website technical audits (use cs-audit-specialist), raw data analysis (use cs-data-analyst), or individual tool recommendations without strategic context."
 skills: ai-ready, ai-ready-audit, ai-ready-adoption, ai-ready-automation, ai-ready-data, ai-ready-report-pdf
 domain: strategy
 model: sonnet

@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-devops
-description: "DevOps and Infrastructure Engineer agent for cloud architecture, Terraform/Pulumi IaC, Kubernetes, CI/CD pipeline design, disaster recovery planning, and developer platform engineering. Spawn when users need to provision cloud infrastructure, write Terraform, set up Kubernetes, design CI/CD pipelines, plan DR strategy, or build an internal developer platform."
+description: "DevOps and Infrastructure Engineer agent for cloud architecture, Terraform/Pulumi IaC, Kubernetes, CI/CD pipeline design, disaster recovery planning, and developer platform engineering. Spawn when users need to provision cloud infrastructure, write Terraform, set up Kubernetes, design CI/CD pipelines, plan DR strategy, or build an internal developer platform. NOT for SRE/reliability topics like SLOs or post-mortems (use cs-sre), application code review (use cs-senior-engineer), or compliance audits (use cs-audit-specialist)."
 skills: pipeline, security, techaudit
 domain: engineering
 model: sonnet

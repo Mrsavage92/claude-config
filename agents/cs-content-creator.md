@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-content-creator
-description: "Content production specialist for writing SEO-optimised blog posts, adapting content for LinkedIn/Twitter/Instagram/Facebook, auditing brand voice consistency, planning content calendars, writing email campaign copy, and creating landing page copy. Spawn when asked to write a blog post, create social media content, check brand voice, build a content brief, plan a content calendar, or write copy for emails or landing pages."
+description: "Content production specialist for writing SEO-optimised blog posts, adapting content for LinkedIn/Twitter/Instagram/Facebook, auditing brand voice consistency, planning content calendars, writing email campaign copy, and creating landing page copy. Spawn when asked to write a blog post, create social media content, check brand voice, build a content brief, plan a content calendar, or write copy for emails or landing pages. NOT for SEO or technical GEO strategy (use cs-seo-specialist), paid ad copy (use cs-demand-gen-specialist), or reputation management (use cs-reputation-manager)."
 skills: market-copy, market-social, market-brand, market-emails, scroll-stop-prompt, scroll-stop-build
 domain: marketing
 model: sonnet

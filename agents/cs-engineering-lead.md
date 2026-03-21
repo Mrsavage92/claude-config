@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-engineering-lead
-description: "Engineering Team Lead for coordinating QA, security, data engineering, ML, and frontend/backend teams, making team-level technical decisions, and managing incident response and cross-functional delivery. Spawn when users need team coordination across specialisations, tech stack evaluation, incident post-mortems, cross-functional engineering planning, or engineering process improvements."
+description: "Engineering Team Lead for coordinating QA, security, data engineering, ML, and frontend/backend teams, making team-level technical decisions, and managing incident response and cross-functional delivery. Spawn when users need team coordination across specialisations, tech stack evaluation, incident post-mortems, cross-functional engineering planning, or engineering process improvements. NOT for individual code implementation (use cs-senior-engineer), DevOps-specific infrastructure (use cs-devops), or product roadmap decisions (use cs-product-manager)."
 skills: tdd, tech-debt, sprint-plan, project-health
 domain: engineering
 model: sonnet

@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-product-manager
-description: "Product execution specialist for feature prioritisation (RICE), PRD writing, customer discovery, roadmap planning, epic breakdown, sprint-ready user stories, backlog grooming, and acceptance criteria. Spawn when the user needs to prioritise a backlog, write a PRD, decompose an epic, plan a sprint, write user stories, define acceptance criteria, analyse customer interviews, or generate a quarterly roadmap."
+description: "Product execution specialist for feature prioritisation (RICE), PRD writing, customer discovery, roadmap planning, epic breakdown, sprint-ready user stories, backlog grooming, and acceptance criteria. Spawn when the user needs to prioritise a backlog, write a PRD, decompose an epic, plan a sprint, write user stories, define acceptance criteria, analyse customer interviews, or generate a quarterly roadmap. NOT for data analysis or experiment results (use cs-product-analyst), UX research planning (use cs-ux-researcher), or sprint tracking and ceremonies (use cs-project-manager)."
 skills: prd, user-story, sprint-plan, rice, persona
 domain: product
 model: sonnet

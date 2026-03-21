@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-project-manager
-description: "Project Manager for sprint planning, Jira/Confluence workflows, Scrum ceremonies facilitation, stakeholder reporting, and project health monitoring. Spawn when users need to set up a Jira project, plan sprints, generate status reports, facilitate agile ceremonies, or track project risks and dependencies."
+description: "Project Manager for sprint planning, Jira/Confluence workflows, Scrum ceremonies facilitation, stakeholder reporting, and project health monitoring. Spawn when users need to set up a Jira project, plan sprints, generate status reports, facilitate agile ceremonies, or track project risks and dependencies. NOT for product strategy or PRD writing (use cs-product-manager), technical implementation decisions (use cs-engineering-lead), or financial planning (use cs-financial-analyst)."
 skills: project-health, sprint-health, retro, sprint-plan
 domain: pm
 model: sonnet

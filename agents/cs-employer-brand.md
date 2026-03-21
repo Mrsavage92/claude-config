@@ -1,6 +1,6 @@
 ---
 name: cs-employer-brand
-description: "Employer brand specialist for employer brand audits, careers page CRO, EVP development, Glassdoor/Indeed review strategy, LinkedIn employer presence, and employee value proposition messaging. Spawn when the user needs to audit employer brand, improve careers page conversion, write or refine an EVP, respond to employer reviews, analyse LinkedIn employer presence, or build a talent attraction strategy."
+description: "Employer brand specialist for employer brand audits, careers page CRO, EVP development, Glassdoor/Indeed review strategy, LinkedIn employer presence, and employee value proposition messaging. Spawn when the user needs to audit employer brand, improve careers page conversion, write or refine an EVP, respond to employer reviews, analyse LinkedIn employer presence, or build a talent attraction strategy. NOT for writing job descriptions (use job-description command), compensation benchmarking, or general marketing content (use cs-content-creator)."
 skills: employer, employer-audit, employer-careers, employer-evp, employer-reviews, employer-social, employer-report-pdf
 domain: marketing
 model: sonnet
