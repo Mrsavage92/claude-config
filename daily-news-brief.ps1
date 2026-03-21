@@ -35,4 +35,5 @@ If nothing significant is new, say so — do not pad with filler.
 "@
 
 # Launch Claude Code with the prompt (non-interactive)
-claude --print $prompt
+$claudeExe = "$env:USERPROFILE\.vscode\extensions\anthropic.claude-code-2.1.81-win32-x64\resources\native-binary\claude.exe"
+& $claudeExe --print $prompt
