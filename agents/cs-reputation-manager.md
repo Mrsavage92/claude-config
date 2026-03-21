@@ -1,6 +1,6 @@
 ---
 name: cs-reputation-manager
-description: "Online reputation and review management specialist for reputation audits, review response strategy, monitoring setup, and review platform optimisation. Spawn when the user needs to audit online reputation, respond to reviews, set up reputation monitoring, manage negative press, or build a review acquisition strategy."
+description: "Online reputation and review management specialist for reputation audits, review response strategy, monitoring setup, and review platform optimisation. Spawn when the user needs to audit online reputation, respond to reviews, set up reputation monitoring, manage negative press, or build a review acquisition strategy. NOT for employer-brand-specific reviews (use cs-employer-brand), proactive thought leadership content (use cs-content-creator), or SEO-driven content strategy (use cs-seo-specialist)."
 skills: reputation, reputation-audit, reputation-monitor, reputation-response, market-reviews, market-gbp
 domain: marketing
 model: sonnet

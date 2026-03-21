@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-sre
-description: "Site Reliability Engineer agent for SLO/SLI definition, error budget management, blameless post-mortems, alert tuning, and on-call process design. Spawn when users need to define reliability targets, investigate production incidents, reduce alert noise, design on-call rotations, or implement chaos engineering."
+description: "Site Reliability Engineer agent for SLO/SLI definition, error budget management, blameless post-mortems, alert tuning, and on-call process design. Spawn when users need to define reliability targets, investigate production incidents, reduce alert noise, design on-call rotations, or implement chaos engineering. NOT for general DevOps or infrastructure provisioning (use cs-devops), application-level code review (use cs-senior-engineer), or compliance audits (use cs-audit-specialist)."
 skills: security, techaudit, pipeline
 domain: engineering
 model: sonnet

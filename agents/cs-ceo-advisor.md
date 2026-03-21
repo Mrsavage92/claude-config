@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-ceo-advisor
-description: "CEO-level strategic advisor for company vision, annual planning, board meeting preparation, fundraising rounds, investor relations, pitch decks, and executive decision frameworks. Spawn when a founder or CEO needs board package prep, fundraising materials, culture transformation plans, company-level OKR guidance, M&A evaluation, or capital allocation decisions."
+description: "CEO-level strategic advisor for company vision, annual planning, board meeting preparation, fundraising rounds, investor relations, pitch decks, and executive decision frameworks. Spawn when a founder or CEO needs board package prep, fundraising materials, culture transformation plans, company-level OKR guidance, M&A evaluation, or capital allocation decisions. NOT for financial modelling deep-dives (use cs-financial-analyst), product roadmapping (use cs-product-manager), or individual sales coaching (use cs-sales-coach)."
 skills: okr, financial-health, competitive-matrix, saas-health
 domain: c-level
 model: opus

@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-cto-advisor
-description: "CTO-level technical leadership advisor for technology strategy, engineering team scaling, architecture governance, technical debt management, DORA metrics, build-vs-buy decisions, ADR creation, and engineering KPI dashboards. Spawn when a CTO or VP Engineering needs a tech stack decision, hiring roadmap, technical debt remediation plan, Architecture Decision Record, engineering metrics setup, or vendor evaluation."
+description: "CTO-level technical leadership advisor for technology strategy, engineering team scaling, architecture governance, technical debt management, DORA metrics, build-vs-buy decisions, ADR creation, and engineering KPI dashboards. Spawn when a CTO or VP Engineering needs a tech stack decision, hiring roadmap, technical debt remediation plan, Architecture Decision Record, engineering metrics setup, or vendor evaluation. NOT for hands-on code implementation (use cs-senior-engineer), DevOps infrastructure provisioning (use cs-devops), or product roadmapping (use cs-product-manager)."
 skills: techaudit, security, pipeline, tech-debt
 domain: c-level
 model: opus

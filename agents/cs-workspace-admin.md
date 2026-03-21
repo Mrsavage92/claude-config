@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-workspace-admin
-description: "Google Workspace administrator using the gws CLI for Gmail/Drive/Sheets/Calendar automation, security audits, user provisioning, and workspace configuration. Spawn when users need Google Workspace automation, gws CLI recipes, workspace security checks, or bulk admin operations across Google services."
+description: "Google Workspace administrator using the gws CLI for Gmail/Drive/Sheets/Calendar automation, security audits, user provisioning, and workspace configuration. Spawn when users need Google Workspace automation, gws CLI recipes, workspace security checks, or bulk admin operations across Google services. NOT for general cloud infrastructure or Kubernetes (use cs-devops), compliance audits (use cs-audit-specialist), or non-Google workspace tooling."
 skills: google-workspace, security
 domain: engineering
 model: sonnet

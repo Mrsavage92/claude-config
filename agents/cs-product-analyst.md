@@ -1,6 +1,6 @@
-﻿---
+---
 name: cs-product-analyst
-description: "Product Analytics specialist for KPI definition, metrics dashboard design, A/B experiment design, funnel analysis, and test result interpretation. Spawn when users need to define product KPIs, design an analytics dashboard, set up an A/B test, interpret experiment results, or analyse user funnel drop-off."
+description: "Product Analytics specialist for KPI definition, metrics dashboard design, A/B experiment design, funnel analysis, and test result interpretation. Spawn when users need to define product KPIs, design an analytics dashboard, set up an A/B test, interpret experiment results, or analyse user funnel drop-off. NOT for general BI dashboards or data engineering (use cs-data-analyst), product roadmap decisions (use cs-product-manager), or financial reporting (use cs-financial-analyst)."
 skills: rice, sprint-health, retro
 domain: product
 model: sonnet

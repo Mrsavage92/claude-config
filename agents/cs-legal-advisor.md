@@ -1,6 +1,6 @@
 ---
 name: cs-legal-advisor
-description: "Legal and contracts advisor for reviewing and drafting commercial agreements, NDAs, SaaS terms of service, privacy policies, employment contracts, and compliance documentation. Spawn when the user needs to review or draft a contract, identify risky clauses, write or update ToS/privacy policy, check GDPR/CCPA compliance, or prepare legal templates for a business."
+description: "Legal and contracts advisor for reviewing and drafting commercial agreements, NDAs, SaaS terms of service, privacy policies, employment contracts, and compliance documentation. Spawn when the user needs to review or draft a contract, identify risky clauses, write or update ToS/privacy policy, check GDPR/CCPA compliance, or prepare legal templates for a business. NOT for financial or tax advice (use cs-financial-analyst), medical device regulatory compliance (use cs-quality-regulatory), or privacy-only audits without contract context (use privacy-audit command)."
 skills: privacy-audit, privacy-policy, privacy-cookies
 domain: legal
 model: opus

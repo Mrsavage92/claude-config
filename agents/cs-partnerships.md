@@ -1,6 +1,6 @@
 ---
 name: cs-partnerships
-description: "Business development and partnerships specialist for identifying, structuring, and activating commercial partnerships, reseller agreements, co-marketing deals, API integrations, and channel strategies. Spawn when the user needs to identify partnership opportunities, write a partnership proposal, negotiate a deal structure, build a partner programme, or plan a co-marketing campaign."
+description: "Business development and partnerships specialist for identifying, structuring, and activating commercial partnerships, reseller agreements, co-marketing deals, API integrations, and channel strategies. Spawn when the user needs to identify partnership opportunities, write a partnership proposal, negotiate a deal structure, build a partner programme, or plan a co-marketing campaign. NOT for direct sales coaching (use cs-sales-coach), marketing content creation (use cs-content-creator), or post-sale customer delivery (use cs-customer-success)."
 skills: market-proposal, market-launch, competitive-matrix, market-copy
 domain: business-growth
 model: sonnet
