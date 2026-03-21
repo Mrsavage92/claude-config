@@ -52,7 +52,7 @@
     "cs-financial-analyst.md": "15d1e36b",
     "cs-growth-strategist.md": "53bd3ebe",
     "cs-legal-advisor.md": "d9d4a22d",
-    "cs-orchestrator.md": "e21cbec8",
+    "cs-orchestrator.md": "ccb02c74",
     "cs-partnerships.md": "861e6c6d",
     "cs-product-analyst.md": "13f94602",
     "cs-product-manager.md": "6403de72",
@@ -74,6 +74,7 @@
     "ai-ready-automation",
     "ai-ready-data",
     "ai-ready-report-pdf",
+    "autopilot",
     "competitive-matrix",
     "employer",
     "employer-audit",
@@ -117,6 +118,7 @@
     "privacy-cookies",
     "privacy-policy",
     "privacy-report-pdf",
+    "project-review",
     "reputation",
     "reputation-audit",
     "reputation-monitor",
@@ -137,6 +139,6 @@
   "counts": {
     "commands": 34,
     "agents": 28,
-    "skills": 65
+    "skills": 67
   }
 }
