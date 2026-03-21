@@ -1,6 +1,6 @@
 ---
 name: cs-customer-success
-description: "Customer success specialist for building onboarding programmes, QBR templates, health score frameworks, escalation playbooks, renewal strategies, and customer advocacy programmes. Spawn when the user needs to design a customer onboarding journey, prepare for a QBR, identify at-risk accounts, write a success plan, or build a CS team playbook."
+description: "Post-sale delivery specialist — customer onboarding programmes, QBR preparation, health score frameworks, save playbooks, renewal strategy, and advocacy programmes. Spawn for: designing an onboarding journey, preparing a QBR, writing a joint success plan, or building a CS team playbook. NOT for pipeline ops (use cs-growth-strategist) or individual sales coaching (use cs-sales-coach)."
 skills: saas-health, market-funnel, market-emails, market-proposal
 domain: business-growth
 model: sonnet

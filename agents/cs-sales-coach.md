@@ -1,6 +1,6 @@
 ---
 name: cs-sales-coach
-description: "Sales coaching and enablement specialist for building sales scripts, discovery call frameworks, objection handling playbooks, demo structures, cold outreach sequences, and win/loss analysis. Spawn when the user needs to improve sales conversion, write a discovery call guide, handle a specific objection, build a sales playbook, or coach a rep on a specific deal."
+description: "Individual seller enablement specialist — scripts, discovery frameworks, objection handling, demo structures, cold outreach, and deal coaching. Spawn for: writing a discovery call guide, handling a specific objection, building a sales playbook, coaching a rep on a live deal, or creating a battle card. NOT for pipeline ops or revenue forecasting (use cs-growth-strategist) or post-sale customer delivery (use cs-customer-success)."
 skills: market-emails, market-copy, market-funnel, competitive-matrix
 domain: sales
 model: sonnet
