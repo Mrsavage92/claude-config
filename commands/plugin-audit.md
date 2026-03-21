@@ -1,10 +1,6 @@
 ---
 name: plugin-audit
-description: "Run a comprehensive audit of skills, agents, and commands for structure, quality, security, and compatibility. Use when validating a skill before publishing, checking skill library health, or debugging broken skills."
-  Comprehensive audit pipeline for skills, plugins, agents, and commands. Validates structure,
-  quality, security, marketplace compliance, cross-platform compatibility, and ecosystem integration.
-  Runs all built-in validation tools, invokes domain-appropriate agents for code review,
-  and produces a pass/fail gate report. Usage: /plugin-audit <skill-path>
+description: Run a comprehensive 8-phase audit of any skill, agent, or command — validates structure, quality, security, and ecosystem integration. Use when validating a skill before publishing, checking skill library health, or debugging a broken skill.
 ---
 
 # /plugin-audit
