@@ -23,6 +23,12 @@ Run this review in two phases:
 6. Report: what was reviewed, what was found, what was implemented
 "@
 
-# Launch Claude Code with the prompt (non-interactive)
+# Launch Claude Code and log output
 $claudeExe = "$env:USERPROFILE\.vscode\extensions\anthropic.claude-code-2.1.81-win32-x64\resources\native-binary\claude.exe"
-& $claudeExe --print $prompt
+$logDir    = "$env:USERPROFILE\.claude\logs"
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
+$logFile   = "$logDir\$(Get-Date -Format 'yyyy-MM-dd')-daily-review.md"
+
+$output = & $claudeExe --print $prompt
+$output | Out-File -FilePath $logFile -Encoding UTF8
+$output
