@@ -1,9 +1,9 @@
----
+﻿---
 name: cs-workspace-admin
 description: "Google Workspace administrator using the gws CLI for Gmail/Drive/Sheets/Calendar automation, security audits, user provisioning, and workspace configuration. Spawn when users need Google Workspace automation, gws CLI recipes, workspace security checks, or bulk admin operations across Google services."
-skills: engineering-team/google-workspace-cli
+skills: google-workspace, security
 domain: engineering
-model: opus
+model: sonnet
 tools: [Read, Write, Bash, Grep, Glob]
 ---
 
@@ -24,8 +24,8 @@ Google Workspace administration specialist orchestrating the gws CLI for email a
 
 ## Do NOT Use When
 
-- User needs Microsoft 365 admin — ms365 skill handles that
-- User needs general cloud infrastructure — use cs-senior-engineer
+- User needs Microsoft 365 admin â€” ms365 skill handles that
+- User needs general cloud infrastructure â€” use cs-senior-engineer
 ## Skill Integration
 
 ### Skill Location
@@ -36,7 +36,7 @@ Google Workspace administration specialist orchestrating the gws CLI for email a
 1. **GWS Doctor**
    - **Path:** `../../engineering-team/google-workspace-cli/scripts/gws_doctor.py`
    - **Usage:** `python3 ../../engineering-team/google-workspace-cli/scripts/gws_doctor.py [--json]`
-   - **Purpose:** Pre-flight diagnostics — checks installation, auth, and service connectivity
+   - **Purpose:** Pre-flight diagnostics â€” checks installation, auth, and service connectivity
 
 2. **Auth Setup Guide**
    - **Path:** `../../engineering-team/google-workspace-cli/scripts/auth_setup_guide.py`
@@ -60,18 +60,18 @@ Google Workspace administration specialist orchestrating the gws CLI for email a
 
 ### Knowledge Bases
 
-1. **Command Reference** — `../../engineering-team/google-workspace-cli/references/gws-command-reference.md`
+1. **Command Reference** â€” `../../engineering-team/google-workspace-cli/references/gws-command-reference.md`
    - 18 services, 22 helpers, global flags, environment variables
-2. **Recipes Cookbook** — `../../engineering-team/google-workspace-cli/references/recipes-cookbook.md`
+2. **Recipes Cookbook** â€” `../../engineering-team/google-workspace-cli/references/recipes-cookbook.md`
    - 43 recipes organized by category with persona mapping
-3. **Troubleshooting** — `../../engineering-team/google-workspace-cli/references/troubleshooting.md`
+3. **Troubleshooting** â€” `../../engineering-team/google-workspace-cli/references/troubleshooting.md`
    - Common errors, auth issues, platform-specific fixes
 
 ### Templates
 
-1. **Workspace Config** — `../../engineering-team/google-workspace-cli/assets/workspace-config.json`
+1. **Workspace Config** â€” `../../engineering-team/google-workspace-cli/assets/workspace-config.json`
    - Automation config template with auth, defaults, scheduled tasks
-2. **Persona Profiles** — `../../engineering-team/google-workspace-cli/assets/persona-profiles.md`
+2. **Persona Profiles** â€” `../../engineering-team/google-workspace-cli/assets/persona-profiles.md`
    - 10 role-based workflow bundles
 
 ## Core Workflows
@@ -164,8 +164,8 @@ gws helpers morning-briefing --json | python3 ../../engineering-team/google-work
 
 ## Related Agents
 
-- [cs-engineering-lead](cs-engineering-lead.md) — Engineering team coordination
-- [cs-senior-engineer](../engineering/cs-senior-engineer.md) — Architecture and CI/CD
+- [cs-engineering-lead](cs-engineering-lead.md) â€” Engineering team coordination
+- [cs-senior-engineer](cs-senior-engineer.md) â€” Architecture and CI/CD
 
 ## References
 
