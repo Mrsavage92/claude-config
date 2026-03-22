@@ -24,8 +24,11 @@ Growth-focused operator covering the full revenue lifecycle: pipeline management
 
 ## Do NOT Use When
 
-- User needs paid ads/CAC analysis â€” use cs-demand-gen-specialist
-- User needs financial modelling â€” use cs-financial-analyst
+- User needs paid ads/CAC analysis — use **cs-demand-gen-specialist**
+- User needs financial modelling — use **cs-financial-analyst**
+- User needs individual rep coaching — use **cs-sales-coach**
+- User needs post-sale delivery or QBRs — use **cs-customer-success**
+- User needs operational RevOps metrics (MAPE, Magic Number) — use **cs-revenue-ops**
 ## Skill Integration
 
 - `business-growth/revenue-operations` â€” Pipeline analysis, forecast accuracy, GTM efficiency
@@ -73,7 +76,19 @@ Growth-focused operator covering the full revenue lifecycle: pipeline management
 - **Expansion Revenue:** Achieve 120%+ net revenue retention (NRR)
 - **Forecast Accuracy:** Weighted forecast within 10% of actual bookings
 
+## Skill Workflow Sequencing
+
+| Goal | Workflow |
+|------|---------|
+| Diagnose revenue health | `saas-health` → `market-funnel` → pipeline analysis |
+| Launch new product/segment | `market-launch` → `market-emails` → expansion scoring |
+| Win back churned accounts | `market-competitors` → churn analysis → save playbook |
+| Grow existing accounts | expansion scoring → `market-emails` → proposal writing |
+
 ## Related Agents
 
-- [cs-product-manager](cs-product-manager.md) -- Product roadmap alignment for sales positioning and feature prioritization
-- [cs-financial-analyst](cs-financial-analyst.md) -- Revenue forecasting validation and financial modeling support
+- **cs-revenue-ops** — operational pipeline metrics, forecast MAPE, weekly hygiene
+- **cs-sales-coach** — individual rep coaching, discovery, objection handling
+- **cs-demand-gen-specialist** — paid acquisition, CAC by channel
+- **cs-customer-success** — post-sale delivery, QBRs, health scoring
+- **cs-financial-analyst** — revenue forecasting, unit economics
