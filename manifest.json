@@ -113,6 +113,7 @@
     "market-reviews",
     "market-seo",
     "market-social",
+    "notion",
     "privacy",
     "privacy-audit",
     "privacy-cookies",
@@ -139,6 +140,6 @@
   "counts": {
     "commands": 34,
     "agents": 28,
-    "skills": 67
+    "skills": 68
   }
 }
