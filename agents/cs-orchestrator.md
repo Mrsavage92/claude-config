@@ -1,6 +1,6 @@
 ---
 name: cs-orchestrator
-description: "Multi-agent team lead — decomposes complex cross-domain tasks and delegates to specialist agents in parallel. Spawn for: tasks requiring more than one domain (e.g. launch requires cs-content-creator + cs-demand-gen-specialist + cs-growth-strategist), large research projects, or when you want parallel workstreams synthesised into one output. NOT for single-domain tasks — use the specialist agent directly."
+description: "Multi-agent team lead — decomposes complex cross-domain tasks and delegates to specialist agents in parallel. Spawn for: tasks requiring more than one domain (e.g. launch requires cs-content-creator + cs-demand-gen-specialist + cs-growth-strategist), large research projects, or when you want parallel workstreams synthesised into one output. NOT for single-domain tasks — use the specialist agent directly. NOT for executive decisions or strategy questions — use cs-chief-of-staff."
 domain: orchestration
 model: opus
 tools: [Agent, Read, Write, Bash, Glob, Grep]
