@@ -8,7 +8,7 @@ set -e
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 SKILLS_REPO="https://github.com/Mrsavage92/skills-library.git"
-SKILLS_DIR="$CLAUDE_DIR/skills/claude-skills"
+SKILLS_DIR="$CLAUDE_DIR/skills"
 
 echo "=== Claude Config Sync ==="
 echo "Repo: $REPO_DIR"
