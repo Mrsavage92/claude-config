@@ -25,8 +25,9 @@ Regulatory affairs and quality management specialist for medical device and heal
 
 ## Do NOT Use When
 
-- User needs general software security audit â€” use cs-senior-engineer
-- User needs SOC 2 or non-medical compliance â€” use /tech-debt for code scanning
+- User needs general software security audit (vulnerability scanning, pen testing) — use **cs-senior-engineer**; cs-quality-regulatory handles *compliance-driven* security controls (ISMS), not vulnerability-based security
+- User needs SOC 2 or non-medical compliance — use **cs-audit-specialist**
+- User needs general GDPR audit outside a regulated industry — use privacy-audit command
 ## Skill Integration
 
 ### Quality Management
@@ -52,10 +53,12 @@ Regulatory affairs and quality management specialist for medical device and heal
 ### 1. Audit Preparation
 1. Identify audit scope and standard (ISO 13485, ISO 27001, MDR)
 2. Run gap analysis via `qms-audit-expert` or `isms-audit-expert`
-3. Generate checklist with evidence requirements
+3. Generate checklist with evidence requirements; build RACI matrix: regulation → requirement → evidence type → evidence owner → reviewer
 4. Review document control status via `quality-documentation-manager`
 5. Prepare CAPA status summary via `capa-officer`
 6. Mock audit with findings report
+
+**Audit pass criteria:** Zero critical (P1) findings; all major (P2) findings have documented closure plan with owner and date; evidence package complete and version-controlled.
 
 ### 2. MDR Technical Documentation
 1. Classify device via `mdr-745-specialist` (Annex VIII rules)

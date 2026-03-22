@@ -29,6 +29,19 @@ Growth-focused operator covering the full revenue lifecycle: pipeline management
 - User needs individual rep coaching — use **cs-sales-coach**
 - User needs post-sale delivery or QBRs — use **cs-customer-success**
 - User needs operational RevOps metrics (MAPE, Magic Number) — use **cs-revenue-ops**
+## Core Tools
+
+| Tool | Purpose | Output |
+|------|---------|--------|
+| `pipeline_analyzer.py` | Coverage ratios, stage conversion, deal aging | Pipeline health report with red flags |
+| `forecast_accuracy_tracker.py` | MAPE calculation, commit vs actual | Forecast accuracy score + root cause |
+| `health_score_calculator.py` | Customer health scoring by segment | At-risk account list with scores |
+| `churn_risk_analyzer.py` | Behavioural churn signals | Prioritised save list + intervention type |
+| `expansion_opportunity_scorer.py` | Whitespace mapping, effort vs impact | Ranked expansion target list |
+| `competitive_matrix_builder.py` | Win/loss by competitor | Competitive positioning gaps |
+
+**RevOps boundary:** cs-revenue-ops measures *historical* Magic Number and pipeline MAPE for this period. cs-growth-strategist uses those outputs to identify *where* to invest next (expansion, new segments, channel mix) — forward-looking.
+
 ## Skill Integration
 
 - `business-growth/revenue-operations` â€” Pipeline analysis, forecast accuracy, GTM efficiency

@@ -113,6 +113,7 @@ Product analytics specialist covering the full measurement lifecycle: KPI framew
 ### 4. Experiment Result Interpretation
 
 1. **Check validity first** — sample ratio mismatch (SRM)? Novelty effect in first 3 days?
+   - **SRM definition:** SRM occurs when experiment variants receive unequal traffic (e.g., control 52%, treatment 48% when 50/50 expected). A > 2% mismatch indicates a logging or randomisation bug — results are invalid. Fix the implementation before interpreting results.
 2. **Primary metric significance** — p < 0.05 AND confidence interval does not cross zero
 3. **Practical significance** — is the effect size meaningful for the business?
 4. **Guardrail check** — did any guardrail metrics degrade significantly?
@@ -133,7 +134,7 @@ Product analytics specialist covering the full measurement lifecycle: KPI framew
 3. **Identify biggest drop-off** — highest-volume × highest-drop-off = priority
 4. **Segment the drop-off** — new vs returning, device type, traffic source, plan
 5. **Correlate with behaviour** — what do users who convert do that drop-offs don't?
-6. **Form hypotheses** — rank by effort vs expected impact
+6. **Form hypotheses** — rank by: drop-off rate × volume at that stage (opportunity size = both rate AND scale, not just rate)
 7. **Design experiment** — test the top hypothesis
 
 **Common drop-off causes by stage:**
@@ -183,7 +184,7 @@ Product analytics specialist covering the full measurement lifecycle: KPI framew
 - Experiment decisions backed by pre-registered primary metric (no post-hoc metric shopping)
 - Sample ratio mismatch rate < 5% of experiments
 - Average experiment duration within 10% of planned duration
-- Guardrail regression rate < 10% of shipped experiments
+- Guardrail regression rate < 10% of shipped experiments (measured as % of shipped experiments where a guardrail metric degraded significantly; if consistently > 10%, revisit guardrail thresholds — they may be too sensitive)
 - Dashboard P0 metrics reviewed in < 5 min weekly (efficiency signal)
 
 ## Related Agents

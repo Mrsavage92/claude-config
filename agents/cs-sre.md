@@ -36,10 +36,10 @@ Every service should measure all four:
 
 | Signal | What to Measure | Alert Threshold |
 |--------|----------------|-----------------|
-| **Latency** | p50, p95, p99 response time | p99 > SLO target |
-| **Traffic** | Requests per second (RPS) | Sudden drop > 30% |
-| **Errors** | Error rate (5xx / total requests) | > error budget burn rate |
-| **Saturation** | CPU, memory, connection pool % | > 80% sustained |
+| **Latency** | p50, p95, p99 response time | p99 > SLO target for 5+ consecutive minutes |
+| **Traffic** | Requests per second (RPS) | Sudden drop > 30% sustained for 10+ minutes |
+| **Errors** | Error rate (5xx / total requests) | > error budget burn rate (not a fixed %) |
+| **Saturation** | CPU, memory, connection pool % | > 80% sustained for 15+ minutes |
 
 ## SLO Framework
 
@@ -72,6 +72,11 @@ Start conservative. You can tighten later; loosening erodes trust.
 Error budget = 1 - SLO target
 Example: 99.9% SLO → 0.1% error budget = 43.8 minutes/month
 ```
+
+**Concrete example:**
+> 99.9% SLO → 0.1% error budget → 43.8 min/month allowed.
+> Week 1 incident = 10 min downtime → 33.8 min remaining for weeks 2–4.
+> At this burn rate (10 min/week), budget exhausted by week 5 of a 4-week month → already over budget.
 
 **Error budget policy:**
 - Budget > 50% remaining: feature velocity prioritised
@@ -132,6 +137,8 @@ Example: 99.9% SLO → 0.1% error budget = 43.8 minutes/month
 | 6h | > 6x | Page (SEV2) | Error budget 5% consumed in 6h |
 | 1d | > 3x | Ticket | Error budget 10% consumed in 1d |
 | 3d | > 1x | Weekly review | At this rate, budget exhausted in 3d |
+
+**Alert suppression:** Silence lower-severity alerts (1d and 3d windows) during planned maintenance using annotation-driven silencing in Grafana/Datadog. Never silence SEV1/2 multi-burn alerts — if a maintenance window would trigger them, your change is too risky.
 
 ### 4. Blameless Post-Mortem
 
