@@ -36,10 +36,20 @@ echo "Installed $(ls "$REPO_DIR/agents/" | wc -l | tr -d ' ') agents."
 # 4. Sync skills library
 echo "[4/5] Syncing skills library..."
 mkdir -p "$CLAUDE_DIR/skills"
+
+# Migrate old wrong-path installs (skills/claude-skills → skills/)
+OLD_SKILLS="$CLAUDE_DIR/skills/claude-skills"
+if [ -d "$OLD_SKILLS" ] && [ ! -d "$SKILLS_DIR/.git" ]; then
+  echo "Migrating skills from old path (skills/claude-skills → skills/)..."
+  cp -r "$OLD_SKILLS"/. "$SKILLS_DIR/"
+  rm -rf "$OLD_SKILLS"
+  echo "Migration done."
+fi
+
 if [ -d "$SKILLS_DIR/.git" ]; then
   echo "Updating existing skills library..."
   cd "$SKILLS_DIR"
-  git pull origin main
+  git pull origin master 2>/dev/null || git pull origin main
 else
   echo "Cloning skills library (first time)..."
   git clone "$SKILLS_REPO" "$SKILLS_DIR"

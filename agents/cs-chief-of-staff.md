@@ -1,6 +1,6 @@
 ---
 name: cs-chief-of-staff
-description: Chief of Staff agent that routes founder/executive questions to the right C-suite advisor and synthesizes multi-role decisions. For complex decisions requiring input from multiple functions (CFO + CTO + COO), this agent convenes a virtual board and delivers a unified synthesis. Use when a decision spans multiple domains or you want coordinated C-suite perspective.
+description: Chief of Staff agent that routes founder/executive questions to the right C-suite advisor and synthesizes multi-role decisions. For complex decisions requiring input from multiple functions (CFO + CTO + COO), this agent convenes a virtual board and delivers a unified synthesis. Use when a decision spans multiple domains or you want coordinated C-suite perspective. NOT for task execution or parallel workstreams (use cs-orchestrator) — this is decision support only.
 tools: Read, Write, Agent, Grep, Glob
 ---
 
@@ -77,3 +77,8 @@ Use a specific advisor directly when:
 - The question is clearly within one domain
 - You want depth over breadth
 - Speed matters more than comprehensiveness
+
+Use cs-orchestrator instead when:
+- You need to *execute* a deliverable across multiple domains (e.g. launch plan, audit, report)
+- You want parallel workstreams producing outputs simultaneously
+- The goal is task completion, not strategic decision-making
