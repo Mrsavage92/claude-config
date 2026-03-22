@@ -41,33 +41,17 @@ The cs-demand-gen-specialist agent bridges the gap between marketing strategy an
    - **Path:** `../../marketing-skill/marketing-demand-acquisition/scripts/calculate_cac.py`
    - **Usage:** `python ../../marketing-skill/marketing-demand-acquisition/scripts/calculate_cac.py campaign-spend.csv customer-data.csv`
    - **Features:** CAC calculation by channel, LTV:CAC ratio, payback period analysis, ROI metrics
+   - **Output format:** Table with columns: Channel | Spend | Customers | CAC | LTV:CAC | Payback (days) | ROI % | Rank
    - **Use Cases:** Budget allocation, channel performance evaluation, campaign ROI analysis
 
 **Note:** Additional tools (demand_gen_analyzer.py, funnel_optimizer.py) planned for future releases per marketing roadmap.
 
 ### Knowledge Bases
 
-1. **Attribution Guide**
-   - **Location:** `../../marketing-skill/marketing-demand-acquisition/references/attribution-guide.md`
-   - **Content:** Marketing attribution models, channel attribution, ROI measurement frameworks
-   - **Use Case:** Campaign attribution, channel performance analysis, budget justification
-
-2. **Campaign Templates**
-   - **Location:** `../../marketing-skill/marketing-demand-acquisition/references/campaign-templates.md`
-   - **Content:** Reusable campaign structures, launch checklists, multi-channel campaign blueprints
-   - **Use Case:** Campaign planning, rapid campaign setup, standardized launch processes
-
-3. **HubSpot Workflows**
-   - **Location:** `../../marketing-skill/marketing-demand-acquisition/references/hubspot-workflows.md`
-   - **Content:** HubSpot automation workflows, lead nurturing sequences, CRM integration patterns
-   - **Use Case:** Marketing automation, lead scoring, nurture campaign setup
-
-4. **International Playbooks**
-   - **Location:** `../../marketing-skill/marketing-demand-acquisition/references/international-playbooks.md`
-   - **Content:** International market expansion strategies, localization best practices, regional channel optimization
-   - **Use Case:** Global campaign planning, market entry strategy, cross-border demand generation
-
-### Templates
+1. **Attribution Guide** — first-touch, last-touch, linear, time-decay, and data-driven attribution models; when to use each; UTM parameter setup for accurate channel tracking
+2. **Campaign Templates** — reusable structures and launch checklists for paid search, paid social, email, and content campaigns
+3. **HubSpot Workflows** — lead scoring setup, nurture sequence triggers, lifecycle stage transitions, MQL handoff to sales
+4. **International Playbooks** — localisation best practices, regional channel benchmarks, GDPR/privacy compliance for EU campaigns
 
 No asset templates currently available â€” use campaign-templates.md reference for campaign structure guidance.
 
@@ -260,44 +244,25 @@ fi
 
 ## Success Metrics
 
-**Acquisition Metrics:**
-- **Lead Volume:** 20-30% month-over-month growth
-- **MQL Conversion Rate:** 15-25% of total leads qualify as MQLs
-- **CAC (Customer Acquisition Cost):** Decrease by 15-20% with optimization
-- **LTV:CAC Ratio:** Maintain 3:1 or higher ratio
+| Metric | Definition | Target |
+|--------|-----------|--------|
+| Qualified lead volume | Leads meeting ICP criteria (not raw form fills) | 20-30% MoM growth |
+| MQL conversion rate | MQLs / total leads entering nurture | 15-25% |
+| CAC by channel | Channel spend / customers acquired from that channel | Trending down QoQ |
+| LTV:CAC ratio | Customer LTV / blended CAC | > 3:1 |
+| CAC payback period | CAC / (monthly ARPU × gross margin %) | < 12 months |
+| Landing page CVR | Form submissions / unique visitors | > 25% (optimised) |
+| MQL → SQL rate | SQLs / MQLs (joint with sales) | 40-50% |
+| Pipeline sourced | % of total pipeline sourced by demand gen | 50-70% |
 
-**Channel Performance:**
-- **Paid Search:** CTR 3-5%, conversion rate 5-10%
-- **Paid Social:** CTR 1-2%, CPL (cost per lead) benchmarked by industry
-- **Content Marketing:** 30-40% of organic traffic converts to leads
-- **Email Campaigns:** Open rate 20-30%, click rate 3-5%, conversion rate 2-5%
-
-**Funnel Optimization:**
-- **Landing Page Conversion:** 25-40% conversion rate on optimized pages
-- **Form Completion:** 60-80% of visitors who start form complete it
-- **Lead Quality:** 40-50% of MQLs convert to SQLs
-
-**Business Impact:**
-- **Pipeline Contribution:** Demand gen accounts for 50-70% of sales pipeline
-- **Revenue Attribution:** Track $X in closed-won revenue to demand gen campaigns
-- **Payback Period:** CAC recovered within 6-12 months
+**Channel benchmarks:**
+- Paid Search: CTR 3-5%, landing page CVR 5-10%
+- Paid Social (LinkedIn B2B): CTR 0.5-1%, CPL varies by industry
+- Email nurture: Open 20-30%, click 3-5%, lead-to-MQL 2-5%
 
 ## Related Agents
 
-- [cs-content-creator](cs-content-creator.md) - Content creation for demand gen campaigns
-- cs-product-marketing - Product positioning and messaging (planned)
-- cs-growth-marketer - Growth hacking and viral acquisition (planned)
-
-## References
-
-- **Skill Documentation:** [../../marketing-skill/marketing-demand-acquisition/SKILL.md](../../marketing-skill/marketing-demand-acquisition/SKILL.md)
-- **Marketing Domain Guide:** [../../marketing-skill/CLAUDE.md](../../marketing-skill/CLAUDE.md)
-- **Agent Development Guide:** [../CLAUDE.md](../CLAUDE.md)
-- **Marketing Roadmap:** [../../marketing-skill/marketing_skills_roadmap.md](../../marketing-skill/marketing_skills_roadmap.md)
-
----
-
-**Last Updated:** November 5, 2025
-**Sprint:** sprint-11-05-2025 (Day 2)
-**Status:** Production Ready
-**Version:** 1.0
+- **cs-content-creator** — writes the ad copy, landing page copy, and lead magnet content
+- **cs-cmo-advisor** — marketing strategy, positioning, growth model selection (CMO owns MQL targets; demand gen executes)
+- **cs-growth-strategist** — what happens after the MQL: pipeline, churn, expansion
+- **cs-seo-specialist** — organic search strategy complementing paid acquisition

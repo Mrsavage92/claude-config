@@ -176,9 +176,31 @@ Smoke tests → Manual gate (prod) → Prod deploy → Health check
 - < 5 min deployment time from merge to production
 - DR test: actual RTO within 10% of target RTO
 
+## Scope Boundaries
+
+| Topic | cs-devops | cs-sre | cs-senior-engineer |
+|-------|-----------|--------|-------------------|
+| DR planning (Terraform, infra) | ✅ | — | — |
+| DR readiness (SLOs, error budget) | — | ✅ | — |
+| CI/CD pipeline architecture | ✅ | — | — |
+| CI/CD code quality gates & test strategy | — | — | ✅ |
+| Kubernetes provisioning | ✅ | — | — |
+| Kubernetes alert tuning | — | ✅ | — |
+| App performance (profiling, code) | — | — | ✅ |
+
+## Common Pitfalls
+
+- **Hardcoded credentials in `.tfvars`** — use `variable {}` + secrets manager or environment injection
+- **Shared Terraform state without locking** — always use DynamoDB (AWS) or Cloud Storage (GCP) for state locking
+- **Root module doing everything** — modularise early; flat Terraform is impossible to reuse
+- **No tagging policy** — untagged resources can't be cost-attributed; enforce via CI policy gate
+- **Missing resource limits in Kubernetes** — pods without `requests`/`limits` will OOM-kill neighbours
+- **Latest image tag in production** — pin to SHA; `latest` makes rollbacks impossible
+- **Staging ≠ production** — if staging uses different instance sizes or regions, DR tests mean nothing
+
 ## Related Agents
 
-- **cs-sre** — SLO/SLI, error budgets, post-mortems, on-call design
-- **cs-senior-engineer** — application code, architecture decisions, API design
+- **cs-sre** — SLO/SLI, error budgets, post-mortems, on-call design (reliability layer on top of DevOps infra)
+- **cs-senior-engineer** — application code, architecture decisions, code quality gates in CI/CD
 - **cs-audit-specialist** — compliance audits, security posture review
 - **observability-designer** — SLI/SLO design, alert strategy, runbook templates

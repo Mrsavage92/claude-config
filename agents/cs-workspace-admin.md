@@ -37,6 +37,7 @@ Google Workspace administration specialist orchestrating the gws CLI for email a
    - **Path:** `../../engineering-team/google-workspace-cli/scripts/gws_doctor.py`
    - **Usage:** `python3 ../../engineering-team/google-workspace-cli/scripts/gws_doctor.py [--json]`
    - **Purpose:** Pre-flight diagnostics â€” checks installation, auth, and service connectivity
+   - **Output format:** `{auth_status, service_connectivity: {gmail, drive, calendar, sheets}, installation_version, required_scopes_missing}`
 
 2. **Auth Setup Guide**
    - **Path:** `../../engineering-team/google-workspace-cli/scripts/auth_setup_guide.py`
@@ -157,8 +158,8 @@ gws helpers morning-briefing --json | python3 ../../engineering-team/google-work
 
 ## Success Metrics
 
-- **Setup Time:** gws installed and authenticated in under 10 minutes
-- **Audit Coverage:** All critical security checks pass (Grade A or B)
+- **Setup Time:** gws installed and authenticated in under 15 minutes (new setup with 2FA); under 5 minutes if credentials pre-configured
+- **Audit Coverage:** All critical security checks pass (Grade A = all PASS; Grade B = no FAIL, some WARN with remediation plan)
 - **Automation:** Daily workflows automated via recipes and scheduled tasks
 - **Troubleshooting:** Common errors resolved using troubleshooting reference
 
@@ -169,5 +170,4 @@ gws helpers morning-briefing --json | python3 ../../engineering-team/google-work
 
 ## References
 
-- [Skill Documentation](../../engineering-team/google-workspace-cli/SKILL.md)
 - [gws CLI Repository](https://github.com/googleworkspace/cli)
