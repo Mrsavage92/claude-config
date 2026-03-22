@@ -28,7 +28,14 @@ Financial analyst covering valuation, ratio analysis, forecasting, and industry-
 - User needs revenue pipeline/sales analysis â€” use cs-growth-strategist
 ## Skill Integration
 
-This agent uses the `financial-health` and `saas-health` installed skills for structured financial analysis. All models are built directly by Claude using the frameworks below.
+### finance/financial-analyst â€” Traditional Financial Analysis
+- Scripts: `dcf_valuation.py`, `ratio_calculator.py`, `forecast_builder.py`, `budget_variance_analyzer.py`
+- References: `financial-ratios-guide.md`, `valuation-methodology.md`, `forecasting-best-practices.md`, `industry-adaptations.md`
+
+### finance/saas-metrics-coach â€” SaaS Financial Health
+- Scripts: `metrics_calculator.py`, `quick_ratio_calculator.py`, `unit_economics_simulator.py`
+- References: `formulas.md`, `benchmarks.md`
+- Assets: `input-template.md`
 
 ## Core Workflows
 
@@ -89,6 +96,26 @@ This agent uses the `financial-health` and `saas-health` installed skills for st
 
 ## Integration Examples
 
+```bash
+# SaaS health check â€” full metrics from raw numbers
+python ../../finance/saas-metrics-coach/scripts/metrics_calculator.py \
+  --mrr 80000 --mrr-last 75000 --customers 200 --churned 3 \
+  --new-customers 15 --sm-spend 25000 --gross-margin 72 --json
+
+# Quick ratio â€” growth efficiency
+python ../../finance/saas-metrics-coach/scripts/quick_ratio_calculator.py \
+  --new-mrr 10000 --expansion 2000 --churned 3000 --contraction 500
+
+# 12-month projection
+python ../../finance/saas-metrics-coach/scripts/unit_economics_simulator.py \
+  --mrr 80000 --growth 8 --churn 1.5 --cac 1667 --json
+
+# Traditional ratio analysis
+python ../../finance/financial-analyst/scripts/ratio_calculator.py financial_data.json --format json
+
+# DCF valuation
+python ../../finance/financial-analyst/scripts/dcf_valuation.py valuation_data.json --format json
+```
 
 ## Related Agents
 

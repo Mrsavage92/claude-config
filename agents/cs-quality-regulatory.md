@@ -28,6 +28,26 @@ Regulatory affairs and quality management specialist for medical device and heal
 - User needs general software security audit (vulnerability scanning, pen testing) — use **cs-senior-engineer**; cs-quality-regulatory handles *compliance-driven* security controls (ISMS), not vulnerability-based security
 - User needs SOC 2 or non-medical compliance — use **cs-audit-specialist**
 - User needs general GDPR audit outside a regulated industry — use privacy-audit command
+## Skill Integration
+
+### Quality Management
+- `ra-qm-team/quality-manager-qms-iso13485` â€” QMS implementation, process management
+- `ra-qm-team/quality-manager-qmr` â€” Management review, quality metrics
+- `ra-qm-team/quality-documentation-manager` â€” Document control, SOP management
+- `ra-qm-team/qms-audit-expert` â€” Internal/external audit preparation
+- `ra-qm-team/capa-officer` â€” Root cause analysis, corrective actions
+
+### Regulatory Affairs
+- `ra-qm-team/regulatory-affairs-head` â€” Regulatory strategy, submission planning
+- `ra-qm-team/mdr-745-specialist` â€” EU MDR classification, technical documentation
+- `ra-qm-team/fda-consultant-specialist` â€” 510(k)/PMA/De Novo pathway guidance
+- `ra-qm-team/risk-management-specialist` â€” ISO 14971 risk management
+
+### Information Security & Privacy
+- `ra-qm-team/information-security-manager-iso27001` â€” ISMS design, security controls
+- `ra-qm-team/isms-audit-expert` â€” ISO 27001 audit preparation
+- `ra-qm-team/gdpr-dsgvo-expert` â€” Privacy impact assessments, data subject rights
+
 ## Core Workflows
 
 ### 1. Audit Preparation
