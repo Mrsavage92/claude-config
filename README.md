@@ -4,8 +4,8 @@ Shared source of truth for Claude Code configuration across all machines.
 
 ## What's in here
 
-- `commands/` — 61 slash commands (installed to `~/.claude/commands/`)
-- `agents/` — 60 specialist agents (installed to `~/.claude/agents/`)
+- `commands/` — 41 slash commands (installed to `~/.claude/commands/`)
+- `agents/` — 59 specialist agents (installed to `~/.claude/agents/`)
 - `settings-template.json` — settings structure without secrets
 - `sync.sh` — Mac/Linux sync script
 - `sync.ps1` — Windows sync script
