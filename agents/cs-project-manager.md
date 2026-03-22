@@ -34,69 +34,103 @@ The cs-project-manager agent bridges the gap between project execution and strat
 
 ### Senior PM
 
+**Skill Location:** `../../project-management/senior-pm/`
 
 **Python Tools:**
 
 1. **Project Health Dashboard**
    - **Purpose:** Generate portfolio-level health dashboard with RAG status across all active projects
+   - **Path:** `../../project-management/senior-pm/scripts/project_health_dashboard.py`
+   - **Usage:** `python ../../project-management/senior-pm/scripts/project_health_dashboard.py sample_project_data.json`
    - **Features:** Schedule variance, budget tracking, risk exposure, milestone status, RAG indicators
 
 2. **Risk Matrix Analyzer**
    - **Purpose:** Quantitative risk analysis with probability-impact matrices and Expected Monetary Value (EMV)
+   - **Path:** `../../project-management/senior-pm/scripts/risk_matrix_analyzer.py`
+   - **Usage:** `python ../../project-management/senior-pm/scripts/risk_matrix_analyzer.py risks.json`
    - **Features:** Risk scoring, heat map generation, mitigation tracking, EMV calculation
 
 3. **Resource Capacity Planner**
    - **Purpose:** Team resource allocation and capacity forecasting across sprints and projects
+   - **Path:** `../../project-management/senior-pm/scripts/resource_capacity_planner.py`
+   - **Usage:** `python ../../project-management/senior-pm/scripts/resource_capacity_planner.py team_data.json`
    - **Features:** Utilization analysis, over-allocation detection, capacity forecasting, cross-project balancing
 
 **Knowledge Bases:**
 
+- `../../project-management/senior-pm/references/portfolio-prioritization-models.md` -- WSJF, MoSCoW, Cost of Delay, portfolio scoring frameworks
+- `../../project-management/senior-pm/references/risk-management-framework.md` -- Risk identification, qualitative/quantitative analysis, response strategies
+- `../../project-management/senior-pm/references/portfolio-kpis.md` -- KPI definitions, tracking cadences, executive reporting metrics
 
 **Templates:**
 
+- `../../project-management/senior-pm/assets/executive_report_template.md` -- Executive status report with RAG, risks, decisions needed
+- `../../project-management/senior-pm/assets/project_charter_template.md` -- Project charter with scope, objectives, constraints, stakeholders
+- `../../project-management/senior-pm/assets/raci_matrix_template.md` -- Responsibility assignment matrix for cross-functional teams
 
 ### Scrum Master
 
+**Skill Location:** `../../project-management/scrum-master/`
 
 **Python Tools:**
 
 1. **Sprint Health Scorer**
    - **Purpose:** Quantitative sprint health assessment across scope, velocity, quality, and team morale
+   - **Path:** `../../project-management/scrum-master/scripts/sprint_health_scorer.py`
+   - **Usage:** `python ../../project-management/scrum-master/scripts/sprint_health_scorer.py sample_sprint_data.json`
    - **Features:** Multi-dimensional scoring (0-100), trend analysis, health indicators, actionable recommendations
 
 2. **Velocity Analyzer**
    - **Purpose:** Historical velocity analysis with forecasting and confidence intervals
+   - **Path:** `../../project-management/scrum-master/scripts/velocity_analyzer.py`
+   - **Usage:** `python ../../project-management/scrum-master/scripts/velocity_analyzer.py sprint_history.json`
    - **Features:** Rolling averages, standard deviation, sprint-over-sprint trends, capacity prediction
 
 3. **Retrospective Analyzer**
    - **Purpose:** Structured retrospective analysis with action item tracking and theme extraction
+   - **Path:** `../../project-management/scrum-master/scripts/retrospective_analyzer.py`
+   - **Usage:** `python ../../project-management/scrum-master/scripts/retrospective_analyzer.py retro_notes.json`
    - **Features:** Theme clustering, sentiment analysis, action item extraction, trend tracking across sprints
 
 **Knowledge Bases:**
 
+- `../../project-management/scrum-master/references/retro-formats.md` -- Start/Stop/Continue, 4Ls, Sailboat, Mad/Sad/Glad, Starfish formats
+- `../../project-management/scrum-master/references/team-dynamics-framework.md` -- Tuckman stages, psychological safety, conflict resolution
+- `../../project-management/scrum-master/references/velocity-forecasting-guide.md` -- Monte Carlo simulation, confidence ranges, capacity planning
 
 **Templates:**
 
+- `../../project-management/scrum-master/assets/sprint_report_template.md` -- Sprint review report with burndown, velocity, demo notes
+- `../../project-management/scrum-master/assets/team_health_check_template.md` -- Spotify-style team health check across 8 dimensions
 
 ### Jira Expert
 
+**Skill Location:** `../../project-management/jira-expert/`
 
 **Knowledge Bases:**
 
+- `../../project-management/jira-expert/references/jql-examples.md` -- JQL query patterns for backlog grooming, sprint reporting, SLA tracking
+- `../../project-management/jira-expert/references/automation-examples.md` -- Jira automation rule templates for common workflows
+- `../../project-management/jira-expert/references/AUTOMATION.md` -- Comprehensive automation guide with triggers, conditions, actions
+- `../../project-management/jira-expert/references/WORKFLOWS.md` -- Workflow design patterns, transition rules, validators, post-functions
 
 ### Confluence Expert
 
+**Skill Location:** `../../project-management/confluence-expert/`
 
 **Knowledge Bases:**
 
+- `../../project-management/confluence-expert/references/templates.md` -- Page templates for sprint plans, meeting notes, decision logs, architecture docs
 
 ### Atlassian Admin
 
+**Skill Location:** `../../project-management/atlassian-admin/`
 
 Covers user provisioning, permission schemes, project configuration, and integration setup. No scripts or references yet -- relies on SKILL.md workflows.
 
 ### Atlassian Templates
 
+**Skill Location:** `../../project-management/atlassian-templates/`
 
 Covers blueprint creation, custom page layouts, and reusable Confluence/Jira components. No scripts or references yet -- relies on SKILL.md workflows.
 
@@ -109,28 +143,38 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 **Steps:**
 
 1. **Analyze Velocity History** - Review past sprint performance to set realistic capacity:
+   ```bash
+   python ../../project-management/scrum-master/scripts/velocity_analyzer.py sprint_history.json
+   ```
    - Review rolling average velocity and standard deviation
    - Identify trends (accelerating, decelerating, stable)
    - Set sprint capacity at 80% of average velocity (buffer for unknowns)
 
 2. **Query Backlog via JQL** - Use jira-expert JQL patterns to pull prioritized candidates:
+   - Reference: `../../project-management/jira-expert/references/jql-examples.md`
    - Filter by priority, story points estimated, team assignment
    - Identify blocked items, external dependencies, carry-overs from previous sprint
 
 3. **Check Resource Availability** - Verify team capacity for the sprint window:
+   ```bash
+   python ../../project-management/senior-pm/scripts/resource_capacity_planner.py team_data.json
+   ```
    - Account for PTO, holidays, shared resources
    - Flag over-allocated team members
    - Adjust sprint capacity based on actual availability
 
 4. **Select Sprint Backlog** - Commit items within capacity:
+   - Apply WSJF or priority-based selection (ref: `../../project-management/senior-pm/references/portfolio-prioritization-models.md`)
    - Ensure sprint goal alignment -- every item should contribute to 1-2 goals
    - Include 10-15% capacity for bug fixes and operational work
 
 5. **Document Sprint Plan** - Create Confluence sprint plan page:
+   - Use template from `../../project-management/confluence-expert/references/templates.md`
    - Include sprint goal, committed stories, capacity breakdown, risks
    - Link to Jira sprint board for live tracking
 
 6. **Set Up Sprint Tracking** - Configure dashboards and automation:
+   - Create burndown/burnup dashboard (ref: `../../project-management/jira-expert/references/AUTOMATION.md`)
    - Set up daily standup reminder automation
    - Configure sprint scope change alerts
 
@@ -139,6 +183,14 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 **Time Estimate:** 2-4 hours for complete sprint planning session (including backlog refinement)
 
 **Example:**
+```bash
+# Full sprint planning workflow
+python ../../project-management/scrum-master/scripts/velocity_analyzer.py sprint_history.json > velocity_report.txt
+python ../../project-management/senior-pm/scripts/resource_capacity_planner.py team_data.json > capacity_report.txt
+cat velocity_report.txt
+cat capacity_report.txt
+# Use velocity average and capacity data to commit sprint items
+```
 
 ### Workflow 2: Portfolio Health Review
 
@@ -153,27 +205,38 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
    - Quality metrics (defect rates, test coverage)
 
 2. **Generate Health Dashboard** - Run project health analysis:
+   ```bash
+   python ../../project-management/senior-pm/scripts/project_health_dashboard.py portfolio_data.json
+   ```
    - Review per-project RAG status (Red/Amber/Green)
    - Identify projects requiring intervention
    - Track schedule and budget variance percentages
 
 3. **Analyze Risk Exposure** - Quantify portfolio-level risk:
+   ```bash
+   python ../../project-management/senior-pm/scripts/risk_matrix_analyzer.py portfolio_risks.json
+   ```
    - Calculate EMV for each risk
    - Identify top-10 risks by exposure
    - Review mitigation plan progress
    - Flag risks with no assigned owner
 
 4. **Review Resource Utilization** - Check cross-project allocation:
+   ```bash
+   python ../../project-management/senior-pm/scripts/resource_capacity_planner.py all_teams.json
+   ```
    - Identify over-allocated individuals (>100% utilization)
    - Find under-utilized capacity for rebalancing
    - Forecast resource needs for next quarter
 
 5. **Prepare Executive Report** - Assemble findings into report:
+   - Use template: `../../project-management/senior-pm/assets/executive_report_template.md`
    - Include RAG summary, risk heatmap, resource utilization chart
    - Highlight decisions needed from leadership
    - Provide recommendations with supporting data
 
 6. **Publish to Confluence** - Create executive dashboard page:
+   - Reference KPI definitions from `../../project-management/senior-pm/references/portfolio-kpis.md`
    - Embed Jira macros for live data
    - Set up weekly refresh cadence
 
@@ -182,6 +245,15 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 **Time Estimate:** 3-5 hours for complete portfolio review (monthly cadence recommended)
 
 **Example:**
+```bash
+# Portfolio health review automation
+python ../../project-management/senior-pm/scripts/project_health_dashboard.py portfolio_data.json > health_dashboard.txt
+python ../../project-management/senior-pm/scripts/risk_matrix_analyzer.py portfolio_risks.json > risk_report.txt
+python ../../project-management/senior-pm/scripts/resource_capacity_planner.py all_teams.json > resource_report.txt
+cat health_dashboard.txt
+cat risk_report.txt
+cat resource_report.txt
+```
 
 ### Workflow 3: Retrospective and Continuous Improvement
 
@@ -190,11 +262,15 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 **Steps:**
 
 1. **Gather Sprint Metrics** - Collect quantitative data before the retro:
+   ```bash
+   python ../../project-management/scrum-master/scripts/sprint_health_scorer.py sprint_data.json
+   ```
    - Review sprint health score (0-100)
    - Identify scoring dimensions that dropped (scope, velocity, quality, morale)
    - Compare against previous sprint scores for trend analysis
 
 2. **Select Retro Format** - Choose format based on team needs:
+   - Reference: `../../project-management/scrum-master/references/retro-formats.md`
    - **Start/Stop/Continue**: General-purpose, good for new teams
    - **4Ls (Liked/Learned/Lacked/Longed For)**: Focuses on learning and growth
    - **Sailboat**: Visual metaphor for anchors (blockers) and wind (accelerators)
@@ -205,8 +281,12 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
    - Present sprint metrics as context (not judgment)
    - Time-box each section (5 min brainstorm, 10 min discuss, 5 min vote)
    - Use dot voting to prioritize discussion topics
+   - Reference team dynamics from `../../project-management/scrum-master/references/team-dynamics-framework.md`
 
 4. **Analyze Retro Output** - Extract structured insights:
+   ```bash
+   python ../../project-management/scrum-master/scripts/retrospective_analyzer.py retro_notes.json
+   ```
    - Identify recurring themes across sprints
    - Cluster related items into improvement areas
    - Track action item completion from previous retros
@@ -218,6 +298,7 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
    - Add action items to next sprint backlog
 
 6. **Document in Confluence** - Publish retro summary:
+   - Use sprint report template: `../../project-management/scrum-master/assets/sprint_report_template.md`
    - Include sprint health score, retro themes, action items, metrics trends
    - Link to previous retro pages for longitudinal tracking
 
@@ -231,6 +312,15 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 **Time Estimate:** 1.5-2 hours (30 min prep + 60 min retro + 30 min documentation)
 
 **Example:**
+```bash
+# Pre-retro data collection
+python ../../project-management/scrum-master/scripts/sprint_health_scorer.py sprint_data.json > health_score.txt
+python ../../project-management/scrum-master/scripts/velocity_analyzer.py sprint_history.json > velocity_trend.txt
+cat health_score.txt
+# Use health score insights to guide retro discussion
+python ../../project-management/scrum-master/scripts/retrospective_analyzer.py retro_notes.json > retro_analysis.txt
+cat retro_analysis.txt
+```
 
 ### Workflow 4: Jira/Confluence Setup for New Teams
 
@@ -251,18 +341,22 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
    - Define priority scheme and SLA targets
 
 3. **Design Workflows** - Build workflows matching team process:
+   - Reference: `../../project-management/jira-expert/references/WORKFLOWS.md`
    - Map states: Backlog > Ready > In Progress > Review > QA > Done
    - Add transitions with conditions (e.g., assignee required for In Progress)
    - Configure validators (e.g., story points required before Done)
    - Set up post-functions (e.g., auto-assign reviewer, notify channel)
 
 4. **Configure Automation** - Set up time-saving automation rules:
+   - Reference: `../../project-management/jira-expert/references/AUTOMATION.md`
+   - Examples from: `../../project-management/jira-expert/references/automation-examples.md`
    - Auto-transition: Move to In Progress when branch created
    - Auto-assign: Rotate assignments based on workload
    - Notifications: Slack alerts for blocked items, SLA breaches
    - Cleanup: Auto-close stale items after 30 days
 
 5. **Set Up Confluence Space** - Create team knowledge base:
+   - Reference: `../../project-management/confluence-expert/references/templates.md`
    - Create space with standard page hierarchy:
      - Home (team overview, quick links)
      - Sprint Plans (per-sprint documentation)
@@ -276,6 +370,7 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
    - Burndown/burnup chart gadget
    - Velocity chart for historical tracking
    - SLA compliance tracker
+   - Use JQL patterns from `../../project-management/jira-expert/references/jql-examples.md`
 
 7. **Onboard Team** - Walk team through the setup:
    - Document workflow rules and why they exist
@@ -291,12 +386,98 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 
 ### Example 1: Weekly Project Status Report
 
+```bash
+#!/bin/bash
+# weekly-status.sh - Automated weekly project status generation
+
+echo "Weekly Project Status - $(date +%Y-%m-%d)"
+echo "============================================"
+
+# Sprint health assessment
+echo ""
+echo "Sprint Health:"
+python ../../project-management/scrum-master/scripts/sprint_health_scorer.py current_sprint.json
+
+# Velocity trend
+echo ""
+echo "Velocity Trend:"
+python ../../project-management/scrum-master/scripts/velocity_analyzer.py sprint_history.json
+
+# Risk exposure
+echo ""
+echo "Active Risks:"
+python ../../project-management/senior-pm/scripts/risk_matrix_analyzer.py active_risks.json
+
+# Resource utilization
+echo ""
+echo "Team Capacity:"
+python ../../project-management/senior-pm/scripts/resource_capacity_planner.py team_data.json
+```
 
 ### Example 2: Sprint Retrospective Pipeline
 
+```bash
+#!/bin/bash
+# retro-pipeline.sh - End-of-sprint analysis pipeline
+
+SPRINT_NUM=$1
+echo "Sprint $SPRINT_NUM Retrospective Pipeline"
+echo "=========================================="
+
+# Step 1: Score sprint health
+echo ""
+echo "1. Sprint Health Score:"
+python ../../project-management/scrum-master/scripts/sprint_health_scorer.py sprint_${SPRINT_NUM}.json > sprint_health.txt
+cat sprint_health.txt
+
+# Step 2: Analyze velocity trend
+echo ""
+echo "2. Velocity Analysis:"
+python ../../project-management/scrum-master/scripts/velocity_analyzer.py velocity_history.json > velocity.txt
+cat velocity.txt
+
+# Step 3: Process retro notes
+echo ""
+echo "3. Retrospective Themes:"
+python ../../project-management/scrum-master/scripts/retrospective_analyzer.py retro_sprint_${SPRINT_NUM}.json > retro_analysis.txt
+cat retro_analysis.txt
+
+echo ""
+echo "Pipeline complete. Review outputs above for retro facilitation."
+```
 
 ### Example 3: Portfolio Dashboard Generation
 
+```bash
+#!/bin/bash
+# portfolio-dashboard.sh - Monthly executive portfolio review
+
+MONTH=$(date +%Y-%m)
+echo "Portfolio Dashboard - $MONTH"
+echo "================================"
+
+# Project health across portfolio
+echo ""
+echo "Project Health (All Active):"
+python ../../project-management/senior-pm/scripts/project_health_dashboard.py portfolio_$MONTH.json > dashboard.txt
+cat dashboard.txt
+
+# Risk heatmap
+echo ""
+echo "Risk Exposure Summary:"
+python ../../project-management/senior-pm/scripts/risk_matrix_analyzer.py risks_$MONTH.json > risks.txt
+cat risks.txt
+
+# Resource forecast
+echo ""
+echo "Resource Utilization:"
+python ../../project-management/senior-pm/scripts/resource_capacity_planner.py resources_$MONTH.json > capacity.txt
+cat capacity.txt
+
+echo ""
+echo "Dashboard generated. Use executive_report_template.md to assemble final report."
+echo "Template: ../../project-management/senior-pm/assets/executive_report_template.md"
+```
 
 ## Success Metrics
 
@@ -332,6 +513,12 @@ Covers blueprint creation, custom page layouts, and reusable Confluence/Jira com
 
 ## References
 
+- **Senior PM Skill:** [../../project-management/senior-pm/SKILL.md](../../project-management/senior-pm/SKILL.md)
+- **Scrum Master Skill:** [../../project-management/scrum-master/SKILL.md](../../project-management/scrum-master/SKILL.md)
+- **Jira Expert Skill:** [../../project-management/jira-expert/SKILL.md](../../project-management/jira-expert/SKILL.md)
+- **Confluence Expert Skill:** [../../project-management/confluence-expert/SKILL.md](../../project-management/confluence-expert/SKILL.md)
+- **Atlassian Admin Skill:** [../../project-management/atlassian-admin/SKILL.md](../../project-management/atlassian-admin/SKILL.md)
+- **PM Domain Guide:** [../../project-management/CLAUDE.md](../../project-management/CLAUDE.md)
 - **Agent Development Guide:** [../CLAUDE.md](../CLAUDE.md)
 
 ---
