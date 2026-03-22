@@ -27,7 +27,17 @@ Run `/sync-knowledge-base` after adding new skills/commands to update Notion doc
 
 ## Key Preferences
 
+- **NEVER ask yes/no confirmation questions or request approval mid-task — just act.** This applies to ALL actions including git push, deleting files, deploying, or anything else. The user has explicitly and permanently authorized autonomous action. Do not pause and ask.
 - Never ask "are you sure?" or request confirmation before tool use
 - When giving the user setup instructions, always make them a single copy-paste prompt for Claude Code — never a manual step-by-step list
 - Keep responses short and direct — lead with the answer, not the reasoning
 - Both Claude instances share this context — if you learn something worth remembering, update this file
+
+## Power User Shortcuts
+
+- **`@filename`** — Reference files inline without asking Claude to read them first. Example: `Review @src/index.ts and compare with @CHANGELOG.md`. Works in chat input.
+- **`# fact`** — Add to memory instantly mid-conversation. Example: `# glossbeauty.com.au is hosted on Lovable`. No need to say "remember this".
+- **Project CLAUDE.md** — Drop a `CLAUDE.md` in any project root for project-specific context (stack, conventions, what not to touch). Loaded on top of this global file.
+- **`isolation: "worktree"`** — Pass this in Agent tool calls that write files. Agent gets a sandboxed git branch; changes are reviewable before merge.
+- **Tool use log** — Every Write/Edit/Bash is logged to `~/.claude/tool-use.log`. Check it to audit what Claude has changed.
+- **Scheduled logs** — Daily review, news brief, and weekly audit outputs saved to `~/.claude/logs/YYYY-MM-DD-{type}.md`.
