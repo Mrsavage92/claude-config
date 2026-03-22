@@ -52,6 +52,35 @@ Run the specific skill for the domain requested. Produces a standalone report fo
 ### 3. Client Deliverable
 Combine audit output with PDF report skills (`techaudit-report-pdf`, `security-report-pdf`, `geo-report-pdf`, `market-report-pdf`) for polished client-facing documents.
 
+## Cross-Suite Integration
+
+When running a full audit, findings across suites compound. Use this integration matrix to escalate:
+
+| Finding | Primary Suite | Also Flags |
+|---------|--------------|-----------|
+| Missing HTTPS / weak headers | Security | Technical, Privacy |
+| No cookie consent | Privacy | GEO (AI citability), Marketing |
+| Slow Core Web Vitals | Technical | Marketing (conversion), GEO |
+| Missing schema markup | GEO | Marketing (rich results) |
+| No robots.txt AI rules | GEO | Security (crawler exposure) |
+| High attrition on Glassdoor | Employer Brand | Reputation |
+| No privacy policy | Privacy | Legal risk, GEO |
+
+**Cross-suite action priority:** Security + Privacy fixes first (legal risk), then Technical (revenue impact), then GEO + Marketing (growth).
+
+## Output Standards
+
+- **Single-suite audit** — scored findings (Pass/Warn/Fail), prioritised action list, benchmark comparison
+- **Full audit** — executive summary score by suite, cross-suite issue matrix, integrated 30-day action plan
+- **Client deliverable** — PDF report via suite-specific PDF skill, branded and client-ready
+
+## Success Metrics
+
+- Full audit completed in < 20 min (parallel suite execution)
+- Action plan items ranked by impact/effort
+- Cross-suite issues identified and surfaced (not siloed per suite)
+- PDF report generated for client delivery where requested
+
 ## Related Agents
 
 - **cs-seo-specialist** — ongoing SEO strategy after audit
