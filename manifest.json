@@ -3,9 +3,11 @@
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "a11y-audit.md": "becadec2",
+    "ad-creative.md": "5112871e",
     "agent-brief.md": "f0a9e19f",
     "api-docs.md": "4cd6a7bd",
     "architecture.md": "6cb8b2ce",
+    "brand-dna.md": "3175d642",
     "changelog.md": "b1810e99",
     "code-reviewer.md": "a7a32cbe",
     "code-to-prd.md": "445637ac",
@@ -196,7 +198,7 @@
     "techaudit-speed"
   ],
   "counts": {
-    "commands": 59,
+    "commands": 61,
     "agents": 60,
     "skills": 69
   }
