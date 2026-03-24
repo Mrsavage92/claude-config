@@ -158,6 +158,7 @@
     "privacy-policy",
     "privacy-report-pdf",
     "project-doc",
+    "project-manager",
     "project-refresh",
     "project-review",
     "reputation",
@@ -181,6 +182,6 @@
   "counts": {
     "commands": 41,
     "agents": 59,
-    "skills": 71
+    "skills": 72
   }
 }
