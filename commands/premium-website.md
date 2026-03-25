@@ -4,6 +4,15 @@ The premium website suite is the full set of web-* skills that together replace 
 
 **saas-build reads this file once at Phase 0. All rules here apply to every phase automatically. When the suite is updated, only this file needs changing.**
 
+## Maintenance Rule
+
+Whenever a web-* skill is created or meaningfully updated (new non-negotiable, new MCP call, new checklist item, new pattern), the session that made the change MUST:
+1. Update the Skills table below if a new skill was added
+2. Update the relevant section in this file (Landing Page, Performance, Quality Bar, or Pre-Deploy) to reflect the new rule
+3. Push both files to GitHub in the same commit
+
+This file is the contract. If a rule lives only in an individual skill file and not here, saas-build will not enforce it.
+
 ---
 
 ## Skills in the Suite
