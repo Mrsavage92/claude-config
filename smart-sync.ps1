@@ -75,13 +75,38 @@ try {
         Copy-Item "$ClaudeDir\CLAUDE.md" "$RepoDir\global-context.md" -Force
     }
 
-    git add agents/ commands/ global-context.md 2>>$LOG
+    # Regenerate manifest.json with current hashes + skills list
+    try {
+        python3 -c "
+import os,json,hashlib
+home=os.environ['USERPROFILE']
+repo=os.path.join(home,'Documents','Git','claude-config')
+cmds=os.path.join(home,'.claude','commands')
+agts=os.path.join(home,'.claude','agents')
+skls=os.path.join(home,'.claude','skills')
+def md5(p):
+    with open(p,'rb') as f: return hashlib.md5(f.read()).hexdigest()
+ch={f:md5(os.path.join(cmds,f)) for f in os.listdir(cmds) if f.endswith('.md')}
+ah={f:md5(os.path.join(agts,f)) for f in os.listdir(agts) if f.endswith('.md')}
+sk=sorted([d for d in os.listdir(skls) if not d.startswith('.')])
+m={'last_updated':'$(Get-Date -Format yyyy-MM-dd)','generated_by':'$MACHINE','commands':ch,'agents':ah,'skills':sk,'counts':{'commands':len(ch),'agents':len(ah),'skills':len(sk)}}
+json.dump(m,open(os.path.join(repo,'manifest.json'),'w'),indent=2)
+" 2>>$LOG
+    } catch { "[$((Get-Date).ToString())][stop][manifest] $_" >> $LOG }
+
+    git add agents/ commands/ global-context.md manifest.json 2>>$LOG
     git diff --cached --quiet
-    if ($LASTEXITCODE -ne 0) { git commit -m $MSG 2>>$LOG }
+    $hasChanges = $LASTEXITCODE -ne 0
+    if ($hasChanges) { git commit -m $MSG 2>>$LOG }
 
     git fetch origin main 2>>$LOG
     git rebase origin/main 2>>$LOG
     git push origin main 2>>$LOG
+
+    # Update Notion if anything changed
+    if ($hasChanges) {
+        Start-Process python3 -ArgumentList "`"$env:USERPROFILE\Documents\notion_sync.py`"" -WindowStyle Hidden
+    }
 
 } catch { "[$((Get-Date).ToString())][stop][config] $_" >> $LOG }
 
