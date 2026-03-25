@@ -45,12 +45,13 @@
     "usage-report.md": "f694988d44e61e12e068b98bc16ab359",
     "user-story.md": "43ceaa09d475b8fbdaa1c807385ec68b",
     "validate.md": "4cf78fb7eb679c3a0561f7f396f8a581",
+    "web-animations.md": "c71228bbc71c189259185bc76d818200",
     "web-component.md": "732f78e64b0f6e7a12d48620373cc1d4",
     "web-deploy.md": "b3ab6785419109409eac870e1f76b7be",
     "web-fix.md": "b2f032452192621d66452687d7576647",
-    "web-page.md": "3cc7cfe99bbae81ee3b64c08fdbd4f40",
+    "web-page.md": "a2a07b0a9fd6b2790e2d19c6da38993a",
     "web-review.md": "8c956f13be99204673f8d2f30d7f992a",
-    "web-scaffold.md": "23afcaa21ccce61eccf759fca9da17a7",
+    "web-scaffold.md": "28c0210a08401a3b57aa3bc77f935005",
     "web-scope.md": "11bd5f356a11b44252cd4a0a1d3ed482",
     "web-supabase.md": "1a58fd9e3850f7d96642db26f6e3f376"
   },
@@ -197,7 +198,7 @@
     "web-design-guidelines"
   ],
   "counts": {
-    "commands": 51,
+    "commands": 52,
     "agents": 59,
     "skills": 79
   }
