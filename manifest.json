@@ -42,12 +42,20 @@
     "tech-debt.md": "a76aabdd12d02b7c8ed3bb5bde51092a",
     "usage-report.md": "f694988d44e61e12e068b98bc16ab359",
     "user-story.md": "43ceaa09d475b8fbdaa1c807385ec68b",
-    "validate.md": "4cf78fb7eb679c3a0561f7f396f8a581"
+    "validate.md": "4cf78fb7eb679c3a0561f7f396f8a581",
+    "web-component.md": "732f78e64b0f6e7a12d48620373cc1d4",
+    "web-deploy.md": "cf4f005ccdfc198fcd39dd52d6d2a1a1",
+    "web-fix.md": "b2f032452192621d66452687d7576647",
+    "web-page.md": "e8ead12493a0e180ba9a80e264ff34b8",
+    "web-review.md": "cd6300150127cc1a24e02ad1d5e7a394",
+    "web-scaffold.md": "2f159dd751299e12e4108d0ad5ec0ffa",
+    "web-supabase.md": "1a58fd9e3850f7d96642db26f6e3f376"
   },
   "agents": {
     "agent-designer.md": "61b70b9cace1711a110292e7bcd515b8",
     "api-design-reviewer.md": "30d47930105054dcda691c259d0c4513",
     "codebase-onboarding.md": "6271259451db48f2a57a18616b7da863",
+    "cs-agile-product-owner.md": "c00e9ffd97fd4d24a104ac75d17c040e",
     "cs-ai-advisor.md": "fedacfbc1cc1fdbfb715bdb97eed9377",
     "cs-audit-specialist.md": "517d4c0504cbe234dcb4a0d69bee4f3b",
     "cs-board-advisor.md": "c84819de849939c2d82d6604bc2285b2",
@@ -106,6 +114,7 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
+    ".git",
     "agent-browser",
     "ai-image-generation",
     "ai-ready",
@@ -138,7 +147,6 @@
     "geo-report-pdf",
     "geo-schema",
     "geo-technical",
-    "iso27001",
     "market",
     "market-ads",
     "market-audit",
@@ -187,8 +195,8 @@
     "web-design-guidelines"
   ],
   "counts": {
-    "commands": 41,
-    "agents": 59,
+    "commands": 48,
+    "agents": 60,
     "skills": 79
   }
 }
