@@ -101,6 +101,8 @@ All web skills read `~/.claude/web-system-prompt.md` (the Design DNA) before gen
 
 For animation patterns: read `/web-animations` (4 techniques — Technique 3 STAGGER is the hero standard).
 
+**Suite maintenance rule:** When any web-* skill is created or updated with a new non-negotiable, pattern, or checklist item — update `premium-website.md` in the same session. That file is the contract saas-build reads. If a rule isn't in premium-website.md, saas-build won't enforce it.
+
 ## Power User Shortcuts
 
 - **`@filename`** — Reference files inline without asking Claude to read them first. Example: `Review @src/index.ts and compare with @CHANGELOG.md`. Works in chat input.
