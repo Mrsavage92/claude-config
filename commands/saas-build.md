@@ -112,6 +112,14 @@ Following /web-page rules:
 - Signature color appears max twice per page
 - Typography uses the type scale (not everything at text-sm)
 
+**Landing page non-negotiables (enforce these — do not skip):**
+- Call `mcp__magic__21st_magic_component_inspiration` for animated background BEFORE writing the hero
+- Call `mcp__magic__21st_magic_component_inspiration` for feature cards BEFORE writing the features section
+- Animated background: mandatory. CSS grid pattern minimum, 21st.dev animated canvas preferred. `opacity: 0.15-0.25`, `z-index: -1`.
+- Product visual mockup: mandatory. Never a gradient blob. Built from shadcn primitives: browser chrome (3 dots + URL bar) + sidebar column + stat cards + data table rows. Wrapped in glow div.
+- Hero entrance: Technique 3 STAGGER from web-animations (pill → headline → sub → CTAs → stats → product visual last with 0.6s delay)
+- All below-fold sections: `whileInView` + `viewport={{ once: true }}` from web-animations Technique 2/3
+
 **4c. Per-page self-review (run immediately after building — do not skip)**
 Score these 11 items. If any item fails, fix it before moving to next page:
 
@@ -144,6 +152,9 @@ Run the full /web-review audit. Target score: 38+/40.
 
 Additional checks beyond the standard review:
 - [ ] Landing page exists at `/`
+- [ ] Landing page has animated background (CSS grid minimum, 21st.dev canvas preferred) — not a plain gradient
+- [ ] Landing page hero has product visual mockup (browser chrome + sidebar + stat cards + table rows) — not a blob
+- [ ] Hero uses Technique 3 STAGGER from web-animations (staggered entrance, product visual loads last)
 - [ ] Every empty state on every page has a CTA
 - [ ] Brand color audit: count uses of `text-primary`, `bg-primary`, `border-primary`, `ring-primary` across each page file. Flag any page with > 3 total uses.
 - [ ] Run `npm run build` — confirm clean build, report chunk sizes
