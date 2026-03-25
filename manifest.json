@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-03-24",
+  "last_updated": "2026-03-25",
   "generated_by": "PC-Windows",
   "commands": {
     "a11y-audit.md": "becadec2217a064792f023b8ed197943",
@@ -37,7 +37,7 @@
     "sprint-health.md": "8d7d0a7ae19acc589f3639a1de1f0cc3",
     "sprint-plan.md": "3d5608e1ab0c20f5cc7688f42da0a870",
     "standup.md": "17624eca8e8eab139f0fe71688025cac",
-    "sync-knowledge-base.md": "3768acbee3f18c49d92bbf7c429d8686",
+    "sync-knowledge-base.md": "99bc9a98932d61e048437991f15aee18",
     "tdd.md": "45e07a83d3f7fba85f49a1962b2602cb",
     "tech-debt.md": "a76aabdd12d02b7c8ed3bb5bde51092a",
     "usage-report.md": "f694988d44e61e12e068b98bc16ab359",
@@ -106,6 +106,8 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
+    "agent-browser",
+    "ai-image-generation",
     "ai-ready",
     "ai-ready-adoption",
     "ai-ready-audit",
@@ -113,6 +115,7 @@
     "ai-ready-data",
     "ai-ready-report-pdf",
     "autopilot",
+    "brainstorming",
     "competitive-matrix",
     "employer",
     "employer-audit",
@@ -121,6 +124,7 @@
     "employer-report-pdf",
     "employer-reviews",
     "employer-social",
+    "find-skills",
     "full-audit",
     "geo",
     "geo-audit",
@@ -177,11 +181,13 @@
     "techaudit-audit",
     "techaudit-mobile",
     "techaudit-report-pdf",
-    "techaudit-speed"
+    "techaudit-speed",
+    "vercel-react-best-practices",
+    "web-design-guidelines"
   ],
   "counts": {
     "commands": 41,
     "agents": 59,
-    "skills": 72
+    "skills": 78
   }
 }
