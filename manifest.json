@@ -18,6 +18,7 @@
     "google-workspace.md": "7fc60b980f67da058e66b9dace9dc4dd",
     "handoff.md": "76e25e41df0f116eb864f6bac5ed1cfd",
     "job-description.md": "74464af13998ed81d7c92c00f90376e2",
+    "linkedin-post.md": "24e972fc079cccba12e9b308a2864c30",
     "okr.md": "8bc8c5874b23c342a50b5ea42bc50417",
     "parallel-audit.md": "f379b48cbd6ab03f7f44d509d610bfe3",
     "persona.md": "98381107e06be0c500ac199abc12259f",
@@ -29,6 +30,7 @@
     "project-health.md": "47584fa9305d12addaaa3bf1c339b69b",
     "retro.md": "8fdd33d9e2884f6ec99f1e9eca03a6e5",
     "rice.md": "aefda3a05d2a8492c92dc48efa5db93b",
+    "saas-build.md": "659e38a1d44fb7aaa6a8d13c34600d36",
     "saas-health.md": "0bccebaa8e68632a1b2259c238ed52ce",
     "scaffold.md": "781bbda78f27a3efca54fa4ae31cd62d",
     "scroll-stop-build.md": "abcea540437d613231bdad28c241ff7f",
@@ -44,18 +46,18 @@
     "user-story.md": "43ceaa09d475b8fbdaa1c807385ec68b",
     "validate.md": "4cf78fb7eb679c3a0561f7f396f8a581",
     "web-component.md": "732f78e64b0f6e7a12d48620373cc1d4",
-    "web-deploy.md": "cf4f005ccdfc198fcd39dd52d6d2a1a1",
+    "web-deploy.md": "b3ab6785419109409eac870e1f76b7be",
     "web-fix.md": "b2f032452192621d66452687d7576647",
-    "web-page.md": "e8ead12493a0e180ba9a80e264ff34b8",
-    "web-review.md": "cd6300150127cc1a24e02ad1d5e7a394",
-    "web-scaffold.md": "2f159dd751299e12e4108d0ad5ec0ffa",
+    "web-page.md": "3cc7cfe99bbae81ee3b64c08fdbd4f40",
+    "web-review.md": "8c956f13be99204673f8d2f30d7f992a",
+    "web-scaffold.md": "23afcaa21ccce61eccf759fca9da17a7",
+    "web-scope.md": "11bd5f356a11b44252cd4a0a1d3ed482",
     "web-supabase.md": "1a58fd9e3850f7d96642db26f6e3f376"
   },
   "agents": {
     "agent-designer.md": "61b70b9cace1711a110292e7bcd515b8",
     "api-design-reviewer.md": "30d47930105054dcda691c259d0c4513",
     "codebase-onboarding.md": "6271259451db48f2a57a18616b7da863",
-    "cs-agile-product-owner.md": "c00e9ffd97fd4d24a104ac75d17c040e",
     "cs-ai-advisor.md": "fedacfbc1cc1fdbfb715bdb97eed9377",
     "cs-audit-specialist.md": "517d4c0504cbe234dcb4a0d69bee4f3b",
     "cs-board-advisor.md": "c84819de849939c2d82d6604bc2285b2",
@@ -114,7 +116,6 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
-    ".git",
     "agent-browser",
     "ai-image-generation",
     "ai-ready",
@@ -184,6 +185,7 @@
     "security-email",
     "security-headers",
     "security-report-pdf",
+    "shared",
     "stock-photos",
     "techaudit",
     "techaudit-accessibility",
@@ -195,8 +197,8 @@
     "web-design-guidelines"
   ],
   "counts": {
-    "commands": 48,
-    "agents": 60,
+    "commands": 51,
+    "agents": 59,
     "skills": 79
   }
 }
