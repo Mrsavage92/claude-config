@@ -1,142 +1,164 @@
 # /web-deploy
 
-Build and deploy a web project to Vercel or Railway with environment configuration and domain setup.
+Deploy a web project to Vercel (frontend) and/or Railway (backend) with full environment configuration, smoke testing, and CORS lockdown.
 
 ## When to Use
-- Deploying a project for the first time
-- Pushing updates to production
-- Configuring a custom domain
-- Setting up environment variables on the hosting platform
+- After /web-review scores 38+/40
+- First-time deploy or pushing updates to production
+
+## Pre-Deploy Gate
+Do NOT deploy if:
+- `npm run build` fails
+- /web-review score is below 38/40
+- CORS is still `*` in the backend
+- Any CRITICAL issues from /web-review are unresolved
+
+---
 
 ## Process
 
-### Step 1 — Assess Project State
-Read `package.json` to confirm build script exists. Check for `.env.example` to identify required env vars.
-
-Run build check first:
+### Step 1 — Build Verification
 ```bash
 npm run build
 ```
-If build fails, run `/web-fix` on the errors before proceeding.
+Capture and report all chunk sizes. If any chunk exceeds 250KB gzipped: add it to `vite.config.ts` manualChunks before deploying. Fix the bundle, not the warning limit.
 
-### Step 2 — Choose Platform
+Confirm TypeScript passes with zero errors. Fix any errors — do not deploy with TypeScript failures.
 
-**Vercel** — best for:
-- Static sites and SPAs (React + Vite)
-- Projects with no custom server
-- Fast global CDN, automatic HTTPS
-- Free tier generous for personal projects
+### Step 2 — Pre-Deploy Checklist (all must pass)
 
-**Railway** — best for:
-- Full-stack apps with a Node.js backend
-- Projects needing persistent processes
-- Already using Railway for other services (GrowLocal, AuditHQ)
+```
+Pre-Deploy Gate
+──────────────────────────────────────
+[ ] npm run build succeeds — zero errors
+[ ] No chunk > 250KB gzipped
+[ ] vercel.json exists with SPA rewrites
+[ ] CORS is NOT "*" — locked to specific origin(s)
+[ ] All VITE_* env vars documented in .env.example
+[ ] /web-review score is 38+/40
+[ ] Landing page exists at "/"
+```
 
-### Step 3A — Vercel Deploy
+If any item fails: fix it before proceeding.
+
+### Step 3 — CORS Lockdown (backend only — do before frontend deploy)
+
+Update `main.py` or equivalent to use environment variable:
+```python
+import os
+
+_origins = os.getenv("FRONTEND_URL", "")
+allow_origins = [_origins, "http://localhost:5173"] if _origins else ["*"]
+
+app.add_middleware(CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+Commit and push so Railway auto-deploys the CORS fix before the frontend goes live.
+
+### Step 4 — Vercel Deploy
 
 ```bash
-# First time
-npx vercel --prod
-
-# Subsequent deploys
-npx vercel --prod
+npx vercel --prod --yes
 ```
 
-Or via GitHub integration (preferred):
-1. Push code to GitHub
-2. Import project at vercel.com/new
-3. Framework: Vite (auto-detected)
-4. Build command: `npm run build`
-5. Output directory: `dist`
+Capture the production URL from output. Note both the unique deploy URL and the aliased project URL (https://[project].vercel.app).
 
-**Set env vars in Vercel:**
-Vercel does NOT need VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — these are hardcoded in `src/lib/supabase.ts` (anon key is public by design).
+**If first deploy:** Vercel will auto-detect Vite. Confirm:
+- Framework: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Root directory: [project root or monorepo app path]
 
-If the project uses other env vars (Stripe keys, API keys), add them via:
-```bash
-npx vercel env add STRIPE_SECRET_KEY production
-```
+### Step 5 — Set All Environment Variables in Vercel
 
-**Custom domain:**
-```bash
-npx vercel domains add yourdomain.com
-```
-Then add CNAME record at DNS provider pointing to `cname.vercel-dns.com`
-
-### Step 3B — Railway Deploy
-
-Use Railway MCP or CLI:
+For every variable in `.env.example`, set it now. Do not skip any.
 
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login and link
-railway login
-railway link
-
-# Deploy
-railway up
+npx vercel env add VITE_API_URL production --value https://[railway-url] --yes
 ```
 
-Or via GitHub:
-1. Create new Railway project
-2. Connect GitHub repo
-3. Railway auto-detects Vite and runs `npm run build` + serves `dist/`
+If Railway URL is unknown: log as NEEDS_HUMAN in BUILD-LOG.md with exact steps:
+```
+NEEDS_HUMAN: Set VITE_API_URL in Vercel
+  1. Get Railway production URL from Railway dashboard
+  2. Run: npx vercel env add VITE_API_URL production --value [url] --yes
+  3. Run: npx vercel --prod --yes  (redeploy with env var)
+```
 
-**Set env vars on Railway:**
-Use Railway MCP `mcp__plugin_railway__set_env_var` or:
+### Step 6 — Update FRONTEND_URL in Railway (backend only)
+
+Set the Vercel production URL as FRONTEND_URL in Railway so CORS accepts requests from it. Use Railway GraphQL API or Railway CLI:
 ```bash
-railway variables set VARIABLE_NAME=value
+railway variables --set "FRONTEND_URL=https://[vercel-url]"
 ```
 
-**Custom domain on Railway:**
-Railway dashboard > Settings > Domains > Add Custom Domain
-Add CNAME in DNS provider pointing to Railway's provided hostname.
+If Railway token not available: log as NEEDS_HUMAN with exact steps.
 
-### Step 4 — Post-Deploy Checklist
+### Step 7 — Smoke Test (5 checks — all required)
 
-- [ ] Site loads at production URL
-- [ ] Supabase connection works (test auth flow if applicable)
-- [ ] All routes work (check React Router is not returning 404 on refresh)
-- [ ] Images and assets load correctly
-- [ ] HTTPS is active
-- [ ] Custom domain resolves (if applicable)
+After deploy, verify these manually or by reading page source:
 
-**Fixing React Router 404 on refresh (Vercel):**
-Create `vercel.json` at the **project root** (not `public/`):
-```json
-{
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-}
+```
+Smoke Test — [product URL]
+──────────────────────────────────────
+[ ] 1. Landing page loads — hero visible, CTA button present
+[ ] 2. Sign up flow — creates Supabase user (check auth.users in Supabase dashboard)
+[ ] 3. Onboarding/setup — completes and reaches dashboard
+[ ] 4. Core feature — accessible, shows correct empty state with CTA
+[ ] 5. Settings page — loads, form submits without error
 ```
 
-**Fixing React Router 404 on refresh (Railway):**
-Vite does not support `historyApiFallback` (that is a Webpack option). For Railway, use the `serve` package which handles SPA routing with the `-s` flag.
+If any smoke test fails: investigate and fix before marking deploy done. A deployed product that doesn't work is worse than no product.
 
-Confirm `package.json` has the serve script:
-```json
-"scripts": {
-  "serve": "serve -s dist -l 3000"
-}
+### Step 8 — Bundle Report
+
+Include in deploy output:
+```
+Bundle sizes (gzipped):
+  vendor-react:    XX KB
+  vendor-motion:   XX KB
+  vendor-query:    XX KB
+  vendor-supabase: XX KB
+  [page chunks]:   XX KB each
+  Total:           XX KB
 ```
 
-And `serve` is in devDependencies: `"serve": "^14.2.3"`
+Target: total gzipped < 500KB. All individual chunks < 250KB.
 
-On Railway, set the start command to `npm run serve` and set the `PORT` environment variable to `3000`.
+### Step 9 — Output
 
-### Step 5 — Output
 ```
-Deployed: [project-name]
-URL: https://[project].vercel.app (or railway.app)
-Custom domain: [if configured]
-Platform: Vercel / Railway
-Build: Success
-Status: Live
+Deployed: [product name]
+──────────────────────────────────────────
+Frontend URL:  https://[project].vercel.app
+Backend URL:   https://[service].railway.app (if applicable)
+Custom domain: [if configured / pending DNS]
+
+Build: passed (0 errors)
+/web-review: [score]/40
+Smoke test: [5/5 passed / X failed — see above]
+CORS: locked to [url]
+
+Environment variables set:
+  VITE_API_URL: [set / NEEDS_HUMAN]
+  [others]: [set / NEEDS_HUMAN]
+
+Remaining human actions:
+  [ ] Register domain [domain.com.au] — point DNS CNAME to cname.vercel-dns.com
+  [ ] Switch Stripe to live mode — replace test price IDs in PRICE_MAP
+  [ ] [any other credential-dependent items]
 ```
+
+Update BUILD-LOG.md with deploy summary.
 
 ## Rules
-- Always run `npm run build` locally first — never deploy a broken build
-- Never commit `.env` files — use platform env var UI or CLI
-- Supabase anon key is safe to hardcode in source code (it is a public key by design)
-- For Vite SPAs on any platform: configure URL rewrites to fix React Router 404s
+- Never deploy with /web-review score below 38/40
+- Never deploy with CORS as `*` in production backend
+- Never deploy with TypeScript errors
+- VITE_API_URL must be set in Vercel if the app has a backend — not documented as "to do later"
+- Smoke test is not optional — it is the difference between "deployed" and "working"
+- vercel.json with SPA rewrites is always required for React Router apps on Vercel

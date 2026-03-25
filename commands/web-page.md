@@ -1,121 +1,188 @@
 # /web-page
 
-Build a complete, production-quality page by composing sections and components with enterprise-level design.
+Build one complete, production-quality page with a per-page review loop before moving on.
 
 ## When to Use
-- Adding a new page to an existing project
-- Building: landing page, pricing page, dashboard, auth (sign in/up), settings, about, blog, docs
+- Building any page in an existing scaffolded project
+- Called per-page by /saas-build — not all pages at once
+
+## Critical Rule
+**One page at a time. Build it. Review it. Fix it. Only then move to the next.**
+The old pattern (build all pages, review at the end) produced thin, empty-feeling pages. This skill enforces the per-page loop.
+
+---
 
 ## Process
 
-### Step 1 — Read Design DNA + Project Context
-Read `~/.claude/web-system-prompt.md`. Then read:
-- `src/styles/index.css` (color tokens, fonts)
-- `tailwind.config.ts` (type scale, custom values)
-- `src/components/` directory listing (what already exists — reuse before rebuilding)
+### Step 1 — Read Context
+Read `~/.claude/web-system-prompt.md`.
+Read `SCOPE.md` for the page definition (purpose, data, empty state, loading state, error state, signature element).
+Read `CLAUDE.md` for color job, design decisions.
+Read `src/styles/index.css` and `src/components/` listing.
 
-### Step 2 — Page Type Playbook
+If SCOPE.md does not have a definition for the requested page: define it now (all 5 fields) and add it to SCOPE.md before building.
 
-**Landing Page**
-Structure: Hero > Social Proof (logos) > Features (3-col grid) > How It Works > Testimonials > Pricing > CTA > Footer
-Inspiration study: stripe.com, framer.com, linear.app/landing
-Key elements: gradient mesh hero, animated headline, screenshot/product visual, logo bar, feature cards with icons, pricing table
+### Step 2 — Enforce Page Order
 
-**Dashboard / App**
-Structure: Sidebar nav + Header + Main content area + Stats row + Data tables/charts
-Inspiration study: linear.app, vercel.com/dashboard, planetscale.com
-Key elements: sidebar with icon+label nav, header with search+user menu, stat cards with trend indicators, data tables with sorting
+**Is this a landing page request?**
+YES → build it. This is always valid.
 
-**Auth (Sign In / Sign Up)**
-Structure: Split layout (brand left, form right) OR centered card
-Inspiration study: clerk.com, linear.app/login, vercel.com/login
-Key elements: full-height layout, brand gradient left panel, clean form right, social auth buttons, trust signals
+**Is this an app page request, and does `/` (landing page) exist?**
+NO → build the landing page first. No exceptions. The landing page is the product's first impression and must exist before any dashboard or feature page.
 
-**Pricing Page**
-Structure: Header > Toggle (monthly/annual) > Pricing cards > Feature comparison table > FAQ > CTA
-Key elements: highlighted recommended plan, annual discount badge, feature tick list, comparison table with shadcn Table
+### Step 3 — Page Design Brief (per page)
 
-**Settings Page**
-Structure: Sidebar nav + Content area with sections
-Key elements: settings groups with dividers, form inputs using shadcn Form, save states with toast feedback
+Before writing a single component, answer these for this specific page:
 
-**About / Team**
-Structure: Hero > Mission statement > Team grid > Values > CTA
-Key elements: team member cards with hover effects, editorial typography, timeline component
+1. **What does a brand-new user with zero data see?** Define the empty state CTA.
+2. **What is the signature element?** One thing that makes this page visually interesting. Not decoration — something that makes the data/purpose feel alive. Examples: animated stat counter, progress arc, timeline, data visualisation, contextual illustration.
+3. **Where does the primary color appear?** Maximum 2 places. Name them.
+4. **What is the typography hierarchy?** At minimum: one heading (font-semibold text-base or larger) + body text (text-sm) + captions (text-xs). Never all text-sm.
 
-### Step 3 — Section-by-Section Build
+### Step 4 — Page-Type Templates
 
-For each section:
-1. Check if a matching component exists in `src/components/sections/` — reuse before rebuilding
-2. If not, generate it inline using these rules:
-   - **Standard interactive element** (button, input, badge, card, table): use shadcn/ui — `npx shadcn@latest add [component]`, never rebuild from scratch
-   - **Complex visual section** (testimonials, pricing, feature grid, stat counter): run `mcp__magic__21st_magic_component_inspiration` first, then `mcp__magic__21st_magic_component_builder`, then adapt to project CSS tokens
-   - **Layout section** (hero, navbar, footer): build with Tailwind + Framer Motion, apply a Visual Signature Element from `~/.claude/web-system-prompt.md`
-   - All components: TypeScript interface with `className?: string`, named export only, `cn()` from `@/lib/utils`, all colors via CSS variables (`hsl(var(--token))`), max 150 lines
-3. Apply scroll-triggered animations to every section (Framer Motion `whileInView` + `fadeUp` pattern):
-   ```tsx
-   const fadeUp = {
-     hidden: { opacity: 0, y: 24 },
-     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }
-   }
-   // Parent with stagger for grids/lists:
-   const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }
-   ```
-4. Mobile-first responsive: base styles for 375px, then `sm:`, `md:`, `lg:`
+#### Landing Page (`/`)
+Structure: Nav → Hero → Features → How It Works → Pricing → Final CTA → Footer
 
-### Step 4 — Page Composition Rules
+Hero MUST include:
+- A product screenshot, dashboard mockup, or device-framed UI preview — not just a gradient blob
+- Display-size headline with negative letter-spacing
+- One primary CTA + one secondary CTA
+- At least one trust signal (stat, "no credit card", deadline urgency, user count)
+- Framer Motion staggered entrance (headline → subtext → CTA → trust signal)
 
+Features section: 3-6 cards, each with icon + title + 2-sentence description. Staggered whileInView animation.
+
+Pricing: 3 tiers, center tier highlighted with `border-primary/50 bg-primary/5`. Each tier: name, price, description, feature list with Check icons, CTA button.
+
+Footer: logo + tagline left, nav links center, legal disclaimer right.
+
+#### Dashboard
+MUST include a "getting started" track for users with zero data:
 ```tsx
-// Every page follows this structure
-export function [PageName]Page() {
+// If user has no data yet, show this instead of empty stat cards
+function GettingStarted({ steps }: { steps: Step[] }) {
   return (
-    <main>
-      {/* Sections stacked vertically */}
-      {/* Each section: full-width, owns its own padding */}
-      {/* Alternating background: background > muted > background */}
-    </main>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <h2 className="text-sm font-semibold text-foreground">Get started</h2>
+      <p className="mt-1 text-xs text-muted-foreground">Complete these steps to set up your account</p>
+      <div className="mt-4 space-y-3">
+        {steps.map(step => (
+          <div key={step.id} className="flex items-center gap-3">
+            <div className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold',
+              step.done ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground'
+            )}>
+              {step.done ? <Check className="h-3 w-3" /> : step.num}
+            </div>
+            <span className={cn('text-xs', step.done ? 'line-through text-muted-foreground' : 'text-foreground')}>
+              {step.label}
+            </span>
+            {!step.done && <Link to={step.href} className="ml-auto text-xs text-primary hover:underline">{step.action}</Link>}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 ```
 
-- Alternating section backgrounds create visual rhythm without effort
-- Every section gets `py-16 md:py-24 lg:py-32` vertical padding
-- Max content width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
-- Add `id` anchors to sections for scroll navigation
+Stat cards show skeleton on load. Empty state per-section shows EmptyState component with relevant CTA.
 
-### Step 5 — Performance
-- Use `React.lazy` + `Suspense` for below-fold sections
-- Images: `loading="lazy"`, explicit `width` + `height`
-- Add route to `src/App.tsx` router
+#### Settings Page
+NOT a single bare form. Structure:
+- Left: section navigation (vertical list of setting categories)
+- Right: content area with grouped fields separated by dividers
+- Each field group: heading + description + inputs
+- Save pattern: autosave on blur OR explicit save button with "Saved" confirmation that resets after 2s
+- Use shadcn Form + Input + Select — never raw HTML form elements
 
-### Step 6 — SEO Meta
-Add to the page component:
 ```tsx
-// Update document title and meta description
-useEffect(() => {
-  document.title = `${pageTitle} | ${siteName}`
-}, [])
+// Settings section pattern
+function SettingsSection({ title, description, children }: SettingsSectionProps) {
+  return (
+    <div className="py-6 first:pt-0 last:pb-0">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  )
+}
 ```
 
-Or if using react-helmet:
-```tsx
-<Helmet>
-  <title>{pageTitle} | {siteName}</title>
-  <meta name="description" content={description} />
-</Helmet>
+#### Data Table Pages (customers, transactions, reports)
+Always include:
+- Column headers with sort indicators
+- Loading: skeleton rows (same height as real rows)
+- Empty: EmptyState component with CTA to add first item
+- Error: inline error with retry button
+- Row hover: `hover:bg-muted/40`
+- For tables with expand/actions: Fragment key pattern, never nested interactive elements
+
+#### Reports Page
+Never just download buttons. Always show live data preview at the top:
+- Compliance score / summary metric displayed as a number or progress bar
+- Last generated date
+- Then download buttons below the preview
+- If no data yet: EmptyState explaining what the report contains and how to generate data
+
+### Step 5 — Build the Page
+
+Write components following these rules:
+- All colors via CSS variables — never hardcoded hex/rgb
+- EmptyState from `src/components/ui/EmptyState.tsx` — never write inline empty states
+- Loading states use skeleton divs at the same dimensions as real content
+- Status indicators: muted colored dot (`before:content-['•']` with text-[color]) + text label — never full colored badge fills
+- framer-motion whileInView + viewport={{ once: true }} on all major sections
+- Named exports only, max 150 lines per file
+
+### Step 6 — Add Route to App.tsx
+Add the new page to App.tsx with React.lazy + Suspense immediately. Never leave routes unregistered.
+
+### Step 7 — Per-Page Self-Review (MANDATORY — do not skip)
+
+Run this check before marking the page done. Fix any failures immediately.
+
+```
+Per-page review: [page name]
+───────────────────────────────────────────────
+[ ] Zero-data state: page makes sense with no data
+[ ] Empty state: has CTA button (not just text)
+[ ] Loading state: skeleton layout (not blank or spinner on empty)
+[ ] Error state: inline error + retry button
+[ ] Color budget: primary color appears <= 2 times on this page
+[ ] User knows next action: clear without reading docs
+[ ] Typography: at least 2 size/weight levels used (not all text-sm)
+[ ] Mobile: layout works at 375px
+[ ] Focus rings: all buttons, links, inputs have focus-visible:ring-2
+[ ] Aria labels: all icon-only buttons have aria-label
+[ ] Modals (if any): close button has aria-label="Close", Escape closes
 ```
 
-### Step 7 — Output
-- Write all new section components to `src/components/sections/`
-- Write the page to `src/pages/[PageName].tsx`
-- Add route to App.tsx
-- List every new file created
+If any item fails: fix it. Do not move to the next page until all 11 pass.
 
-## Page Quality Checklist
-- [ ] Hero has a strong visual statement (gradient/texture/animation)
-- [ ] Every section has scroll-triggered entrance animation
-- [ ] Alternating section backgrounds for rhythm
-- [ ] Mobile layout tested at 375px mentally
-- [ ] CTA appears at least twice (hero + bottom)
-- [ ] Loading/error states on any async data
-- [ ] SEO meta tags set
+Log: "Page [name] — self-review passed (11/11)" before proceeding.
+
+### Step 8 — Output
+
+```
+Built: [page name] ([route])
+Files: [list]
+Self-review: 11/11 passed
+Signature element: [what makes this page visually interesting]
+Empty state: [CTA label]
+
+Next page: [name] | All pages complete — run /web-review
+```
+
+## Page Quality Standards
+
+A page is DONE when:
+- It looks correct with zero data (new user)
+- It looks correct with real data (populated state)
+- It looks correct when loading
+- It looks correct when the API fails
+- A designer seeing it for the first time would not feel the need to fix it
+
+"It renders" is not done. "It compiles" is not done. These standards are the bar.

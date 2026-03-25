@@ -1,117 +1,166 @@
 # /web-review
 
-Audit existing UI against enterprise design standards and auto-fix all issues found.
+Comprehensive audit of a web project against enterprise design, accessibility, and performance standards. Auto-fixes all issues. Targets 38+/40.
 
 ## When to Use
-- Before deploying any web project
-- After a build session to catch quality issues
-- When something "feels off" but you can't pinpoint it
-- Regular quality check during development
+- After all pages are built (final quality gate before /web-deploy)
+- When visual quality feels off and you need to diagnose why
+- As a check after any significant change
+
+## Scoring Philosophy
+Score what a real user experiences, not just what the code does. A page that technically renders but feels empty, confusing, or visually thin scores low on Visual Quality regardless of whether the tokens are correct. Do not inflate scores. A 34/40 that should be 28/40 results in shipping a bad product.
+
+---
 
 ## Process
 
-### Step 1 — Read Design DNA
-Read `~/.claude/web-system-prompt.md`. Read `src/styles/index.css` and `tailwind.config.ts` to understand the project's design system.
+### Step 1 — Read Context
+Read `~/.claude/web-system-prompt.md`.
+Read `SCOPE.md` if it exists — use page definitions to verify every page was built as planned.
+Read `CLAUDE.md` for the color job definition.
+Read `src/styles/index.css` and `tailwind.config.ts`.
 
 ### Step 2 — Run All Checks in Parallel
 
-#### A. Design System Compliance
-Scan all files in `src/components/` and `src/pages/` for:
-- Hardcoded colors (hex `#`, rgb(), hsl() outside index.css) - CRITICAL
-- Direct Tailwind color classes: `text-white`, `text-black`, `bg-white`, `bg-black`, `text-gray-*`, `bg-gray-*` - CRITICAL
-- Inline styles (`style={{}}`) with color or spacing values
-- Magic number spacing (`p-[13px]`, `mt-[37px]`) - replace with scale values
-- TypeScript `any` type usage
-- Components exceeding 150 lines
+#### A. Design System Compliance (target: 10/10)
 
-#### B. Visual Quality Check (the Awwwards test)
-For each page component, evaluate:
-- Does the hero make a strong first impression? (gradient/texture/animation/bold type)
-- Is there a consistent visual rhythm? (alternating backgrounds, consistent spacing)
-- Are all interactive elements visually distinct on hover?
-- Is typography scale being used (display/hero/title) or defaulting to generic sizes?
-- Are Framer Motion scroll animations applied to all major sections?
-- Does dark mode look as good as light mode?
+Scan all files in `src/components/` and `src/pages/`:
 
-Score each page: Excellent / Good / Needs Work / Poor
+CRITICAL (each costs 2 points):
+- Hardcoded colors: hex `#`, `rgb()`, `hsl()` outside index.css
+- Direct Tailwind color classes: `text-white`, `text-black`, `bg-white`, `bg-black`, `text-gray-*`, `bg-gray-*`
+- Inline `style={{}}` with color or spacing values
 
-#### C. Web Interface Guidelines Compliance
-Scan all component and page files for violations of these rules:
-- Every interactive element must have a visible hover state (`hover:` variant)
-- Every focusable element must have a visible focus ring (`focus-visible:ring-2 focus-visible:ring-ring`)
-- No default export components — named exports only
-- No components over 150 lines — flag for split
-- `cn()` from `@/lib/utils` used for all conditional classes (never string concatenation)
-- Framer Motion `whileInView` present on all major section components
-- `viewport={{ once: true }}` set on all Framer Motion scroll triggers
-- `React.lazy` + `Suspense` used for all route-level components in App.tsx
-- `darkMode: 'class'` in tailwind.config.ts and `.dark` class variants activate via CSS variables
+SHOULD FIX (each costs 1 point):
+- Magic number spacing: `p-[13px]`, `mt-[37px]` — replace with scale
+- TypeScript `any` usage
+- Components over 150 lines
+- `key={index}` on any dynamic list
 
-#### D. Accessibility Scan
-Scan all files for WCAG 2.2 violations:
-- `<img>` tags missing `alt` attribute — CRITICAL
-- Icon-only buttons/links missing `aria-label` — CRITICAL
-- Form `<input>` and `<textarea>` without associated `<label>` or `aria-label` — CRITICAL
-- Interactive elements that cannot receive keyboard focus (missing `tabIndex` or wrong element type)
-- Missing `role` on non-semantic interactive elements (e.g., `<div onClick>` without `role="button"`)
-- Color contrast: check that `text-muted-foreground` on `bg-background` meets 4.5:1 ratio in both modes
-- Decorative images should have `alt=""` (empty string, not missing)
-- `<button>` inside `<a>` or vice versa (invalid nesting)
+**Color budget audit (new — critical for enterprise design):**
+For each page file, count occurrences of `text-primary`, `bg-primary`, `border-primary`, `ring-primary`. If any page has > 3 total: flag as CRITICAL. Enterprise design = restraint. The primary color doing too many jobs is a design system failure.
 
-#### E. Performance Check (Vite SPA rules)
-Scan for:
-- Data fetching inside `useEffect` (use SWR or React Query instead)
-- `key={index}` on dynamic lists (use stable IDs)
-- Missing `React.lazy` on route-level components
+#### B. Visual Quality (target: 10/10)
+
+Score this honestly. Ask: "Would a designer at Linear, Stripe, or Vercel be proud of this?" If uncertain, score lower.
+
+For each page component:
+
+**Landing page (2 points):**
+- Does the hero have a real product visual (screenshot, mockup, UI preview in a frame)? Not just a gradient blob.
+- Is the headline at display or hero size with negative letter-spacing?
+
+**All pages (1 point each):**
+- Are empty states designed with a CTA? (Icon in muted circle + heading + description + button — not just text)
+- Does the dashboard have a getting-started track for new users with zero data?
+- Is typography hierarchical? (Not everything at text-sm)
+- Does each page have one "signature element" that makes it visually interesting?
+- Is spacing generous? (Not cramped — section gaps 24px+, card padding 20px+)
+- Do all cards/sections use alternating backgrounds for visual rhythm?
+- Is the color usage restrained? (Brand color in 2 places max per page)
+- Are Framer Motion scroll animations on all major sections?
+
+Score each: Excellent (1.0) / Good (0.75) / Needs Work (0.5) / Poor (0) across 10 criteria.
+
+#### C. Accessibility (target: 10/10)
+
+CRITICAL (each costs 2 points):
+- `<img>` tags missing `alt` attribute
+- Icon-only buttons/links missing `aria-label`
+- Modal close buttons missing `aria-label="Close"`
+- Form `<input>` or `<textarea>` without `<label>` or `aria-label`
+- Interactive `<div>` without `role="button"` and `tabIndex`
+
+SHOULD FIX (each costs 1 point):
+- Missing `focus-visible:ring-2 focus-visible:ring-ring` on any interactive element
+- `<button>` inside `<a>` or vice versa
+- Missing skip-nav link in AppLayout
+- Missing `aria-live` region for mutation success/error feedback
+- Decorative icons missing `aria-hidden="true"`
+
+#### D. Performance (target: 10/10)
+
+Run `npm run build` and capture output.
+
+CRITICAL (each costs 2 points):
+- Any chunk exceeds 250KB gzipped
+- `key={index}` on any dynamic list (already caught in A, counts here too)
+- Data fetching inside `useEffect` instead of TanStack Query
+
+SHOULD FIX (each costs 1 point):
+- `vite.config.ts` missing `manualChunks` (vendor splitting)
+- Missing `React.lazy` on any route-level component
 - Images without `loading="lazy"` and explicit dimensions
-- Barrel imports that prevent tree-shaking
+- `vendor-react`, `vendor-motion`, `vendor-query`, `vendor-supabase` chunks not split
+
+#### E. Completeness Check (bonus/penalty)
+
+- Landing page exists at `/`: required — if missing, Visual Quality score is capped at 6/10
+- Every page in SCOPE.md was built: verify against App.tsx routes
+- vercel.json exists with SPA rewrites: required for deploy
+- CORS is not `*`: flag as deploy blocker
 
 ### Step 3 — Score Report
 
-Output a score card:
 ```
 /web-review Results — [Project Name]
-─────────────────────────────────
+──────────────────────────────────────────
 Design System:    [score]/10
-Visual Quality:   [score]/10
+Visual Quality:   [score]/10  [honest assessment — do not inflate]
 Accessibility:    [score]/10
 Performance:      [score]/10
 Overall:          [score]/40
 
-CRITICAL (fix now):
-  ⚠ src/components/Hero.tsx:23 — hardcoded #1a1a1a, use text-foreground
-  ⚠ src/pages/Pricing.tsx — no scroll animations on feature section
+CRITICAL (fix before deploy):
+  ⚠ [file:line] — [issue] → [fix]
 
 SHOULD FIX:
-  • src/components/Card.tsx:45 — magic number p-[13px], use p-3
-  • src/pages/About.tsx — missing alt on team member images
+  • [file:line] — [issue] → [fix]
 
 NICE TO HAVE:
-  • Hero could use gradient mesh background for more visual impact
-  • Pricing cards lack hover elevation effect
+  • [enhancement] — [impact]
+
+Completeness:
+  Landing page: [exists / MISSING]
+  CORS locked: [yes / NO — deploy blocker]
+  vercel.json: [exists / MISSING]
+  Bundle sizes: [list chunks with gzip sizes]
 ```
 
 ### Step 4 — Auto-Fix All CRITICAL Issues
-Without asking, fix all CRITICAL items immediately:
+Without asking, fix every CRITICAL item:
 - Replace hardcoded colors with semantic tokens
-- Add missing alt attributes
-- Add missing focus states
-- Fix aria label gaps
+- Add missing aria-labels and alt attributes
+- Add focus rings
+- Fix modal accessibility (aria-label="Close", Escape handler)
+- Split vendor bundle in vite.config.ts if missing
+- Add vercel.json if missing
+- Create EmptyState components to replace any inline empty states without CTAs
 
-### Step 5 — Fix SHOULD FIX Items
-Fix all "should fix" items unless they require new design decisions.
+### Step 5 — Fix All SHOULD FIX Items
+Fix everything that doesn't require a new design decision.
 
-### Step 6 — Report NICE TO HAVE
-List enhancement opportunities but don't implement — these are for the user to prioritise.
+### Step 6 — Visual Quality Upgrades (if Visual Quality < 8/10)
 
-### Step 7 — Visual Upgrade Pass (if score < 7/10 on Visual Quality)
-If visual quality is low, offer to:
-1. Add gradient mesh to hero background
-2. Add Framer Motion scroll animations to sections that lack them
-3. Use `mcp__magic__21st_magic_component_refiner` on the lowest-quality components
-4. Improve typography hierarchy (increase heading sizes, tighten letter-spacing)
+For each page scoring below 0.75 average:
+1. Identify the specific gap (no empty state CTA, cramped spacing, missing skeleton, no signature element)
+2. Fix it — do not just recommend it
+3. Use `mcp__magic__21st_magic_component_refiner` on components scoring Poor
+4. For landing page hero: if no product visual exists, generate a dashboard mockup using shadcn Card components arranged to look like the actual app UI
+
+### Step 7 — Re-score After Fixes
+After all fixes: re-run the scoring. Report the final score.
+
+If score is still below 38/40: identify what would need to change to reach 38 and flag it clearly.
 
 ## Quality Thresholds
-- Score 35-40: Ship it
-- Score 28-34: Fix criticals, ship with plan
-- Score < 28: Do not ship — needs visual rework
+
+- **38-40:** Ship it. This is the target.
+- **32-37:** Fix criticals, re-review before deploy. Do not deploy at this score.
+- **< 32:** Major rework needed. Do not deploy. Identify the root cause (usually: missing landing page, empty pages with no CTAs, or color system violations).
+
+## Rules
+- Never report a score higher than what is actually true
+- Visual Quality is scored against "would a Linear/Stripe designer be proud?" — not "does it technically render?"
+- Landing page absence caps Visual Quality at 6/10 regardless of other page quality
+- A 40/40 is achievable. It means: correct tokens, real empty states with CTAs, restrained color, generous spacing, accessible, fast bundles, and a product visual on the landing page hero.
