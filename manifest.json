@@ -138,6 +138,7 @@
     "geo-report-pdf",
     "geo-schema",
     "geo-technical",
+    "iso27001",
     "market",
     "market-ads",
     "market-audit",
@@ -188,6 +189,6 @@
   "counts": {
     "commands": 41,
     "agents": 59,
-    "skills": 78
+    "skills": 79
   }
 }
