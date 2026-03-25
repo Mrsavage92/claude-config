@@ -75,6 +75,8 @@ export default defineConfig({
 })
 ```
 
+Read `vercel-react-best-practices` before generating vite.config.ts — apply bundle splitting, chunk targets, and React.lazy pattern from the start.
+
 Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.
 
 ---
@@ -100,7 +102,9 @@ Log: "Phase 3 complete — backend configured" to BUILD-LOG.md.
 This is the core loop. For EACH page in SCOPE.md build order:
 
 **4a. Pre-build check**
-- Read SCOPE.md page definition (purpose, data, empty state, loading, error, signature element)
+- Re-read SCOPE.md (full file) — the source of truth for page definitions and build order
+- Re-read CLAUDE.md — confirm the COLOR JOB sentence and design decisions are fresh in context
+- Read the page's definition fields: purpose, data, empty state, loading state, error state, signature element
 - Confirm the page's design is clear before writing code
 
 **4b. Build the page**
@@ -172,8 +176,12 @@ Log score and fix summary to BUILD-LOG.md.
 Execute the full deploy sequence:
 
 **6a. Pre-deploy gates (all must pass)**
+Run `vercel-react-best-practices` checklist before deploying:
 - `npm run build` succeeds with no TypeScript errors
 - No chunk exceeds 250KB gzipped (if exceeded, add to manualChunks)
+- All routes use `React.lazy` + `Suspense`
+- All images have `alt`, `loading="lazy"`, explicit dimensions
+- Hero image uses `loading="eager"`
 - CORS in backend is NOT `*` — must be locked to production domain
 - vercel.json exists with SPA rewrites
 
@@ -191,12 +199,21 @@ npx vercel env add [VAR_NAME] production --value [value] --yes
 VITE_API_URL is required if there is a backend — set it now, not later.
 
 **6d. Smoke test (run all 5 — do not skip)**
-Open the production URL mentally and verify:
-1. Landing page loads and is visually correct
-2. "Start free trial" CTA navigates to /signin
-3. Sign up creates a Supabase user (check Supabase dashboard)
-4. Onboarding flow completes and reaches dashboard
-5. Core product feature is accessible and shows correct empty state
+Output this checklist for the human to verify. Do not mark Phase 6 complete until all 5 are confirmed.
+
+```
+Smoke Test — [product URL]
+──────────────────────────────────────
+ACTION REQUIRED: Open [URL] and verify each item below.
+
+[ ] 1. Landing page loads — hero visible, animated background present, CTA visible
+[ ] 2. "Start free trial" CTA navigates to /signin
+[ ] 3. Sign up creates a Supabase user — check auth.users in Supabase dashboard
+[ ] 4. Onboarding flow completes and reaches dashboard
+[ ] 5. Core product feature is accessible and shows correct empty state with CTA
+
+For each failure: paste the error and Claude will fix before marking deploy done.
+```
 
 If any smoke test fails: fix before marking deploy complete.
 
