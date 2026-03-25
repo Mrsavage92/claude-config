@@ -80,18 +80,21 @@ SHOULD FIX (each costs 1 point):
 
 #### D. Performance (target: 10/10)
 
-Run `npm run build` and capture output.
+Read `vercel-react-best-practices` for the full checklist. Run `npm run build` and capture output.
 
 CRITICAL (each costs 2 points):
 - Any chunk exceeds 250KB gzipped
 - `key={index}` on any dynamic list (already caught in A, counts here too)
 - Data fetching inside `useEffect` instead of TanStack Query
+- Hero image missing `loading="eager"` (hurts LCP)
 
 SHOULD FIX (each costs 1 point):
 - `vite.config.ts` missing `manualChunks` (vendor splitting)
 - Missing `React.lazy` on any route-level component
-- Images without `loading="lazy"` and explicit dimensions
+- Images without `alt`, `loading="lazy"`, and explicit `width`+`height`
 - `vendor-react`, `vendor-motion`, `vendor-query`, `vendor-supabase` chunks not split
+- AnimatedBackground not lazy-loaded (canvas/WebGL blocks main thread)
+- Font missing `display=swap` (causes FOUT / CLS)
 
 #### E. Completeness Check (bonus/penalty)
 
