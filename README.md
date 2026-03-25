@@ -4,13 +4,15 @@ Shared source of truth for Claude Code configuration across all machines.
 
 ## What's in here
 
-- `commands/` — 41 slash commands (installed to `~/.claude/commands/`)
+- `commands/` — 52 slash commands (installed to `~/.claude/commands/`)
 - `agents/` — 59 specialist agents (installed to `~/.claude/agents/`)
+- `skills/` — 79 skills (synced from `Mrsavage92/skills-library`)
 - `settings-template.json` — settings structure without secrets
 - `sync.sh` — Mac/Linux sync script
 - `sync.ps1` — Windows sync script
+- `manifest.json` — auto-generated hash index, counts updated on every sync
 
-Skills library is synced separately from: https://github.com/Mrsavage92/skills-library
+Skills library: https://github.com/Mrsavage92/skills-library
 
 ## First-time setup on a new machine
 
