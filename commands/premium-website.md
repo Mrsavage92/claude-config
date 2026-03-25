@@ -2,9 +2,9 @@
 
 The premium website suite is the full set of web-* skills that together replace Lovable. It produces Awwwards/Linear/Stripe quality output — not generic AI UI.
 
-## What It Is
+**saas-build reads this file once at Phase 0. All rules here apply to every phase automatically. When the suite is updated, only this file needs changing.**
 
-A coordinated skill pipeline for building production-grade React web apps inside Claude Code. Every skill reads `~/.claude/web-system-prompt.md` (the Design DNA) before generating anything.
+---
 
 ## Skills in the Suite
 
@@ -19,37 +19,109 @@ A coordinated skill pipeline for building production-grade React web apps inside
 | `/web-review` | Design + a11y + performance audit (target 38+/40) before deploy |
 | `/web-deploy` | Vercel (SPAs) or Railway (full-stack) with smoke tests |
 | `/web-fix` | Fix a specific component, bug, or review failure |
+| `/vercel-react-best-practices` | Bundle splitting, Core Web Vitals, image optimization, Vercel deploy checklist |
 
-## The Engine Behind Every Landing Page
-
-Two things are non-negotiable on every landing page:
-
-**1. Animated background**
-- Call `mcp__magic__21st_magic_component_inspiration` with "animated background hero [dark/enterprise/grid]"
-- Then `mcp__magic__21st_magic_component_builder` to generate
-- `opacity: 0.15-0.25`, `z-index: -1`, wrapped in `useReducedMotion` check
-- CSS grid pattern is the minimum — 21st.dev animated canvas is preferred
-
-**2. Product visual mockup**
-- Built from shadcn primitives shaped like the real app — never a gradient blob
-- Browser chrome: 3 colored dots + URL bar
-- Sidebar: muted icon-shaped divs, first one `bg-primary/80`
-- Content: 3 stat cards + 3-4 data table rows
-- Wrapped in glow: `absolute -inset-4 rounded-3xl bg-gradient-to-b from-brand/15 to-transparent blur-2xl`
-
-**Hero entrance animation (Technique 3 STAGGER from web-animations):**
-Pill → headline → subheadline → CTAs → stats → product visual (0.6s delay, loads last for effect)
+---
 
 ## Design DNA
 
-`~/.claude/web-system-prompt.md` is the master design reference. Read it before any UI generation. It contains:
+Read `~/.claude/web-system-prompt.md` before any UI generation. It contains:
 - Token system (HSL variables only — never hardcoded hex/rgb)
 - Typography scale (text-display / text-hero / text-title)
 - Color discipline rules
 - Visual signature elements (grid lines, grain texture, glow effects)
 - Component quality standards
 
-## Full Build Loop (orchestrated by /saas-build)
+---
+
+## Landing Page — Non-Negotiables (enforced on every build)
+
+### 1. Animated Background
+- Call `mcp__magic__21st_magic_component_inspiration` with "animated background hero [dark/enterprise/grid]" BEFORE writing the hero
+- Then `mcp__magic__21st_magic_component_builder` to generate it
+- `opacity: 0.15-0.25`, `z-index: -1`, lazy-loaded, wrapped in `useReducedMotion` check
+- CSS grid pattern is the minimum — 21st.dev animated canvas preferred
+
+### 2. Product Visual Mockup
+- Built from shadcn primitives shaped like the real app — NEVER a gradient blob
+- Browser chrome: 3 colored dots (`bg-destructive/50`, `bg-yellow-400/50`, `bg-green-500/50`) + URL bar showing `app.[product].com.au`
+- Sidebar: column of muted icon-shaped divs, first one `bg-primary/80` (active state)
+- Content: 3 stat cards + 3-4 data table rows with colored dot + muted line divs + status pill
+- Glow wrapper: `absolute -inset-4 rounded-3xl bg-gradient-to-b from-brand/15 to-transparent blur-2xl`
+- This is NOT optional. Every hero must have this.
+
+### 3. Hero Entrance Animation
+Read `/web-animations` Technique 3 STAGGER. Entrance order is always:
+Pill → headline → subheadline → CTAs → trust stats → product visual (0.6s delay — loads last for effect)
+
+### 4. Features Section
+- Call `mcp__magic__21st_magic_component_inspiration` for "feature cards dark enterprise SaaS" BEFORE writing
+- 3-6 cards, `whileInView` stagger from web-animations Technique 3
+
+### 5. Color Discipline
+- Primary color used exactly twice on the landing page: CTA button + feature icon backgrounds
+- Never more. Enterprise design = restraint.
+
+---
+
+## Performance Rules (from vercel-react-best-practices)
+
+Apply from scaffold onwards — not just at review time:
+
+- `vite.config.ts` MUST have `manualChunks` splitting vendor-react, vendor-motion, vendor-query, vendor-supabase
+- All routes in App.tsx MUST use `React.lazy` + `Suspense`
+- No `useEffect` for data fetching — TanStack Query only
+- All images: `alt`, `loading="lazy"`, explicit `width` + `height`
+- Hero image: `loading="eager"` (LCP)
+- AnimatedBackground: lazy-loaded (`React.lazy`)
+- Font: `display=swap`
+- No chunk exceeds 250KB gzipped
+
+---
+
+## Per-Page Quality Bar
+
+Every page must pass before moving to the next:
+
+```
+[ ] Zero-data state: page makes sense with no data
+[ ] Empty state: has CTA button (not just text)
+[ ] Loading state: skeleton layout (not blank or spinner)
+[ ] Error state: inline error + retry button
+[ ] Color budget: primary appears <= 2 times on this page
+[ ] User knows next action: clear without reading docs
+[ ] Typography: at least 2 size/weight levels (not all text-sm)
+[ ] Mobile: layout works at 375px
+[ ] Focus rings: all interactive elements have focus-visible:ring-2
+[ ] Aria labels: all icon-only buttons have aria-label
+[ ] Modals (if any): close button aria-label="Close", Escape closes
+```
+
+"It renders" is not done. A page passes when a designer seeing it for the first time would not want to fix it.
+
+---
+
+## Pre-Deploy Checklist
+
+Run before any deploy:
+
+```
+[ ] npm run build — no TypeScript errors
+[ ] No chunk exceeds 250KB gzipped
+[ ] All routes use React.lazy + Suspense
+[ ] All images have alt, loading="lazy", explicit dimensions
+[ ] Hero image uses loading="eager"
+[ ] vercel.json at project root with SPA rewrites
+[ ] CORS not * — locked to production domain
+[ ] VITE_* env vars set in Vercel dashboard
+[ ] Landing page animated background present
+[ ] Landing page product visual mockup present (not a blob)
+[ ] web-review score 38+/40
+```
+
+---
+
+## Full Build Loop
 
 ```
 /web-scope      → SCOPE.md with all design decisions
@@ -60,11 +132,4 @@ Pill → headline → subheadline → CTAs → stats → product visual (0.6s de
 /web-deploy     → Vercel or Railway
 ```
 
-## Quality Bar
-
-"It renders" is not done. A page passes when:
-- It looks correct with zero data (new user)
-- It looks correct with real data
-- It looks correct when loading (skeleton layout)
-- It looks correct when the API fails (inline error + retry)
-- A designer seeing it for the first time would not want to fix it
+Orchestrated autonomously by `/saas-build`. Update this file when the suite changes — saas-build reads it at Phase 0 and inherits everything automatically.
