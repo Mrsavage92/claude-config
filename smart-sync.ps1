@@ -75,26 +75,43 @@ try {
         Copy-Item "$ClaudeDir\CLAUDE.md" "$RepoDir\global-context.md" -Force
     }
 
-    # Regenerate manifest.json with current hashes + skills list
+    # Run validation before sync — log issues but don't block
+    try {
+        $validOut = python3 "$ClaudeDir\scripts\validate-skills.py" 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            "[$((Get-Date).ToString())][stop][validate] ISSUES: $validOut" >> $LOG
+        }
+    } catch { "[$((Get-Date).ToString())][stop][validate] $_" >> $LOG }
+
+    # Regenerate manifest.json — excludes shared, .git, .gitignore + auto-updates README counts
     try {
         python3 -c "
-import os,json,hashlib
+import os,json,hashlib,re
+from datetime import date
 home=os.environ['USERPROFILE']
 repo=os.path.join(home,'Documents','Git','claude-config')
 cmds=os.path.join(home,'.claude','commands')
 agts=os.path.join(home,'.claude','agents')
 skls=os.path.join(home,'.claude','skills')
+EXCLUDE={'shared','.git','.gitignore'}
 def md5(p):
     with open(p,'rb') as f: return hashlib.md5(f.read()).hexdigest()
 ch={f:md5(os.path.join(cmds,f)) for f in os.listdir(cmds) if f.endswith('.md')}
 ah={f:md5(os.path.join(agts,f)) for f in os.listdir(agts) if f.endswith('.md')}
-sk=sorted([d for d in os.listdir(skls) if not d.startswith('.')])
-m={'last_updated':'$(Get-Date -Format yyyy-MM-dd)','generated_by':'$MACHINE','commands':ch,'agents':ah,'skills':sk,'counts':{'commands':len(ch),'agents':len(ah),'skills':len(sk)}}
+sk=sorted([d.rstrip('@/') for d in os.listdir(skls) if d.rstrip('@/') not in EXCLUDE and not d.startswith('.')])
+m={'last_updated':str(date.today()),'generated_by':os.environ.get('COMPUTERNAME','PC'),'commands':ch,'agents':ah,'skills':sk,'counts':{'commands':len(ch),'agents':len(ah),'skills':len(sk)}}
 json.dump(m,open(os.path.join(repo,'manifest.json'),'w'),indent=2)
+rp=os.path.join(repo,'README.md')
+if os.path.exists(rp):
+    r=open(rp,encoding='utf-8').read()
+    r=re.sub(r'\d+ slash commands',f'{len(ch)} slash commands',r)
+    r=re.sub(r'\d+ specialist agents',f'{len(ah)} specialist agents',r)
+    r=re.sub(r'\d+ skills',f'{len(sk)} skills',r)
+    open(rp,'w',encoding='utf-8').write(r)
 " 2>>$LOG
     } catch { "[$((Get-Date).ToString())][stop][manifest] $_" >> $LOG }
 
-    git add agents/ commands/ global-context.md manifest.json 2>>$LOG
+    git add agents/ commands/ global-context.md manifest.json README.md 2>>$LOG
     git diff --cached --quiet
     $hasChanges = $LASTEXITCODE -ne 0
     if ($hasChanges) { git commit -m $MSG 2>>$LOG }
