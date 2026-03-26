@@ -10,11 +10,8 @@ Execute the full knowledge base sync workflow directly (no external skill file r
 **Step 1 — Scan current state**
 - Commands: `~/.claude/commands/` (*.md files)
 - Agents: `~/.claude/agents/` (*.md files)
-- Skills: `~/.claude/skills/` (top-level directories — each skill is a folder containing `SKILL.md`)
+- Skills: `~/.claude/skills/` (top-level directories)
 - Load `~/Documents/Git/claude-config/manifest.json` if it exists — diff to find what changed
-
-> **Note:** New skills must be created at `~/.claude/skills/{skill-name}/SKILL.md` only.
-> Do NOT save skills to the OpenClaw workspace (`~/.openclaw/workspace/skills/`) — that repo is unrelated and not used.
 
 **Step 2 — Push to GitHub**
 - Copy agents and commands to `~/Documents/Git/claude-config/`
