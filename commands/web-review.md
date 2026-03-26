@@ -64,6 +64,25 @@ Score each: Excellent (1.0) / Good (0.75) / Needs Work (0.5) / Poor (0) across 1
 
 #### C. Accessibility (target: 10/10)
 
+**Automated scan (run first):**
+
+Option A — dev server running:
+```bash
+npx axe-core-cli http://localhost:5173 --exit
+```
+
+Option B — no dev server (static analysis fallback):
+```bash
+# Missing alt on img tags
+grep -rn "<img" src/ | grep -v 'alt='
+# Icon buttons missing aria-label
+grep -rn "aria-label" src/components/ | grep -v "aria-label"
+# Inputs missing labels
+grep -rn "<input" src/ | grep -v "aria-label\|htmlFor"
+```
+
+Flag any violations from either method as CRITICAL automatically — they map directly to WCAG failures.
+
 CRITICAL (each costs 2 points):
 - `<img>` tags missing `alt` attribute
 - Icon-only buttons/links missing `aria-label`

@@ -43,31 +43,44 @@ If any item fails: fix it before proceeding.
 
 ### Step 3 — CORS Lockdown (backend only — do before frontend deploy)
 
-Update `main.py` or equivalent to use environment variable:
+Update `main.py` to support comma-separated multi-product `FRONTEND_URL`. This pattern is required — single-origin string breaks when a second product deploys to the same backend:
 ```python
 import os
 
-_origins = os.getenv("FRONTEND_URL", "")
-allow_origins = [_origins, "http://localhost:5173"] if _origins else ["*"]
+# Supports comma-separated list: "https://product-a.vercel.app,https://product-b.vercel.app"
+_frontend_urls = [u.strip() for u in os.getenv("FRONTEND_URL", "").split(",") if u.strip()]
+_allowed_origins = (
+    _frontend_urls + ["http://localhost:5173", "http://localhost:3000"]
+    if _frontend_urls
+    else ["*"]
+)
 
 app.add_middleware(CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 ```
+
+To add a new frontend to an existing backend: append to `FRONTEND_URL` with a comma — do not replace the existing value.
+
 Commit and push so Railway auto-deploys the CORS fix before the frontend goes live.
 
 ### Step 4 — Vercel Deploy
+
+**Monorepo projects:** The frontend lives in `apps/[product-slug]/`. Vercel must be told where to find it — pass `--root-directory` or configure in the Vercel dashboard under Project Settings > General > Root Directory.
 
 **First deploy — link repo for continuous deployment (do this once):**
 ```bash
 # Push to GitHub first if not already
 git add -A && git commit -m "chore: pre-deploy cleanup" && git push origin main
 
-# Import via Vercel CLI (links GitHub repo — all future pushes auto-deploy)
+# Standalone project:
 npx vercel --prod --yes
+
+# Monorepo — specify the app subdirectory:
+npx vercel --prod --yes --root-directory apps/[product-slug]
 ```
 
 After first deploy, Vercel will create a GitHub integration. All future `git push origin main` → auto-deploy. No manual `npx vercel --prod` needed again.
@@ -83,7 +96,7 @@ Capture the production URL from output. Note both the unique deploy URL and the 
 - Framework: Vite
 - Build command: `npm run build`
 - Output directory: `dist`
-- Root directory: [project root or monorepo app path]
+- Root directory: `apps/[product-slug]` (monorepo) or project root (standalone)
 
 **Confirm GitHub auto-deploy is wired:**
 After first deploy, verify at vercel.com/[project]/settings/git that the GitHub repo is connected and `main` branch triggers production deploys.
@@ -106,28 +119,39 @@ NEEDS_HUMAN: Set VITE_API_URL in Vercel
 
 ### Step 6 — Update FRONTEND_URL in Railway (backend only)
 
-Set the Vercel production URL as FRONTEND_URL in Railway so CORS accepts requests from it. Use Railway GraphQL API or Railway CLI:
+Set or append the Vercel production URL in Railway FRONTEND_URL:
+
+**Standalone product (first deploy to this backend):**
 ```bash
 railway variables --set "FRONTEND_URL=https://[vercel-url]"
 ```
 
-If Railway token not available: log as NEEDS_HUMAN with exact steps.
+**Monorepo (backend already serves other products):** Append — do not replace:
+```bash
+# Get current value first, then append with comma
+railway variables --set "FRONTEND_URL=https://[existing-url],https://[new-vercel-url]"
+```
 
-### Step 7 — Smoke Test (5 checks — all required)
+If Railway token not available: log as NEEDS_HUMAN with exact steps, including whether this is append or replace.
 
-Output this checklist for the human to verify. Do not mark deploy complete until all 5 are confirmed.
+### Step 7 — Smoke Test (6 checks — all required)
+
+Read `SCOPE.md` to get: the product name, the primary CTA label on the landing page, and the name of the core feature page. Use these in the checklist below.
+
+Output this checklist for the human to verify. Do not mark deploy complete until all 6 are confirmed.
 
 ```
-Smoke Test — [product URL]
+Smoke Test — [product name] ([product URL])
 ──────────────────────────────────────
 ACTION REQUIRED: Open [URL] and verify each item below.
 Report back which pass and which fail before this deploy is marked done.
 
-[ ] 1. Landing page loads — hero visible, animated background present, CTA button visible
-[ ] 2. Sign up flow — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
-[ ] 3. Onboarding/setup — complete the onboarding flow. Confirm it reaches the dashboard.
-[ ] 4. Core feature — navigate to the core feature. Confirm it loads and shows the correct empty state with CTA.
-[ ] 5. Settings page — open Settings. Confirm it loads and form submits without error.
+[ ] 1. Landing page loads — hero visible, animated background present, [CTA label from SCOPE.md] button visible
+[ ] 2. Primary CTA navigates to /signin (or /signup)
+[ ] 3. Sign up — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
+[ ] 4. Onboarding/setup — complete the onboarding flow. Confirm it reaches the dashboard.
+[ ] 5. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
+[ ] 6. Settings page — loads and form submits without error.
 
 For each failure: paste the error or screenshot and Claude will fix before marking done.
 ```

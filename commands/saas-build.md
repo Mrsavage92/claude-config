@@ -22,12 +22,18 @@ Read these files in full — they are the source of truth for the entire build:
 3. `CLAUDE.md` (project root, if exists) — project-specific overrides.
 4. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
 
+**Monorepo detection:** Check if the working directory contains `turbo.json` or an `apps/` directory. If yes, this is a monorepo build.
+- In monorepo mode: the frontend lives in `apps/[product-slug]/`. All Phase 2-6 file operations target that subdirectory.
+- The backend is the shared FastAPI service at `services/api/` — do NOT scaffold a new backend or create a new Railway service. Note the existing Railway URL from `CLAUDE.md` for VITE_API_URL.
+- If `apps/[product-slug]/` already exists (created by `/product-add`): skip Phase 2 directory creation, only fill in the files.
+- If `apps/[product-slug]/` does not exist: run `/product-add` first, then scaffold.
+
 Check git log for recent work. Determine: is this a fresh start or a resume?
 
 If fresh start: begin at Phase 1.
 If resuming: identify the last completed phase and continue from the next one.
 
-Log every phase start and completion to `BUILD-LOG.md` in the project root.
+Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
 
 ---
 
@@ -90,10 +96,11 @@ This is the core loop. For EACH page in SCOPE.md build order:
 Follow /web-page rules. Apply all landing page non-negotiables from premium-website.md for the `/` page.
 - Landing page (`/`) is ALWAYS first — no exceptions
 - Auth (`/signin`) is ALWAYS second
-- App pages follow in SCOPE.md priority order
+- Onboarding (`/setup` or `/onboarding`) is ALWAYS third for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
+- App pages follow in SCOPE.md priority order after onboarding
 
 **4c. Per-page self-review**
-Run the 11-item checklist from premium-website.md. Fix any failures. Log: "Page [name] complete — self-review passed (11/11)" to BUILD-LOG.md. Only then move to the next page.
+Run the 12-item checklist from premium-website.md. Fix any failures. Log: "Page [name] complete — self-review passed (12/12)" to BUILD-LOG.md. Only then move to the next page.
 
 **4d. App.tsx**
 After each page, add the route with React.lazy + Suspense. Never leave routes unregistered.
@@ -143,15 +150,16 @@ Report back which pass and which fail — Claude will fix failures before markin
 [ ] 1. Landing page loads — hero visible, animated background present, [CTA label from SCOPE.md] button visible
 [ ] 2. Primary CTA navigates to /signin (or /signup)
 [ ] 3. Sign up — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
-[ ] 4. Onboarding/setup — complete the onboarding flow. Confirm it reaches the dashboard.
-[ ] 5. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
+[ ] 4. Onboarding/setup — complete the /setup wizard fully (all steps including plan selection or trial activation). Confirm it redirects to /dashboard on completion. This step is MANDATORY — if /setup does not exist, it is a build failure.
+[ ] 5. Trial banner — after onboarding, confirm the AppLayout shows a trial banner (days remaining + Upgrade button) if trial model is free-trial.
+[ ] 6. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
 [ ] 6. Settings page — loads and form submits without error.
 
 For each failure: paste the error or screenshot and Claude will fix before marking done.
 ```
 
 **6e. Update CORS**
-Update backend CORS `allow_origins` from `*` to the production Vercel URL. Commit and push.
+In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
 
 **6f. Bundle report**
 ```

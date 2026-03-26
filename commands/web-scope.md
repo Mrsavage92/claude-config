@@ -21,6 +21,9 @@ Read the user's product description. Extract:
 - Core value: what does the user accomplish that they couldn't before?
 - Business model: free trial + paid? freemium? one-time?
 - Pricing tiers (if known)
+- **Trial model** (decide if not stated): `free-trial-no-card` | `free-trial-card-required` | `freemium` | `paid-only`. Default to `free-trial-no-card` if unclear.
+- **Onboarding data**: what information must the user provide before they can use the product? (e.g. business name, industry, location — product-specific). List the fields.
+- **Dashboard gate**: what must be true before a user can reach the dashboard? (e.g. onboarding complete + plan selected, or just onboarding complete for trial)
 
 ### Step 2 — Design Brief (decide all of these before touching CSS)
 
@@ -73,11 +76,13 @@ Signature element: [what one thing makes this page visually interesting?]
 - `/` — Landing page: hero, features, how it works, pricing, CTA, footer
 - `/signin` — Auth: sign in + sign up on same page, split layout or centered card
 
+**Mandatory app pages for any product with auth (always required):**
+- `/setup` or `/onboarding` — Multi-step wizard. Runs once after signup, before dashboard. Collects the onboarding data fields identified in Step 1. Final step: plan selection (Stripe Checkout) or trial activation. Redirect to `/dashboard` only after complete. **This page is not optional — every SaaS product with auth must have it.**
+- `/dashboard` — Summary: KPIs, recent activity, urgent actions. Shows getting-started track if onboarding is somehow incomplete.
+
 **Common app pages (include what applies):**
-- `/dashboard` — Summary: KPIs, recent activity, urgent actions, getting-started track for new users
 - `/[core-feature]` — The primary product feature (varies by product)
 - `/settings` — Profile + billing: grouped sections, autosave pattern
-- `/onboarding` or `/setup` — Wizard for new users before they hit dashboard
 
 ### Step 4 — Component Inventory
 
@@ -112,6 +117,14 @@ Write `SCOPE.md` to the project root with this structure:
 ### App Layer
 [Each page with all 5 fields, in build priority order]
 
+## Monetization & Trial
+- **Trial model:** [free-trial-no-card | free-trial-card-required | freemium | paid-only]
+- **Trial length:** [X days, or N/A]
+- **Onboarding data collected:** [list the fields — e.g. "business name, industry, suburb, website URL"]
+- **Dashboard gate:** [what must be true before /dashboard is accessible — e.g. "onboarding complete + trial activated"]
+- **Upgrade gate:** [which features are paywalled — e.g. "AI responses, competitor tracking locked to paid plan"]
+- **Trial banner:** AppLayout shows persistent top banner when trial active: "X days left — Upgrade now"
+
 ## Component Decisions
 - Modal base: [pattern]
 - Empty state: [pattern]
@@ -121,7 +134,7 @@ Write `SCOPE.md` to the project root with this structure:
 ## Build Order
 1. Landing page (/)
 2. Auth (/signin)
-3. [onboarding if needed]
+3. Onboarding (/setup) — always 3rd for SaaS with auth
 4. [core feature page]
 5. [supporting pages in priority order]
 6. Settings (last — least critical path)
