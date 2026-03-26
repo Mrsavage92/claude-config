@@ -138,6 +138,8 @@
     "code-reviewer",
     "competitive-matrix",
     "customer-success-manager",
+    "dataverse-data-model",
+    "dynamics365-crm-architect",
     "employer",
     "employer-audit",
     "employer-careers",
@@ -179,6 +181,9 @@
     "market-seo",
     "market-social",
     "notion",
+    "power-automate-engineer",
+    "power-platform-alm",
+    "power-platform-integration",
     "privacy",
     "privacy-audit",
     "privacy-cookies",
@@ -217,6 +222,6 @@
   "counts": {
     "commands": 55,
     "agents": 59,
-    "skills": 93
+    "skills": 98
   }
 }
