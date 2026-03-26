@@ -125,7 +125,7 @@ All routes prefixed: /[prefix_clean]/
 - No animations except landing page hero (Technique 3 STAGGER)
 ```
 
-**`SCOPE.md`** — write a complete SCOPE.md following this structure:
+**`SCOPE.md`** — write a complete SCOPE.md following this structure. Every page MUST have all 6 fields filled — do not leave any as "TBD" or omit them:
 
 ```markdown
 # [Product Name] — Scope
@@ -133,10 +133,19 @@ All routes prefixed: /[prefix_clean]/
 ## Design Decisions
 - **Style:** Enterprise calm — trust and reliability
 - **Font:** Inter
-- **Primary color:** [suggest based on product type]
-- **COLOR JOB:** [define one job for the primary color]
-- **Reference site:** [suggest a relevant reference]
+- **Primary color:** [suggest HSL value based on product type]
+- **COLOR JOB:** Primary is used ONLY for [e.g. "action buttons and active nav indicator"]. Nothing else.
+- **Reference site:** [suggest one: linear.app / stripe.com / vercel.com / clerk.com]
 - **Tone:** [Professional/Calm/Trustworthy]
+- **CTA label:** [the primary call-to-action label on the landing page, e.g. "Start free trial"]
+
+## Monetization & Trial
+- **Trial model:** free-trial-no-card
+- **Trial length:** 14 days
+- **Onboarding data collected:** [list fields the user must provide at setup — e.g. "business name, industry, suburb, website URL"]
+- **Dashboard gate:** onboarding complete + trial activated
+- **Upgrade gate:** [list which features are paywalled — e.g. "AI features and exports locked to paid plan"]
+- **Trial banner:** AppLayout shows persistent top banner when trial active: "X days left in trial - Upgrade now"
 
 ## Page Inventory (build order)
 
@@ -146,31 +155,49 @@ All routes prefixed: /[prefix_clean]/
 - **Empty state:** N/A (marketing page)
 - **Loading state:** N/A
 - **Error state:** N/A
-- **Signature element:** ProductMockup showing [product's key UI]
+- **Signature element:** ProductMockup showing [describe the product's key UI — e.g. "a compliance dashboard with risk score ring and customer table"]
 
 ### /signin — Auth
 - **Purpose:** Sign in / sign up
 - **Data:** Supabase Auth
 - **Empty state:** N/A
-- **Loading state:** Spinner
-- **Error state:** Inline error message
-- **Signature element:** Clean centered card
+- **Loading state:** Spinner on submit button
+- **Error state:** Inline error below form
+- **Signature element:** Clean centered card with product logo
 
-[Add remaining pages from the Pages input following this format]
+### /setup — Onboarding Wizard
+- **Purpose:** Collect business profile and activate trial before user reaches dashboard
+- **Data:** Writes to [prefix]_businesses or equivalent org table; activates trial in cp_organizations
+- **Empty state:** N/A (wizard is always populated step-by-step)
+- **Loading state:** Spinner on each step's Continue button while saving
+- **Error state:** Inline error on the current step — do not advance on error
+- **Signature element:** Numbered step indicator showing progress (Step 1 of 3)
+- **Steps:** Step 1 — Business details ([fields from Monetization section]). Step 2 — [product-specific setup, e.g. connect accounts]. Step 3 — Choose plan (Stripe Checkout). Redirect to /dashboard on completion.
+- **Gate:** ProtectedRoute redirects here if onboarding_complete = false on the org record.
+
+[For EACH page from the Pages input, add a section following exactly this format:]
+### /[route] — [Page Name]
+- **Purpose:** [one sentence — what the user does here]
+- **Data:** [what API routes / tables this page reads from]
+- **Empty state:** [what a new user with zero data sees — include CTA label]
+- **Loading state:** [skeleton layout or spinner — be specific]
+- **Error state:** [inline error + retry button description]
+- **Signature element:** [the one visually distinctive element that makes this page memorable]
 ```
 
 ### Step 6 — Update PRICE_MAP
 
-Read `packages/stripe-utils/src/index.ts`. Find the `PRICE_MAP` object. Add placeholder price IDs for this product:
+Read `packages/stripe-utils/src/index.ts`. Find the `PRICE_MAP` object. Add a new entry for this product using the correct `ProductId` key format (kebab-case product slug, matching the existing entries):
 
 ```typescript
-// [Product Name]
-[prefix_clean]_starter: 'price_[prefix_clean]_starter',
-[prefix_clean]_pro:     'price_[prefix_clean]_pro',
-[prefix_clean]_agency:  'price_[prefix_clean]_agency',
+'[product-slug]': {
+  starter:    'price_[prefix_clean]_starter',    // TODO: Replace with real Stripe price ID before launch
+  pro:        'price_[prefix_clean]_pro',         // TODO: Replace with real Stripe price ID before launch
+  enterprise: 'price_[prefix_clean]_enterprise',  // TODO: Replace with real Stripe price ID before launch
+},
 ```
 
-Replace `price_[prefix_clean]_*` with a comment `// TODO: Replace with real Stripe price ID before launch`.
+The placeholder values MUST follow the format `price_[prefix_clean]_[tier]` — never use empty strings or `null`. The TODO comments are required so it's obvious these are not real IDs.
 
 ### Step 7 — Update CLAUDE.md
 
@@ -205,8 +232,12 @@ Table prefix: [prefix]_
 - [ ] /web-scaffold → apps/[product-slug]/
 - [ ] /web-supabase → [prefix]_ tables + RLS
 
-## Session 4-N — Pages (web-page per page)
-[List each page]
+## Session 4-N — Pages (web-page per page, in order)
+- [ ] / — Landing page (always first)
+- [ ] /signin — Auth (always second)
+- [ ] /setup — Onboarding wizard (always third — mandatory for all SaaS products)
+- [ ] AppLayout trial banner (persistent top banner showing trial days remaining + Upgrade button)
+[List remaining pages from Pages input]
 
 ## Session Final — Review + Deploy
 - [ ] /web-review (target 38+/40)

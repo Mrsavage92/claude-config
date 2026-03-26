@@ -158,6 +158,16 @@ Write components following these rules:
 ### Step 6 — Add Route to App.tsx
 Add the new page to App.tsx with React.lazy + Suspense immediately. Never leave routes unregistered.
 
+### Step 6b — Cross-Page Component Dedup Check
+
+Before finalising the page, scan `src/components/` for existing components that do the same job as anything you just built:
+- Did you write an inline empty state? → replace with `EmptyState` from `ui/EmptyState.tsx`
+- Did you write a custom skeleton div pattern? → check if a `LoadingSkeleton` component already exists
+- Did you write a stat card? → check if a `StatCard` component already exists from a previous page
+- Did you write a data table? → check for an existing `DataTable` wrapper
+
+If a duplicate exists: refactor to use the shared component. If the new pattern is better: update the shared component and remove the old implementation everywhere it was used. One version per pattern — no silent copies.
+
 ### Step 7 — Per-Page Self-Review (MANDATORY — do not skip)
 
 Run this check before marking the page done. Fix any failures immediately.
@@ -169,7 +179,8 @@ Per-page review: [page name]
 [ ] Empty state: has CTA button (not just text)
 [ ] Loading state: skeleton layout (not blank or spinner on empty)
 [ ] Error state: inline error + retry button
-[ ] Color budget: primary color appears <= 2 times on this page
+[ ] Color budget: count every text-primary, bg-primary, border-primary, ring-primary. Total must be <= 2. If > 2: replace ambient/decorative uses with text-muted-foreground, bg-muted, or text-brand.
+[ ] document.title: any page title change uses useEffect(() => { document.title = '...' }, []) — never at render scope
 [ ] User knows next action: clear without reading docs
 [ ] Typography: at least 2 size/weight levels used (not all text-sm)
 [ ] Mobile: layout works at 375px
@@ -178,16 +189,16 @@ Per-page review: [page name]
 [ ] Modals (if any): close button has aria-label="Close", Escape closes
 ```
 
-If any item fails: fix it. Do not move to the next page until all 11 pass.
+If any item fails: fix it. Do not move to the next page until all 12 pass.
 
-Log: "Page [name] — self-review passed (11/11)" before proceeding.
+Log: "Page [name] — self-review passed (12/12)" before proceeding.
 
 ### Step 8 — Output
 
 ```
 Built: [page name] ([route])
 Files: [list]
-Self-review: 11/11 passed
+Self-review: 12/12 passed
 Signature element: [what makes this page visually interesting]
 Empty state: [CTA label]
 

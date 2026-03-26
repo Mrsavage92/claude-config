@@ -349,6 +349,17 @@ List all VITE_* env vars the project needs.
 npm install && npx shadcn@latest init && npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea
 ```
 
+**shadcn v4 CSS overwrite guard (mandatory — do not skip):**
+After running the above, check `src/styles/index.css` for the string `oklch(`. If found, shadcn v4 has overwritten the design system tokens with oklch-format values.
+
+Restore using the Complete Token Set from the **Color System** section of `~/.claude/web-system-prompt.md` (already read in Step 1 — it is in memory). Apply these rules when restoring:
+- Replace `--primary` with the project's chosen HSL value from the design brief
+- Replace `--brand` with the project's signature color HSL value
+- Replace the `@import` URL with the chosen Google Font
+- Keep all other token names and structure exactly as in the template
+
+The restored file must contain only HSL space-separated values — no `oklch()`, no `rgb()`, no hex. This check is required every scaffold.
+
 ### Step 6 — Output
 ```
 Scaffolded: [name]

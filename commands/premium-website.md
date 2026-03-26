@@ -77,9 +77,18 @@ Full detail: `/web-animations` Technique 3.
 - Call `mcp__magic__21st_magic_component_inspiration` for "feature cards dark enterprise SaaS" BEFORE writing
 - 3-6 cards, `whileInView` stagger from web-animations Technique 3
 
-### 5. Color Discipline
+### 5. Onboarding & Trial Gate (SaaS products with auth — mandatory)
+- Every SaaS product with auth MUST have a `/setup` or `/onboarding` wizard built as the 3rd page (after landing + auth)
+- The wizard MUST collect product-specific business profile data before the user reaches the dashboard
+- Final wizard step MUST activate the trial or present Stripe Checkout — never let users skip straight to dashboard
+- `ProtectedRoute` MUST check `onboarding_complete` on the org record and redirect to `/setup` if false
+- AppLayout MUST include a trial banner when trial is active: persistent top bar showing days remaining + "Upgrade now" button
+- The trial banner is hidden only when the user is on an active paid plan
+
+### 6. Color Discipline
 - **Landing page**: primary color used exactly twice — CTA button + feature icon backgrounds. Never more.
 - **App/dashboard pages**: primary color allowed for active nav items, primary action buttons, and progress/score indicators only. Max 3 uses per page.
+- **PRIMARY COLOR BUDGET rule**: count every `text-primary`, `bg-primary`, `border-primary`, `ring-primary` on the page. If the count exceeds the budget: replace ambient/decorative uses with `text-muted-foreground`, `bg-muted`, or `text-brand`. Never use primary as a neutral fill.
 - Enterprise design = restraint. If in doubt, use `text-muted-foreground` and `border-white/[0.07]`.
 
 ---
@@ -125,7 +134,8 @@ Every page must pass before moving to the next:
 [ ] Empty state: has CTA button (not just text)
 [ ] Loading state: skeleton layout (not blank or spinner)
 [ ] Error state: inline error + retry button
-[ ] Color budget: primary appears <= 2 times on this page
+[ ] Color budget: count text-primary/bg-primary/border-primary/ring-primary — total <= 2. If > 2: replace with text-muted-foreground or bg-muted.
+[ ] document.title: any page title change uses useEffect(() => { document.title = '...' }, []) — never at render scope
 [ ] User knows next action: clear without reading docs
 [ ] Typography: at least 2 size/weight levels (not all text-sm)
 [ ] Mobile: layout works at 375px
@@ -156,6 +166,11 @@ Run before any deploy:
 [ ] Landing page animated background present
 [ ] Landing page product visual mockup present (not a blob)
 [ ] Auth pages: form labels, error states, redirect-after-login working
+[ ] No duplicate component patterns — EmptyState, skeleton, stat card, data table each exist once
+[ ] All page title changes use useEffect — none at render scope
+[ ] /setup or /onboarding wizard exists — mandatory for all SaaS products with auth
+[ ] ProtectedRoute checks onboarding_complete and redirects to /setup if false
+[ ] AppLayout trial banner present (days remaining + Upgrade button) when trial model is free-trial
 [ ] web-review score 38+/40
 ```
 
