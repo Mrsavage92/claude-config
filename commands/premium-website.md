@@ -60,16 +60,27 @@ Read `~/.claude/web-system-prompt.md` before any UI generation. It contains:
 - This is NOT optional. Every hero must have this.
 
 ### 3. Hero Entrance Animation
-Read `/web-animations` Technique 3 STAGGER. Entrance order is always:
+Technique 3 STAGGER (Framer Motion) — entrance order is always:
 Pill → headline → subheadline → CTAs → trust stats → product visual (0.6s delay — loads last for effect)
+
+Implementation pattern:
+```tsx
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.12 } } };
+const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } } };
+// Wrap section in <motion.div variants={container} initial="hidden" animate="show">
+// Wrap each element in <motion.div variants={item}>
+// Product visual gets delay={0.6} override
+```
+Full detail: `/web-animations` Technique 3.
 
 ### 4. Features Section
 - Call `mcp__magic__21st_magic_component_inspiration` for "feature cards dark enterprise SaaS" BEFORE writing
 - 3-6 cards, `whileInView` stagger from web-animations Technique 3
 
 ### 5. Color Discipline
-- Primary color used exactly twice on the landing page: CTA button + feature icon backgrounds
-- Never more. Enterprise design = restraint.
+- **Landing page**: primary color used exactly twice — CTA button + feature icon backgrounds. Never more.
+- **App/dashboard pages**: primary color allowed for active nav items, primary action buttons, and progress/score indicators only. Max 3 uses per page.
+- Enterprise design = restraint. If in doubt, use `text-muted-foreground` and `border-white/[0.07]`.
 
 ---
 
@@ -85,6 +96,23 @@ Apply from scaffold onwards — not just at review time:
 - AnimatedBackground: lazy-loaded (`React.lazy`)
 - Font: `display=swap`
 - No chunk exceeds 250KB gzipped
+
+## Routing & Auth Rules
+
+- All auth-gated routes MUST use a `ProtectedRoute` wrapper component — never `useEffect` redirects
+- `ProtectedRoute` pattern: check session from Supabase, show skeleton while loading, redirect to `/auth` if null
+- Auth pages (login, signup, reset-password) are exempt from the product visual mockup rule
+- Auth pages quality bar: form labels, error states, redirect-after-login, mobile layout at 375px
+- `/web-scope` MUST produce a `SCOPE.md` containing: page list, auth flow diagram, design decisions, color palette choice, component inventory. saas-build uses this as the build contract.
+
+## Skill Trigger Guide
+
+| Use | When |
+|---|---|
+| `/web-fix` | A specific element is broken, failing a review check, or visually wrong. Pass the exact component name and the failure. |
+| `/web-component` | Adding a net-new UI element to an existing page. |
+| `/web-page` | Building an entire page from scratch. |
+| `/web-review` | Final quality gate before deploy — scores 40 dimensions across design, a11y, and performance. |
 
 ---
 
@@ -118,6 +146,8 @@ Run before any deploy:
 [ ] npm run build — no TypeScript errors
 [ ] No chunk exceeds 250KB gzipped
 [ ] All routes use React.lazy + Suspense
+[ ] Each lazy route wrapped in ErrorBoundary
+[ ] ProtectedRoute used on all auth-gated routes (no useEffect redirects)
 [ ] All images have alt, loading="lazy", explicit dimensions
 [ ] Hero image uses loading="eager"
 [ ] vercel.json at project root with SPA rewrites
@@ -125,6 +155,7 @@ Run before any deploy:
 [ ] VITE_* env vars set in Vercel dashboard
 [ ] Landing page animated background present
 [ ] Landing page product visual mockup present (not a blob)
+[ ] Auth pages: form labels, error states, redirect-after-login working
 [ ] web-review score 38+/40
 ```
 

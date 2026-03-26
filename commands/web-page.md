@@ -44,18 +44,36 @@ Before writing a single component, answer these for this specific page:
 #### Landing Page (`/`)
 Structure: Nav → Hero → Features → How It Works → Pricing → Final CTA → Footer
 
-Hero MUST include:
-- A product screenshot, dashboard mockup, or device-framed UI preview — not just a gradient blob
-- Display-size headline with negative letter-spacing
-- One primary CTA + one secondary CTA
-- At least one trust signal (stat, "no credit card", deadline urgency, user count)
-- Framer Motion staggered entrance (headline → subtext → CTA → trust signal)
+**Hero build sequence — follow in order:**
 
-Features section: 3-6 cards, each with icon + title + 2-sentence description. Staggered whileInView animation.
+1. **Animated background first** — call `mcp__magic__21st_magic_component_inspiration` with query "animated background hero [dark/enterprise/grid]". Then `mcp__magic__21st_magic_component_builder`. Set `opacity: 0.2`, `z-index: -1`, wrap in `prefers-reduced-motion`. If MCP unavailable: CSS grid lines pattern from `web-system-prompt.md` Visual Signature Elements.
 
-Pricing: 3 tiers, center tier highlighted with `border-primary/50 bg-primary/5`. Each tier: name, price, description, feature list with Check icons, CTA button.
+2. **Product visual mockup** — built from shadcn primitives shaped like the real app:
+   - Browser chrome: three colored dots (`bg-destructive/50`, `bg-yellow-400/50`, `bg-green-500/50`) + URL bar showing `app.[product].com.au`
+   - Sidebar: column of muted icon-shaped divs, first one `bg-primary/80` (active nav state)
+   - Content: 3 stat cards (`border border-border/40 bg-background/60`), each with a muted label div + bold value div + colored bottom bar
+   - Data table: 3-4 rows, each with a colored dot + muted line divs + status pill shape
+   - Wrap entire mockup in a glow container: `absolute -inset-4 rounded-3xl bg-gradient-to-b from-brand/15 to-transparent blur-2xl`
+   - This is NOT optional. Every hero must have this.
 
-Footer: logo + tagline left, nav links center, legal disclaimer right.
+3. **Headline** — display size (`text-display`), `text-balance`, negative letter-spacing. Key phrase wrapped in `.gradient-text` class. Never the full headline — just 2-3 words.
+
+4. **CTAs** — Primary: `Button size="lg"` (bg-primary — this is one of the 2 allowed uses of primary color on this page). Secondary: `Button size="lg" variant="outline"`.
+
+5. **Trust stats row** — 3 real numbers from the product value prop. Format: large bold number + small muted label.
+
+6. **Framer Motion entrance** — stagger using `web-animations` skill Technique 3 STAGGER pattern. Order: pill → headline → subheadline → CTAs → stats → product visual (slight delay so it "loads in" last).
+
+**Features section:**
+- Run `mcp__magic__21st_magic_component_inspiration` for "feature cards dark enterprise SaaS" before writing anything
+- 3-6 cards. Each: icon in `bg-primary/10 rounded-lg p-2 w-fit` + title + 2 sentences. Icon is `text-primary` — second allowed use of primary color on landing page.
+- `whileInView` stagger from `web-animations` Technique 3.
+
+**Pricing:**
+3 tiers, center highlighted: `border-primary/50 bg-primary/5 shadow-lg`. Each tier: name, price, description, feature list with Check icons, CTA button. Check `mcp__magic__21st_magic_component_inspiration` for "pricing table SaaS" if a better layout exists.
+
+**Footer:**
+Logo + tagline left, nav links center, legal disclaimer right. No color — purely `text-muted-foreground`.
 
 #### Dashboard
 MUST include a "getting started" track for users with zero data:
