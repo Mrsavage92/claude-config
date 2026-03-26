@@ -120,8 +120,6 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
-    ".git",
-    ".gitignore",
     "agent-browser",
     "ai-image-generation",
     "ai-ready",
@@ -136,7 +134,6 @@
     "client-golive",
     "client-onboard",
     "code-reviewer",
-    "competitive-matrix",
     "customer-success-manager",
     "dataverse-data-model",
     "dynamics365-crm-architect",
@@ -207,7 +204,6 @@
     "senior-devops",
     "senior-frontend",
     "senior-qa",
-    "shared",
     "stock-photos",
     "stripe-integration-expert",
     "techaudit",
@@ -216,12 +212,11 @@
     "techaudit-mobile",
     "techaudit-report-pdf",
     "techaudit-speed",
-    "vercel-react-best-practices",
     "web-design-guidelines"
   ],
   "counts": {
     "commands": 55,
     "agents": 59,
-    "skills": 98
+    "skills": 93
   }
 }
