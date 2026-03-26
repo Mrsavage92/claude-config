@@ -221,7 +221,80 @@ export function EmptyState({ icon: Icon, heading, description, action, className
 ```
 
 #### `src/components/landing/` + `src/pages/Landing.tsx`
-Landing page is generated as part of scaffold if SCOPE.md includes it (it always will). See /web-page landing page template.
+Landing page is built during scaffold — not deferred. The hero is the most important file in the project.
+
+**Build sequence for landing page:**
+
+1. **Animated background** — run `mcp__magic__21st_magic_component_inspiration` searching for "animated background hero [enterprise/dark/grid]". Then `mcp__magic__21st_magic_component_builder` to generate. Adapt colors to `hsl(var(--brand))`. Apply `z-index: -1`, `opacity: 0.2-0.3` (subtle — background, not foreground). Wrap in `prefers-reduced-motion` check from `web-animations` skill.
+
+2. **Hero section** — structure: Nav → background → headline → subheadline → CTAs → trust stats → product visual. Apply Framer Motion staggered entrance from `web-animations` skill Technique 3 (FADE_UP + STAGGER on children).
+
+3. **Product visual** — a simulated UI mockup showing the actual app. Built from shadcn Card, Skeleton, Badge. Includes browser chrome (three colored dots + URL bar), a sidebar column of muted icon shapes, and a content area with mock stat cards + a data table row. Adapt KPI labels to the product. Never just a gradient blob. Wrap in a glow div: `absolute -inset-4 rounded-3xl bg-gradient-to-b from-brand/15 to-transparent blur-2xl`.
+
+**ProductMockup template (adapt labels per product):**
+```tsx
+export function ProductMockup() {
+  return (
+    <div className="relative mx-auto max-w-2xl">
+      {/* Glow */}
+      <div className="absolute -inset-4 rounded-3xl bg-gradient-to-b from-brand/15 to-transparent blur-2xl" />
+      {/* Browser chrome */}
+      <div className="relative rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm overflow-hidden shadow-2xl">
+        <div className="flex items-center gap-1.5 border-b border-border/40 bg-muted/30 px-4 py-2.5">
+          <div className="h-2.5 w-2.5 rounded-full bg-destructive/50" />
+          <div className="h-2.5 w-2.5 rounded-full bg-yellow-400/50" />
+          <div className="h-2.5 w-2.5 rounded-full bg-green-500/50" />
+          <div className="ml-3 h-4 flex-1 max-w-[160px] rounded bg-muted/60 text-[10px] text-muted-foreground flex items-center px-2">
+            app.[product].com
+          </div>
+        </div>
+        <div className="flex h-48">
+          {/* Sidebar */}
+          <div className="flex w-10 flex-col items-center gap-2 border-r border-border/30 bg-muted/20 py-3">
+            {[true, false, false, false].map((active, i) => (
+              <div key={i} className={`h-5 w-5 rounded ${active ? 'bg-primary/80' : 'bg-muted/60'}`} />
+            ))}
+          </div>
+          {/* Content */}
+          <div className="flex-1 p-3 space-y-2">
+            {/* Stat cards */}
+            <div className="grid grid-cols-3 gap-2">
+              {[['KPI 1', '124'], ['KPI 2', '89%'], ['KPI 3', '12']].map(([label, val]) => (
+                <div key={label} className="rounded border border-border/40 bg-background/60 p-2">
+                  <div className="text-[9px] text-muted-foreground">{label}</div>
+                  <div className="text-xs font-semibold text-foreground">{val}</div>
+                  <div className="mt-1 h-0.5 w-full rounded bg-primary/40" />
+                </div>
+              ))}
+            </div>
+            {/* Table rows */}
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-2 rounded border border-border/20 bg-muted/10 px-2 py-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-500/70" />
+                <div className="h-2 flex-1 rounded bg-muted/50" />
+                <div className="h-3 w-8 rounded-full bg-muted/40 text-[8px]" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+Swap `[product]`, `KPI 1/2/3` labels, and dot colors to match the actual product before using.
+
+4. **Features section** — run `mcp__magic__21st_magic_component_inspiration` for "feature grid cards [dark/enterprise]". Use `mcp__magic__21st_magic_component_builder`. Apply `whileInView` stagger from `web-animations` Technique 3.
+
+5. **Pricing section** — 3 tiers. Center tier: `border-primary/50 bg-primary/5 shadow-lg`. Each: name, price, description, feature list with Check icons, CTA. Use `mcp__magic__21st_magic_component_inspiration` for "pricing table SaaS" if a better layout exists.
+
+6. **Other sections** — How It Works (3 numbered steps with connector), Footer (logo+tagline left, links center, legal right).
+
+**Rules:**
+- `mcp__magic__21st_magic_component_inspiration` is called BEFORE writing any complex section — not after
+- Animated background is mandatory — CSS grid pattern minimum, 21st.dev animated canvas preferred
+- Product visual mockup is mandatory — shadcn components shaped like the real app, never a blob
+- All sections use `whileInView` + `viewport={{ once: true }}` — see `web-animations` skill Technique 3
 
 #### `src/App.tsx`
 BrowserRouter with route for `/` (Landing), `/signin` (Auth), and protected app routes. All app routes lazy-loaded.

@@ -131,18 +131,23 @@ npx vercel env add [VAR_NAME] production --value [value] --yes
 VITE_API_URL is required if there is a backend — set it now, not later.
 
 **6d. Smoke test (present to user — do not skip)**
+
+Read SCOPE.md to get: the product name, the primary CTA label on the landing page, and the name of the core feature page. Use these in the checklist below — do not hardcode generic text.
+
 ```
-Smoke Test — [product URL]
-──────────────────────────────────────
-ACTION REQUIRED: Open [URL] and verify each item below.
+Smoke Test — [product name] ([product URL])
+──────────────────────────────────────────────────────
+ACTION REQUIRED: Open [URL] in a browser and verify each item.
+Report back which pass and which fail — Claude will fix failures before marking deploy done.
 
-[ ] 1. Landing page loads — hero visible, animated background present, CTA visible
-[ ] 2. "Start free trial" CTA navigates to /signin
-[ ] 3. Sign up creates a Supabase user — check auth.users in Supabase dashboard
-[ ] 4. Onboarding flow completes and reaches dashboard
-[ ] 5. Core product feature is accessible and shows correct empty state with CTA
+[ ] 1. Landing page loads — hero visible, animated background present, [CTA label from SCOPE.md] button visible
+[ ] 2. Primary CTA navigates to /signin (or /signup)
+[ ] 3. Sign up — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
+[ ] 4. Onboarding/setup — complete the onboarding flow. Confirm it reaches the dashboard.
+[ ] 5. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
+[ ] 6. Settings page — loads and form submits without error.
 
-For each failure: paste the error and Claude will fix before marking deploy done.
+For each failure: paste the error or screenshot and Claude will fix before marking done.
 ```
 
 **6e. Update CORS**

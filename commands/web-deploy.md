@@ -61,6 +61,18 @@ Commit and push so Railway auto-deploys the CORS fix before the frontend goes li
 
 ### Step 4 — Vercel Deploy
 
+**First deploy — link repo for continuous deployment (do this once):**
+```bash
+# Push to GitHub first if not already
+git add -A && git commit -m "chore: pre-deploy cleanup" && git push origin main
+
+# Import via Vercel CLI (links GitHub repo — all future pushes auto-deploy)
+npx vercel --prod --yes
+```
+
+After first deploy, Vercel will create a GitHub integration. All future `git push origin main` → auto-deploy. No manual `npx vercel --prod` needed again.
+
+**If not using GitHub (local deploy only):**
 ```bash
 npx vercel --prod --yes
 ```
@@ -72,6 +84,9 @@ Capture the production URL from output. Note both the unique deploy URL and the 
 - Build command: `npm run build`
 - Output directory: `dist`
 - Root directory: [project root or monorepo app path]
+
+**Confirm GitHub auto-deploy is wired:**
+After first deploy, verify at vercel.com/[project]/settings/git that the GitHub repo is connected and `main` branch triggers production deploys.
 
 ### Step 5 — Set All Environment Variables in Vercel
 
@@ -100,16 +115,21 @@ If Railway token not available: log as NEEDS_HUMAN with exact steps.
 
 ### Step 7 — Smoke Test (5 checks — all required)
 
-After deploy, verify these manually or by reading page source:
+Output this checklist for the human to verify. Do not mark deploy complete until all 5 are confirmed.
 
 ```
 Smoke Test — [product URL]
 ──────────────────────────────────────
-[ ] 1. Landing page loads — hero visible, CTA button present
-[ ] 2. Sign up flow — creates Supabase user (check auth.users in Supabase dashboard)
-[ ] 3. Onboarding/setup — completes and reaches dashboard
-[ ] 4. Core feature — accessible, shows correct empty state with CTA
-[ ] 5. Settings page — loads, form submits without error
+ACTION REQUIRED: Open [URL] and verify each item below.
+Report back which pass and which fail before this deploy is marked done.
+
+[ ] 1. Landing page loads — hero visible, animated background present, CTA button visible
+[ ] 2. Sign up flow — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
+[ ] 3. Onboarding/setup — complete the onboarding flow. Confirm it reaches the dashboard.
+[ ] 4. Core feature — navigate to the core feature. Confirm it loads and shows the correct empty state with CTA.
+[ ] 5. Settings page — open Settings. Confirm it loads and form submits without error.
+
+For each failure: paste the error or screenshot and Claude will fix before marking done.
 ```
 
 If any smoke test fails: investigate and fix before marking deploy done. A deployed product that doesn't work is worse than no product.
