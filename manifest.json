@@ -2,6 +2,8 @@
   "last_updated": "2026-03-27",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
+    "LOG.md": "e631729b2db8569894079b55d6b3cb53",
+    "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
     "a11y-audit.md": "becadec2217a064792f023b8ed197943",
     "ad-creative.md": "5112871e69b9cfae14d00d7ea49206f0",
     "agent-brief.md": "f0a9e19f4c8e07ba380309969d8b6a9e",
@@ -19,7 +21,6 @@
     "handoff.md": "76e25e41df0f116eb864f6bac5ed1cfd",
     "job-description.md": "74464af13998ed81d7c92c00f90376e2",
     "linkedin-post.md": "24e972fc079cccba12e9b308a2864c30",
-    "LOG.md": "e631729b2db8569894079b55d6b3cb53",
     "okr.md": "8bc8c5874b23c342a50b5ea42bc50417",
     "parallel-audit.md": "f379b48cbd6ab03f7f44d509d610bfe3",
     "persona.md": "98381107e06be0c500ac199abc12259f",
@@ -43,7 +44,6 @@
     "sprint-plan.md": "3d5608e1ab0c20f5cc7688f42da0a870",
     "standup.md": "17624eca8e8eab139f0fe71688025cac",
     "sync-knowledge-base.md": "a8696afe2f1cab306b7d7b96b925d76d",
-    "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
     "tdd.md": "45e07a83d3f7fba85f49a1962b2602cb",
     "tech-debt.md": "a76aabdd12d02b7c8ed3bb5bde51092a",
     "usage-report.md": "f694988d44e61e12e068b98bc16ab359",
@@ -217,11 +217,12 @@
     "techaudit-report-pdf",
     "techaudit-speed",
     "web-design-guidelines",
+    "web-email",
     "web-table"
   ],
   "counts": {
     "commands": 58,
     "agents": 59,
-    "skills": 95
+    "skills": 96
   }
 }
