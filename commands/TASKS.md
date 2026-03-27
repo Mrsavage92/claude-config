@@ -12,4 +12,4 @@ Implement 3 missing patterns that every product needs but the suite doesn't enfo
 - [x] 2. Add AppLayout trial banner to web-scaffold — reference React component scaffolded into every new product
 - [x] 3. Add Sentry to web-scaffold — init in main.tsx, ErrorBoundary wrapper, enforce in pre-deploy checklist
 - [x] 4. Update premium-website.md contract — Stripe + Sentry added to pre-deploy checklist
-- [ ] 5. Sync to GitHub + Notion
+- [x] 5. Sync to GitHub + Notion
