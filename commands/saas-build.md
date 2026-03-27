@@ -99,6 +99,19 @@ Follow /web-page rules. Apply all landing page non-negotiables from premium-webs
 - Onboarding (`/setup` or `/onboarding`) is ALWAYS third for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
 - App pages follow in SCOPE.md priority order after onboarding
 
+**Dashboard page detection — read `/dashboard-design` skill before building:**
+Before writing any page that is a dashboard, analytics view, monitoring screen, or data management list, read `~/.claude/skills/dashboard-design/SKILL.md` in full. Apply these rules automatically:
+- Determine page type (Overview / Analytics / List / Detail / Settings) from the skill's Page Types table
+- Use KpiCard + Sparkline components (from skill spec) for any metric display
+- Use TanStack Query for all data fetching — never useEffect
+- DateRangePicker required on Analytics pages
+- FilterBar required above every data table
+- Export CSV button in page header for every List page
+- Framer Motion stagger (0.08s) on KPI card entrance
+- All colors via CSS variables — zero hardcoded grays or whites
+- CMD+K CommandPalette mounted in AppLayout if product has 8+ nav items
+- Run the skill's Pre-Ship Checklist (28 items) as the per-page self-review for dashboard pages instead of the standard 12-item checklist
+
 **4c. Per-page self-review**
 Run the 12-item checklist from premium-website.md. Fix any failures. Log: "Page [name] complete — self-review passed (12/12)" to BUILD-LOG.md. Only then move to the next page.
 
