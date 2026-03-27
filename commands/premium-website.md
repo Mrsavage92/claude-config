@@ -28,6 +28,7 @@ This file is the contract. If a rule lives only in an individual skill file and 
 | `/web-review` | Design + a11y + performance audit (target 38+/40) before deploy |
 | `/web-deploy` | Vercel (SPAs) or Railway (full-stack) with smoke tests |
 | `/web-fix` | Fix a specific component, bug, or review failure |
+| `/web-stripe` | Stripe checkout session, webhook handler, UpgradeButton + PricingCards components, trial-to-paid flow |
 | `/vercel-react-best-practices` | Bundle splitting, Core Web Vitals, image optimization, Vercel deploy checklist |
 
 ---
@@ -171,6 +172,12 @@ Run before any deploy:
 [ ] /setup or /onboarding wizard exists — mandatory for all SaaS products with auth
 [ ] ProtectedRoute checks onboarding_complete and redirects to /setup if false
 [ ] AppLayout trial banner present (days remaining + Upgrade button) when trial model is free-trial
+[ ] TrialBanner hidden when subscription_status === 'active' — verified on a paid test account
+[ ] Stripe checkout tested end-to-end with test card 4242 4242 4242 4242 — subscription activates and banner disappears
+[ ] VITE_STRIPE_PUBLISHABLE_KEY + VITE_STRIPE_PRO_PRICE_ID set in Vercel dashboard
+[ ] Stripe webhook endpoint registered in Stripe dashboard — correct prod URL, correct events
+[ ] Sentry initialised in main.tsx — VITE_SENTRY_DSN set in Vercel dashboard
+[ ] Sentry.ErrorBoundary wraps root <App /> — unhandled render errors are captured
 [ ] web-review score 38+/40
 ```
 

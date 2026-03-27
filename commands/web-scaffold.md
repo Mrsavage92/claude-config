@@ -164,23 +164,92 @@ Standard QueryClient with staleTime: 60000, retry: 1.
 #### `src/hooks/use-theme.ts`
 Standard useTheme hook.
 
-#### `src/components/layout/AppLayout.tsx`
-MUST include skip-nav as first element:
+#### `src/components/layout/TrialBanner.tsx`
+Generated in every SaaS scaffold with auth. Hidden when subscription is active. Trial model from SCOPE.md determines default trial days.
+
 ```tsx
-<>
-  <a
-    href="#main-content"
-    className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground"
-  >
-    Skip to content
-  </a>
-  <div className="flex h-screen">
-    <Sidebar />
-    <main id="main-content" className="flex-1 overflow-y-auto">
-      <Outlet />
-    </main>
-  </div>
-</>
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { UpgradeButton } from '@/components/billing/UpgradeButton'
+
+interface OrgRecord {
+  trial_ends_at: string | null
+  subscription_status: string | null
+}
+
+export function TrialBanner() {
+  const [org, setOrg] = useState<OrgRecord | null>(null)
+
+  useEffect(() => {
+    supabase
+      .from('organizations')
+      .select('trial_ends_at, subscription_status')
+      .single()
+      .then(({ data }) => setOrg(data))
+  }, [])
+
+  if (!org) return null
+  if (org.subscription_status === 'active') return null
+  if (!org.trial_ends_at) return null
+
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((new Date(org.trial_ends_at).getTime() - Date.now()) / 86_400_000)
+  )
+
+  if (daysLeft === 0) {
+    return (
+      <div className="flex items-center justify-center gap-3 border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-sm">
+        <span className="text-destructive font-medium">Your trial has expired.</span>
+        <UpgradeButton priceId={import.meta.env.VITE_STRIPE_PRO_PRICE_ID} label="Upgrade now" size="sm" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-3 border-b border-border bg-muted/40 px-4 py-2 text-sm">
+      <span className="text-muted-foreground">
+        <span className="font-medium text-foreground">{daysLeft} day{daysLeft !== 1 ? 's' : ''}</span> left in your free trial.
+      </span>
+      <UpgradeButton priceId={import.meta.env.VITE_STRIPE_PRO_PRICE_ID} label="Upgrade now" size="sm" variant="outline" />
+    </div>
+  )
+}
+```
+
+**Rules:**
+- Hidden when `subscription_status === 'active'` — never shown to paying customers
+- Shown on ALL app pages inside AppLayout — never page-specific
+- Upgrade link uses `VITE_STRIPE_PRO_PRICE_ID` env var — replace placeholder before go-live
+- Trial expiry urgency: 0 days uses destructive color; 1-7 uses default warning tone; 8+ uses muted
+- If product uses free-trial-no-card model, `trial_ends_at` is set at signup — no card required until upgrade
+
+#### `src/components/layout/AppLayout.tsx`
+MUST include skip-nav as first element AND trial banner above content area:
+```tsx
+import { TrialBanner } from '@/components/layout/TrialBanner'
+
+export function AppLayout() {
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground"
+      >
+        Skip to content
+      </a>
+      <div className="flex h-screen flex-col">
+        <TrialBanner />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main id="main-content" className="flex-1 overflow-y-auto">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </>
+  )
+}
 ```
 
 #### `src/components/ui/EmptyState.tsx`
@@ -296,6 +365,49 @@ Swap `[product]`, `KPI 1/2/3` labels, and dot colors to match the actual product
 - Product visual mockup is mandatory — shadcn components shaped like the real app, never a blob
 - All sections use `whileInView` + `viewport={{ once: true }}` — see `web-animations` skill Technique 3
 
+#### `src/main.tsx` — Sentry error monitoring (SaaS products mandatory)
+Add Sentry before `createRoot`. Skip for pure landing pages without auth.
+
+```tsx
+import * as Sentry from '@sentry/react'
+import { createRoot } from 'react-dom/client'
+import App from './App'
+import './styles/index.css'
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),
+  ],
+  tracesSampleRate: 0.2,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  enabled: import.meta.env.PROD,
+})
+
+createRoot(document.getElementById('root')!).render(
+  <Sentry.ErrorBoundary fallback={<p className="p-8 text-destructive">Something went wrong. Please refresh.</p>}>
+    <App />
+  </Sentry.ErrorBoundary>
+)
+```
+
+Add to `.env.example`:
+```
+VITE_SENTRY_DSN=https://...@sentry.io/...   # Get from Sentry project settings
+```
+
+Add to Vercel dashboard: `VITE_SENTRY_DSN`
+
+**Package:** `npm install @sentry/react`
+
+**Rules:**
+- `enabled: import.meta.env.PROD` — never sends events in dev
+- Wrap root `<App />` in `<Sentry.ErrorBoundary>` — catches all unhandled React render errors
+- `tracesSampleRate: 0.2` — 20% of transactions traced (keeps free tier comfortable)
+- `replaysOnErrorSampleRate: 1.0` — always capture replay on error (critical for debugging)
+
 #### `src/App.tsx`
 BrowserRouter with route for `/` (Landing), `/signin` (Auth), and protected app routes. All app routes lazy-loaded.
 
@@ -342,7 +454,14 @@ Always generate this at the project root — every React Router SPA needs it. Do
 ```
 
 #### `.env.example`
-List all VITE_* env vars the project needs.
+List all VITE_* env vars the project needs. For SaaS products with auth always include:
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+VITE_STRIPE_PRO_PRICE_ID=price_...   # Replace with real price ID before go-live
+VITE_API_URL=https://your-railway-service.up.railway.app
+```
 
 ### Step 5 — Install + shadcn Init
 ```bash
@@ -378,6 +497,8 @@ Next: /web-supabase (if backend) → /web-page (landing first)
 - tsconfig.json MUST always include "types": ["vite/client"]
 - vercel.json MUST be generated at project root — every React Router SPA needs it from day one
 - EmptyState component MUST be generated in every scaffold
-- AppLayout MUST include skip-nav
+- AppLayout MUST include skip-nav AND TrialBanner (SaaS with auth)
+- TrialBanner MUST be generated in every SaaS scaffold — hidden by subscription_status, not removed
+- Sentry MUST be initialised in main.tsx for every SaaS product — skip only for pure landing pages without auth
 - CLAUDE.md MUST include the color job sentence
 - Landing page route MUST exist in App.tsx from day one (even if page not built yet)
