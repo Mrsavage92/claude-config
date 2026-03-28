@@ -82,10 +82,10 @@ Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 
 Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute it completely:
 1. Identify product personality type (one of 8: Enterprise Authority, Data Intelligence, Trusted Productivity, Premium Professional, Bold Operator, Health & Care, Growth Engine, Civic/Government)
-2. Run 2-3 competitor research WebSearch queries for this product category
-3. Select a unique color system from the personality palette library — EXPLICITLY reject hsl(213 94% 58%) with a documented reason unless this is developer tooling
-4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS")
-5. Call `mcp__magic__21st_magic_component_builder` for the animated background
+2. **Skip competitor research — MARKET-BRIEF.md already has it.** Read MARKET-BRIEF.md competitors section instead of running new WebSearch queries. Only run fresh queries if MARKET-BRIEF.md does not exist.
+3. Select a unique color system from the personality palette library — EXPLICITLY reject hsl(213 94% 58%) with a documented reason unless this is developer tooling. **Cross-product uniqueness check (monorepo):** before writing DESIGN-BRIEF.md, grep all existing `apps/*/DESIGN-BRIEF.md` files for the chosen primary HSL value. If the same hue (within ±15 degrees) is already in use by another product, select a different palette and document why.
+4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS"). If MCP is unavailable or returns no results: use the CSS grid pattern from web-system-prompt.md as the animated background fallback and continue — do not stop.
+5. Call `mcp__magic__21st_magic_component_builder` for the animated background. If MCP unavailable: write the CSS grid pattern inline in HeroSection.
 6. Search LottieFiles for 3 animations relevant to this product
 7. Choose marketing site tier (Tier 2 standard: /, /features, /pricing, /signin as separate routes)
 8. Write DESIGN-BRIEF.md to the project root (or `apps/[product-slug]/` in monorepo)
@@ -107,7 +107,13 @@ Execute the full /web-scope process:
 
 Do not proceed to Phase 2 until SCOPE.md exists and every page has all 5 fields defined.
 
-**Stop condition:** if the product description is too vague to define pages, ask ONE clarifying question. One question only. Then continue.
+**Mandatory pages — add to SCOPE.md regardless of brief:**
+Every SaaS product MUST include these pages in the inventory. If the brief doesn't mention them, add them:
+- `/privacy` — Privacy Policy (static, auto-generated)
+- `/terms` — Terms of Service (static, auto-generated)
+These are never optional. Add them to the build order in Phase 4 after `/settings`.
+
+**Stop condition:** if the product description is too vague to identify the core feature category, make a documented assumption and log it — do NOT ask. Format: "Brief was vague — assumed [X] based on [Y]. Correct SCOPE.md if wrong." Only ask if the product domain is completely unidentifiable after analysis.
 
 ---
 
@@ -120,7 +126,26 @@ Execute the full /web-scaffold process using decisions from SCOPE.md:
 4. CLAUDE.md MUST include: color job definition, design reference site, page inventory summary
 5. AppLayout MUST include skip-nav link as first element
 6. Generate vercel.json with SPA rewrites at project root
-7. Run `npm install && npx shadcn@latest init && npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea`
+7. Run install commands. If any command exits non-zero: read the full error output, fix the root cause (wrong Node version, missing lockfile, network issue), retry once. If retry fails, log STUCK with exact error and stop.
+```bash
+npm install
+npx shadcn@latest init
+npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
+```
+After install, create `vitest.config.ts`:
+```ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+export default defineConfig({
+  plugins: [react()],
+  test: { environment: 'jsdom', setupFiles: ['./src/tests/setup.ts'] },
+})
+```
+Create `src/tests/setup.ts`:
+```ts
+import '@testing-library/jest-dom'
+```
 8. Create `src/components/ErrorBoundary.tsx` — class component wrapping children, renders inline error + retry button on caught errors. Wrap every `React.lazy` route with it in App.tsx.
 9. Create `src/pages/NotFoundPage.tsx` — 404 page with headline, sub, and back-to-home button. Register as `path="*"` catch-all in App.tsx.
 10. Create `src/hooks/useSeo.ts` — sets `document.title` and `<meta name="description">` via useEffect. Accepts `{ title, description, noIndex? }`. Call on every page.
@@ -138,16 +163,25 @@ If the product needs Supabase:
 2. Apply schema migrations
 3. Write RLS policies for all tables
 4. Generate TypeScript types
-5. Write src/lib/supabase.ts with hardcoded values
-6. Write useAuth hook and ProtectedRoute component
+5. Write `src/lib/supabase.ts` with hardcoded values — the anon key is safe to commit (it is public by design; RLS policies enforce access control)
+6. Write `useAuth` hook and `ProtectedRoute` component
+7. Write `/reset-password` route and `ResetPasswordPage.tsx` — calls `supabase.auth.resetPasswordForEmail()`. Register in App.tsx. This is mandatory for every product with auth — do not skip.
+8. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
 
-If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user.
+If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one.
 
 Log: "Phase 3 complete — backend configured" to BUILD-LOG.md.
 
 ---
 
 ### Phase 3b — Stripe (run /web-stripe) — skip if no paid plans
+
+**How to determine if this phase runs:** Read `SCOPE.md` and look for a Monetization or Trial section. Run this phase if ANY of these are true:
+- Trial model is `free-trial` or `paid-only`
+- Any pricing tier exists beyond a permanent free plan
+- SCOPE.md mentions Stripe, subscription, upgrade, or billing
+
+Skip this phase only if the product is explicitly free with no upgrade path.
 
 If the product has any paid plan or trial-to-paid flow:
 1. Read `~/.claude/skills/web-stripe/SKILL.md` in full
@@ -287,7 +321,9 @@ Log: "Phase 4.5 complete — [N] tests passing" to BUILD-LOG.md.
 This is an explicit loop. Run it until the product passes or you hit 5 attempts.
 
 **Loop:**
-1. Run the full /web-review audit — read `~/.claude/skills/web-review/SKILL.md` if it exists, otherwise use premium-website.md quality bar and pre-deploy checklist as the audit criteria
+1. Run the full /web-review audit:
+   - If `~/.claude/commands/web-review.md` exists: follow it exactly — it outputs `Overall: [X]/40`
+   - If not: manually audit every page against the 13-item per-page checklist in premium-website.md (1 point per item × all pages, normalised to /40), then check every item in the pre-deploy checklist (each failure = -1). Sum the result. Document which items failed.
 2. Record the score (X/40) and list every failure
 3. If score >= 38 AND pre-deploy checklist fully green: exit loop, proceed to Phase 6
 4. If score < 38 OR any pre-deploy checklist item is red:
@@ -455,7 +491,7 @@ Write final BUILD-LOG.md entry:
 | Stripe live price IDs needed | Log as NEEDS_HUMAN with test prices in place |
 | Railway auth token needed | Log as NEEDS_HUMAN, document which env vars to set |
 | External API key not in env | Log as NEEDS_HUMAN with exact variable name needed |
-| Same error 3 times | Log as STUCK, explain what was tried |
+| Same error 3 times on a single fix attempt | Log as STUCK, explain what was tried, skip and continue with other work |
 | Ambiguous product requirements | Ask ONE clarifying question, then continue |
 
 Never stop for:
