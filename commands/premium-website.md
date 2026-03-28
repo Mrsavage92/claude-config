@@ -20,7 +20,7 @@ This file is the contract. If a rule lives only in an individual skill file and 
 | Skill | Role |
 |---|---|
 | `/web-scope` | Define pages, design decisions, and product architecture before writing code |
-| `/web-scaffold` | Bootstrap the full project: config files, design system, landing page with animated hero |
+| `/web-scaffold` | Bootstrap the full project: config files, design system, routes, AppLayout, TrialBanner, Sentry init — hero built in Phase 4 |
 | `/web-animations` | Framer Motion patterns — Technique 3 STAGGER is the standard hero entrance |
 | `/web-supabase` | Schema, RLS policies, auth, TypeScript types |
 | `/web-page` | Build one page at a time with per-page self-review loop |
@@ -93,8 +93,8 @@ Full detail: `/web-animations` Technique 3.
 
 ### 6. Color Discipline
 - **Landing page**: primary color used exactly twice — CTA button + feature icon backgrounds. Never more.
-- **App/dashboard pages**: primary color allowed for active nav items, primary action buttons, and progress/score indicators only. Max 3 uses per page.
-- **PRIMARY COLOR BUDGET rule**: count every `text-primary`, `bg-primary`, `border-primary`, `ring-primary` on the page. If the count exceeds the budget: replace ambient/decorative uses with `text-muted-foreground`, `bg-muted`, or `text-brand`. Never use primary as a neutral fill.
+- **App/dashboard pages**: primary color allowed for active nav items, primary action buttons, and progress/score indicators only. Max 2 uses per page (same budget as landing page).
+- **PRIMARY COLOR BUDGET rule**: count every `text-primary`, `bg-primary`, `border-primary`, `ring-primary` on the page. If the count exceeds 2: replace ambient/decorative uses with `text-muted-foreground`, `bg-muted`, or `text-brand`. Never use primary as a neutral fill.
 - Enterprise design = restraint. If in doubt, use `text-muted-foreground` and `border-white/[0.07]`.
 
 ---
@@ -143,6 +143,29 @@ Apply from scaffold onwards — not just at review time:
 | `/web-component` | Adding a net-new UI element to an existing page. |
 | `/web-page` | Building an entire page from scratch. |
 | `/web-review` | Final quality gate before deploy — scores 40 dimensions across design, a11y, and performance. |
+| `/web-stripe` | Adding paid plans or trial-to-paid flow. Run after Supabase, before building pages. |
+| `/web-onboarding` | Building the `/setup` or `/onboarding` wizard. Mandatory for all SaaS products with auth. |
+| `/web-settings` | Building the `/settings` page (profile, billing portal, team, danger zone). |
+| `/web-email` | Adding transactional email — welcome, trial-ending, invites, password reset, invoices. |
+| `/web-table` | Building any page with a sortable/filterable list of records. |
+| `/dashboard-design` | Building any dashboard, analytics, monitoring, or data management page. |
+
+---
+
+## Dashboard Pages (enforced by Phase 4b detection)
+
+Before building any page that is a dashboard, analytics view, monitoring screen, or data management list — read `/dashboard-design` skill. These rules apply automatically:
+
+- **Page type**: determine from skill's Page Types table (Overview / Analytics / List / Detail / Settings / Onboarding)
+- **KPI cards**: use `KpiCard` + `Sparkline` from skill spec for any metric display — never ad-hoc stat boxes
+- **Data tables**: use `/web-table` skill — TanStack Table v8 with skeleton rows, bulk action bar, FilterBar above
+- **DateRangePicker**: required on all Analytics pages (4 presets: 7d/30d/90d/12mo)
+- **FilterBar**: required above every data table (search + status filter + clear)
+- **Export CSV**: button in page header on every List page
+- **Animations**: Framer Motion stagger (0.08s) on KPI card entrance
+- **Colors**: all via CSS variables — zero hardcoded grays, whites, or hex values
+- **CMD+K CommandPalette**: mount in AppLayout for products with 8+ nav items
+- **Self-review**: use the skill's 28-item Pre-Ship Checklist instead of the standard 13-item per-page bar
 
 ---
 
@@ -156,7 +179,8 @@ Every page must pass before moving to the next:
 [ ] Loading state: skeleton layout (not blank or spinner)
 [ ] Error state: inline error + retry button
 [ ] Color budget: count text-primary/bg-primary/border-primary/ring-primary — total <= 2. If > 2: replace with text-muted-foreground or bg-muted.
-[ ] document.title: any page title change uses useEffect(() => { document.title = '...' }, []) — never at render scope
+[ ] useSeo: called on this page — title + description set; noIndex: true on auth/settings/onboarding pages
+[ ] document.title: never set at render scope — useSeo handles it via useEffect
 [ ] User knows next action: clear without reading docs
 [ ] Typography: at least 2 size/weight levels (not all text-sm)
 [ ] Mobile: layout works at 375px
@@ -210,12 +234,24 @@ Run before any deploy:
 ## Full Build Loop
 
 ```
-/web-scope      → SCOPE.md with all design decisions
-/web-scaffold   → foundation files + landing page hero
-/web-supabase   → schema + auth (if backend)
-/web-page × N   → one page at a time, review loop after each
-/web-review     → audit before deploy (38+/40 required)
-/web-deploy     → Vercel or Railway
+/web-scope        → SCOPE.md with all design decisions + page list
+/web-scaffold     → foundation: config, design system, routes, AppLayout, TrialBanner, Sentry
+/web-supabase     → schema, RLS policies, auth, TypeScript types (if backend)
+/web-stripe       → checkout session, webhooks, UpgradeButton (if paid plans)
+/web-email        → transactional email setup (if email flows required)
+/web-page × N     → one page at a time — landing first, auth second, /setup third
+                    (dashboard pages: read /dashboard-design first)
+                    (list pages: read /web-table first)
+/web-settings     → /settings page (always required for SaaS with auth)
+/web-review       → audit before deploy (38+/40 required)
+/web-deploy       → Vercel (SPA) or Railway (full-stack)
 ```
+
+Page build order enforced by saas-build:
+1. `/` — Landing (non-negotiables apply: animated bg, product mockup, STAGGER hero)
+2. `/auth` — Sign in / sign up
+3. `/setup` — Onboarding wizard (mandatory for all SaaS with auth)
+4. App pages in SCOPE.md priority order
+5. `/settings` — Settings (mandatory for all SaaS with auth)
 
 Orchestrated autonomously by `/saas-build`. Update this file when the suite changes — saas-build reads it at Phase 0 and inherits everything automatically.
