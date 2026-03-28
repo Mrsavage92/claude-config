@@ -2,8 +2,6 @@
   "last_updated": "2026-03-28",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
-    "LOG.md": "e631729b2db8569894079b55d6b3cb53",
-    "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
     "a11y-audit.md": "becadec2217a064792f023b8ed197943",
     "ad-creative.md": "5112871e69b9cfae14d00d7ea49206f0",
     "agent-brief.md": "f0a9e19f4c8e07ba380309969d8b6a9e",
@@ -21,6 +19,7 @@
     "handoff.md": "76e25e41df0f116eb864f6bac5ed1cfd",
     "job-description.md": "74464af13998ed81d7c92c00f90376e2",
     "linkedin-post.md": "24e972fc079cccba12e9b308a2864c30",
+    "LOG.md": "e631729b2db8569894079b55d6b3cb53",
     "okr.md": "8bc8c5874b23c342a50b5ea42bc50417",
     "parallel-audit.md": "f379b48cbd6ab03f7f44d509d610bfe3",
     "persona.md": "98381107e06be0c500ac199abc12259f",
@@ -28,14 +27,16 @@
     "pitch-deck.md": "4a2e220ec9896b4583068d9050860174",
     "plugin-audit.md": "98cd86fa4096fcf9cea4dbd0131c2805",
     "prd.md": "99d338d1d49aa374b1bd5b4a4ae18c8f",
-    "premium-website.md": "e4b221fa7906abc7a76fa6f012848ac8",
+    "premium-website.md": "ce6aaaa19aa7e015c7e6b1ea4b9e6dfe",
     "pricing-model.md": "cded0a0a4da9baac787bf9218740ab17",
     "product-add.md": "764cf9ff5ad2fcdc2cd3b5dfa547eab7",
     "project-health.md": "47584fa9305d12addaaa3bf1c339b69b",
     "retro.md": "8fdd33d9e2884f6ec99f1e9eca03a6e5",
+    "review.md": "372fab6434c5b08670c57411f1e35059",
     "rice.md": "aefda3a05d2a8492c92dc48efa5db93b",
-    "saas-build.md": "b99597dddc31a33e768e831a7fe64d20",
+    "saas-build.md": "100950060189241c196d0fd81e06ad3f",
     "saas-health.md": "0bccebaa8e68632a1b2259c238ed52ce",
+    "saas-improve.md": "d84eb1a5a3740915e3f6ee671b076bbf",
     "scaffold.md": "781bbda78f27a3efca54fa4ae31cd62d",
     "scroll-stop-build.md": "abcea540437d613231bdad28c241ff7f",
     "scroll-stop-prompt.md": "dfece4e3cb702aed083406cca4130297",
@@ -44,6 +45,7 @@
     "sprint-plan.md": "3d5608e1ab0c20f5cc7688f42da0a870",
     "standup.md": "17624eca8e8eab139f0fe71688025cac",
     "sync-knowledge-base.md": "a8696afe2f1cab306b7d7b96b925d76d",
+    "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
     "tdd.md": "45e07a83d3f7fba85f49a1962b2602cb",
     "tech-debt.md": "a76aabdd12d02b7c8ed3bb5bde51092a",
     "usage-report.md": "f694988d44e61e12e068b98bc16ab359",
@@ -52,14 +54,14 @@
     "vercel-react-best-practices.md": "d6a76c1c2e1dba1adeb3ee6ab06c2fc5",
     "web-animations.md": "c71228bbc71c189259185bc76d818200",
     "web-component.md": "732f78e64b0f6e7a12d48620373cc1d4",
-    "web-deploy.md": "387c6c998b599b2b9971be48d718bdd3",
+    "web-deploy.md": "591d9be4b1fa5396807d9fa173e400a4",
     "web-fix.md": "b2f032452192621d66452687d7576647",
-    "web-page.md": "75d3c43be16c137b5c10b73f9983a77f",
-    "web-review.md": "55be9dd088c24b1742b7b1d7b51b8da7",
-    "web-scaffold.md": "1004b215b1a4dcd4f4ee70285582e44e",
-    "web-scope.md": "97fba23a8f5588482b48a2120021471e",
+    "web-page.md": "124ef7b18638f0d27bea29534a4066de",
+    "web-review.md": "660e95a2937bbb15af04131f26cd526e",
+    "web-scaffold.md": "8527539f905b006d8d6e23f3f4fa251b",
+    "web-scope.md": "875fe4b30f1b71bf1d14ce585512e10d",
     "web-stripe.md": "2344884c0fe50b066540c85fd8f369f0",
-    "web-supabase.md": "1a58fd9e3850f7d96642db26f6e3f376"
+    "web-supabase.md": "3a26fb8d89bd2200b7f1226c384d3cee"
   },
   "agents": {
     "agent-designer.md": "61b70b9cace1711a110292e7bcd515b8",
@@ -217,14 +219,15 @@
     "techaudit-report-pdf",
     "techaudit-speed",
     "web-design-guidelines",
+    "web-design-research",
     "web-email",
     "web-onboarding",
     "web-settings",
     "web-table"
   ],
   "counts": {
-    "commands": 58,
+    "commands": 60,
     "agents": 59,
-    "skills": 98
+    "skills": 99
   }
 }

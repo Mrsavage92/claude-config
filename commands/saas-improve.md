@@ -1,154 +1,480 @@
 # /saas-improve
 
-Autonomous post-build improvement engine. Takes an existing SaaS product and makes it production-ready by finding every gap and fixing it — without stopping until done.
+Autonomous multi-agent improvement swarm. Reads live production signals, dispatches 6 specialist agents in parallel, merges their intelligence into a unified priority stack, then executes every fix without stopping.
+
+DO NOT TRIGGER when: user says "review [something]" — that is /review (audit + score + findings log).
+TRIGGER when: user says "improve", "fix gaps", "make it production-ready", "run saas-improve", or resumes after a build session.
 
 ## When to Use
 - After /saas-build completes (or after any build session)
 - When a product was built in an earlier session and needs to be brought up to standard
-- When you want to resume improvement on a half-finished product
-- When BUILD-LOG.md shows STUCK or NEEDS_HUMAN items that have since been resolved
+- When BUILD-LOG.md shows STUCK or NEEDS_HUMAN items that have been resolved
+- On a recurring improvement cycle for any live product
 
 ## What This Does
-Reads the current product state, audits it against the full SaaS completeness standard, generates a prioritised improvement list, then executes every improvement autonomously until the product is ship-ready or a genuine credential blocker is hit.
+Six specialist agents scan the product simultaneously — each from a different angle. Their findings merge into a single IMPROVEMENT-STACK.md ranked by impact. The execution engine fixes everything it can touch, deploys, verifies, then checks if the market has moved since you launched.
 
 ---
 
-## Execution
+## Phase 0 — Orient + Production Signal Read
 
-### Step 1 — Read State
+### 0a. Read state
+Read these files before doing anything else:
+1. `BUILD-LOG.md` — last completed phase, STUCK items, deployed URL
+2. `IMPROVEMENT-STACK.md` — previous stack (if exists: skip Phase 1, go to Phase 2 execution)
+3. `SCOPE.md` — page inventory and feature set
+4. `DESIGN-BRIEF.md` — locked color + typography contract
+5. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
+6. `~/.claude/commands/premium-website.md` — quality standard
+7. `~/.claude/skills/shared/saas-gap-checklist.md` — base completeness checklist
+8. `~/.claude/web-system-prompt.md` — Design DNA
 
-Read these files before doing anything:
-1. `BUILD-LOG.md` — what was built, what phase was last completed, what's still pending
-2. `GAP-REPORT.md` — previous gap analysis (if exists, skip Step 2 and go straight to Step 3)
-3. `SCOPE.md` — page inventory and design decisions
-4. `DESIGN-BRIEF.md` — locked design contract
-5. `~/.claude/commands/premium-website.md` — quality standard
-6. `~/.claude/skills/shared/saas-gap-checklist.md` — completeness checklist
-7. `~/.claude/web-system-prompt.md` — Design DNA
+Run `git log --oneline -20` and `git status`.
 
-Run `git log --oneline -20` to see recent work. Run `git status` to see in-progress changes.
+### 0b. Pull live production signals
 
-### Step 2 — Gap Analysis
+Before any code analysis, check what the live product is telling us. Read these in parallel:
 
-Audit the codebase against every item in `saas-gap-checklist.md`. For each item:
-- Mark YES (done), NO (missing), or SKIP (not applicable to this product)
-- For every NO: assign priority P1/P2/P3/P4 and complexity Quick/Medium/Large
+**Sentry (if VITE_SENTRY_DSN is set):**
+Check for unresolved issues in the last 7 days. Each unresolved error = automatic P0 gap. Log: "Sentry: [N] unresolved issues" or "Sentry: unavailable".
 
-Write `GAP-REPORT.md` with this structure:
+**Railway logs (if Railway service exists):**
+```bash
+# Get last 100 lines of Railway logs for 5xx errors
+npx railway logs --tail 100 2>/dev/null | grep -E "5[0-9]{2}|ERROR|CRITICAL" || echo "Railway: unavailable"
+```
+Each unique 5xx pattern = automatic P1 gap.
 
-```markdown
-# Gap Report — [product name]
-Generated: [timestamp]
-Build URL: [Vercel URL from BUILD-LOG.md]
+**Build health:**
+```bash
+npm run build 2>&1 | tail -20
+```
+Any build error = P0. Any warning about bundle size > 250KB = P1.
 
-## P1 Gaps (Fix first — foundation/security/auth)
-| # | Item | Complexity | Status |
-|---|---|---|---|
-| 1.1 | Missing /privacy page | Quick | TODO |
+**TypeScript:**
+```bash
+npx tsc --noEmit 2>&1 | head -30
+```
+Any TS error = P1.
 
-## P2 Gaps (Fix second — UX/quality)
-| # | Item | Complexity | Status |
-|---|---|---|---|
+**Tests:**
+```bash
+npx vitest run --reporter=verbose 2>&1 | tail -20
+```
+Any failing test = P1.
 
-## P3 Gaps (Fix when P1+P2 done — marketing/SEO)
-| # | Item | Complexity | Status |
-|---|---|---|---|
+Log all signal output. These findings are injected into the swarm as pre-seeded gaps.
 
-## P4 Gaps (Nice to have)
-| # | Item | Complexity | Status |
-|---|---|---|---|
+---
 
-## Skipped (not applicable)
-[items not relevant to this product]
+## Phase 1 — Parallel Swarm Dispatch
 
-## Credential Blockers (can't fix without human action)
-[items that need API keys, Stripe live mode, etc]
+Dispatch all 6 agents simultaneously. Each agent reads the full codebase independently and returns a structured findings list. Do not wait for one before starting the next — run them all at once.
+
+---
+
+### Agent 1: Security
+
+Scope: every file touching auth, payments, user data, env vars, API routes.
+
+```
+CHECK — src/**/*.ts, src/**/*.tsx, **/*.py, **/*.env*
+
+- [ ] No hardcoded secrets/API keys/tokens in source
+- [ ] VITE_* prefix only on non-sensitive vars
+- [ ] All private routes behind auth middleware
+- [ ] User-supplied IDs never trusted (always from JWT/session)
+- [ ] No SQL/NoSQL string interpolation (parameterised only)
+- [ ] Stripe webhook signature verified before processing
+- [ ] RLS enabled on ALL Supabase tables
+- [ ] CORS not * in production
+- [ ] No console.log with user data or tokens
+- [ ] No sensitive data in localStorage
+- [ ] CSRF on state-changing endpoints
+- [ ] Password: bcrypt/argon2, never custom
+- [ ] No eval() or dangerouslySetInnerHTML with user content
+- [ ] Rate limiting on auth endpoints
+- [ ] No stack traces in API error responses
+- [ ] ErrorBoundary/catch blocks: check for `if (import.meta.env.PROD)` — this is an inverted condition (logs only in prod). Must be `DEV` or removed entirely
+- [ ] signOut handler calls cache-clearing function (clearOrgCache, queryClient.clear, etc.) before navigating — stale cached IDs are a data-isolation risk
+
+Return format:
+AGENT: Security
+[P0/P1/P2] [file:line] — [issue]
+TOTAL: [N] findings
 ```
 
-### Step 3 — Improvement Loop
+---
 
-**This loop runs until all P1 + P2 + P3-quick gaps are fixed. Do not stop early.**
+### Agent 2: Performance
+
+Scope: vite.config, package.json, all route components, all data-fetching hooks, build output.
+
+```
+CHECK — src/**/*.tsx, vite.config.ts, package.json
+
+- [ ] No chunk > 250KB gzipped (read build output from Phase 0b)
+- [ ] React.lazy on every route component in App.tsx
+- [ ] TanStack Query / SWR on all data fetching (no useEffect for data)
+- [ ] manualChunks defined in vite.config (vendor-react, vendor-motion, vendor-query, vendor-supabase)
+- [ ] Images: loading="lazy" except hero (loading="eager")
+- [ ] No N+1 queries (loop containing DB call)
+- [ ] Heavy canvas/WebGL components lazy-loaded
+- [ ] font-display: swap on all @font-face
+- [ ] No blocking sync ops in request handlers
+- [ ] useCallback/useMemo where referential equality matters
+- [ ] No unnecessary re-renders (missing dep arrays, stale closures)
+
+Return format:
+AGENT: Performance
+[P1/P2] [file:line] — [issue]
+TOTAL: [N] findings
+```
+
+---
+
+### Agent 3: UX & Friction
+
+Scope: every page, every component that renders data, every form, mobile viewports.
+
+```
+CHECK — src/pages/**/*.tsx, src/components/**/*.tsx
+
+- [ ] Every empty state has designed content with CTA (not just "no data")
+- [ ] Every loading state uses skeleton (not spinner or blank)
+- [ ] Every error state has a retry button (not a white screen)
+- [ ] All forms have validation on submit
+- [ ] All modals: role="dialog", aria-modal, focus trap, Escape closes
+- [ ] All icon-only buttons have aria-label
+- [ ] All inputs have label or aria-label
+- [ ] All interactive divs/spans have role + tabIndex
+- [ ] Skip-nav link in AppLayout
+- [ ] All images have alt attribute
+- [ ] Mobile: sidebar collapses to Sheet on <768px
+- [ ] Mobile: data tables collapse to card stack on <768px
+- [ ] Mobile: touch targets min 44px
+- [ ] Onboarding wizard exists and is <= 4 steps
+- [ ] Trial banner present if free-trial model
+- [ ] ProtectedRoute checks onboarding_complete, redirects to /setup if false
+- [ ] ProtectedRoute checks trial/subscription status — expired users redirected to billing/settings, not silently left in the app
+- [ ] "Coming soon" buttons (those that fire toast.info instead of navigating) have `aria-disabled="true"` so assistive tech knows they are inactive
+
+Return format:
+AGENT: UX/Friction
+[P1/P2/P3] [file:line] — [issue]
+TOTAL: [N] findings
+```
+
+---
+
+### Agent 4: SEO & GEO
+
+Scope: index.html, public/, every page component (for useSeo calls), robots.txt, sitemap.xml.
+
+```
+CHECK — index.html, public/*, src/pages/**/*.tsx
+
+- [ ] useSeo called on every page with unique title + description
+- [ ] og:title, og:description, og:image (1200x630, not placeholder) in index.html
+- [ ] twitter:card in index.html
+- [ ] robots.txt in /public with correct domain (not placeholder)
+- [ ] sitemap.xml in /public with correct domain (not placeholder)
+- [ ] site.webmanifest in /public
+- [ ] og:image file referenced in index.html actually exists in public/ — a missing file is a silent failure (social previews show blank)
+- [ ] JSON-LD schema on landing page (WebApplication or SoftwareApplication)
+- [ ] FAQ section on landing page (LLM citability)
+- [ ] Comparison table vs competitors on landing page
+- [ ] PostHog or GA4 snippet in index.html
+- [ ] No noindex on public marketing pages
+- [ ] Canonical URLs defined
+- [ ] Page titles follow pattern: [Page] — [Product Name]
+
+Return format:
+AGENT: SEO/GEO
+[P2/P3] [file:line] — [issue]
+TOTAL: [N] findings
+```
+
+---
+
+### Agent 5: Code Health
+
+Scope: all source files. Grep-first approach — find patterns, then read context.
+
+```
+CHECK — src/**/*.ts, src/**/*.tsx, **/*.py
+
+- [ ] No TypeScript errors (from Phase 0b tsc output)
+- [ ] No commented-out code blocks
+- [ ] No console.log/console.error in components
+- [ ] No duplicate components (same UI built twice)
+- [ ] No duplicate utility functions
+- [ ] No hardcoded hex/rgb/hsl colors outside index.css
+- [ ] No direct Tailwind color literals (text-white, bg-black, text-gray-*)
+- [ ] No inline style={{}} with color/spacing values
+- [ ] No key={index} on dynamic lists
+- [ ] No TypeScript `any` that can be typed
+- [ ] No components over 200 lines without extraction
+- [ ] No TODO comments in production paths
+- [ ] No unused imports
+- [ ] No hardcoded URLs that should be env vars
+- [ ] No hardcoded contact emails in legal/policy pages (Privacy, Terms) — extract to constants
+- [ ] Failing tests (from Phase 0b vitest output)
+
+Return format:
+AGENT: Code Health
+[P1/P2/P3] [file:line] — [issue]
+TOTAL: [N] findings
+```
+
+---
+
+### Agent 6: Revenue & Conversion
+
+Scope: landing page, pricing page, upgrade flows, Stripe integration, trial logic.
+
+```
+CHECK — src/pages/LandingPage.tsx, src/pages/Pricing*.tsx, src/components/Upgrade*, src/lib/stripe*
+
+- [ ] Pricing section exists on landing page
+- [ ] Social proof section exists on landing page (logos, testimonials, or review count)
+- [ ] Hero CTA is specific (not just "Get started")
+- [ ] UpgradeButton component exists and is wired to Stripe checkout
+- [ ] Trial banner shows countdown + upgrade CTA (not just static text)
+- [ ] Stripe webhook handles: checkout.session.completed, subscription.updated, subscription.deleted
+- [ ] Stripe webhook signature verified (not just received)
+- [ ] PricingCards component exists with feature comparison
+- [ ] Settings > Billing tab has Stripe Customer Portal link
+- [ ] Post-upgrade redirect lands on confirmation/dashboard (not /signin)
+- [ ] Failed payment handling (dunning state shown to user)
+- [ ] Free trial end = automatic downgrade state, not silent loss of access
+
+Return format:
+AGENT: Revenue/Conversion
+[P1/P2/P3] [file:line] — [issue]
+TOTAL: [N] findings
+```
+
+---
+
+## Phase 2 — Stack Merge
+
+Collect all agent findings + Phase 0b production signals. Merge into a single deduplicated IMPROVEMENT-STACK.md.
+
+```markdown
+# Improvement Stack — [product name]
+Generated: [timestamp]
+Production URL: [URL from BUILD-LOG.md]
+Sessions run: [increment each time this runs]
+
+## Production Signals (Phase 0b)
+- Build: [CLEAN / N errors]
+- TypeScript: [CLEAN / N errors]
+- Tests: [N passing / N failing]
+- Sentry: [N unresolved issues / unavailable]
+- Railway 5xx: [N patterns / unavailable]
+
+## Agent Summary
+| Agent | Findings | Top severity |
+|---|---|---|
+| Security | N | P0/P1/P2 |
+| Performance | N | P1/P2 |
+| UX/Friction | N | P1/P2 |
+| SEO/GEO | N | P2/P3 |
+| Code Health | N | P1/P2 |
+| Revenue | N | P1/P2 |
+| **Total** | **N** | |
+
+## P0 — Fix Immediately (production broken)
+| # | Source | File:Line | Issue | Status |
+|---|---|---|---|---|
+
+## P1 — Fix This Session (ship-blocking)
+| # | Source | File:Line | Issue | Status |
+|---|---|---|---|---|
+
+## P2 — Fix This Session (quality)
+| # | Source | File:Line | Issue | Status |
+|---|---|---|---|---|
+
+## P3 — Fix When P1+P2 Done (marketing/polish)
+| # | Source | File:Line | Issue | Status |
+|---|---|---|---|---|
+
+## Credential Blockers
+| # | Issue | What's needed |
+|---|---|---|
+
+## Won't Fix (not applicable to this product)
+[items skipped with reason]
+```
+
+**Deduplication rule:** if two agents flag the same file:line, keep the higher severity, merge the descriptions.
+
+**Injection rule:** every Sentry error = P0 in the stack. Every Railway 5xx = P1. Every failing test = P1. These are non-negotiable — production is telling you something is broken.
+
+---
+
+## Phase 3 — Execution Engine
+
+**This loop runs until all P0 + P1 + P2 + P3-quick items are DONE or BLOCKED. Do not stop early.**
 
 ```
 LOOP:
-  1. Read GAP-REPORT.md
-  2. Find the highest-priority unresolved gap that is not a credential blocker
-  3. If none: exit loop
-  4. Fix it:
-     - Quick gap: fix inline, commit
-     - Medium gap: use appropriate web-* skill (/web-fix, /web-page, /web-component)
-     - Large gap: break into sub-tasks, execute each, commit each
-  5. Mark gap as DONE in GAP-REPORT.md
-  6. Append to BUILD-LOG.md: "IMPROVE | [gap item] | [what was changed] | [timestamp]"
-  7. Return to step 1
+  1. Read IMPROVEMENT-STACK.md — current state, not memory
+  2. Find highest-priority item that is TODO and not BLOCKED
+  3. If none remain: exit loop
+  4. Select the right tool (routing table below)
+  5. Execute the fix
+  6. Re-read the affected file and confirm the issue is gone
+  7. If confirmed: mark DONE in IMPROVEMENT-STACK.md
+     If not fixed: mark STUCK with what was tried, skip
+  8. Commit: "fix([agent]): [issue description] — [file]"
+  9. Append to BUILD-LOG.md: "SWARM | [agent] | [item] | DONE | [timestamp]"
+  10. Return to step 1
 ```
 
-**Skill routing per gap type:**
-| Gap type | Use |
+**Tool routing:**
+| Gap type | Tool |
 |---|---|
 | Broken/missing component | /web-fix |
 | New page needed | /web-page |
 | New component on existing page | /web-component |
-| Dashboard improvements | /dashboard-design skill |
-| Data table on any page | /web-table skill |
-| Settings page issues | /web-settings skill |
-| Onboarding issues | /web-onboarding skill |
-| Email flows missing | /web-email skill |
-| Stripe/billing issues | /web-stripe skill |
-| Design system violations | Fix directly using web-system-prompt.md rules |
-| a11y failures | Fix inline — aria-label, focus rings, semantic HTML |
-| TypeScript errors | Fix inline |
-| Console.log removal | Fix inline — grep and delete |
+| Dashboard/analytics page | /dashboard-design skill |
+| Data table | /web-table skill |
+| Settings page | /web-settings skill |
+| Onboarding wizard | /web-onboarding skill |
+| Email flows | /web-email skill |
+| Stripe/billing | /web-stripe skill |
+| Design system violation | Fix directly per web-system-prompt.md |
+| a11y failure | Fix inline — aria attrs, focus rings, semantic HTML |
+| TypeScript error | Fix inline |
+| Console.log | Grep and delete inline |
+| SEO/meta | Fix in index.html or useSeo call |
+| Hardcoded color | Replace with CSS variable |
+| Test failure | Fix the code, not the test |
+| Sentry/Railway error | Read full stack trace, fix root cause |
 
-### Step 4 — Re-review
+**Batch commits are banned.** One gap = one commit. Unrelated fixes must not share a commit.
+
+**Credential blockers** — if a fix requires an API key, external config, or product decision not available in the codebase: mark BLOCKED in the stack with exact variable name/action needed. Skip it. Continue with everything else.
+
+**Stuck limit** — if the same fix fails 3 times on the same approach: mark STUCK, document exactly what was tried, skip and continue. Never loop forever.
+
+---
+
+## Phase 4 — Regression Guard
 
 After all fixes are committed:
-1. Run npm run build — must pass with zero errors
-2. Re-run /web-review audit (or apply premium-website.md quality bar manually)
-3. If score is below previous score: investigate what regressed and fix it
-4. If score improved: log new score to BUILD-LOG.md
 
-### Step 5 — Final Deploy + Verification
+```bash
+npm run build 2>&1
+npx tsc --noEmit 2>&1
+npx vitest run --reporter=verbose 2>&1
+```
 
-If fixes were made since the last deploy:
+Compare results to Phase 0b baseline.
+
+**If new errors appeared that weren't in Phase 0b:** these are regressions introduced by this session's fixes. Do not deploy. Go back to Phase 3, fix the regressions first. Regressions are P0 — they supersede everything.
+
+**If results are equal or better:** proceed to Phase 5.
+
+Log: "Phase 4 regression guard — [before] → [after]" to BUILD-LOG.md.
+
+---
+
+## Phase 5 — Deploy + Live Verification
+
+If any fixes were made since the last deploy, redeploy:
+
+**Preferred — Vercel MCP:**
+```
+vercel.createDeployment({ target: "production" })
+```
+
+**Fallback:**
 ```bash
 npx vercel --prod --yes
 ```
 
-After deploy completes, verify it is actually live — not a 404, crash, or stale cache:
+After deploy completes, verify both surface and depth:
+
 ```bash
-# Extract the production URL from deploy output, then verify
+# Surface check — CDN edge responds
 curl -s -o /dev/null -w "%{http_code}" [production-url]
-# Must return 200. If not: check Vercel build logs for the error before continuing.
+# Must be 200
 
-# Verify the main app route loads (not just the CDN edge)
+# Depth check — SPA rewrites work
 curl -s -o /dev/null -w "%{http_code}" [production-url]/signin
-# Must return 200 (Vercel SPA rewrites must be working)
+# Must be 200
+
+# App loads actual content (not empty HTML shell)
+curl -s [production-url] | grep -c "<title>" || echo "No title found"
+# Must return 1
 ```
 
-If either check returns non-200: check Vercel dashboard build logs, fix the error, redeploy, verify again. Do not mark the session done until both return 200.
+If any check fails: read Vercel build logs, fix the error, redeploy, verify again. Do not call Phase 5 done until all three return expected values.
 
-Update BUILD-LOG.md with new deployment timestamp and HTTP status confirmation.
+Update BUILD-LOG.md: "Deploy [timestamp] — all 3 live checks passed — [URL]"
 
-### Step 6 — Report
+---
 
-Write final GAP-REPORT.md update and BUILD-LOG.md entry:
+## Phase 6 — Competitive Drift Check
 
+**Run this phase every 3rd improvement session** (track count in IMPROVEMENT-STACK.md `Sessions run` field).
+
+The product was scoped against market research from launch day. Markets move. This phase detects if you've fallen behind.
+
+Run the same 3 searches as Phase 0.25 in saas-build:
+1. `"[product category] SaaS features" site:reddit.com OR site:producthunt.com`
+2. `"[product category] SaaS alternatives"`
+3. `"[product category] missing feature" OR "wish it had"`
+
+Compare results against MARKET-BRIEF.md. For each new pattern found that isn't in MARKET-BRIEF.md:
+- Update MARKET-BRIEF.md with the new competitor/feature data
+- If a competitor shipped a feature that was in your "Nice-to-have post-launch" list: upgrade it to P2 and add to IMPROVEMENT-STACK.md
+- If a new competitor emerged: log it as a P3 awareness item
+
+Log: "Phase 6 competitive drift check — [N] new patterns found, [N] added to stack" to BUILD-LOG.md.
+
+If this is not a 3rd-session run: skip Phase 6, log "Phase 6 skipped (session [N] of 3)".
+
+---
+
+## Phase 7 — Intelligence Sync
+
+Push the session's output to all intelligence layers:
+
+**Update IMPROVEMENT-STACK.md:**
+- Mark session complete with timestamp
+- Increment `Sessions run` counter
+- Summarize what was fixed vs what remains
+
+**Update BUILD-LOG.md final entry:**
 ```markdown
-## Improvement Session Complete — [timestamp]
+## Swarm Session Complete — [timestamp]
 
-**Gaps resolved:** [N]
-**Gaps skipped (credentials):** [N] — see Credential Blockers section
-**web-review score:** [X]/40
+**Session:** #[N]
+**Agents run:** 6 (Security, Performance, UX/Friction, SEO/GEO, Code Health, Revenue)
+**Total findings:** [N]
+**Fixed:** [N]
+**Blocked (credentials):** [N]
+**Regressions:** [N]
 **Deploy URL:** [URL]
+**Live verification:** PASSED / FAILED
 
-### Fixed in this session
-- [gap item 1] — [what was changed]
-- [gap item 2] — [what was changed]
+### Fixed this session
+- [finding] — [what changed] ([agent])
 
-### Still needs human action
-- [credential blocker 1 with exact variable/action needed]
+### Still blocked (needs human)
+- [item] — [exact credential/action needed]
+
+### Next session priority
+[top 3 remaining items]
 ```
+
+**Push to Notion (if project has Notion URL in memory):**
+Run `/project-refresh` PUSH mode with the above summary.
 
 ---
 
@@ -156,21 +482,26 @@ Write final GAP-REPORT.md update and BUILD-LOG.md entry:
 
 | Condition | Action |
 |---|---|
-| All P1+P2+P3-quick gaps resolved | Exit loop, run Step 4-6 |
-| Gap requires credential not in env | Mark BLOCKED in GAP-REPORT.md, skip and continue |
-| Same fix attempt fails 3 times | Mark STUCK, document what was tried, skip and continue |
-| npm run build fails after fix | Revert the fix (git checkout -- [file]), mark STUCK |
+| All P0+P1+P2+P3-quick items DONE or BLOCKED | Exit Phase 3, run Phase 4-7 |
+| Fix fails 3 times same approach | Mark STUCK, document, skip, continue |
+| Build breaks after a fix | Revert that file, mark STUCK, continue with others |
+| Credential not in env | Mark BLOCKED with exact var name, skip, continue |
+| Sentry/Railway MCP unavailable | Log "signal unavailable", continue without it |
 
 **Never stop because:**
-- There are many gaps — that is expected, keep working
-- A fix takes a long time — break it down and keep going
-- "The product already works" — working and production-ready are different things
+- There are many items — that is expected, swarm handles scale
+- A fix takes many steps — break it down and execute
+- "The product works" — working and production-ready are different
+- An agent found nothing — clean is good, log it and move on
 
 ---
 
 ## Rules
-- Read GAP-REPORT.md before every fix — always work from the current state, not memory
-- One gap = one commit — do not batch unrelated fixes
-- Fix P1 gaps before P2 gaps before P3 gaps — never do P3 work when P1 gaps exist
-- Credential blockers are NOT reasons to stop the session — skip them and fix everything else
-- Every fix must leave the codebase in a clean, committable state
+
+- One gap = one commit. No batching.
+- P0 → P1 → P2 → P3. Never do P3 while P1 gaps exist.
+- Credential blockers are not reasons to stop — skip them, fix everything else.
+- Every fix verified by re-reading the file after the change.
+- IMPROVEMENT-STACK.md is always the source of truth — never work from memory.
+- Sentry errors and Railway 5xx patterns are P0/P1 by definition — live production outranks static analysis.
+- The swarm finds what the checklist misses. Both inputs matter.
