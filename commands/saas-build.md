@@ -31,10 +31,48 @@ Read these files in full — they are the source of truth for the entire build:
 
 Check git log for recent work. Determine: is this a fresh start or a resume?
 
-If fresh start: begin at Phase 1.
-If resuming: identify the last completed phase and continue from the next one.
+If fresh start: begin at Phase 0.25.
+If resuming: identify the last completed phase and continue from the next one. If resuming past Phase 0.5, verify DESIGN-BRIEF.md exists — if missing, run Phase 0.5 before continuing.
 
 Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
+
+---
+
+### Phase 0.25 — Feature & Market Research
+
+Before any design work, answer: "What do competitors miss that our users need?"
+
+Run 3 WebSearch queries:
+1. `"[product category] SaaS features" site:reddit.com OR site:producthunt.com` — real user needs
+2. `"[product category] SaaS alternatives"` — who exists, what they do, what they miss
+3. `"[product category] missing feature" OR "wish it had"` — unmet needs that become your differentiator
+
+Write `MARKET-BRIEF.md` to project root:
+```markdown
+# Market Brief — [product name]
+
+## Top 3 competitors
+| Name | Price | Strengths | Gaps |
+
+## Features users consistently request that competitors miss
+1.
+2.
+3.
+
+## Our differentiator (one sentence)
+
+## Must-have for v1 (without these we are not in the market)
+-
+
+## Nice-to-have post-launch
+-
+```
+
+SCOPE.md (Phase 1) must include the "Must-have for v1" features in the page inventory. If a must-have feature has no page defined, add the page.
+
+If resuming: check if MARKET-BRIEF.md exists. If yes, skip this phase.
+
+Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 
 ---
 
@@ -82,7 +120,7 @@ Execute the full /web-scaffold process using decisions from SCOPE.md:
 4. CLAUDE.md MUST include: color job definition, design reference site, page inventory summary
 5. AppLayout MUST include skip-nav link as first element
 6. Generate vercel.json with SPA rewrites at project root
-7. Run `npm install && npx shadcn@latest init && npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea`
+7. Run `npm install && npx shadcn@latest init && npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea`
 8. Create `src/components/ErrorBoundary.tsx` — class component wrapping children, renders inline error + retry button on caught errors. Wrap every `React.lazy` route with it in App.tsx.
 9. Create `src/pages/NotFoundPage.tsx` — 404 page with headline, sub, and back-to-home button. Register as `path="*"` catch-all in App.tsx.
 10. Create `src/hooks/useSeo.ts` — sets `document.title` and `<meta name="description">` via useEffect. Accepts `{ title, description, noIndex? }`. Call on every page.
@@ -189,11 +227,58 @@ Before writing any transactional email logic, read `~/.claude/skills/web-email/S
 - FastAPI background tasks for delivery — never block request thread
 - Trial reminder cron: 7-day, 3-day, 1-day reminders via `trial_reminders.py`
 
-**4c. Per-page self-review**
-Run the 12-item checklist from premium-website.md. Fix any failures. Log: "Page [name] complete — self-review passed (12/12)" to BUILD-LOG.md. Only then move to the next page.
+**4c. Per-page self-review (two passes — not one)**
 
-**4d. App.tsx**
+Pass 1 — checklist: run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
+
+Pass 2 — fresh eyes: close the file mentally. Re-read the page component as if you are a new user opening this product for the first time with zero data. Ask:
+- Would I know what to do on this page right now?
+- Does the empty state give me a reason to act (not just explain why it's empty)?
+- Does the loading state feel intentional or like something broke?
+- Is the signature color doing exactly one job on this page?
+- Would I be embarrassed to show this to a designer?
+
+Fix anything that fails Pass 2. Log: "Page [name] complete — self-review passed (13/13 + fresh eyes)" to BUILD-LOG.md. Only then move to the next page.
+
+**4d. Context refresh (every 3 pages)**
+After completing every 3rd page (i.e. pages 3, 6, 9...), re-read DESIGN-BRIEF.md and SCOPE.md in full before starting the next page. Long build sessions compress early context — this prevents late pages drifting from the locked design contract.
+
+**4e. App.tsx**
 After each page, add the route with React.lazy + Suspense. Never leave routes unregistered.
+
+---
+
+### Phase 4.5 — Core Test Coverage
+
+Run after all pages are built, before the quality gate.
+
+Write tests for the three flows that break silently in production:
+
+**1. Auth flow** (`src/tests/auth.test.ts`):
+- Sign up with valid email/password → expect session created
+- Sign in with wrong password → expect error message rendered
+- Access protected route without session → expect redirect to /auth
+- Access /setup after onboarding_complete = true → expect redirect to /dashboard
+
+**2. Onboarding flow** (`src/tests/onboarding.test.ts`):
+- Complete all wizard steps → expect onboarding_complete = true in org record
+- Partial completion → expect redirect back to /setup on next login
+- Trial activation → expect subscription_status = 'trial' and trial_ends_at set
+
+**3. Core feature smoke** (`src/tests/core.test.ts`):
+- Primary data query returns empty → expect EmptyState with CTA rendered (not blank)
+- Primary data query errors → expect error state + retry button rendered (not white screen)
+
+Use Vitest + @testing-library/react. Mock Supabase client (vi.mock('@/lib/supabase')).
+
+Run tests:
+```bash
+npx vitest run --reporter=verbose 2>&1
+```
+
+If tests fail: fix the code, not the test. If a test cannot pass because the feature doesn't exist yet, that is a build gap — implement the feature.
+
+Log: "Phase 4.5 complete — [N] tests passing" to BUILD-LOG.md.
 
 ---
 
@@ -259,7 +344,14 @@ For each failure: paste the error or screenshot and Claude will fix before marki
 **6e. Update CORS**
 In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
 
-**6f. Bundle report**
+**6f. Bundle audit and auto-fix**
+
+Run build and capture output:
+```bash
+npm run build 2>&1 | grep -E "\.js|\.css|gzip"
+```
+
+Report sizes:
 ```
 Bundle sizes (gzipped):
   vendor-react:    XX KB
@@ -269,7 +361,13 @@ Bundle sizes (gzipped):
   [page chunks]:   XX KB each
   Total:           XX KB
 ```
-Flag any chunk > 250KB.
+
+**Auto-fix any chunk > 250KB — do not just flag it:**
+1. Identify the chunk in vite.config.ts `manualChunks`
+2. Split it further: e.g. if `vendor-supabase` is large, separate `@supabase/auth-ui-react` into its own chunk `vendor-supabase-ui`
+3. If a page chunk is large, move its heaviest dependency import to a dedicated chunk
+4. Re-run build and verify all chunks are < 250KB gzipped
+5. If a chunk cannot be reduced below 250KB after splitting: log as NEEDS_HUMAN with exact module name and size
 
 ---
 
