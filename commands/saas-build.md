@@ -21,7 +21,8 @@ Read these files in full — they are the source of truth for the entire build:
 2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
 3. `~/.claude/skills/web-animations/SKILL.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
 4. `CLAUDE.md` (project root, if exists) — project-specific overrides.
-5. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
+5. `DESIGN-BRIEF.md` (project root, if exists) — locked color system, typography, marketing tier, and component decisions from Phase 0.5. If this file exists, all design decisions are already made — do NOT re-decide them.
+6. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
 
 **Monorepo detection:** Check if the working directory contains `turbo.json` or an `apps/` directory. If yes, this is a monorepo build.
 - In monorepo mode: the frontend lives in `apps/[product-slug]/`. All Phase 2-6 file operations target that subdirectory.
@@ -29,10 +30,10 @@ Read these files in full — they are the source of truth for the entire build:
 - If `apps/[product-slug]/` already exists (created by `/product-add`): skip Phase 2 directory creation, only fill in the files.
 - If `apps/[product-slug]/` does not exist: run `/product-add` first, then scaffold.
 
-Check git log for recent work. Determine: is this a fresh start or a resume?
+Check if BUILD-LOG.md exists in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo). This is the primary resume signal — not git log.
 
-If fresh start: begin at Phase 0.25.
-If resuming: identify the last completed phase and continue from the next one. If resuming past Phase 0.5, verify DESIGN-BRIEF.md exists — if missing, run Phase 0.5 before continuing.
+If BUILD-LOG.md does not exist: this is a fresh start. Begin at Phase 0.25.
+If BUILD-LOG.md exists: read it to identify the last completed phase, then continue from the next one. If resuming from Phase 1 or later, verify DESIGN-BRIEF.md exists — if missing, run Phase 0.5 before continuing. Also verify MARKET-BRIEF.md exists — if missing, run Phase 0.25 before continuing.
 
 Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
 
@@ -100,10 +101,11 @@ Log: "Phase 0.5 complete — DESIGN-BRIEF.md written" to BUILD-LOG.md.
 
 Execute the full /web-scope process:
 1. **Read DESIGN-BRIEF.md first** — all color, typography, and marketing structure decisions are already locked. Do NOT re-decide them. Import them directly from the brief.
-2. Extract brief from user input
-3. Produce complete page inventory with all 5 fields per page (use the marketing tier structure from DESIGN-BRIEF.md for public pages)
-4. Write SCOPE.md to project root
-5. Write initial BUILD-LOG.md
+2. **Read MARKET-BRIEF.md (if exists)** — extract the "Must-have for v1" list. Every item on that list must map to a page in the inventory. If a must-have has no page, create one before continuing.
+3. Extract brief from user input
+4. Produce complete page inventory with all 5 fields per page (use the marketing tier structure from DESIGN-BRIEF.md for public pages)
+5. Write SCOPE.md to project root
+6. Write initial BUILD-LOG.md
 
 Do not proceed to Phase 2 until SCOPE.md exists and every page has all 5 fields defined.
 
@@ -254,7 +256,7 @@ Before writing any page that is a dashboard, analytics view, monitoring screen, 
 - Skeleton loaders (not spinners) for all async data — use shadcn Skeleton matching exact card/row dimensions
 - Dark mode via ThemeProvider + CSS variables — never hardcode colors, use hsl(var(--chart-1)) etc. for Recharts
 - Mobile: Sheet drawer sidebar on <768px, data tables collapse to card stack, touch targets min 44px, hide secondary columns
-- Run the skill's Pre-Ship Checklist (28 items) as the per-page self-review for dashboard pages instead of the standard 12-item checklist
+- Run the skill's Pre-Ship Checklist (28 items) as the per-page self-review for dashboard pages instead of the standard 13-item checklist
 
 **Data table detection — read `/web-table` skill before building:**
 Before writing any page with a list of records (resources, users, transactions, logs, etc.), read `~/.claude/skills/web-table/SKILL.md`. Apply automatically:
@@ -346,6 +348,8 @@ Log: "Phase 4.5 complete — [N] tests passing" to BUILD-LOG.md.
 
 This is an explicit loop. Run it until the product passes or you hit 5 attempts.
 
+**Scoring note:** Phase 5 uses `/web-review` (x/40) — a web-specific visual + a11y + performance gate. This is different from `/review` (x/100) which is a code-depth audit covering security, correctness, and maintainability. Use /web-review here. Optionally run /review separately as an additional code audit — its score does not replace or gate deploy.
+
 **Loop:**
 1. Run the full /web-review audit:
    - If `~/.claude/commands/web-review.md` exists: follow it exactly — it outputs `Overall: [X]/40`
@@ -356,7 +360,7 @@ This is an explicit loop. Run it until the product passes or you hit 5 attempts.
    - For each failure: run /web-fix targeting the exact component and failure reason
    - After all fixes: commit with `fix: quality gate — [N] issues resolved`
    - Return to step 1
-5. If after 5 loop iterations the score is still < 38: log STUCK with exact failures and current score, then proceed to Phase 6 with failures documented
+5. If after 5 loop iterations the score is still < 38: log STUCK with exact failures and current score, then STOP — do NOT proceed to Phase 6. A score below 38 means the product is not ready to deploy. List every remaining failure and halt. Do not skip this rule.
 
 **Never skip this loop.** A low score is not a reason to delay — it is a list of tasks to execute.
 
@@ -399,6 +403,7 @@ Report back which pass and which fail — Claude will fix failures before markin
 [ ] 5. Trial banner — after onboarding, confirm the AppLayout shows a trial banner (days remaining + Upgrade button) if trial model is free-trial.
 [ ] 6. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
 [ ] 7. Settings page — loads and form submits without error.
+[ ] 8. /privacy and /terms — both pages load without errors.
 
 For each failure: paste the error or screenshot and Claude will fix before marking done.
 ```
@@ -517,7 +522,7 @@ Write final BUILD-LOG.md entry:
 | Railway auth token needed | Log as NEEDS_HUMAN, document which env vars to set |
 | External API key not in env | Log as NEEDS_HUMAN with exact variable name needed |
 | Same error 3 times on a single fix attempt | Log as STUCK, explain what was tried, skip and continue with other work |
-| Ambiguous product requirements | Ask ONE clarifying question, then continue |
+| Ambiguous product requirements | Log assumption and continue — format: "Brief was vague — assumed [X] based on [Y]. Correct SCOPE.md if wrong." |
 
 Never stop for:
 - "Shall I proceed to the next page?"
