@@ -19,7 +19,7 @@ Executes the full build loop autonomously. Only stops for genuine blockers that 
 Read these files in full — they are the source of truth for the entire build:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
 2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
-3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
+3. `~/.claude/skills/web-animations/SKILL.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
 4. `CLAUDE.md` (project root, if exists) — project-specific overrides.
 5. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
 
@@ -167,8 +167,8 @@ If the product needs Supabase:
 4. Generate TypeScript types
 5. Write `src/lib/supabase.ts` with hardcoded values — the anon key is safe to commit (it is public by design; RLS policies enforce access control)
 6. Write `useAuth` hook and `ProtectedRoute` component
-7. Write `/reset-password` route and `ResetPasswordPage.tsx` — calls `supabase.auth.resetPasswordForEmail()`. Register in App.tsx. This is mandatory for every product with auth — do not skip.
-8. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
+7. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
+8. Register `/reset-password` route in App.tsx as a lazy-loaded stub pointing to a placeholder component — full `ResetPasswordPage.tsx` is built in Phase 4 (so it gets the per-page self-review pass). Mark it in SCOPE.md as a required auth page if not already present.
 
 If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one.
 
@@ -200,6 +200,28 @@ Log: "Phase 3b complete — Stripe integrated" to BUILD-LOG.md.
 
 ---
 
+### Phase 3c — Email (run /web-email) — skip if no transactional email
+
+**How to determine if this phase runs:** Run if ANY of these are true:
+- Trial model is `free-trial` (requires trial-ending reminders)
+- Product has team invites (requires invite email)
+- Product has auth with password reset (requires reset email)
+- SCOPE.md mentions welcome email, notifications, or email flows
+
+Skip only if the product is a pure landing page with no auth.
+
+1. Read `~/.claude/skills/web-email/SKILL.md` in full
+2. Set up Resend integration in `services/api/email_service.py` (or equivalent)
+3. Write React Email templates: welcome, trial-ending (if free-trial), team-invite (if team features), password-reset, invoice (if paid)
+4. Wire welcome email to auth signup trigger
+5. Add `RESEND_API_KEY` to `.env.example`
+
+Log NEEDS_HUMAN: "Add RESEND_API_KEY — verify sending domain at resend.com/domains before emails will deliver"
+
+Log: "Phase 3c complete — email configured" to BUILD-LOG.md.
+
+---
+
 ### Phase 4 — Pages (run /web-page per page, in SCOPE.md build order)
 
 This is the core loop. For EACH page in SCOPE.md build order:
@@ -215,6 +237,8 @@ Follow /web-page rules. Apply all landing page non-negotiables from premium-webs
 - Auth (`/signin`) is ALWAYS second
 - Onboarding (`/setup` or `/onboarding`) is ALWAYS third for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
 - App pages follow in SCOPE.md priority order after onboarding
+- Settings (`/settings`) is ALWAYS built after all app pages and before /privacy + /terms — mandatory for all SaaS with auth. If SCOPE.md does not include it, add it now.
+- `/privacy` and `/terms` are ALWAYS last (static pages, minimal build time)
 
 **Dashboard page detection — read `/dashboard-design` skill before building:**
 Before writing any page that is a dashboard, analytics view, monitoring screen, or data management list, read `~/.claude/skills/dashboard-design/SKILL.md` in full. Apply these rules automatically:
@@ -416,7 +440,7 @@ Bundle sizes (gzipped):
 The purpose is to answer: "What does a production-ready SaaS have that we haven't built yet?"
 
 **Loop:**
-1. Read `~/.claude/skills/shared/saas-gap-checklist.md` in full
+1. Read `~/.claude/skills/shared/saas-gap-checklist.md` in full. If the file does not exist: use the P1/P2/P3/P4 gap definitions in the "What counts as a gap" sections below as the checklist — do not skip this phase.
 2. Audit the current codebase against every checklist item
 3. Write `GAP-REPORT.md` to the project root with:
    - Every NO item (what's missing)
