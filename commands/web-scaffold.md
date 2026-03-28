@@ -492,6 +492,122 @@ Landing page: included (built in Phase 4 of /saas-build)
 Next: /web-supabase (if backend) → /web-page (landing first)
 ```
 
+#### `src/hooks/useSeo.ts` — Per-page SEO
+
+```ts
+// src/hooks/useSeo.ts
+import { useEffect } from 'react'
+
+interface SeoOptions {
+  title: string
+  description?: string
+  image?: string    // absolute URL for OG image
+  noIndex?: boolean
+}
+
+export function useSeo({ title, description, image, noIndex }: SeoOptions) {
+  useEffect(() => {
+    // Title
+    document.title = title ? `${title} | [ProductName]` : '[ProductName]'
+
+    // Description
+    const desc = document.querySelector('meta[name="description"]')
+    if (desc && description) desc.setAttribute('content', description)
+
+    // OG tags
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    const ogDesc = document.querySelector('meta[property="og:description"]')
+    const ogImage = document.querySelector('meta[property="og:image"]')
+    if (ogTitle) ogTitle.setAttribute('content', document.title)
+    if (ogDesc && description) ogDesc.setAttribute('content', description)
+    if (ogImage && image) ogImage.setAttribute('content', image)
+
+    // noIndex
+    let robotsMeta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null
+    if (noIndex) {
+      if (!robotsMeta) {
+        robotsMeta = document.createElement('meta')
+        robotsMeta.name = 'robots'
+        document.head.appendChild(robotsMeta)
+      }
+      robotsMeta.content = 'noindex, nofollow'
+    } else if (robotsMeta) {
+      robotsMeta.content = 'index, follow'
+    }
+  }, [title, description, image, noIndex])
+}
+```
+
+Seed `index.html` with base meta tags (replace placeholders during scaffold):
+```html
+<!-- in <head> -->
+<title>[ProductName]</title>
+<meta name="description" content="[One-sentence product description]" />
+<meta property="og:title" content="[ProductName]" />
+<meta property="og:description" content="[One-sentence product description]" />
+<meta property="og:image" content="[ProductURL]/og-image.png" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="robots" content="index, follow" />
+```
+
+Usage on every page:
+```tsx
+useSeo({
+  title: 'Dashboard',
+  description: 'Monitor your [product] performance.',
+})
+```
+
+**Auth/settings/onboarding pages: always set `noIndex: true`** — only public pages should be indexed.
+
+---
+
+#### `src/pages/NotFoundPage.tsx` — 404
+
+```tsx
+// src/pages/NotFoundPage.tsx
+import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
+
+export function NotFoundPage() {
+  useEffect(() => { document.title = 'Page not found' }, [])
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+      <div className="text-center max-w-md">
+        <p className="text-8xl font-bold text-muted-foreground/20 mb-4 select-none">404</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Page not found</h1>
+        <p className="text-sm text-muted-foreground mb-8">
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+        <Button asChild className="gap-2">
+          <Link to="/"><ArrowLeft className="h-4 w-4" />Back to home</Link>
+        </Button>
+      </div>
+    </div>
+  )
+}
+```
+
+Register in `App.tsx` as the catch-all route:
+```tsx
+const NotFoundPage = React.lazy(() =>
+  import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage }))
+)
+
+// Always last route in router
+<Route path="*" element={
+  <Suspense fallback={null}>
+    <NotFoundPage />
+  </Suspense>
+} />
+```
+
+---
+
 ## Rules
 - vite.config.ts MUST always include manualChunks — no exceptions
 - tsconfig.json MUST always include "types": ["vite/client"]
@@ -502,3 +618,7 @@ Next: /web-supabase (if backend) → /web-page (landing first)
 - Sentry MUST be initialised in main.tsx for every SaaS product — skip only for pure landing pages without auth
 - CLAUDE.md MUST include the color job sentence
 - Landing page route MUST exist in App.tsx from day one (even if page not built yet)
+- `useSeo` hook MUST be generated in every scaffold and called on every page
+- `NotFoundPage` MUST be generated in every scaffold and registered as the `path="*"` catch-all route
+- `index.html` MUST include base OG + Twitter meta tags — replace placeholders during scaffold
+- Auth, settings, and onboarding pages MUST set `noIndex: true` in useSeo
