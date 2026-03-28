@@ -266,7 +266,8 @@ Skip only if the product is a pure landing page with no auth.
 2. Set up Resend integration in `services/api/email_service.py` (or equivalent)
 3. Write React Email templates: welcome, trial-ending (if free-trial), team-invite (if team features), password-reset, invoice (if paid)
 4. Wire welcome email to auth signup trigger
-5. Add `RESEND_API_KEY` to `.env.example`
+5. If trial model is `free-trial`: write `services/api/trial_reminders.py` — cron job that queries orgs where `trial_ends_at` is 7, 3, or 1 day away and sends the trial-ending template. Deploy as Railway cron (`0 9 * * *`).
+6. Add `RESEND_API_KEY` to `.env.example`
 
 Log NEEDS_HUMAN: "Add RESEND_API_KEY — verify sending domain at resend.com/domains before emails will deliver"
 
@@ -287,7 +288,7 @@ This is the core loop. For EACH page in SCOPE.md build order:
 Follow /web-page rules. Apply all landing page non-negotiables from premium-website.md for the `/` page.
 - Landing page (`/`) is ALWAYS first — no exceptions
 - Auth (`/signin`) is ALWAYS second
-- Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it.
+- Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it. Route wrapper: `AuthRoute` (session-only, NOT `ProtectedRoute`) — the user is unauthenticated when clicking a reset link.
 - Onboarding (`/setup` or `/onboarding`) is ALWAYS fourth for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
 - App pages follow in SCOPE.md priority order after onboarding
 - Settings (`/settings`) is ALWAYS built after all app pages and before /privacy + /terms — mandatory for all SaaS with auth. If SCOPE.md does not include it, add it now.
@@ -375,7 +376,7 @@ Write tests for the three flows that break silently in production:
 - Primary data query returns empty → expect EmptyState with CTA rendered (not blank)
 - Primary data query errors → expect error state + retry button rendered (not white screen)
 
-Use Vitest + @testing-library/react. Mock Supabase client (vi.mock('@/lib/supabase')).
+Use Vitest + @testing-library/react. Mock Supabase client (vi.mock('@/lib/supabase')). **All Supabase calls in tests MUST use the mock — never hit real Supabase. If a test makes a real network call, the mock is misconfigured — fix the mock, not the test.**
 
 Run tests:
 ```bash
