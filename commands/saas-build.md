@@ -5,7 +5,7 @@ Full autonomous SaaS build pipeline from idea to deployed product. Runs the comp
 ## When to Use
 - Starting any new SaaS product from scratch
 - User provides a product idea, name, or brief
-- Replaces manually chaining /web-scope → /web-scaffold → /web-supabase → /web-page × N → /web-review → /web-deploy
+- Executes 8 phases end-to-end: market research → design research → scope → scaffold → backend (Supabase + Stripe + email) → pages → quality gate → deploy → gap analysis
 
 ## What This Does
 Executes the full build loop autonomously. Only stops for genuine blockers that require human action (external credentials, domain registration, Stripe live mode). Does NOT pause to ask "shall I proceed?" between steps.
@@ -19,7 +19,7 @@ Executes the full build loop autonomously. Only stops for genuine blockers that 
 Read these files in full — they are the source of truth for the entire build:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
 2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
-3. `~/.claude/skills/web-animations/SKILL.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
+3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
 4. `CLAUDE.md` (project root, if exists) — project-specific overrides.
 5. `DESIGN-BRIEF.md` (project root, if exists) — locked color system, typography, marketing tier, and component decisions from Phase 0.5. If this file exists, all design decisions are already made — do NOT re-decide them.
 6. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
@@ -83,7 +83,7 @@ Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 
 Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute it completely:
 1. Identify product personality type (one of 8: Enterprise Authority, Data Intelligence, Trusted Productivity, Premium Professional, Bold Operator, Health & Care, Growth Engine, Civic/Government)
-2. **Skip competitor research — MARKET-BRIEF.md already has it.** Read MARKET-BRIEF.md competitors section instead of running new WebSearch queries. Only run fresh queries if MARKET-BRIEF.md does not exist.
+2. **Skip competitor research if MARKET-BRIEF.md exists.** Check if MARKET-BRIEF.md exists in the project root before doing anything else. If it exists: read the competitors section directly — do NOT run new WebSearch queries. If it does not exist: run Phase 0.25 now before continuing Phase 0.5.
 3. Select a unique color system from the personality palette library — EXPLICITLY reject hsl(213 94% 58%) with a documented reason unless this is developer tooling. **Cross-product uniqueness check (monorepo):** before writing DESIGN-BRIEF.md, grep all existing `apps/*/DESIGN-BRIEF.md` files for the chosen primary HSL value. If the same hue (within ±15 degrees) is already in use by another product, select a different palette and document why.
 4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS"). If MCP is unavailable or returns no results: use the CSS grid pattern from web-system-prompt.md as the animated background fallback and continue — do not stop.
 5. Call `mcp__magic__21st_magic_component_builder` for the animated background. If MCP unavailable: write the CSS grid pattern inline in HeroSection.
@@ -154,7 +154,26 @@ import '@testing-library/jest-dom'
 9. Create `src/pages/NotFoundPage.tsx` — 404 page with headline, sub, and back-to-home button. Register as `path="*"` catch-all in App.tsx.
 10. Create `src/hooks/useSeo.ts` — sets `document.title` and `<meta name="description">` via useEffect. Accepts `{ title, description, noIndex? }`. Call on every page.
 11. Add OG + Twitter meta tags to `index.html`: `og:title`, `og:description`, `og:image` (1200x630 placeholder), `twitter:card`.
-12. Initialise Sentry in `main.tsx`: `Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN })`. Wrap `<App />` with `<Sentry.ErrorBoundary>`. Add `VITE_SENTRY_DSN` to `.env.example`.
+12. Generate `public/robots.txt`:
+   ```
+   User-agent: *
+   Allow: /
+   Sitemap: https://[product-domain]/sitemap.xml
+   ```
+   Leave domain as placeholder — user replaces after domain is live.
+13. Generate `public/sitemap.xml` with all public routes from SCOPE.md (landing, features, pricing, terms, privacy). Set `<lastmod>` to today's date. Leave domain as placeholder.
+14. Generate `public/site.webmanifest`:
+   ```json
+   { "name": "[Product Name]", "short_name": "[Slug]", "start_url": "/", "display": "standalone", "background_color": "#0a0a0a", "theme_color": "#0a0a0a", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+   ```
+   Add `<link rel="manifest" href="/site.webmanifest">` and `<link rel="apple-touch-icon" href="/icon-192.png">` to `index.html`. Log NEEDS_HUMAN: "Add icon-192.png and icon-512.png to /public — use a square version of the product logo."
+15. Initialise Sentry in `main.tsx` conditionally — only if `VITE_SENTRY_DSN` is set, so local dev and deploys without a Sentry project don't silently fail:
+   ```ts
+   if (import.meta.env.VITE_SENTRY_DSN) {
+     Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN })
+   }
+   ```
+   Wrap `<App />` with `<Sentry.ErrorBoundary fallback={<p>Something went wrong</p>}>`. Add `VITE_SENTRY_DSN=` (blank, optional) to `.env.example` with comment: `# Get from sentry.io — create project → Client Keys → DSN`.
 
 Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.
 
@@ -180,7 +199,7 @@ Log: "Phase 3 complete — backend configured" to BUILD-LOG.md.
 
 ### Phase 3b — Stripe (run /web-stripe) — skip if no paid plans
 
-**How to determine if this phase runs:** Read `SCOPE.md` and look for a Monetization or Trial section. Run this phase if ANY of these are true:
+**How to determine if this phase runs:** Read `SCOPE.md` and look for a Monetization or Trial section. If resuming a build, also check `BUILD-LOG.md` — if it contains "Phase 3b complete", skip this phase. Run this phase if ANY of these are true:
 - Trial model is `free-trial` or `paid-only`
 - Any pricing tier exists beyond a permanent free plan
 - SCOPE.md mentions Stripe, subscription, upgrade, or billing
@@ -190,7 +209,7 @@ Skip this phase only if the product is explicitly free with no upgrade path.
 If the product has any paid plan or trial-to-paid flow:
 1. Read `~/.claude/skills/web-stripe/SKILL.md` in full
 2. Create Stripe checkout session endpoint in FastAPI (or Supabase edge function for standalone)
-3. Create webhook handler — handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+3. Create webhook handler — verify signature first with `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`, then handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Reject any request that fails signature verification with 400.
 4. Write `UpgradeButton` component and `PricingCards` component
 5. Wire trial banner "Upgrade now" CTA to checkout session
 6. Add `VITE_STRIPE_PUBLISHABLE_KEY` + `VITE_STRIPE_PRO_PRICE_ID` to `.env.example`
@@ -237,7 +256,8 @@ This is the core loop. For EACH page in SCOPE.md build order:
 Follow /web-page rules. Apply all landing page non-negotiables from premium-website.md for the `/` page.
 - Landing page (`/`) is ALWAYS first — no exceptions
 - Auth (`/signin`) is ALWAYS second
-- Onboarding (`/setup` or `/onboarding`) is ALWAYS third for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
+- Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it.
+- Onboarding (`/setup` or `/onboarding`) is ALWAYS fourth for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
 - App pages follow in SCOPE.md priority order after onboarding
 - Settings (`/settings`) is ALWAYS built after all app pages and before /privacy + /terms — mandatory for all SaaS with auth. If SCOPE.md does not include it, add it now.
 - `/privacy` and `/terms` are ALWAYS last (static pages, minimal build time)
@@ -293,7 +313,7 @@ Before writing any transactional email logic, read `~/.claude/skills/web-email/S
 
 Pass 1 — checklist: run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
 
-Pass 2 — fresh eyes: close the file mentally. Re-read the page component as if you are a new user opening this product for the first time with zero data. Ask:
+Pass 2 — fresh eyes: re-read the page component from line 1 as if you are a new user opening this product for the first time with zero data. Ask:
 - Would I know what to do on this page right now?
 - Does the empty state give me a reason to act (not just explain why it's empty)?
 - Does the loading state feel intentional or like something broke?
@@ -312,7 +332,7 @@ After each page, add the route with React.lazy + Suspense. Never leave routes un
 
 ### Phase 4.5 — Core Test Coverage
 
-Run after all pages are built, before the quality gate.
+Run after all pages are built, before the quality gate. If resuming: check BUILD-LOG.md — if it contains "Phase 4.5 complete" and `npx vitest run` exits 0, skip this phase.
 
 Write tests for the three flows that break silently in production:
 
@@ -352,7 +372,7 @@ This is an explicit loop. Run it until the product passes or you hit 5 attempts.
 
 **Loop:**
 1. Run the full /web-review audit:
-   - If `~/.claude/commands/web-review.md` exists: follow it exactly — it outputs `Overall: [X]/40`
+   - If `~/.claude/skills/web-review/SKILL.md` exists: follow it exactly — it outputs `Overall: [X]/40`
    - If not: manually audit every page against the 13-item per-page checklist in premium-website.md (1 point per item × all pages, normalised to /40), then check every item in the pre-deploy checklist (each failure = -1). Sum the result. Document which items failed.
 2. Record the score (X/40) and list every failure
 3. If score >= 38 AND pre-deploy checklist fully green: exit loop, proceed to Phase 6
@@ -399,7 +419,7 @@ Report back which pass and which fail — Claude will fix failures before markin
 [ ] 1. Landing page loads — hero visible, animated background present, [CTA label from SCOPE.md] button visible
 [ ] 2. Primary CTA navigates to /signin (or /signup)
 [ ] 3. Sign up — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
-[ ] 4. Onboarding/setup — complete the /setup wizard fully (all steps including plan selection or trial activation). Confirm it redirects to /dashboard on completion. This step is MANDATORY — if /setup does not exist, it is a build failure.
+[ ] 4. Onboarding — complete the [onboarding route from SCOPE.md] wizard fully. Confirm it redirects to [main app route from SCOPE.md] on completion. MANDATORY — if the onboarding route does not exist, it is a build failure.
 [ ] 5. Trial banner — after onboarding, confirm the AppLayout shows a trial banner (days remaining + Upgrade button) if trial model is free-trial.
 [ ] 6. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
 [ ] 7. Settings page — loads and form submits without error.
@@ -441,6 +461,8 @@ Bundle sizes (gzipped):
 ### Phase 7 — Gap Analysis Loop (post-build self-improvement)
 
 **This phase runs after every deploy. It does not require human instruction to begin.**
+
+If resuming: read GAP-REPORT.md. If it exists and shows 0 P1 and 0 P2 gaps, skip to Phase 8.
 
 The purpose is to answer: "What does a production-ready SaaS have that we haven't built yet?"
 
