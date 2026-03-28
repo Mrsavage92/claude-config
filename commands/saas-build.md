@@ -137,8 +137,10 @@ After install, create `vitest.config.ts`:
 ```ts
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 export default defineConfig({
   plugins: [react()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   test: { environment: 'jsdom', setupFiles: ['./src/tests/setup.ts'] },
 })
 ```
@@ -428,7 +430,6 @@ The purpose is to answer: "What does a production-ready SaaS have that we haven'
 9. Return to step 4
 
 **What counts as a P1 gap:**
-- Missing /privacy or /terms page
 - Missing password reset flow
 - No onboarding wizard
 - Trial banner missing
