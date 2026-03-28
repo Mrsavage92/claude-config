@@ -38,12 +38,32 @@ Log every phase start and completion to `BUILD-LOG.md` in the project root (or `
 
 ---
 
+### Phase 0.5 — Design Research (run /web-design-research) — MANDATORY
+
+**This phase runs before /web-scope on EVERY new product. It is not optional.**
+
+Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute it completely:
+1. Identify product personality type (one of 8: Enterprise Authority, Data Intelligence, Trusted Productivity, Premium Professional, Bold Operator, Health & Care, Growth Engine, Civic/Government)
+2. Run 2-3 competitor research WebSearch queries for this product category
+3. Select a unique color system from the personality palette library — EXPLICITLY reject hsl(213 94% 58%) with a documented reason unless this is developer tooling
+4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS")
+5. Call `mcp__magic__21st_magic_component_builder` for the animated background
+6. Search LottieFiles for 3 animations relevant to this product
+7. Choose marketing site tier (Tier 2 standard: /, /features, /pricing, /signin as separate routes)
+8. Write DESIGN-BRIEF.md to the project root (or `apps/[product-slug]/` in monorepo)
+
+Do not proceed to Phase 1 until DESIGN-BRIEF.md exists with all sections filled.
+
+Log: "Phase 0.5 complete — DESIGN-BRIEF.md written" to BUILD-LOG.md.
+
+---
+
 ### Phase 1 — Scope (run /web-scope)
 
 Execute the full /web-scope process:
-1. Extract brief from user input
-2. Make all design decisions (enterprise vs expressive, font, color, reference site)
-3. Produce complete page inventory with all 5 fields per page
+1. **Read DESIGN-BRIEF.md first** — all color, typography, and marketing structure decisions are already locked. Do NOT re-decide them. Import them directly from the brief.
+2. Extract brief from user input
+3. Produce complete page inventory with all 5 fields per page (use the marketing tier structure from DESIGN-BRIEF.md for public pages)
 4. Write SCOPE.md to project root
 5. Write initial BUILD-LOG.md
 
@@ -177,15 +197,23 @@ After each page, add the route with React.lazy + Suspense. Never leave routes un
 
 ---
 
-### Phase 5 — Quality Gate (run /web-review)
+### Phase 5 — Quality Gate (review-fix loop)
 
-Run the full /web-review audit. Target score: 38+/40.
+This is an explicit loop. Run it until the product passes or you hit 5 attempts.
 
-Verify the pre-deploy checklist from premium-website.md is fully green before proceeding.
+**Loop:**
+1. Run the full /web-review audit — read `~/.claude/skills/web-review/SKILL.md` if it exists, otherwise use premium-website.md quality bar and pre-deploy checklist as the audit criteria
+2. Record the score (X/40) and list every failure
+3. If score >= 38 AND pre-deploy checklist fully green: exit loop, proceed to Phase 6
+4. If score < 38 OR any pre-deploy checklist item is red:
+   - For each failure: run /web-fix targeting the exact component and failure reason
+   - After all fixes: commit with `fix: quality gate — [N] issues resolved`
+   - Return to step 1
+5. If after 5 loop iterations the score is still < 38: log STUCK with exact failures and current score, then proceed to Phase 6 with failures documented
 
-If score < 38: fix all issues. Do not move to Phase 6 until score is 38+.
+**Never skip this loop.** A low score is not a reason to delay — it is a list of tasks to execute.
 
-Log score and fix summary to BUILD-LOG.md.
+Log each loop iteration to BUILD-LOG.md: "Phase 5 attempt [N] — score [X]/40 — [N failures] remaining"
 
 ---
 
@@ -245,7 +273,58 @@ Flag any chunk > 250KB.
 
 ---
 
-### Phase 7 — Handoff
+### Phase 7 — Gap Analysis Loop (post-build self-improvement)
+
+**This phase runs after every deploy. It does not require human instruction to begin.**
+
+The purpose is to answer: "What does a production-ready SaaS have that we haven't built yet?"
+
+**Loop:**
+1. Read `~/.claude/skills/shared/saas-gap-checklist.md` in full
+2. Audit the current codebase against every checklist item
+3. Write `GAP-REPORT.md` to the project root with:
+   - Every NO item (what's missing)
+   - Priority bucket for each: P1 (Foundation/Auth/Security) | P2 (UX/Quality) | P3 (Marketing/SEO) | P4 (Nice-to-have)
+   - Estimated fix complexity: Quick (< 30 min) | Medium (30-90 min) | Large (90+ min)
+4. If no P1 or P2 gaps remain: exit loop and proceed to Phase 8
+5. Execute ALL P1 gaps first (never skip a P1 gap)
+6. Execute ALL P2 gaps
+7. Execute P3 gaps that are quick or medium complexity
+8. After each batch of fixes: commit, re-read checklist, update GAP-REPORT.md
+9. Return to step 4
+
+**What counts as a P1 gap:**
+- Missing /privacy or /terms page
+- Missing password reset flow
+- No onboarding wizard
+- Trial banner missing
+- ProtectedRoute not checking onboarding_complete
+- Any broken mobile layout
+- Any missing empty state CTA
+- TypeScript errors in build
+- console.log in src/
+- Hardcoded hex colors
+
+**What counts as a P2 gap:**
+- Missing useSeo on any page
+- Any loading state is a blank screen or spinner (not skeleton)
+- Any error state is a white screen
+- Settings page missing tabs
+- Any icon-only button missing aria-label
+- Social proof section missing from landing page
+- Pricing section missing from landing page
+
+**Execution rules:**
+- Do not ask whether to fix gaps — just fix them
+- Do not batch changes — one gap = one commit
+- If a gap requires credentials (email API key, etc): log NEEDS_HUMAN and skip, continue with others
+- Never stop because there are many gaps — that is the point of this phase
+
+Log: "Phase 7 gap analysis — [N] gaps found, [N] fixed, [N] skipped (credentials needed)" to BUILD-LOG.md.
+
+---
+
+### Phase 8 — Handoff
 
 Write final BUILD-LOG.md entry:
 

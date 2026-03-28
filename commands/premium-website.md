@@ -19,7 +19,8 @@ This file is the contract. If a rule lives only in an individual skill file and 
 
 | Skill | Role |
 |---|---|
-| `/web-scope` | Define pages, design decisions, and product architecture before writing code |
+| `/web-design-research` | Pre-build design research — competitor analysis, 21st.dev component sourcing, LottieFiles animations, unique color system, multi-page marketing structure. Runs BEFORE /web-scope. Outputs DESIGN-BRIEF.md. |
+| `/web-scope` | Define pages, design decisions, and product architecture before writing code — reads DESIGN-BRIEF.md as primary input |
 | `/web-scaffold` | Bootstrap the full project: config files, design system, routes, AppLayout, TrialBanner, Sentry init — hero built in Phase 4 |
 | `/web-animations` | Framer Motion patterns — Technique 3 STAGGER is the standard hero entrance |
 | `/web-supabase` | Schema, RLS policies, auth, TypeScript types |
@@ -234,7 +235,8 @@ Run before any deploy:
 ## Full Build Loop
 
 ```
-/web-scope        → SCOPE.md with all design decisions + page list
+/web-design-research → DESIGN-BRIEF.md: competitor research, 21st.dev components, LottieFiles, unique color system, multi-page structure
+/web-scope        → SCOPE.md — reads DESIGN-BRIEF.md, imports all design decisions, defines page inventory
 /web-scaffold     → foundation: config, design system, routes, AppLayout, TrialBanner, Sentry
 /web-supabase     → schema, RLS policies, auth, TypeScript types (if backend)
 /web-stripe       → checkout session, webhooks, UpgradeButton (if paid plans)
