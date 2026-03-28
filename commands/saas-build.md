@@ -302,13 +302,6 @@ Before writing any `/setup` or `/onboarding` route, read `~/.claude/skills/web-o
 - `ProtectedRoute` must check `onboarding_complete` — redirect to `/setup` if false
 - `AuthRoute` (session-only check) wraps `/setup` — not `ProtectedRoute`
 
-**Email — read `/web-email` skill before building:**
-Before writing any transactional email logic, read `~/.claude/skills/web-email/SKILL.md`. Apply automatically:
-- Resend + React Email for all transactional mail
-- 5 templates: welcome, trial-ending (urgency at 1 day), team-invite, password-reset, invoice
-- FastAPI background tasks for delivery — never block request thread
-- Trial reminder cron: 7-day, 3-day, 1-day reminders via `trial_reminders.py`
-
 **4c. Per-page self-review (two passes — not one)**
 
 Pass 1 — checklist: run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
@@ -481,6 +474,8 @@ The purpose is to answer: "What does a production-ready SaaS have that we haven'
 9. Return to step 4
 
 **What counts as a P1 gap:**
+- Missing /privacy page
+- Missing /terms page
 - Missing password reset flow
 - No onboarding wizard
 - Trial banner missing
@@ -499,6 +494,25 @@ The purpose is to answer: "What does a production-ready SaaS have that we haven'
 - Any icon-only button missing aria-label
 - Social proof section missing from landing page
 - Pricing section missing from landing page
+
+**What counts as a P3 gap (Marketing/SEO):**
+- robots.txt missing from /public
+- sitemap.xml missing from /public (or not registered in robots.txt)
+- og:image is still the 1200x630 placeholder — needs a real image
+- Landing page missing FAQ section (LLM citability — AIs cite pages with Q&A)
+- Landing page missing comparison table vs competitors
+- No analytics snippet (Google Analytics or PostHog) in index.html
+- No structured data (JSON-LD schema) on landing page
+- sitemap.xml domain is still placeholder — needs updating once domain is live
+
+**What counts as a P4 gap (Nice-to-have):**
+- Dark mode toggle not accessible in AppLayout header
+- CMD+K palette not implemented (product has 8+ nav items)
+- PWA icons (icon-192.png, icon-512.png) not yet added to /public
+- Error page links back to home AND to status page
+- Empty states use illustrations rather than icon + text
+- Toast notification on every destructive user action (delete, remove)
+- Keyboard shortcut hints visible in UI (e.g. button tooltips showing Ctrl+S)
 
 **Execution rules:**
 - Do not ask whether to fix gaps — just fix them
