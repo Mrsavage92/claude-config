@@ -13,6 +13,19 @@ Building without a scope produces: forgotten landing pages, empty pages with no 
 
 ## Process
 
+### Step 0 — Read DESIGN-BRIEF.md (if it exists)
+
+Before making any design decisions, check if `DESIGN-BRIEF.md` exists in the project root (or `apps/[product-slug]/` in monorepo).
+
+**If DESIGN-BRIEF.md exists:** Read it in full. All design decisions in Steps 2b and 2c below are ALREADY LOCKED by the brief. Do not re-decide them — import the values directly:
+- Personality type, mode (dark/light-first), color system (primary/background/surface/accent HSL values), typography, reference sites, 21st.dev components selected, LottieFiles animations, marketing site tier and page structure.
+- Skip Steps 2b and 2c entirely. Jump from Step 2a straight to Step 3, using the locked design values from DESIGN-BRIEF.md.
+- The marketing site page structure (/, /features, /pricing, /signin) comes from the brief's "Marketing Site Structure" section — use that as the public page list in SCOPE.md.
+
+**If DESIGN-BRIEF.md does not exist:** Proceed normally through all steps. But flag at the end: "Note: /web-design-research was not run. Design decisions were made without competitor research or 21st.dev sourcing. Run /web-design-research before the next product to get differentiated designs."
+
+---
+
 ### Step 1 — Extract the Brief
 Read the user's product description. Extract:
 - Product name
