@@ -175,6 +175,26 @@ After all fixes: re-run the scoring. Report the final score.
 
 If score is still below 38/40: identify what would need to change to reach 38 and flag it clearly.
 
+## Quality Gate Loop
+
+When invoked from `/saas-build` Phase 5, this skill runs inside an explicit loop. Follow these rules:
+
+**Exit condition:** score >= 38 AND pre-deploy checklist fully green. Only then proceed to deploy.
+
+**Fix loop:** for each failure after scoring:
+1. Run `/web-fix` targeting the exact component and failure reason
+2. After all fixes: commit with `fix: quality gate — [N] issues resolved`
+3. Re-run the full audit (return to Step 1 of Process)
+
+**Hard stop:** if after 5 loop iterations the score is still < 38, log `STUCK` with the current score and every remaining failure, then STOP. Do NOT proceed to deploy. A score below 38 means the product is not ready. List all remaining failures and halt — do not skip or override this rule.
+
+**Log each iteration to BUILD-LOG.md:**
+```
+Phase 5 attempt [N] — score [X]/40 — [N failures] remaining
+```
+
+---
+
 ## Quality Thresholds
 
 - **38-40:** Ship it. This is the target.

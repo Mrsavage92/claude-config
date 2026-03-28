@@ -463,10 +463,60 @@ VITE_STRIPE_PRO_PRICE_ID=price_...   # Replace with real price ID before go-live
 VITE_API_URL=https://your-railway-service.up.railway.app
 ```
 
-### Step 5 — Install + shadcn Init
-```bash
-npm install && npx shadcn@latest init && npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea
+#### `public/site.webmanifest` — PWA manifest (generated at scaffold time)
+
+```json
+{
+  "name": "[Product Name]",
+  "short_name": "[Slug]",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
 ```
+
+Add these two tags to `index.html` `<head>` immediately after the favicon link:
+```html
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/icon-192.png" />
+```
+
+Log NEEDS_HUMAN: "Add icon-192.png and icon-512.png to /public — use a square version of the product logo."
+
+### Step 5 — Install + shadcn Init
+
+**Tests directory is created at scaffold time, not after pages are built.**
+
+```bash
+npm install
+npx shadcn@latest init
+npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
+```
+
+After install, create `vitest.config.ts`:
+```ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+export default defineConfig({
+  plugins: [react()],
+  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  test: { environment: 'jsdom', setupFiles: ['./src/tests/setup.ts'] },
+})
+```
+
+Create `src/tests/setup.ts`:
+```ts
+import '@testing-library/jest-dom'
+```
+
+The `src/tests/` directory is the home for all test files written in Phase 4.5. Create it now so the path exists.
 
 **shadcn v4 CSS overwrite guard (mandatory — do not skip):**
 After running the above, check `src/styles/index.css` for the string `oklch(`. If found, shadcn v4 has overwritten the design system tokens with oklch-format values.
@@ -622,3 +672,5 @@ const NotFoundPage = React.lazy(() =>
 - `NotFoundPage` MUST be generated in every scaffold and registered as the `path="*"` catch-all route
 - `index.html` MUST include base OG + Twitter meta tags — replace placeholders during scaffold
 - Auth, settings, and onboarding pages MUST set `noIndex: true` in useSeo
+- `vitest.config.ts` + `src/tests/setup.ts` MUST be created at scaffold time — never deferred to after pages are built
+- `public/site.webmanifest` MUST be generated at scaffold time with `<link rel="manifest">` + `<link rel="apple-touch-icon">` added to `index.html`
