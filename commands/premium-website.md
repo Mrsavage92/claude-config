@@ -99,6 +99,21 @@ Full detail: `/web-animations` Technique 3.
 
 ---
 
+## Stripe / Payments (enforced by Phase 3b)
+
+For any product with paid plans or a trial-to-paid flow — run `/web-stripe` after Supabase setup, before building pages:
+
+- Stripe checkout session: always server-side (FastAPI endpoint or Supabase edge function) — never client-side price creation
+- Webhook handler MUST handle: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+- `UpgradeButton` + `PricingCards` components written from `/web-stripe` skill — never ad-hoc checkout buttons
+- Trial banner "Upgrade now" CTA wires to checkout session — never to a pricing page link
+- Billing tab in `/settings` uses Stripe Customer Portal redirect — never a custom billing UI
+- Required env vars: `VITE_STRIPE_PUBLISHABLE_KEY`, `VITE_STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- Webhook endpoint registered in Stripe dashboard before deploy is considered done — log as NEEDS_HUMAN if not yet done
+- Smoke test end-to-end with test card `4242 4242 4242 4242` — subscription activates and trial banner disappears
+
+---
+
 ## Performance Rules (from vercel-react-best-practices)
 
 Apply from scaffold onwards — not just at review time:
