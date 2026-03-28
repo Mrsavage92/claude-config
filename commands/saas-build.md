@@ -19,8 +19,9 @@ Executes the full build loop autonomously. Only stops for genuine blockers that 
 Read these files in full — they are the source of truth for the entire build:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
 2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
-3. `CLAUDE.md` (project root, if exists) — project-specific overrides.
-4. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
+3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
+4. `CLAUDE.md` (project root, if exists) — project-specific overrides.
+5. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
 
 **Monorepo detection:** Check if the working directory contains `turbo.json` or an `apps/` directory. If yes, this is a monorepo build.
 - In monorepo mode: the frontend lives in `apps/[product-slug]/`. All Phase 2-6 file operations target that subdirectory.
@@ -62,6 +63,11 @@ Execute the full /web-scaffold process using decisions from SCOPE.md:
 5. AppLayout MUST include skip-nav link as first element
 6. Generate vercel.json with SPA rewrites at project root
 7. Run `npm install && npx shadcn@latest init && npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea`
+8. Create `src/components/ErrorBoundary.tsx` — class component wrapping children, renders inline error + retry button on caught errors. Wrap every `React.lazy` route with it in App.tsx.
+9. Create `src/pages/NotFoundPage.tsx` — 404 page with headline, sub, and back-to-home button. Register as `path="*"` catch-all in App.tsx.
+10. Create `src/hooks/useSeo.ts` — sets `document.title` and `<meta name="description">` via useEffect. Accepts `{ title, description, noIndex? }`. Call on every page.
+11. Add OG + Twitter meta tags to `index.html`: `og:title`, `og:description`, `og:image` (1200x630 placeholder), `twitter:card`.
+12. Initialise Sentry in `main.tsx`: `Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN })`. Wrap `<App />` with `<Sentry.ErrorBoundary>`. Add `VITE_SENTRY_DSN` to `.env.example`.
 
 Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.
 
@@ -80,6 +86,23 @@ If the product needs Supabase:
 If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user.
 
 Log: "Phase 3 complete — backend configured" to BUILD-LOG.md.
+
+---
+
+### Phase 3b — Stripe (run /web-stripe) — skip if no paid plans
+
+If the product has any paid plan or trial-to-paid flow:
+1. Read `~/.claude/skills/web-stripe/SKILL.md` in full
+2. Create Stripe checkout session endpoint in FastAPI (or Supabase edge function for standalone)
+3. Create webhook handler — handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+4. Write `UpgradeButton` component and `PricingCards` component
+5. Wire trial banner "Upgrade now" CTA to checkout session
+6. Add `VITE_STRIPE_PUBLISHABLE_KEY` + `VITE_STRIPE_PRO_PRICE_ID` to `.env.example`
+7. Add webhook endpoint to `.env.example` as `STRIPE_WEBHOOK_SECRET`
+
+Log NEEDS_HUMAN: "Set STRIPE_WEBHOOK_SECRET — register [product-url]/api/webhooks/stripe in Stripe dashboard for: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted"
+
+Log: "Phase 3b complete — Stripe integrated" to BUILD-LOG.md.
 
 ---
 
@@ -110,6 +133,9 @@ Before writing any page that is a dashboard, analytics view, monitoring screen, 
 - Framer Motion stagger (0.08s) on KPI card entrance
 - All colors via CSS variables — zero hardcoded grays or whites
 - CMD+K CommandPalette mounted in AppLayout if product has 8+ nav items
+- Skeleton loaders (not spinners) for all async data — use shadcn Skeleton matching exact card/row dimensions
+- Dark mode via ThemeProvider + CSS variables — never hardcode colors, use hsl(var(--chart-1)) etc. for Recharts
+- Mobile: Sheet drawer sidebar on <768px, data tables collapse to card stack, touch targets min 44px, hide secondary columns
 - Run the skill's Pre-Ship Checklist (28 items) as the per-page self-review for dashboard pages instead of the standard 12-item checklist
 
 **Data table detection — read `/web-table` skill before building:**
@@ -197,7 +223,7 @@ Report back which pass and which fail — Claude will fix failures before markin
 [ ] 4. Onboarding/setup — complete the /setup wizard fully (all steps including plan selection or trial activation). Confirm it redirects to /dashboard on completion. This step is MANDATORY — if /setup does not exist, it is a build failure.
 [ ] 5. Trial banner — after onboarding, confirm the AppLayout shows a trial banner (days remaining + Upgrade button) if trial model is free-trial.
 [ ] 6. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
-[ ] 6. Settings page — loads and form submits without error.
+[ ] 7. Settings page — loads and form submits without error.
 
 For each failure: paste the error or screenshot and Claude will fix before marking done.
 ```
