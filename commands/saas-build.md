@@ -87,7 +87,7 @@ Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute it comp
 3. Select a unique color system from the personality palette library — EXPLICITLY reject hsl(213 94% 58%) with a documented reason unless this is developer tooling. **Cross-product uniqueness check (monorepo):** before writing DESIGN-BRIEF.md, grep all existing `apps/*/DESIGN-BRIEF.md` files for the chosen primary HSL value. If the same hue (within ±15 degrees) is already in use by another product, select a different palette and document why.
 4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS"). If MCP is unavailable or returns no results: use the CSS grid pattern from web-system-prompt.md as the animated background fallback and continue — do not stop.
 5. Call `mcp__magic__21st_magic_component_builder` for the animated background. If MCP unavailable: write the CSS grid pattern inline in HeroSection.
-6. Search LottieFiles for 3 animations relevant to this product
+6. Search LottieFiles for 3 animations relevant to this product: run WebSearch "site:lottiefiles.com [product-category] animation" and pick 3 results. Add the top result URLs to DESIGN-BRIEF.md under an 'Animations' section. If WebSearch returns no results: skip and note "no LottieFiles found" in DESIGN-BRIEF.md — do not block progress.
 7. Choose marketing site tier (Tier 2 standard: /, /features, /pricing, /signin as separate routes)
 8. Write DESIGN-BRIEF.md to the project root (or `apps/[product-slug]/` in monorepo)
 
@@ -105,7 +105,7 @@ Execute the full /web-scope process:
 3. Extract brief from user input
 4. Produce complete page inventory with all 5 fields per page (use the marketing tier structure from DESIGN-BRIEF.md for public pages)
 5. Write SCOPE.md to project root
-6. Write initial BUILD-LOG.md
+6. Append initial SCOPE summary to BUILD-LOG.md — do NOT overwrite; Phase 0.25 already created this file
 
 Do not proceed to Phase 2 until SCOPE.md exists and every page has all 5 fields defined.
 
@@ -132,7 +132,8 @@ Execute the full /web-scaffold process using decisions from SCOPE.md:
 ```bash
 npm install
 npx shadcn@latest init
-npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea
+npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea switch radio-group checkbox
+npm install @sentry/react
 npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
 ```
 After install, create `vitest.config.ts`:
@@ -187,7 +188,7 @@ If the product needs Supabase:
 3. Write RLS policies for all tables
 4. Generate TypeScript types
 5. Write `src/lib/supabase.ts` with hardcoded values — the anon key is safe to commit (it is public by design; RLS policies enforce access control)
-6. Write `useAuth` hook and `ProtectedRoute` component
+6. Write `useAuth` hook and `ProtectedRoute` component. ProtectedRoute must: (a) check session — redirect to `/auth` if null; (b) show a skeleton layout while session is loading; (c) check `onboarding_complete` on the org record — redirect to `/setup` if false. All three checks are required.
 7. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
 8. Register `/reset-password` route in App.tsx as a lazy-loaded stub pointing to a placeholder component — full `ResetPasswordPage.tsx` is built in Phase 4 (so it gets the per-page self-review pass). Mark it in SCOPE.md as a required auth page if not already present.
 
@@ -207,13 +208,43 @@ Log: "Phase 3 complete — backend configured" to BUILD-LOG.md.
 Skip this phase only if the product is explicitly free with no upgrade path.
 
 If the product has any paid plan or trial-to-paid flow:
-1. Read `~/.claude/skills/web-stripe/SKILL.md` in full
-2. Create Stripe checkout session endpoint in FastAPI (or Supabase edge function for standalone)
-3. Create webhook handler — verify signature first with `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`, then handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Reject any request that fails signature verification with 400.
-4. Write `UpgradeButton` component and `PricingCards` component
-5. Wire trial banner "Upgrade now" CTA to checkout session
-6. Add `VITE_STRIPE_PUBLISHABLE_KEY` + `VITE_STRIPE_PRO_PRICE_ID` to `.env.example`
-7. Add webhook endpoint to `.env.example` as `STRIPE_WEBHOOK_SECRET`
+1. Read `~/.claude/commands/web-stripe.md` in full
+2. **Auto-create Stripe test price (requires STRIPE_SECRET_KEY in env):**
+   **Check Stripe CLI availability first:** `stripe --version 2>&1`. If command not found: skip CLI approach, use the curl fallback below.
+   If Stripe CLI is available AND `STRIPE_SECRET_KEY` is in env:
+   ```bash
+   stripe prices create \
+     --unit-amount [price in cents from SCOPE.md, e.g. 4900 for $49] \
+     --currency aud \
+     --recurring[interval]=month \
+     --product-data[name]="[Product Name] Pro" \
+     --lookup-key "[product-slug]-pro-monthly"
+   ```
+   Capture the `id` field from output (format: `price_xxx`). This is `VITE_STRIPE_PRO_PRICE_ID`.
+   **If Stripe CLI unavailable:** use the Stripe REST API directly to create the price:
+   ```bash
+   curl -s https://api.stripe.com/v1/prices \
+     -u "$STRIPE_SECRET_KEY:" \
+     -d "unit_amount=[price in cents]" \
+     -d "currency=aud" \
+     -d "recurring[interval]=month" \
+     -d "product_data[name]=[Product Name] Pro"
+   ```
+   Capture the publishable key:
+   ```bash
+   curl -s https://api.stripe.com/v1/account \
+     -u "$STRIPE_SECRET_KEY:" \
+     | grep -o '"pk_test_[^"]*"' | tr -d '"'
+   ```
+   Write both values to `.env.local` and Vercel env vars (Phase 6c).
+   If the curl returns empty: the secret key is live mode (`sk_live_`) — get the live publishable key from stripe.com/apikeys and log as NEEDS_HUMAN.
+   If `STRIPE_SECRET_KEY` is not in env: log NEEDS_HUMAN: "Add STRIPE_SECRET_KEY to env — then re-run Phase 3b to auto-create price ID."
+3. Create Stripe checkout session endpoint in FastAPI (or Supabase edge function for standalone)
+4. Create webhook handler — verify signature first with `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`, then handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Reject any request that fails signature verification with 400.
+5. Write `UpgradeButton` component and `PricingCards` component
+6. Wire trial banner "Upgrade now" CTA to checkout session
+7. Add `VITE_STRIPE_PUBLISHABLE_KEY` + `VITE_STRIPE_PRO_PRICE_ID` to `.env.example`
+8. Add webhook endpoint to `.env.example` as `STRIPE_WEBHOOK_SECRET`
 
 Log NEEDS_HUMAN: "Set STRIPE_WEBHOOK_SECRET — register [product-url]/api/webhooks/stripe in Stripe dashboard for: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted"
 
@@ -304,7 +335,7 @@ Before writing any `/setup` or `/onboarding` route, read `~/.claude/skills/web-o
 
 **4c. Per-page self-review (two passes — not one)**
 
-Pass 1 — checklist: run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
+Pass 1 — checklist: for dashboard pages, run the 28-item Pre-Ship Checklist from the dashboard-design skill (as specified in Phase 4b dashboard detection) — not the standard 13-item checklist. For all other pages, run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
 
 Pass 2 — fresh eyes: re-read the page component from line 1 as if you are a new user opening this product for the first time with zero data. Ask:
 - Would I know what to do on this page right now?
@@ -364,9 +395,8 @@ This is an explicit loop. Run it until the product passes or you hit 5 attempts.
 **Scoring note:** Phase 5 uses `/web-review` (x/40) — a web-specific visual + a11y + performance gate. This is different from `/review` (x/100) which is a code-depth audit covering security, correctness, and maintainability. Use /web-review here. Optionally run /review separately as an additional code audit — its score does not replace or gate deploy.
 
 **Loop:**
-1. Run the full /web-review audit:
-   - If `~/.claude/skills/web-review/SKILL.md` exists: follow it exactly — it outputs `Overall: [X]/40`
-   - If not: manually audit every page against the 13-item per-page checklist in premium-website.md (1 point per item × all pages, normalised to /40), then check every item in the pre-deploy checklist (each failure = -1). Sum the result. Document which items failed.
+1. Run the full /web-review audit by reading `~/.claude/commands/web-review.md` and following it exactly — it outputs `Overall: [X]/40`.
+   Fallback (if web-review.md is somehow unavailable): score = 40 minus (count of failed items in the 13-item per-page checklist across all pages, plus count of red items in the pre-deploy checklist). Each failure = -1. Document every failure explicitly.
 2. Record the score (X/40) and list every failure
 3. If score >= 38 AND pre-deploy checklist fully green: exit loop, proceed to Phase 6
 4. If score < 38 OR any pre-deploy checklist item is red:
@@ -387,39 +417,77 @@ Log each loop iteration to BUILD-LOG.md: "Phase 5 attempt [N] — score [X]/40 �
 Run through the pre-deploy checklist in premium-website.md. All items must pass.
 
 **6b. Vercel deploy**
+
+**First: confirm the Vercel project exists.** Via MCP: check if a project named `[product-slug]` already exists. If not, create it first before deploying — never deploy to a non-existent project.
+
+Use the `vercel` MCP server (preferred — no CLI auth issues on Windows):
+- Call `createDeployment` with `target: production`
+- For monorepo: set `rootDirectory: apps/[product-slug]`
+- Capture the production URL from the response
+
+Fallback if MCP unavailable:
 ```bash
 npx vercel --prod --yes
 ```
-Capture the production URL from output.
 
 **6c. Set all env vars in Vercel**
-For each var in `.env.example`:
+
+Use the `vercel` MCP `addEnvVar` tool for each var in `.env.example` with `target: production`.
+
+Fallback if MCP unavailable:
 ```bash
 npx vercel env add [VAR_NAME] production --value [value] --yes
 ```
+
 VITE_API_URL is required if there is a backend — set it now, not later.
 
-**6d. Smoke test (present to user — do not skip)**
-
-Read SCOPE.md to get: the product name, the primary CTA label on the landing page, and the name of the core feature page. Use these in the checklist below — do not hardcode generic text.
-
+**Redeploy after env vars are set.** Env vars set after the initial deploy do not take effect until the next deploy. Trigger a redeploy:
+```bash
+npx vercel --prod --yes
 ```
-Smoke Test — [product name] ([product URL])
-──────────────────────────────────────────────────────
-ACTION REQUIRED: Open [URL] in a browser and verify each item.
-Report back which pass and which fail — Claude will fix failures before marking deploy done.
+Or via Vercel MCP redeploy. Do not skip — without this, the app launches with empty VITE_API_URL, VITE_STRIPE_PUBLISHABLE_KEY, and VITE_SENTRY_DSN.
 
-[ ] 1. Landing page loads — hero visible, animated background present, [CTA label from SCOPE.md] button visible
-[ ] 2. Primary CTA navigates to /signin (or /signup)
-[ ] 3. Sign up — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
-[ ] 4. Onboarding — complete the [onboarding route from SCOPE.md] wizard fully. Confirm it redirects to [main app route from SCOPE.md] on completion. MANDATORY — if the onboarding route does not exist, it is a build failure.
-[ ] 5. Trial banner — after onboarding, confirm the AppLayout shows a trial banner (days remaining + Upgrade button) if trial model is free-trial.
-[ ] 6. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
-[ ] 7. Settings page — loads and form submits without error.
-[ ] 8. /privacy and /terms — both pages load without errors.
+**6d. Automated smoke test (agent-browser — no human required)**
 
-For each failure: paste the error or screenshot and Claude will fix before marking done.
+Read SCOPE.md to get: the product name, the primary CTA label, the onboarding route, and the core feature page route.
+
+**Step 1 — Create a test user via Supabase MCP (bypasses email confirmation):**
 ```
+supabase.auth.admin.createUser({
+  email: "smoke-test+[timestamp]@[product-slug].test",
+  password: "SmokeTest123!",
+  email_confirm: true
+})
+```
+Save the returned user ID for cleanup.
+If Supabase MCP is unavailable: log NEEDS_HUMAN "Create a test account manually at [production-url]/signin to run smoke test, then delete it after. Supabase MCP was unavailable for automated test user creation." and skip to Step 2 using a manually-created account — do not block Phase 6d entirely.
+
+**Step 2 — Run the browser sequence via the `agent-browser` Skill:**
+Invoke agent-browser via the Skill tool (it is NOT a bash CLI command). The sequence to execute covers 10 checks:
+
+1. Open [production-url] — verify landing page loads, hero text "[product name]" visible, CTA "[CTA label from SCOPE.md]" visible
+2. Click CTA — verify navigation to /signin (or /signup)
+3. Sign in with test user credentials — verify redirect to [onboarding-route]
+4. Click through all onboarding wizard steps — verify redirect to [main-app-route] on completion
+5. Verify trial banner visible ("days remaining" text) — skip if trial model is not free-trial
+6. Open [production-url]/[core-feature-route] — verify empty state with CTA renders (not blank)
+7. Open [production-url]/settings — verify "Profile" tab visible
+8. Open [production-url]/privacy — verify page loads without 404
+9. Open [production-url]/terms — verify page loads without 404
+10. Set viewport to 375px, open [production-url] — verify no horizontal overflow, hero readable
+
+Take a screenshot at each step for the record.
+
+**Step 3 — For each failed check:** use /web-fix with the exact failure description, then re-verify that specific check manually or via agent-browser before marking it passed. Do not mark smoke test done until all 10 checks pass.
+
+If agent-browser is unavailable: log NEEDS_HUMAN "Run Phase 6d smoke test manually - sign in at [production-url], complete onboarding, verify trial banner, check all routes. agent-browser was unavailable." and proceed to Phase 6e.
+
+**Step 4 — Clean up test user via Supabase MCP:**
+```
+supabase.auth.admin.deleteUser([saved-user-id])
+```
+
+Log: "Phase 6d smoke test complete — all checks passed" to BUILD-LOG.md.
 
 **6e. Update CORS**
 In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
@@ -526,26 +594,49 @@ Log: "Phase 7 gap analysis — [N] gaps found, [N] fixed, [N] skipped (credentia
 
 ### Phase 8 — Handoff
 
-Write final BUILD-LOG.md entry:
+**8a. Domain availability check (GoDaddy MCP)**
+
+Infer the desired domain from the product name in SCOPE.md. Check both .com.au and .com variants:
+```
+mcp__claude_ai_GoDaddy__domains_check_availability({ domain: "[product-slug].com.au" })
+mcp__claude_ai_GoDaddy__domains_check_availability({ domain: "[product-slug].com" })
+```
+
+If available: log to BUILD-LOG.md: "Domain [name] is available — purchase at godaddy.com/domainsearch/find?domainToCheck=[name] then point DNS A record to Vercel IP: 76.76.21.21"
+
+If not available: call `mcp__claude_ai_GoDaddy__domains_suggest({ query: "[product-slug]", country: "AU", limit: 5 })` and log the top 3 available alternatives to BUILD-LOG.md.
+
+If GoDaddy MCP is unavailable: log to BUILD-LOG.md: "Domain check skipped - GoDaddy MCP unavailable. Check [product-slug].com.au and [product-slug].com manually at godaddy.com" and proceed to Phase 8b.
+
+**8b. Write final BUILD-LOG.md entry:**
 
 ```markdown
 ## Build Complete — [timestamp]
 
 **Product:** [name]
-**URL:** [production URL]
+**URL:** [production Vercel URL]
 **Score:** [web-review score]/40
+
+### Domain
+- [product-slug].com.au — [AVAILABLE / NOT AVAILABLE]
+- [product-slug].com — [AVAILABLE / NOT AVAILABLE]
+- Purchase link: godaddy.com/domainsearch/find?domainToCheck=[product-slug].com.au
+- After purchase: point DNS A record → 76.76.21.21, add domain in Vercel dashboard
 
 ### What was built
 [list of all pages]
 
 ### Remaining human actions required
-- [ ] Register domain and point DNS to Vercel
-- [ ] Switch Stripe to live mode and replace test price IDs
-- [ ] [any other items that needed credentials]
+- [ ] Purchase domain (link above) and point DNS to Vercel
+- [ ] Switch Stripe to live mode: stripe.com/dashboard → Products → copy live price IDs → update Vercel env vars
+- [ ] [any other NEEDS_HUMAN items from this build]
 
 ### Architecture notes
 [anything non-obvious about the build that future sessions should know]
 ```
+
+**8c. Push build summary to Notion via `/project-refresh` PUSH mode.**
+Updates the project's Notion master doc with deploy URL, review score, and remaining human actions — required for cross-session context.
 
 ---
 
@@ -553,7 +644,7 @@ Write final BUILD-LOG.md entry:
 
 | Condition | Action |
 |---|---|
-| Domain registration needed | Log as NEEDS_HUMAN, continue with .vercel.app URL |
+| Domain registration needed | Check availability via GoDaddy MCP (Phase 8a), log purchase link, continue with .vercel.app URL |
 | Stripe live price IDs needed | Log as NEEDS_HUMAN with test prices in place |
 | Railway auth token needed | Log as NEEDS_HUMAN, document which env vars to set |
 | External API key not in env | Log as NEEDS_HUMAN with exact variable name needed |
