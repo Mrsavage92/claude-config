@@ -16,7 +16,7 @@ Executes the full build loop autonomously. Only stops for genuine blockers that 
 
 ### Phase 0 — Orient
 
-Read these files in full — they are the source of truth for the entire build:
+Read these files in full — they are the source of truth for the entire build. Run all reads in parallel:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
 2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
 3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
@@ -154,7 +154,7 @@ import '@testing-library/jest-dom'
 8. Create `src/components/ErrorBoundary.tsx` — class component wrapping children, renders inline error + retry button on caught errors. Wrap every `React.lazy` route with it in App.tsx.
 9. Create `src/pages/NotFoundPage.tsx` — 404 page with headline, sub, and back-to-home button. Register as `path="*"` catch-all in App.tsx.
 10. Create `src/hooks/useSeo.ts` — sets `document.title` and `<meta name="description">` via useEffect. Accepts `{ title, description, noIndex? }`. Call on every page.
-11. Add OG + Twitter meta tags to `index.html`: `og:title`, `og:description`, `og:image` (1200x630 placeholder), `twitter:card`.
+11. Add OG + Twitter meta tags to `index.html`: `og:title`, `og:description`, `og:image` (set to `/og-image.jpg` — auto-generated in step 14 below), `twitter:card`.
 12. Generate `public/robots.txt`:
    ```
    User-agent: *
@@ -167,7 +167,44 @@ import '@testing-library/jest-dom'
    ```json
    { "name": "[Product Name]", "short_name": "[Slug]", "start_url": "/", "display": "standalone", "background_color": "#0a0a0a", "theme_color": "#0a0a0a", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
    ```
-   Add `<link rel="manifest" href="/site.webmanifest">` and `<link rel="apple-touch-icon" href="/icon-192.png">` to `index.html`. Log NEEDS_HUMAN: "Add icon-192.png and icon-512.png to /public — use a square version of the product logo."
+   Add `<link rel="manifest" href="/site.webmanifest">` and `<link rel="apple-touch-icon" href="/icon-192.png">` to `index.html`.
+
+   **Auto-generate icons via ai-image-generation skill (no human required):**
+
+   Before writing the prompt: read DESIGN-BRIEF.md to extract (a) the exact primary color HSL value, (b) the product personality type, and (c) the product's core action/metaphor (what does it fundamentally DO — track, connect, analyse, protect, automate?).
+
+   Construct a craft-level prompt using this template:
+   ```
+   App icon for [Product Name]. [One sentence: what the product does, who it's for].
+   Visual concept: [specific metaphor derived from core action — e.g. "an upward arrow dissolving into data points" for analytics, "a shield with a circuit line" for security, "interlocking gears morphing into a checkmark" for workflow automation].
+   Style: flat vector, ultra-clean, [personality adjective from DESIGN-BRIEF — e.g. "precision enterprise" / "bold consumer" / "calm healthcare"].
+   Color: [primary HSL from DESIGN-BRIEF] icon on #0a0a0a background, subtle inner glow matching primary color.
+   Quality reference: Stripe, Linear, Vercel app icon aesthetic — not generic, not clipart.
+   Format: square, centered, 10% padding from edge. No text. No gradients unless glassy/frosted effect.
+   ```
+
+   Run with Seedream 4.5 for maximum quality. The command outputs JSON — extract the URL with jq:
+   ```bash
+   ICON_URL=$(infsh app run bytedance/seedream-4-5 --input '{"prompt": "[constructed prompt above]"}' | jq -r '.output // .images[0].url // .image_url // empty')
+   ```
+
+   If ICON_URL is non-empty, download to /public:
+   ```bash
+   curl -sL "$ICON_URL" -o public/icon-512.png
+   cp public/icon-512.png public/icon-192.png
+   ```
+
+   Update site.webmanifest to include both: `"icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }, { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }]`
+
+   **Also generate the OG social image** (replaces the 1200x630 placeholder set in step 11):
+   Write a second prompt for a wide-format hero: same brand colors and visual metaphor, but landscape layout showing the product in context — dashboard mockup, key UI element, or abstract brand scene. Aspect ratio 1200x630.
+   ```bash
+   OG_URL=$(infsh app run xai/grok-imagine-image --input '{"prompt": "[og-hero-prompt]", "aspect_ratio": "16:9"}' | jq -r '.output // .images[0].url // .image_url // empty')
+   [ -n "$OG_URL" ] && curl -sL "$OG_URL" -o public/og-image.jpg
+   ```
+   Update index.html og:image to `/og-image.jpg` if downloaded successfully.
+
+   If infsh is unavailable or ICON_URL is empty: log NEEDS_HUMAN: "Add icon-192.png, icon-512.png, and og-image.jpg to /public." and continue.
 15. Initialise Sentry in `main.tsx` conditionally — only if `VITE_SENTRY_DSN` is set, so local dev and deploys without a Sentry project don't silently fail:
    ```ts
    if (import.meta.env.VITE_SENTRY_DSN) {
@@ -180,7 +217,23 @@ Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.
 
 ---
 
-### Phase 3 — Backend (run /web-supabase) — skip if no backend
+### Phase 3 — Backend Setup (parallel dispatch)
+
+Phases 3, 3b, and 3c are independent of each other — Supabase schema, Stripe price creation, and email template setup do not depend on each other's outputs. Determine which apply (read SCOPE.md for monetization model and email requirements), then dispatch all applicable phases simultaneously:
+
+| Phase | Condition to run |
+|---|---|
+| 3 (Supabase) | Product needs auth or database |
+| 3b (Stripe) | Any paid plan or trial-to-paid flow exists |
+| 3c (Email) | Product has auth, team invites, or email flows |
+
+Run all applicable phases in parallel. If only one applies, run it alone. Do not run 3 → wait → 3b → wait → 3c sequentially when all three can run at once.
+
+After all three complete: verify that `src/lib/supabase.ts` exists (if Phase 3 ran), `.env.example` has all required vars, and BUILD-LOG.md has entries for each completed phase.
+
+---
+
+### Phase 3a — Supabase (run /web-supabase) — skip if no backend
 
 If the product needs Supabase:
 1. Get project URL and anon key via Supabase MCP
@@ -290,6 +343,7 @@ Follow /web-page rules. Apply all landing page non-negotiables from premium-webs
 - Auth (`/signin`) is ALWAYS second
 - Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it. Route wrapper: `AuthRoute` (session-only, NOT `ProtectedRoute`) — the user is unauthenticated when clicking a reset link.
 - Onboarding (`/setup` or `/onboarding`) is ALWAYS fourth for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
+- **Auth-free products** (no login, no user accounts): skip auth/reset-password/onboarding positions. Build order is: `/` → app pages in SCOPE.md priority order → `/settings` (if applicable) → `/privacy` → `/terms`.
 - App pages follow in SCOPE.md priority order after onboarding
 - Settings (`/settings`) is ALWAYS built after all app pages and before /privacy + /terms — mandatory for all SaaS with auth. If SCOPE.md does not include it, add it now.
 - `/privacy` and `/terms` are ALWAYS last (static pages, minimal build time)
@@ -433,7 +487,7 @@ npx vercel --prod --yes
 
 **6c. Set all env vars in Vercel**
 
-Use the `vercel` MCP `addEnvVar` tool for each var in `.env.example` with `target: production`.
+Use the `vercel` MCP `addEnvVar` tool for each var in `.env.example` with `target: production`. Skip vars with blank placeholder values (e.g. `VITE_SENTRY_DSN=`, `STRIPE_WEBHOOK_SECRET=` with no value) — only set vars that have actual values.
 
 Fallback if MCP unavailable:
 ```bash
@@ -448,6 +502,8 @@ npx vercel --prod --yes
 ```
 Or via Vercel MCP redeploy. Do not skip — without this, the app launches with empty VITE_API_URL, VITE_STRIPE_PUBLISHABLE_KEY, and VITE_SENTRY_DSN.
 
+**Parallelise 6d + 6f:** Start the bundle audit (6f) at the same time as setting up the smoke test user (6d Step 1). Bundle analysis does not require a live test session, and test user creation does not require the bundle report. Merge both outputs before deciding whether to deploy-fix.
+
 **6d. Automated smoke test (agent-browser — no human required)**
 
 Read SCOPE.md to get: the product name, the primary CTA label, the onboarding route, and the core feature page route.
@@ -455,7 +511,7 @@ Read SCOPE.md to get: the product name, the primary CTA label, the onboarding ro
 **Step 1 — Create a test user via Supabase MCP (bypasses email confirmation):**
 ```
 supabase.auth.admin.createUser({
-  email: "smoke-test+[timestamp]@[product-slug].test",
+  email: "smoke-test+[unix-epoch-seconds, e.g. $(date +%s)]@[product-slug].test",
   password: "SmokeTest123!",
   email_confirm: true
 })
@@ -492,6 +548,8 @@ Log: "Phase 6d smoke test complete — all checks passed" to BUILD-LOG.md.
 
 **6e. Update CORS**
 In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
+
+Use the Railway GraphQL mutation to update the env var (see `reference_railway.md` in memory for the `upsertVariable` mutation template and service/env IDs). If Railway MCP is unavailable: log NEEDS_HUMAN "Update FRONTEND_URL in Railway dashboard to include [production-url] — required for CORS."
 
 **6f. Bundle audit and auto-fix**
 
@@ -553,7 +611,9 @@ The purpose is to answer: "What does a production-ready SaaS have that we haven'
 - Any missing empty state CTA
 - TypeScript errors in build
 - console.log in src/
-- Hardcoded hex colors
+
+**What counts as a P2 gap (Design/Code quality — fix after P1):**
+- Hardcoded hex colors (zero hardcoded hex/rgb in any component)
 
 **What counts as a P2 gap:**
 - Missing useSeo on any page
@@ -567,7 +627,7 @@ The purpose is to answer: "What does a production-ready SaaS have that we haven'
 **What counts as a P3 gap (Marketing/SEO):**
 - robots.txt missing from /public
 - sitemap.xml missing from /public (or not registered in robots.txt)
-- og:image is still the 1200x630 placeholder — needs a real image
+- og:image still using placeholder — re-run Phase 2 icon generation block to auto-generate og-image.jpg
 - Landing page missing FAQ section (LLM citability — AIs cite pages with Q&A)
 - Landing page missing comparison table vs competitors
 - No analytics snippet (Google Analytics or PostHog) in index.html
@@ -577,7 +637,7 @@ The purpose is to answer: "What does a production-ready SaaS have that we haven'
 **What counts as a P4 gap (Nice-to-have):**
 - Dark mode toggle not accessible in AppLayout header
 - CMD+K palette not implemented (product has 8+ nav items)
-- PWA icons (icon-192.png, icon-512.png) not yet added to /public
+- PWA icons (icon-192.png, icon-512.png) need replacing with brand-accurate version (auto-generated in Phase 2 but may need refinement)
 - Error page links back to home AND to status page
 - Empty states use illustrations rather than icon + text
 - Toast notification on every destructive user action (delete, remove)
