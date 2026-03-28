@@ -70,6 +70,9 @@ Commit and push so Railway auto-deploys the CORS fix before the frontend goes li
 
 ### Step 4 — Vercel Deploy
 
+**Step 4a — Confirm Vercel project exists (required before any deploy).**
+Via Vercel MCP: check whether a project named `[product-slug]` already exists. If it does NOT exist: create it now before deploying. Never skip this check — deploying to a non-existent project produces an orphaned deployment with no custom domain, no env vars, and no GitHub connection.
+
 **Primary method — Vercel MCP (preferred, no auth issues on Windows):**
 
 Use the `vercel` MCP server tools to create the deployment:
@@ -77,8 +80,6 @@ Use the `vercel` MCP server tools to create the deployment:
 2. For monorepo: specify `rootDirectory: apps/[product-slug]`
 3. Set `target: production`
 4. Capture the production URL from the response
-
-If the project does not yet exist in Vercel, create it first via MCP before deploying.
 
 **Fallback — CLI (use if MCP tools are unavailable):**
 ```bash
@@ -95,10 +96,20 @@ npx vercel --prod --yes --root-directory apps/[product-slug]
 Capture the production URL. Note both the unique deploy URL and the aliased project URL (https://[project].vercel.app).
 
 **Confirm GitHub auto-deploy is wired (mandatory after first deploy):**
-1. Via Vercel MCP or dashboard: open the project Settings → Git
-2. Confirm the GitHub repo is connected and `main` branch is set as the production branch
-3. If NOT connected: connect it now — do not leave this as a manual follow-up. Without it, every `git push` to main silently does nothing in production.
+1. Use Vercel MCP `linkGitRepository` (or equivalent) to connect the GitHub repo to the Vercel project
+2. Set `main` as the production branch
+3. If MCP cannot complete this step: do NOT mark it as done or leave it as a manual follow-up — log it as NEEDS_HUMAN in BUILD-LOG.md with the exact project name and GitHub repo slug
 4. Test: push a trivial whitespace commit to main and confirm a new Vercel deployment appears within 60 seconds
+
+**NEEDS_HUMAN format if MCP fails this step:**
+```
+NEEDS_HUMAN: Link GitHub repo to Vercel project
+  Vercel project: [project-name]
+  GitHub repo: Mrsavage92/[repo-slug]
+  Steps: Vercel dashboard → Project → Settings → Git → Connect Repository → pick repo → set main as production branch
+```
+
+This step is NOT optional. A Vercel project without Git integration means every code push is silently ignored in production.
 
 ### Step 5 — Set All Environment Variables in Vercel
 
@@ -156,34 +167,52 @@ railway variables --set "FRONTEND_URL=https://[existing-url],https://[new-vercel
    ```
    Do not skip this step — CORS will block all API calls from the new frontend until it is done.
 
-### Step 7 — Smoke Test (6 checks — all required)
+### Step 7 — Automated Smoke Test (agent-browser — no human required)
 
-Read `SCOPE.md` to get: the product name, the primary CTA label on the landing page, and the name of the core feature page. Use these in the checklist below.
+Read `SCOPE.md` to get: the product name, primary CTA label, onboarding route, and core feature page route.
 
-Output this checklist for the human to verify. Do not mark deploy complete until all 6 are confirmed.
-
+**Step 7a — Create a test user via Supabase MCP (bypasses email confirmation):**
 ```
-Smoke Test — [product name] ([product URL])
-──────────────────────────────────────
-ACTION REQUIRED: Open [URL] and verify each item below.
-Report back which pass and which fail before this deploy is marked done.
+supabase.auth.admin.createUser({
+  email: "smoke-test+[timestamp]@[product-slug].test",
+  password: "SmokeTest123!",
+  email_confirm: true
+})
+```
+Save the returned user ID for cleanup. If Supabase MCP is unavailable: log NEEDS_HUMAN to create the account manually and proceed to Step 7b with manual credentials — do not skip the smoke test entirely.
 
-[ ] 1. Landing page loads — hero visible, animated background present, [CTA label from SCOPE.md] button visible
-[ ] 2. Primary CTA navigates to /signin (or /signup)
-[ ] 3. Sign up — complete a full signup. Confirm user appears in Supabase auth.users dashboard.
-[ ] 4. Onboarding/setup — complete the onboarding flow. Confirm it reaches the dashboard.
-[ ] 5. Trial banner — AppLayout shows trial banner (days remaining + Upgrade button) after onboarding if trial model is free-trial.
-[ ] 6. [Core feature page from SCOPE.md] — loads and shows correct empty state with CTA.
-[ ] 7. Settings page — loads and form submits without error.
+**Step 7b — Run the browser sequence via the `agent-browser` Skill (invoke via Skill tool, not bash):**
 
-For each failure: paste the error or screenshot and Claude will fix before marking done.
+10 checks — all required. Take a screenshot at each step:
+
+1. Open `[production-url]` — verify landing page loads, hero text visible, `[CTA label]` button visible
+2. Click CTA — verify navigation to `/signin` or `/signup`
+3. Sign in with test user credentials — verify redirect to `[onboarding-route]`
+4. Click through all onboarding wizard steps — verify redirect to `[main-app-route]` on completion
+5. Verify trial banner visible ("days remaining" text) — skip only if trial model is NOT free-trial
+6. Open `[production-url]/[core-feature-route]` — verify EmptyState with CTA renders (not blank)
+7. Open `[production-url]/settings` — verify "Profile" tab visible
+8. Open `[production-url]/privacy` — verify page loads without 404
+9. Open `[production-url]/terms` — verify page loads without 404
+10. Set viewport to 375px, open `[production-url]` — verify no horizontal overflow, hero readable
+
+**Step 7c — Fix any failed checks:** for each failure, run `/web-fix` with the exact failure description, then re-verify that specific check. Do not mark smoke test done until all 10 pass.
+
+**Step 7d — Clean up test user via Supabase MCP:**
+```
+supabase.auth.admin.deleteUser([saved-user-id])
 ```
 
-If any smoke test fails: investigate and fix before marking deploy done. A deployed product that doesn't work is worse than no product.
+If agent-browser is unavailable: log NEEDS_HUMAN "Run Phase 6d smoke test manually — sign in at [production-url], complete onboarding, verify trial banner, check all 10 routes. agent-browser was unavailable."
 
-### Step 8 — Bundle Report
+### Step 8 — Bundle Audit and Auto-Fix
 
-Include in deploy output:
+Run build and capture output:
+```bash
+npm run build 2>&1 | grep -E "\.js|\.css|gzip"
+```
+
+Report sizes:
 ```
 Bundle sizes (gzipped):
   vendor-react:    XX KB
@@ -193,6 +222,14 @@ Bundle sizes (gzipped):
   [page chunks]:   XX KB each
   Total:           XX KB
 ```
+
+**Auto-fix any chunk > 250KB — do not just flag it:**
+1. Identify the offending chunk in `vite.config.ts` `manualChunks`
+2. Split further: e.g. if `vendor-supabase` is large, move `@supabase/auth-ui-react` into a separate `vendor-supabase-ui` chunk
+3. If a page chunk is large, move its heaviest import into a dedicated chunk
+4. Re-run build and verify all chunks are < 250KB gzipped
+5. Redeploy after the fix
+6. If a chunk cannot be reduced below 250KB after splitting: log NEEDS_HUMAN with exact module name and size
 
 Target: total gzipped < 500KB. All individual chunks < 250KB.
 

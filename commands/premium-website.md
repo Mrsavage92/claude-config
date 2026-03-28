@@ -115,6 +115,26 @@ For any product with paid plans or a trial-to-paid flow — run `/web-stripe` af
 
 ---
 
+## Testing (enforced by Phase 2 and Phase 4.5)
+
+### Test scaffolding — installed at scaffold time
+At scaffold time (`/web-scaffold`), the following are always generated:
+- `npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react`
+- `vitest.config.ts` with jsdom environment + `./src/tests/setup.ts` setupFile
+- `src/tests/setup.ts` — contains `import '@testing-library/jest-dom'`
+- The `src/tests/` directory exists from day one — never created mid-build
+
+### Phase 4.5 — Core test coverage (before quality gate)
+After all pages are built and self-reviewed, before `/web-review`, write three test files:
+
+- `src/tests/auth.test.ts` — 4 scenarios: signup, wrong password, protected route without session, /setup redirect after onboarding done
+- `src/tests/onboarding.test.ts` — 3 scenarios: complete wizard, partial completion, trial activation
+- `src/tests/core.test.ts` — 2 scenarios: primary query returns empty (expect EmptyState with CTA), primary query errors (expect error state + retry, not white screen)
+
+Use Vitest + `@testing-library/react`. Mock Supabase with `vi.mock('@/lib/supabase')`. All tests must pass before `/web-review` runs. If a test fails: fix the code, not the test.
+
+---
+
 ## Performance Rules (from vercel-react-best-practices)
 
 Apply from scaffold onwards — not just at review time:
@@ -130,11 +150,47 @@ Apply from scaffold onwards — not just at review time:
 
 ## Routing & Auth Rules
 
-- All auth-gated routes MUST use a `ProtectedRoute` wrapper component — never `useEffect` redirects
-- `ProtectedRoute` pattern: check session from Supabase, show skeleton while loading, redirect to `/auth` if null
+- All auth-gated routes MUST use a `ProtectedRoute` wrapper — never `useEffect` redirects
+- **`ProtectedRoute` requires THREE checks (all mandatory):**
+  - (a) session exists — redirect to `/auth` if null
+  - (b) skeleton layout while session loads — never a blank flash (use shadcn Skeleton matching app layout)
+  - (c) `onboarding_complete` on the org record — redirect to `/setup` if false
+- **`AuthRoute`** (separate component, session-only, no onboarding check) wraps `/setup` and `/reset-password` specifically — using `ProtectedRoute` on `/setup` causes a redirect loop
 - Auth pages (login, signup, reset-password) are exempt from the product visual mockup rule
 - Auth pages quality bar: form labels, error states, redirect-after-login, mobile layout at 375px
 - `/web-scope` MUST produce a `SCOPE.md` containing: page list, auth flow diagram, design decisions, color palette choice, component inventory. saas-build uses this as the build contract.
+
+## Webmanifest (enforced at scaffold time)
+
+`public/site.webmanifest` is generated at scaffold time — not deferred. Add to `index.html`:
+```html
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="apple-touch-icon" href="/icon-192.png" />
+```
+Log NEEDS_HUMAN: "Add icon-192.png and icon-512.png to /public."
+
+## Page Type Detection (enforced by Phase 4b)
+
+Before building any page, check the type and read the relevant sub-skill:
+
+| Page type | Sub-skill | What it enforces |
+|---|---|---|
+| Dashboard / analytics / monitoring / data overview | `dashboard-design` | KpiCard + Sparkline, DateRangePicker, 28-item checklist |
+| Any list of records (customers, transactions, logs) | `web-table` | TanStack Table v8, skeleton rows, bulk action bar |
+| `/settings` route | `web-settings` | 4-tab layout, Stripe Customer Portal for billing tab |
+| `/setup` or `/onboarding` wizard | `web-onboarding` | Max 4 steps, writes per-step, trial activation on final step |
+
+## Two-Pass Self-Review (enforced per page in web-page)
+
+Every page requires two passes before moving to the next:
+- **Pass 1**: 13-item checklist (or 28-item dashboard checklist). Fix all failures.
+- **Pass 2**: Fresh eyes — 5 questions: Would I know what to do? Does the empty state have a reason to act? Does loading feel intentional? Is the color doing one job? Would I be embarrassed to show this to a designer? Fix anything that fails.
+
+Both passes are required. Pass 1 alone is not sufficient.
+
+## Context Refresh Rule (every 3rd page in web-page)
+
+After completing every 3rd page, re-read `DESIGN-BRIEF.md` and `SCOPE.md` in full before starting the next. Late pages drift from the locked design contract when this is skipped.
 
 ## Skill Trigger Guide
 
@@ -193,6 +249,21 @@ Every page must pass before moving to the next:
 "It renders" is not done. A page passes when a designer seeing it for the first time would not want to fix it.
 
 ---
+
+## Quality Gate Loop (enforced by Phase 5 / web-review)
+
+`/web-review` runs inside an explicit loop when called from `/saas-build`:
+- **Exit condition**: score >= 38 AND pre-deploy checklist fully green
+- **Fix loop**: for each failure, run `/web-fix` targeting the exact failure, commit, re-run `/web-review`
+- **Hard stop**: after 5 iterations with score still < 38 — log `STUCK`, list all remaining failures, and STOP. Do not proceed to deploy.
+
+## Deploy Rules (enforced by Phase 6 / web-deploy)
+
+- **Vercel project existence**: confirm the Vercel project exists via MCP before deploying. Create it if missing. Never deploy to a non-existent project.
+- **Env vars + mandatory redeploy**: set ALL env vars from `.env.example` in Vercel after initial deploy, then trigger a second deploy. Env vars set after the first deploy do not take effect until the next deploy.
+- **Automated smoke test**: use `agent-browser` Skill (10 checks). Create test user via Supabase MCP, run the sequence, clean up. All 10 checks must pass. Not a manual checklist — automated.
+- **Bundle audit auto-fix**: after deploy, run `npm run build` and check chunk sizes. Any chunk > 250KB gzipped: add `manualChunks` in `vite.config.ts`, redeploy. Auto-fix, not just flag.
+- **CORS**: in monorepo mode — append new Vercel URL to comma-separated `FRONTEND_URL` in Railway, never replace existing URLs. In standalone mode — set `FRONTEND_URL` to the production Vercel URL. Backend CORS must never be `*` in production.
 
 ## Pre-Deploy Checklist
 

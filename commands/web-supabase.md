@@ -163,20 +163,95 @@ export function useAuth() {
 }
 ```
 
-**Protected Route Component:**
+**Protected Route Component — THREE checks required:**
+
 ```typescript
+// src/components/auth/ProtectedRoute.tsx
+// Wraps all authenticated app pages (dashboard, settings, etc.)
+// Three checks: (a) session exists, (b) skeleton while loading, (c) onboarding complete
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/use-auth'
+import { Skeleton } from '@/components/ui/skeleton'
+
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth()
+  const navigate = useNavigate()
+  const [onboardingChecked, setOnboardingChecked] = useState(false)
+
+  useEffect(() => {
+    // (a) No session → redirect to /auth
+    if (!loading && !user) {
+      navigate('/auth')
+      return
+    }
+
+    // (c) Check onboarding_complete on org record
+    if (!loading && user) {
+      supabase
+        .from('organizations')
+        .select('onboarding_complete')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data?.onboarding_complete) {
+            navigate('/setup')
+          } else {
+            setOnboardingChecked(true)
+          }
+        })
+    }
+  }, [user, loading, navigate])
+
+  // (b) Skeleton layout while session or onboarding check is in flight — never a blank flash
+  if (loading || !onboardingChecked) {
+    return (
+      <div className="flex h-screen flex-col gap-4 p-6">
+        <Skeleton className="h-10 w-48" />
+        <div className="flex flex-1 gap-4">
+          <Skeleton className="h-full w-48" />
+          <div className="flex flex-1 flex-col gap-3">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
+```
+
+**Auth Route Component — session-only, no onboarding check:**
+
+```typescript
+// src/components/auth/AuthRoute.tsx
+// Wraps /setup and /reset-password only — session required but onboarding_complete NOT checked
+// (If we checked onboarding here, /setup would redirect to /setup in a loop)
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
+import { Skeleton } from '@/components/ui/skeleton'
+
+export function AuthRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!loading && !user) navigate('/signin')
-  }, [user, loading])
+    if (!loading && !user) navigate('/auth')
+  }, [user, loading, navigate])
 
-  if (loading) return <LoadingSpinner />
+  if (loading) return <Skeleton className="h-screen w-full" />
   return user ? <>{children}</> : null
 }
 ```
+
+**Routing rules:**
+- All app pages (dashboard, settings, feature pages): use `ProtectedRoute`
+- `/setup` and `/reset-password`: use `AuthRoute` (session-only, never `ProtectedRoute`)
+- `/auth` and `/` (landing): no wrapper
 
 ### Step 8 — Edge Functions (if needed)
 Use `mcp__claude_ai_Supabase__deploy_edge_function` for custom backend logic.
