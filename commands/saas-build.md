@@ -112,6 +112,37 @@ Before writing any page that is a dashboard, analytics view, monitoring screen, 
 - CMD+K CommandPalette mounted in AppLayout if product has 8+ nav items
 - Run the skill's Pre-Ship Checklist (28 items) as the per-page self-review for dashboard pages instead of the standard 12-item checklist
 
+**Data table detection — read `/web-table` skill before building:**
+Before writing any page with a list of records (resources, users, transactions, logs, etc.), read `~/.claude/skills/web-table/SKILL.md`. Apply automatically:
+- Generic `DataTable<TData, TValue>` component with TanStack Table v8
+- Column definitions: selection checkbox, primary identifier, status (dot+text), date, row actions (DropdownMenu)
+- Skeleton rows while loading — never blank table or spinner
+- Bulk action bar: fixed bottom-center, visible on selection only
+- FilterBar above table, export CSV in page header
+
+**Settings page — read `/web-settings` skill before building:**
+Before writing any `/settings` route, read `~/.claude/skills/web-settings/SKILL.md`. Apply automatically:
+- Tab layout: Profile, Billing, Team, Danger Zone
+- Profile tab: full_name, company_name (read-only email), password change
+- Billing tab: plan status, Stripe Customer Portal redirect (never custom billing UI)
+- Team tab: member list, invite by email + role, remove member dialog
+- Danger Zone: typed confirmation phrase before delete
+
+**Onboarding wizard — read `/web-onboarding` skill before building:**
+Before writing any `/setup` or `/onboarding` route, read `~/.claude/skills/web-onboarding/SKILL.md`. Apply automatically:
+- Max 4 steps with AnimatePresence slide transition (220ms)
+- Write to `organizations` table on each step completion — never batch at end
+- Final step activates trial: sets `onboarding_complete = true`, `trial_ends_at`, `subscription_status = 'trial'`
+- `ProtectedRoute` must check `onboarding_complete` — redirect to `/setup` if false
+- `AuthRoute` (session-only check) wraps `/setup` — not `ProtectedRoute`
+
+**Email — read `/web-email` skill before building:**
+Before writing any transactional email logic, read `~/.claude/skills/web-email/SKILL.md`. Apply automatically:
+- Resend + React Email for all transactional mail
+- 5 templates: welcome, trial-ending (urgency at 1 day), team-invite, password-reset, invoice
+- FastAPI background tasks for delivery — never block request thread
+- Trial reminder cron: 7-day, 3-day, 1-day reminders via `trial_reminders.py`
+
 **4c. Per-page self-review**
 Run the 12-item checklist from premium-website.md. Fix any failures. Log: "Page [name] complete — self-review passed (12/12)" to BUILD-LOG.md. Only then move to the next page.
 

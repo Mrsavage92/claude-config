@@ -30,6 +30,9 @@ This file is the contract. If a rule lives only in an individual skill file and 
 | `/web-fix` | Fix a specific component, bug, or review failure |
 | `/web-stripe` | Stripe checkout session, webhook handler, UpgradeButton + PricingCards components, trial-to-paid flow |
 | `/web-table` | TanStack Table implementation — sorting, filtering, pagination, column visibility, row selection, export |
+| `/web-onboarding` | Multi-step onboarding wizard — progress bar, step data collection, Supabase writes, trial activation |
+| `/web-settings` | Settings page — profile, password change, Stripe billing portal, team invites, danger zone |
+| `/web-email` | Transactional emails — Resend + React Email, 5 templates, FastAPI delivery, trial reminder cron |
 | `/dashboard-design` | Enterprise dashboard patterns — KPI cards, sparklines, charts, sidebar, date range, filters, CMD+K, real-time |
 | `/vercel-react-best-practices` | Bundle splitting, Core Web Vitals, image optimization, Vercel deploy checklist |
 
@@ -180,6 +183,10 @@ Run before any deploy:
 [ ] Stripe webhook endpoint registered in Stripe dashboard — correct prod URL, correct events
 [ ] Sentry initialised in main.tsx — VITE_SENTRY_DSN set in Vercel dashboard
 [ ] Sentry.ErrorBoundary wraps root <App /> — unhandled render errors are captured
+[ ] NotFoundPage exists and registered as path="*" catch-all route in App.tsx
+[ ] useSeo hook called on every page — title, description set; auth/settings/onboarding use noIndex: true
+[ ] index.html has OG + Twitter meta tags (og:title, og:description, og:image, twitter:card)
+[ ] Settings page exists at /settings — profile, billing portal, team tabs all functional
 [ ] web-review score 38+/40
 ```
 
