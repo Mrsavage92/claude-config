@@ -77,29 +77,46 @@ When a new project is identified (no memory file exists):
 
 The web-* skills are collectively called the **premium website suite**. It replaces Lovable. Run `/premium-website` in any session for the full suite reference.
 
-Lovable is no longer used for new projects. The full build pipeline is:
+Lovable is no longer used for new projects. The full pipeline is orchestrated by `/saas-build` — just give it a product brief and it runs everything autonomously. For reference, the phases are:
 
 ```
-/prd           - write the spec
-/web-scaffold  - scaffold React + Vite + Tailwind + shadcn/ui + landing page hero
-/web-supabase  - schema, RLS, auth (always before building pages)
-/web-page      - build each page (landing, dashboard, auth, etc.)
-/web-component - add individual components as needed
-/web-review    - design + a11y + performance audit before deploy
-/web-deploy    - Vercel (SPAs) or Railway (full-stack)
-/market-launch - open for signups
+/saas-build        - ORCHESTRATOR — runs the full pipeline autonomously from brief to deploy
+  Phase 0.25       - market research (MARKET-BRIEF.md)
+  Phase 0.5        - design research via /web-design-research (DESIGN-BRIEF.md)
+  Phase 1          - scope via /web-scope (SCOPE.md)
+  Phase 2          - scaffold: config, design system, routes, AppLayout, Sentry, NotFoundPage, useSeo
+  Phase 3          - backend via /web-supabase (schema, RLS, auth, TypeScript types)
+  Phase 3b         - payments via /web-stripe (checkout, webhooks, UpgradeButton)
+  Phase 3c         - email via /web-email (Resend + React Email, 5 templates, trial reminders)
+  Phase 4          - pages (landing first, auth, /setup, app pages, /settings, /privacy, /terms)
+  Phase 4.5        - tests (auth flow, onboarding flow, core feature smoke)
+  Phase 5          - quality gate via /web-review (38+/40 required, fix loop)
+  Phase 6          - deploy via /web-deploy (Vercel or Railway, bundle audit, smoke test)
+  Phase 7          - gap analysis loop (saas-gap-checklist.md, ~110 items)
+  Phase 8          - handoff (BUILD-LOG.md final entry, NEEDS_HUMAN list)
+
+/saas-improve      - post-launch improvement swarm (6 agents, production signals, gap stack)
 ```
 
-For products with a backend (FastAPI, OpenClaw agents), `/autopilot` handles the backend layer before `/web-supabase` runs.
+**Skill detection in Phase 4 — saas-build reads the right skill automatically:**
+- Dashboard/analytics page → reads `/dashboard-design`
+- List page with records → reads `/web-table`
+- `/setup` or `/onboarding` → reads `/web-onboarding`
+- `/settings` → reads `/web-settings`
+- Transactional email → reads `/web-email`
 
 All web skills read `~/.claude/web-system-prompt.md` (the Design DNA) before generating anything.
 
 **Landing page non-negotiables (every product, every time):**
 - Animated background via `mcp__magic__21st_magic_component_inspiration` - mandatory
-- Product visual mockup (browser chrome + sidebar + stat cards + table) - never a blob
+- Product visual mockup: **max-w-4xl minimum, never max-w-2xl** — the mockup IS the hero, it must dominate
+- For AI products: split-pane mockup (input/inbox left, AI output with typewriter right) — Technique 5 in `/web-animations`
+- Hero headline: minimum `text-5xl sm:text-6xl lg:text-7xl` with `letterSpacing: '-0.03em'` — never text-4xl
 - Hero entrance: Technique 3 STAGGER from `/web-animations` (pill → headline → sub → CTAs → stats → visual last)
+- The mockup must show the product DOING SOMETHING — typewriter, animated counters, sparklines drawing in
+- Floating AI toast/badge that slides in after mockup renders (signals live activity)
 
-For animation patterns: read `/web-animations` (4 techniques — Technique 3 STAGGER is the hero standard).
+For animation patterns: read `/web-animations` (5 techniques — Technique 3 STAGGER is hero entrance, Technique 5 is typewriter for AI products).
 
 **Suite maintenance rule:** When any web-* skill is created or updated with a new non-negotiable, pattern, or checklist item — update `premium-website.md` in the same session. That file is the contract saas-build reads. If a rule isn't in premium-website.md, saas-build won't enforce it.
 
