@@ -37,6 +37,8 @@ If BUILD-LOG.md exists: read it to identify the last completed phase, then conti
 
 Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
 
+Log: "Phase 0 complete — context loaded" to BUILD-LOG.md.
+
 ---
 
 ### Phase 0.25 — Feature & Market Research
@@ -88,7 +90,7 @@ Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute it comp
 4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS"). If MCP is unavailable or returns no results: use the CSS grid pattern from web-system-prompt.md as the animated background fallback and continue — do not stop.
 5. Call `mcp__magic__21st_magic_component_builder` for the animated background. If MCP unavailable: write the CSS grid pattern inline in HeroSection.
 6. Search LottieFiles for 3 animations relevant to this product: run WebSearch "site:lottiefiles.com [product-category] animation" and pick 3 results. Add the top result URLs to DESIGN-BRIEF.md under an 'Animations' section. If WebSearch returns no results: skip and note "no LottieFiles found" in DESIGN-BRIEF.md — do not block progress.
-7. Choose marketing site tier (Tier 2 standard: /, /features, /pricing, /signin as separate routes)
+7. Choose marketing site tier (Tier 2 standard: /, /features, /pricing, /auth as separate routes)
 8. Write DESIGN-BRIEF.md to the project root (or `apps/[product-slug]/` in monorepo)
 
 Do not proceed to Phase 1 until DESIGN-BRIEF.md exists with all sections filled.
@@ -103,11 +105,13 @@ Execute the full /web-scope process:
 1. **Read DESIGN-BRIEF.md first** — all color, typography, and marketing structure decisions are already locked. Do NOT re-decide them. Import them directly from the brief.
 2. **Read MARKET-BRIEF.md (if exists)** — extract the "Must-have for v1" list. Every item on that list must map to a page in the inventory. If a must-have has no page, create one before continuing.
 3. Extract brief from user input
-4. Produce complete page inventory with all 5 fields per page (use the marketing tier structure from DESIGN-BRIEF.md for public pages)
+4. Produce complete page inventory with all 7 fields per page (use the marketing tier structure from DESIGN-BRIEF.md for public pages)
 5. Write SCOPE.md to project root
 6. Append initial SCOPE summary to BUILD-LOG.md — do NOT overwrite; Phase 0.25 already created this file
 
-Do not proceed to Phase 2 until SCOPE.md exists and every page has all 5 fields defined.
+Do not proceed to Phase 2 until SCOPE.md exists and every page has all 7 fields defined.
+
+SCOPE.md MUST also include an `onboarding_route` field at the top level (e.g. `/setup` or `/onboarding`). Phase 3a ProtectedRoute reads this field. If the brief does not specify, default to `/setup`.
 
 **Mandatory pages — add to SCOPE.md regardless of brief:**
 Every SaaS product MUST include these pages in the inventory. If the brief doesn't mention them, add them:
@@ -116,6 +120,8 @@ Every SaaS product MUST include these pages in the inventory. If the brief doesn
 These are never optional. Add them to the build order in Phase 4 after `/settings`.
 
 **Stop condition:** if the product description is too vague to identify the core feature category, make a documented assumption and log it — do NOT ask. Format: "Brief was vague — assumed [X] based on [Y]. Correct SCOPE.md if wrong." Only ask if the product domain is completely unidentifiable after analysis.
+
+Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
 
 ---
 
@@ -204,7 +210,9 @@ import '@testing-library/jest-dom'
    ```
    Update index.html og:image to `/og-image.jpg` if downloaded successfully.
 
-   If infsh is unavailable or ICON_URL is empty: log NEEDS_HUMAN: "Add icon-192.png, icon-512.png, and og-image.jpg to /public." and continue.
+   > **Platform note (Windows):** The `jq`, `curl`, and `cp` commands above are Unix/Mac only. On Windows without WSL, skip the download steps and log NEEDS_HUMAN "Download icon from ICON_URL to public/icon-512.png and public/icon-192.png manually" then continue.
+
+   If infsh is unavailable or ICON_URL is empty: run the `/ai-image-generation` skill with the same constructed prompt to generate and download the icon. If that also fails: log NEEDS_HUMAN: "Add icon-192.png, icon-512.png, and og-image.jpg to /public." and continue.
 15. Initialise Sentry in `main.tsx` conditionally — only if `VITE_SENTRY_DSN` is set, so local dev and deploys without a Sentry project don't silently fail:
    ```ts
    if (import.meta.env.VITE_SENTRY_DSN) {
@@ -219,15 +227,15 @@ Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.
 
 ### Phase 3 — Backend Setup (parallel dispatch)
 
-Phases 3, 3b, and 3c are independent of each other — Supabase schema, Stripe price creation, and email template setup do not depend on each other's outputs. Determine which apply (read SCOPE.md for monetization model and email requirements), then dispatch all applicable phases simultaneously:
+Phases 3a, 3b, and 3c are independent of each other — Supabase schema, Stripe price creation, and email template setup do not depend on each other's outputs. Determine which apply (read SCOPE.md for monetization model and email requirements), then dispatch all applicable phases simultaneously:
 
 | Phase | Condition to run |
 |---|---|
-| 3 (Supabase) | Product needs auth or database |
+| 3a (Supabase) | Product needs auth or database |
 | 3b (Stripe) | Any paid plan or trial-to-paid flow exists |
 | 3c (Email) | Product has auth, team invites, or email flows |
 
-Run all applicable phases in parallel. If only one applies, run it alone. Do not run 3 → wait → 3b → wait → 3c sequentially when all three can run at once.
+Run all applicable phases in parallel. If only one applies, run it alone. Do not run 3a → wait → 3b → wait → 3c sequentially when all three can run at once.
 
 After all three complete: verify that `src/lib/supabase.ts` exists (if Phase 3 ran), `.env.example` has all required vars, and BUILD-LOG.md has entries for each completed phase.
 
@@ -236,18 +244,18 @@ After all three complete: verify that `src/lib/supabase.ts` exists (if Phase 3 r
 ### Phase 3a — Supabase (run /web-supabase) — skip if no backend
 
 If the product needs Supabase:
-1. Get project URL and anon key via Supabase MCP
+1. Get project URL and anon key via Supabase MCP. If Supabase MCP is unavailable and no project URL is known: log NEEDS_HUMAN "Provide Supabase project URL and anon key to continue Phase 3a" and skip Phase 3a entirely — do not attempt to scaffold auth without a real project URL.
 2. Apply schema migrations
 3. Write RLS policies for all tables
 4. Generate TypeScript types
 5. Write `src/lib/supabase.ts` with hardcoded values — the anon key is safe to commit (it is public by design; RLS policies enforce access control)
-6. Write `useAuth` hook and `ProtectedRoute` component. ProtectedRoute must: (a) check session — redirect to `/auth` if null; (b) show a skeleton layout while session is loading; (c) check `onboarding_complete` on the org record — redirect to `/setup` if false. All three checks are required.
+6. Write `useAuth` hook and `ProtectedRoute` component. ProtectedRoute must: (a) check session — redirect to `/auth` if null; (b) show a skeleton layout while session is loading; (c) check `onboarding_complete` on the org record — redirect to the onboarding route defined in SCOPE.md (field: `onboarding_route`, default `/setup`) if false. All three checks are required.
 7. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
 8. Register `/reset-password` route in App.tsx as a lazy-loaded stub pointing to a placeholder component — full `ResetPasswordPage.tsx` is built in Phase 4 (so it gets the per-page self-review pass). Mark it in SCOPE.md as a required auth page if not already present.
 
 If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one.
 
-Log: "Phase 3 complete — backend configured" to BUILD-LOG.md.
+Log: "Phase 3a complete — Supabase configured" to BUILD-LOG.md.
 
 ---
 
@@ -340,7 +348,7 @@ This is the core loop. For EACH page in SCOPE.md build order:
 **4b. Build the page**
 Follow /web-page rules. Apply all landing page non-negotiables from premium-website.md for the `/` page.
 - Landing page (`/`) is ALWAYS first — no exceptions
-- Auth (`/signin`) is ALWAYS second
+- Auth (`/auth`) is ALWAYS second
 - Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it. Route wrapper: `AuthRoute` (session-only, NOT `ProtectedRoute`) — the user is unauthenticated when clicking a reset link.
 - Onboarding (`/setup` or `/onboarding`) is ALWAYS fourth for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
 - **Auth-free products** (no login, no user accounts): skip auth/reset-password/onboarding positions. Build order is: `/` → app pages in SCOPE.md priority order → `/settings` (if applicable) → `/privacy` → `/terms`.
@@ -404,8 +412,23 @@ Fix anything that fails Pass 2. Log: "Page [name] complete — self-review passe
 **4d. Context refresh (every 3 pages)**
 After completing every 3rd page (i.e. pages 3, 6, 9...), re-read DESIGN-BRIEF.md and SCOPE.md in full before starting the next page. Long build sessions compress early context — this prevents late pages drifting from the locked design contract.
 
-**4e. App.tsx**
+**Per-page route registration**
 After each page, add the route with React.lazy + Suspense. Never leave routes unregistered.
+
+Log: "Phase 4 complete — all pages built" to BUILD-LOG.md once every page in the SCOPE.md inventory has been built and self-reviewed.
+
+---
+
+### Phase 4e — Route Reconciliation
+
+After all SCOPE.md pages are built, before Phase 4.5:
+1. Read the app-tier page inventory from SCOPE.md
+2. Grep `src/App.tsx` for React.lazy route definitions
+3. For every app-tier page in SCOPE.md: verify a matching lazy-loaded `<Route>` exists in App.tsx
+4. If any SCOPE.md page has no route: write the missing `const XPage = React.lazy(...)` import and `<Route path="..." element={<XPage />} />` entry now
+5. Do NOT proceed to Phase 4.5 until every SCOPE.md app-tier page has a route in App.tsx
+
+Log: "Phase 4e complete — all routes reconciled" to BUILD-LOG.md.
 
 ---
 
@@ -419,7 +442,7 @@ Write tests for the three flows that break silently in production:
 - Sign up with valid email/password → expect session created
 - Sign in with wrong password → expect error message rendered
 - Access protected route without session → expect redirect to /auth
-- Access /setup after onboarding_complete = true → expect redirect to /dashboard
+- Access /setup after onboarding_complete = true → expect redirect to the main app route (read first app-tier route from SCOPE.md — do not hardcode /dashboard)
 
 **2. Onboarding flow** (`src/tests/onboarding.test.ts`):
 - Complete all wizard steps → expect onboarding_complete = true in org record
@@ -517,13 +540,13 @@ supabase.auth.admin.createUser({
 })
 ```
 Save the returned user ID for cleanup.
-If Supabase MCP is unavailable: log NEEDS_HUMAN "Create a test account manually at [production-url]/signin to run smoke test, then delete it after. Supabase MCP was unavailable for automated test user creation." and skip to Step 2 using a manually-created account — do not block Phase 6d entirely.
+If Supabase MCP is unavailable: log NEEDS_HUMAN "Create a test account manually at [production-url]/auth to run smoke test, then delete it after. Supabase MCP was unavailable for automated test user creation." and skip to Step 2 using a manually-created account — do not block Phase 6d entirely.
 
 **Step 2 — Run the browser sequence via the `agent-browser` Skill:**
 Invoke agent-browser via the Skill tool (it is NOT a bash CLI command). The sequence to execute covers 10 checks:
 
 1. Open [production-url] — verify landing page loads, hero text "[product name]" visible, CTA "[CTA label from SCOPE.md]" visible
-2. Click CTA — verify navigation to /signin (or /signup)
+2. Click CTA — verify navigation to /auth
 3. Sign in with test user credentials — verify redirect to [onboarding-route]
 4. Click through all onboarding wizard steps — verify redirect to [main-app-route] on completion
 5. Verify trial banner visible ("days remaining" text) — skip if trial model is not free-trial
@@ -549,7 +572,7 @@ Log: "Phase 6d smoke test complete — all checks passed" to BUILD-LOG.md.
 **6e. Update CORS**
 In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
 
-Use the Railway GraphQL mutation to update the env var (see `reference_railway.md` in memory for the `upsertVariable` mutation template and service/env IDs). If Railway MCP is unavailable: log NEEDS_HUMAN "Update FRONTEND_URL in Railway dashboard to include [production-url] — required for CORS."
+Use the Railway GraphQL mutation to update the env var (see `~/.claude/projects/C--Users-Adam/memory/reference_railway.md` for the `upsertVariable` mutation template and service/env IDs — if that path does not exist on this machine, check `~/.claude/projects/*/memory/reference_railway.md`). If Railway MCP is unavailable: log NEEDS_HUMAN "Update FRONTEND_URL in Railway dashboard to include [production-url] — required for CORS."
 
 **6f. Bundle audit and auto-fix**
 

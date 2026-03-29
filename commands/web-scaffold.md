@@ -292,11 +292,19 @@ export function EmptyState({ icon: Icon, heading, description, action, className
 #### `src/components/landing/` + `src/pages/Landing.tsx`
 Landing page is built during scaffold — not deferred. The hero is the most important file in the project.
 
+**Read `~/.claude/commands/premium-website.md` 21st.dev Component Registry before building any section.**
+
+For each section below: call `mcp__magic__21st_magic_component_inspiration` first, then apply the **Component Selection Criteria** from `~/.claude/commands/premium-website.md` to pick the right variant. The criteria table maps product type to visual weight — Enterprise B2B gets clean/minimal, dev tools get dark/technical, consumer SaaS gets animated/warm, AI products get split-pane/typewriter. Same product type → same style of component every time. This is deterministic, not random.
+
+Landing page section order: [Banner] → Nav → Hero (animated bg) → Logo Cloud → Stats → Features → Testimonials → Pricing → FAQ → Final CTA → Footer
+
 **Build sequence for landing page:**
 
-1. **Animated background** — run `mcp__magic__21st_magic_component_inspiration` searching for "animated background hero [enterprise/dark/grid]". Then `mcp__magic__21st_magic_component_builder` to generate. Adapt colors to `hsl(var(--brand))`. Apply `z-index: -1`, `opacity: 0.2-0.3` (subtle — background, not foreground). Wrap in `prefers-reduced-motion` check from `web-animations` skill.
+0. **Announcement Banner (optional)** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `announcement banner bar`. Use `Banner 1`. Mount above navbar. Include only when there's a real announcement (launch, beta, promo). If nothing real to announce, skip.
 
-2. **Hero section** — structure: Nav → background → headline → subheadline → CTAs → trust stats → product visual. Apply Framer Motion staggered entrance from `web-animations` skill Technique 3 (FADE_UP + STAGGER on children).
+1. **Animated background** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `animated background gradient`. Use `BackgroundGradientAnimation` (interactive WebGL blobs). `opacity: 0.15-0.2`, `z-index: -1`, lazy-loaded. NO CSS fallback — this is mandatory.
+
+2. **Hero section** — structure: Nav (extract from `HeroSection 2`) → background → headline → subheadline → CTAs → trust stats → product visual. Apply Framer Motion staggered entrance from `web-animations` skill Technique 3.
 
 3. **Product visual** — a simulated UI mockup showing the actual app. Built from shadcn Card, Skeleton, Badge. Includes browser chrome (three colored dots + URL bar), a sidebar column of muted icon shapes, and a content area with mock stat cards + a data table row. Adapt KPI labels to the product. Never just a gradient blob. Wrap in a glow div: `absolute -inset-4 rounded-3xl bg-gradient-to-b from-brand/15 to-transparent blur-2xl`.
 
@@ -353,17 +361,32 @@ export function ProductMockup() {
 ```
 Swap `[product]`, `KPI 1/2/3` labels, and dot colors to match the actual product before using.
 
-4. **Features section** — run `mcp__magic__21st_magic_component_inspiration` for "feature grid cards [dark/enterprise]". Use `mcp__magic__21st_magic_component_builder`. Apply `whileInView` stagger from `web-animations` Technique 3.
+4. **Logo Cloud** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `logo cloud marquee`. Use `Logo Cloud 4` (`InfiniteSlider` + `ProgressiveBlur`). Source SVGs from `svgl.app`. Heading: "Trusted by teams at" in `text-muted-foreground`.
 
-5. **Pricing section** — 3 tiers. Center tier: `border-primary/50 bg-primary/5 shadow-lg`. Each: name, price, description, feature list with Check icons, CTA. Use `mcp__magic__21st_magic_component_inspiration` for "pricing table SaaS" if a better layout exists.
+4b. **Stats / CountUp** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `stats metrics counter`. Use `CaseStudies`. Install `react-countup` with `enableScrollSpy: true`. Minimum 3 stats from product value prop. Dark bg section to visually break from logo cloud.
 
-6. **Other sections** — How It Works (3 numbered steps with connector), Footer (logo+tagline left, links center, legal right).
+5. **Features section** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `features grid section`. Use `Features 4` (border-grid, icon + title + body). Apply `whileInView` stagger from `web-animations` Technique 3. Alternative: `BentoGrid` (searchQuery: `bento grid layout`) when a hero feature needs colSpan emphasis.
+
+6. **Testimonials** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `testimonials social proof`. Use `TestimonialSlider` (Framer Motion `AnimatePresence`, photo, stars, dots). Minimum 3 testimonials.
+
+7. **Pricing section** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `pricing cards section`. Use `PricingCard` (glass-effect, `backdrop-blur`). 3 tiers, center: `border-primary/50 bg-primary/5 shadow-lg` + "Popular" badge. Pre-launch: skip Pricing, go to step 7b instead.
+
+7b. **Waitlist (pre-launch only — replaces Pricing + Final CTA)** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `waitlist email capture`. Use `WaitlistHero` or `WaitlistForm`. Connect to Supabase `waitlist` table. Show position number on submit.
+
+8. **FAQ** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `FAQ accordion`. Use `Faqs 1` (rounded card + shadcn Accordion). Alternative: `RuixenAccordian02` (two-column, General/Billing/Technical). Minimum 5 questions with real answers.
+
+9. **Final CTA** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `call to action section`. Use `Cta 4`.
+
+10. **Footer** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `footer website`. Use `Footer 2` (multi-column with legal row).
 
 **Rules:**
 - `mcp__magic__21st_magic_component_inspiration` is called BEFORE writing any complex section — not after
-- Animated background is mandatory — CSS grid pattern minimum, 21st.dev animated canvas preferred
+- `BackgroundGradientAnimation` is mandatory — no CSS fallback accepted
 - Product visual mockup is mandatory — shadcn components shaped like the real app, never a blob
+- Stats/CountUp section is mandatory — install `react-countup` every build
+- FAQ section is mandatory — minimum 5 questions before Final CTA
 - All sections use `whileInView` + `viewport={{ once: true }}` — see `web-animations` skill Technique 3
+- Landing page without Logo Cloud, Stats, Testimonials, FAQ, and Footer 2 is incomplete
 
 #### `src/main.tsx` — Sentry error monitoring (SaaS products mandatory)
 Add Sentry before `createRoot`. Skip for pure landing pages without auth.
@@ -668,6 +691,9 @@ const NotFoundPage = React.lazy(() =>
 - Sentry MUST be initialised in main.tsx for every SaaS product — skip only for pure landing pages without auth
 - CLAUDE.md MUST include the color job sentence
 - Landing page route MUST exist in App.tsx from day one (even if page not built yet)
+- Landing page MUST use specific 21st.dev components by name — see Component Registry in `premium-website.md`
+- `BackgroundGradientAnimation` is the ONLY acceptable animated background — CSS grid is not sufficient
+- Logo Cloud, Testimonials, Final CTA, and Footer 2 sections are all mandatory — a landing page without them is incomplete
 - `useSeo` hook MUST be generated in every scaffold and called on every page
 - `NotFoundPage` MUST be generated in every scaffold and registered as the `path="*"` catch-all route
 - `index.html` MUST include base OG + Twitter meta tags — replace placeholders during scaffold

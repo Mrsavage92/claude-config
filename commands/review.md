@@ -444,8 +444,8 @@ This inventory is the contract — every section gets reviewed. The review canno
 - [ ] "When to Use" description accurately reflects what the command actually does
 
 #### Pass L — Cross-Reference Integrity
-- [ ] Every skill/command referenced (e.g. `/web-review`, `/web-scope`) — run Glob on `~/.claude/commands/*.md` to verify each exists (all skills and commands live here). Missing references = P1.
-- [ ] Every file path referenced (`~/.claude/...`) — run Glob or Read to verify the path exists. If it does not exist: P1 finding. Do not infer existence — verify with a tool call.
+- [ ] Every skill/command referenced (e.g. `/web-review`, `/web-scope`) — run Glob on `~/.claude/commands/*.md` AND `~/.claude/skills/*/SKILL.md` to verify each exists. Skills may live at either location. Missing from both = P1.
+- [ ] Every file path referenced (`~/.claude/...`) — run Glob or Read to verify the path exists. Note: skills live at `~/.claude/skills/{name}/SKILL.md`, commands at `~/.claude/commands/{name}.md`. Check both locations before flagging as missing. If absent from both: P1 finding.
 - [ ] Score/quality thresholds are consistent (if one section says 38/40, no other section says 36/40)
 - [ ] Phase ordering is consistent (no phase referenced before it's defined)
 
