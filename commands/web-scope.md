@@ -20,7 +20,7 @@ Before making any design decisions, check if `DESIGN-BRIEF.md` exists in the pro
 **If DESIGN-BRIEF.md exists:** Read it in full. All design decisions in Steps 2b and 2c below are ALREADY LOCKED by the brief. Do not re-decide them — import the values directly:
 - Personality type, mode (dark/light-first), color system (primary/background/surface/accent HSL values), typography, reference sites, 21st.dev components selected, LottieFiles animations, marketing site tier and page structure.
 - Skip Steps 2b and 2c entirely. Jump from Step 2a straight to Step 3, using the locked design values from DESIGN-BRIEF.md.
-- The marketing site page structure (/, /features, /pricing, /signin) comes from the brief's "Marketing Site Structure" section — use that as the public page list in SCOPE.md.
+- The marketing site page structure (/, /features, /pricing, /auth) comes from the brief's "Marketing Site Structure" section — use that as the public page list in SCOPE.md.
 
 **If DESIGN-BRIEF.md does not exist:** Proceed normally through all steps. But flag at the end: "Note: /web-design-research was not run. Design decisions were made without competitor research or 21st.dev sourcing. Run /web-design-research before the next product to get differentiated designs."
 
@@ -87,7 +87,7 @@ Signature element: [what one thing makes this page visually interesting?]
 
 **Mandatory public pages (always required — build these first):**
 - `/` — Landing page: hero, features, how it works, pricing, CTA, footer
-- `/signin` — Auth: sign in + sign up on same page, split layout or centered card
+- `/auth` — Auth: sign in + sign up on same page, split layout or centered card
 
 **Mandatory app pages for any product with auth (always required):**
 - `/setup` or `/onboarding` — Multi-step wizard. Runs once after signup, before dashboard. Collects the onboarding data fields identified in Step 1. Final step: plan selection (Stripe Checkout) or trial activation. Redirect to `/dashboard` only after complete. **This page is not optional — every SaaS product with auth must have it.**
@@ -146,7 +146,7 @@ Write `SCOPE.md` to the project root with this structure:
 
 ## Build Order
 1. Landing page (/)
-2. Auth (/signin)
+2. Auth (/auth)
 3. Onboarding (/setup) — always 3rd for SaaS with auth
 4. [core feature page]
 5. [supporting pages in priority order]
@@ -165,7 +165,7 @@ Pages: [N] total ([X] public, [Y] app)
 
 Build order:
   1. / — Landing page
-  2. /signin — Auth
+  2. /auth — Auth
   [etc.]
 
 Design decisions locked:

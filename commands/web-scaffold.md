@@ -435,7 +435,7 @@ Add to Vercel dashboard: `VITE_SENTRY_DSN`
 - `replaysOnErrorSampleRate: 1.0` — always capture replay on error (critical for debugging)
 
 #### `src/App.tsx`
-BrowserRouter with route for `/` (Landing), `/signin` (Auth), and protected app routes. All app routes lazy-loaded.
+BrowserRouter with route for `/` (Landing), `/auth` (Auth), and protected app routes. All app routes lazy-loaded.
 
 #### `CLAUDE.md`
 ```markdown

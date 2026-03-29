@@ -186,7 +186,7 @@ Save the returned user ID for cleanup. If Supabase MCP is unavailable: log NEEDS
 10 checks — all required. Take a screenshot at each step:
 
 1. Open `[production-url]` — verify landing page loads, hero text visible, `[CTA label]` button visible
-2. Click CTA — verify navigation to `/signin` or `/signup`
+2. Click CTA — verify navigation to `/auth`
 3. Sign in with test user credentials — verify redirect to `[onboarding-route]`
 4. Click through all onboarding wizard steps — verify redirect to `[main-app-route]` on completion
 5. Verify trial banner visible ("days remaining" text) — skip only if trial model is NOT free-trial

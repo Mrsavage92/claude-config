@@ -55,7 +55,7 @@ export default function App() {
       <Suspense fallback={<PageSkeleton />}>
         <Routes>
           <Route path="/"         element={<Landing />} />
-          <Route path="/signin"   element={<SignIn />} />
+          <Route path="/auth"   element={<AuthPage />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         </Routes>
       </Suspense>

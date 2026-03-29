@@ -157,7 +157,7 @@ All routes prefixed: /[prefix_clean]/
 - **Error state:** N/A
 - **Signature element:** ProductMockup showing [describe the product's key UI — e.g. "a compliance dashboard with risk score ring and customer table"]
 
-### /signin — Auth
+### /auth — Auth
 - **Purpose:** Sign in / sign up
 - **Data:** Supabase Auth
 - **Empty state:** N/A
@@ -234,7 +234,7 @@ Table prefix: [prefix]_
 
 ## Session 4-N — Pages (web-page per page, in order)
 - [ ] / — Landing page (always first)
-- [ ] /signin — Auth (always second)
+- [ ] /auth — Auth (always second)
 - [ ] /setup — Onboarding wizard (always third — mandatory for all SaaS products)
 - [ ] AppLayout trial banner (persistent top banner showing trial days remaining + Upgrade button)
 [List remaining pages from Pages input]
