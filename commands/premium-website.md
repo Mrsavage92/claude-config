@@ -54,7 +54,7 @@ Read `~/.claude/web-system-prompt.md` before any UI generation. It contains:
 
 **Every section on a landing page must be sourced from 21st.dev — never invented from scratch.**
 
-For each section: call `mcp__magic__21st_magic_component_inspiration` with the searchQuery, then apply the selection criteria below to pick the right variant. The "Default" column is the starting point — the selection criteria determine whether to use it or pick an alternative. This is a deliberate match, not a random choice.
+Component choices are made ONCE during `/web-design-research` and locked in DESIGN-BRIEF.md as a Component Lock table. Build skills read that table — they do NOT re-run MCP queries. The registry below is used by `/web-design-research` to understand defaults and selection criteria. It is a research reference, not a build-time instruction.
 
 ### Component Selection Criteria
 
