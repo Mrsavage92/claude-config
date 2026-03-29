@@ -57,9 +57,12 @@ If the sub-skill file does not exist: continue building but flag as NEEDS_HUMAN 
 
 #### Landing Page (`/`)
 
-**Read the 21st.dev Component Registry in `~/.claude/commands/premium-website.md` before writing a single component.**
+**Before writing a single component: read DESIGN-BRIEF.md in the project root.**
 
-For every section: call `mcp__magic__21st_magic_component_inspiration` first, then apply the **Component Selection Criteria** from `~/.claude/commands/premium-website.md` to choose the right variant. Enterprise B2B = clean/minimal. Dev tools = dark/technical. Consumer SaaS = animated/warm. AI product = split-pane/typewriter. The choice is criteria-driven, not arbitrary — same product type always produces the same style of component.
+- **If DESIGN-BRIEF.md exists with a Component Lock table** → use those exact components. Do NOT call `mcp__magic__21st_magic_component_inspiration`. The `/web-design-research` phase already made these decisions for this specific product.
+- **If no DESIGN-BRIEF.md** → stop and run `/web-design-research` first. Do not proceed without it.
+
+The section instructions below show default MCP queries. They are fallback reference only — when a Component Lock exists, ignore the defaults entirely and use what's locked.
 
 Structure: [Banner] → Nav → Hero (with animated bg) → Logo Cloud → Stats → Features → Testimonials → Pricing → FAQ → Final CTA → Footer
 

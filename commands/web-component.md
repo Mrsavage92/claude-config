@@ -24,9 +24,8 @@ Read `~/.claude/web-system-prompt.md`. Then read the project's:
 - Never edit files in `src/components/ui/`
 
 **Complex visual/marketing component** (pricing table, feature grid, testimonial carousel, stat counter, timeline, logo cloud, comparison table, step indicator)
-- First: `mcp__magic__21st_magic_component_inspiration` — find reference designs
-- Then: `mcp__magic__21st_magic_component_builder` — generate the component
-- Then: adapt output to use the project's CSS variable tokens and type scale
+- **First: check DESIGN-BRIEF.md Component Lock table** — if this component is a landing page section (hero, logo cloud, features, testimonials, pricing, FAQ, stats, footer), the exact 21st.dev component is already chosen. Use it. Do NOT re-run MCP.
+- If the component is NOT in the Component Lock (e.g. a new in-app component, dashboard widget): `mcp__magic__21st_magic_component_inspiration` — find reference designs, then `mcp__magic__21st_magic_component_builder` — generate it
 - If logos needed: `mcp__magic__logo_search`
 
 **Layout / structural component** (hero section, navbar, footer, section background, page wrapper, sidebar)

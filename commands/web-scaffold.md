@@ -292,9 +292,12 @@ export function EmptyState({ icon: Icon, heading, description, action, className
 #### `src/components/landing/` + `src/pages/Landing.tsx`
 Landing page is built during scaffold — not deferred. The hero is the most important file in the project.
 
-**Read `~/.claude/commands/premium-website.md` 21st.dev Component Registry before building any section.**
+**Before writing a single component: check for DESIGN-BRIEF.md in the project root.**
 
-For each section below: call `mcp__magic__21st_magic_component_inspiration` first, then apply the **Component Selection Criteria** from `~/.claude/commands/premium-website.md` to pick the right variant. The criteria table maps product type to visual weight — Enterprise B2B gets clean/minimal, dev tools get dark/technical, consumer SaaS gets animated/warm, AI products get split-pane/typewriter. Same product type → same style of component every time. This is deterministic, not random.
+- **If DESIGN-BRIEF.md exists** → read the Component Lock table. Use the exact components listed there. Do NOT re-run MCP queries. The research phase already made these decisions.
+- **If DESIGN-BRIEF.md is missing** → run `/web-design-research` first. Do not proceed without it.
+
+The Component Lock table in DESIGN-BRIEF.md lists the exact 21st.dev component for every section. It also records the hero architecture pattern (Centered/Split-pane/Full-screen/Minimal). Follow it exactly — the choices were made based on this product's specific personality and competitor landscape.
 
 Landing page section order: [Banner] → Nav → Hero (animated bg) → Logo Cloud → Stats → Features → Testimonials → Pricing → FAQ → Final CTA → Footer
 
