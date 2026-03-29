@@ -416,7 +416,8 @@ Run before any deploy:
 ## Full Build Loop
 
 ```
-/web-design-research → DESIGN-BRIEF.md: competitor research, 21st.dev components, LottieFiles, unique color system, multi-page structure
+saas-build 0.25   → MARKET-BRIEF.md: competitor website deep-dive (hero patterns, social proof format, pricing model), feature gaps, differentiator
+/web-design-research → DESIGN-BRIEF.md: reads MARKET-BRIEF.md competitor data, 21st.dev components, LottieFiles, unique color system, multi-page structure
 /web-scope        → SCOPE.md — reads DESIGN-BRIEF.md, imports all design decisions, defines page inventory
 /web-scaffold     → foundation: config, design system, routes, AppLayout, TrialBanner, Sentry
 /web-supabase     → schema, RLS policies, auth, TypeScript types (if backend)
