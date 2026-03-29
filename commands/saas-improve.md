@@ -21,7 +21,7 @@ Six specialist agents scan the product simultaneously — each from a different 
 ### 0a. Read state
 Read these files before doing anything else:
 1. `BUILD-LOG.md` — last completed phase, STUCK items, deployed URL
-2. `IMPROVEMENT-STACK.md` — previous stack (if exists: skip Phase 1, go to Phase 2 execution)
+2. `IMPROVEMENT-STACK.md` — previous stack (if exists and was generated in the last 24 hours: skip Phase 1 and Phase 2, jump directly to Phase 3 execution with the existing stack. If older than 24 hours: re-run Phase 1 and Phase 2 to refresh findings)
 3. `SCOPE.md` — page inventory and feature set
 4. `DESIGN-BRIEF.md` — locked color + typography contract
 5. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
@@ -41,7 +41,7 @@ Check for unresolved issues in the last 7 days. Each unresolved error = automati
 **Railway logs (if Railway service exists):**
 ```bash
 # Get last 100 lines of Railway logs for 5xx errors
-npx railway logs --tail 100 2>/dev/null | grep -E "5[0-9]{2}|ERROR|CRITICAL" || echo "Railway: unavailable"
+npx railway logs --lines 100 2>/dev/null | grep -E "5[0-9]{2}|ERROR|CRITICAL" || echo "Railway: unavailable"
 ```
 Each unique 5xx pattern = automatic P1 gap.
 
@@ -155,7 +155,7 @@ CHECK — src/pages/**/*.tsx, src/components/**/*.tsx
 - [ ] Mobile: touch targets min 44px
 - [ ] Onboarding wizard exists and is <= 4 steps
 - [ ] Trial banner present if free-trial model
-- [ ] ProtectedRoute checks onboarding_complete, redirects to /setup if false
+- [ ] ProtectedRoute checks onboarding_complete, redirects to onboarding_route (from SCOPE.md, default /setup) if false
 - [ ] ProtectedRoute checks trial/subscription status — expired users redirected to billing/settings, not silently left in the app
 - [ ] "Coming soon" buttons (those that fire toast.info instead of navigating) have `aria-disabled="true"` so assistive tech knows they are inactive
 
@@ -245,7 +245,7 @@ CHECK — src/pages/LandingPage.tsx, src/pages/Pricing*.tsx, src/components/Upgr
 - [ ] Stripe webhook signature verified (not just received)
 - [ ] PricingCards component exists with feature comparison
 - [ ] Settings > Billing tab has Stripe Customer Portal link
-- [ ] Post-upgrade redirect lands on confirmation/dashboard (not /signin)
+- [ ] Post-upgrade redirect lands on confirmation/dashboard (not /auth)
 - [ ] Failed payment handling (dunning state shown to user)
 - [ ] Free trial end = automatic downgrade state, not silent loss of access
 
@@ -322,7 +322,7 @@ Sessions run: [increment each time this runs]
 ```
 LOOP:
   1. Read IMPROVEMENT-STACK.md — current state, not memory
-  2. Find highest-priority item that is TODO and not BLOCKED
+  2. Find highest-priority item that is TODO (not BLOCKED, not STUCK, not in Won't Fix)
   3. If none remain: exit loop
   4. Select the right tool (routing table below)
   5. Execute the fix
@@ -332,6 +332,8 @@ LOOP:
   8. Commit: "fix([agent]): [issue description] — [file]"
   9. Append to BUILD-LOG.md: "SWARM | [agent] | [item] | DONE | [timestamp]"
   10. Return to step 1
+
+When loop exits (no TODO items remain): log "Phase 3 complete — [N] DONE, [N] BLOCKED, [N] STUCK" to BUILD-LOG.md.
 ```
 
 **Tool routing:**
@@ -340,12 +342,12 @@ LOOP:
 | Broken/missing component | /web-fix |
 | New page needed | /web-page |
 | New component on existing page | /web-component |
-| Dashboard/analytics page | /dashboard-design skill |
-| Data table | /web-table skill |
-| Settings page | /web-settings skill |
-| Onboarding wizard | /web-onboarding skill |
-| Email flows | /web-email skill |
-| Stripe/billing | /web-stripe skill |
+| Dashboard/analytics page | /dashboard-design |
+| Data table | /web-table |
+| Settings page | /web-settings |
+| Onboarding wizard | /web-onboarding |
+| Email flows | /web-email |
+| Stripe/billing | /web-stripe |
 | Design system violation | Fix directly per web-system-prompt.md |
 | a11y failure | Fix inline — aria attrs, focus rings, semantic HTML |
 | TypeScript error | Fix inline |
@@ -353,6 +355,7 @@ LOOP:
 | SEO/meta | Fix in index.html or useSeo call |
 | Hardcoded color | Replace with CSS variable |
 | Test failure | Fix the code, not the test |
+| Issue type not in this table | Use /web-fix for UI issues; fix inline for logic/config issues — judgment call based on scope |
 | Sentry/Railway error | Read full stack trace, fix root cause |
 
 **Batch commits are banned.** One gap = one commit. Unrelated fixes must not share a commit.
@@ -375,7 +378,7 @@ npx vitest run --reporter=verbose 2>&1
 
 Compare results to Phase 0b baseline.
 
-**If new errors appeared that weren't in Phase 0b:** these are regressions introduced by this session's fixes. Do not deploy. Go back to Phase 3, fix the regressions first. Regressions are P0 — they supersede everything.
+**If new errors appeared that weren't in Phase 0b:** these are regressions introduced by this session's fixes. Do not deploy. Identify the offending commit with `git log --oneline -10`, then revert it with `git revert <sha>` (creates a new commit, does not destroy history). Add the regression as a P0 to IMPROVEMENT-STACK.md and return to Phase 3. Regressions are P0 — they supersede everything.
 
 **If results are equal or better:** proceed to Phase 5.
 
@@ -385,13 +388,22 @@ Log: "Phase 4 regression guard — [before] → [after]" to BUILD-LOG.md.
 
 ## Phase 5 — Deploy + Live Verification
 
-If any fixes were made since the last deploy, redeploy:
+If any fixes were made since the last deploy, redeploy. If Phase 3 produced zero DONE items (all BLOCKED or STUCK): skip Phase 5 entirely, log "Phase 5 skipped — no fixes to deploy", proceed to Phase 6.
 
 ```bash
-npx vercel --prod --yes
+# Deploy: detect platform from BUILD-LOG.md or project config
+if [ -f "railway.toml" ] || grep -q '"railway"' package.json 2>/dev/null; then
+  # Railway deployment (monorepo / FastAPI products)
+  npx railway up --detach 2>&1
+else
+  # Vercel SPA deployment (default)
+  npx vercel --prod --yes
+fi
 ```
 
 After deploy completes, verify both surface and depth:
+
+> **Platform note (Windows):** The `curl` commands below require WSL or Git Bash. On PowerShell, use `(Invoke-WebRequest -Uri [url] -UseBasicParsing).StatusCode` instead.
 
 ```bash
 # Surface check — CDN edge responds
@@ -399,7 +411,7 @@ curl -s -o /dev/null -w "%{http_code}" [production-url]
 # Must be 200
 
 # Depth check — SPA rewrites work
-curl -s -o /dev/null -w "%{http_code}" [production-url]/signin
+curl -s -o /dev/null -w "%{http_code}" [production-url]/auth
 # Must be 200
 
 # App loads actual content (not empty HTML shell)
@@ -415,7 +427,7 @@ Update BUILD-LOG.md: "Deploy [timestamp] — all 3 live checks passed — [URL]"
 
 ## Phase 6 — Competitive Drift Check
 
-**Run this phase every 3rd improvement session** (track count in IMPROVEMENT-STACK.md `Sessions run` field).
+**Run this phase every 3rd improvement session** (track count in IMPROVEMENT-STACK.md `Sessions run` field). Do not run on session 1 (Sessions run must be > 0 and divisible by 3).
 
 The product was scoped against market research from launch day. Markets move. This phase detects if you've fallen behind.
 
@@ -465,6 +477,13 @@ Push the session's output to all intelligence layers:
 
 ### Next session priority
 [top 3 remaining items]
+```
+
+**Commit Phase 7 updates to Git:**
+```bash
+git add IMPROVEMENT-STACK.md BUILD-LOG.md
+git commit -m "chore(swarm): session [N] — [N] fixed, [N] blocked"
+git push origin main
 ```
 
 **Push to Notion (if project has Notion URL in memory):**
