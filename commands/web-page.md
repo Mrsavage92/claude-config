@@ -56,11 +56,20 @@ If the sub-skill file does not exist: continue building but flag as NEEDS_HUMAN 
 ### Step 4 — Page-Type Templates
 
 #### Landing Page (`/`)
-Structure: Nav → Hero → Features → How It Works → Pricing → Final CTA → Footer
+
+**Read the 21st.dev Component Registry in `~/.claude/commands/premium-website.md` before writing a single component.**
+
+For every section: call `mcp__magic__21st_magic_component_inspiration` first, then apply the **Component Selection Criteria** from `~/.claude/commands/premium-website.md` to choose the right variant. Enterprise B2B = clean/minimal. Dev tools = dark/technical. Consumer SaaS = animated/warm. AI product = split-pane/typewriter. The choice is criteria-driven, not arbitrary — same product type always produces the same style of component.
+
+Structure: [Banner] → Nav → Hero (with animated bg) → Logo Cloud → Stats → Features → Testimonials → Pricing → FAQ → Final CTA → Footer
+
+**Announcement Banner (optional — include when there's a real announcement):**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `announcement banner bar`. Use `Banner 1` — mounts above navbar. Muted bg, pill label + one-line message + optional arrow link.
+- Omit if there is no real announcement to make.
 
 **Hero build sequence — follow in order:**
 
-1. **Animated background first** — call `mcp__magic__21st_magic_component_inspiration` with query "animated background hero [dark/enterprise/grid]". Then `mcp__magic__21st_magic_component_builder`. Set `opacity: 0.2`, `z-index: -1`, wrap in `prefers-reduced-motion`. If MCP unavailable: CSS grid lines pattern from `web-system-prompt.md` Visual Signature Elements.
+1. **Animated background first** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `animated background gradient`. Use `BackgroundGradientAnimation` (interactive WebGL blobs). Set `opacity: 0.15-0.2`, `z-index: -1`, lazy-loaded. Wrap in `useReducedMotion` check. This is NON-NEGOTIABLE — no CSS fallback.
 
 2. **Product visual mockup** — built from shadcn primitives shaped like the real app:
    - Browser chrome: three colored dots (`bg-destructive/50`, `bg-yellow-400/50`, `bg-green-500/50`) + URL bar showing `app.[product].com.au`
@@ -78,16 +87,44 @@ Structure: Nav → Hero → Features → How It Works → Pricing → Final CTA 
 
 6. **Framer Motion entrance** — stagger using `web-animations` skill Technique 3 STAGGER pattern. Order: pill → headline → subheadline → CTAs → stats → product visual (slight delay so it "loads in" last).
 
+**Logo Cloud (after hero — mandatory):**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `logo cloud marquee`. Use `Logo Cloud 4` (`InfiniteSlider` + `ProgressiveBlur` fade edges).
+- Source logo SVGs from `svgl.app`. Heading: `"Trusted by teams at"` in `text-muted-foreground`.
+
+**Stats / CountUp section (after logo cloud — mandatory):**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `stats metrics counter`. Use `CaseStudies` component.
+- Install `react-countup`. Use `enableScrollSpy: true` so numbers animate on scroll.
+- Minimum 3 stats from real product value prop (e.g. "10,000+ businesses", "98% uptime", "2 min setup").
+- Dark/muted section background to visually break from the logo cloud above.
+
 **Features section:**
-- Run `mcp__magic__21st_magic_component_inspiration` for "feature cards dark enterprise SaaS" before writing anything. Use the returned component pattern as the layout reference for the features grid. If MCP unavailable: use a 3-column grid of cards each with icon + title + 2-sentence description — icon in `bg-primary/10 rounded-lg p-2`, card with `border border-border/40 bg-card/60 rounded-xl p-6`.
-- 3-6 cards. Each: icon in `bg-primary/10 rounded-lg p-2 w-fit` + title + 2 sentences. Icon is `text-primary` — second allowed use of primary color on landing page.
-- `whileInView` stagger from `web-animations` Technique 3.
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `features grid section`. Use `Features 4` — border-grid layout, lucide icon + title + 2-sentence body per card.
+- 3-6 cards. Icon in `bg-primary/10 rounded-lg p-2 w-fit`, icon color `text-primary` (second allowed use). `whileInView` stagger from `web-animations` Technique 3.
+- Alternative: `mcp__magic__21st_magic_component_inspiration` searchQuery: `bento grid layout`. Use `BentoGrid` when one feature needs visual emphasis — hero card spans 2 columns with screenshot/animation.
+
+**Testimonials (after features — mandatory):**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `testimonials social proof`. Use `TestimonialSlider` — Framer Motion `AnimatePresence`, photo, star rating, dot indicators, prev/next navigation.
+- Minimum 3 realistic testimonials.
 
 **Pricing:**
-3 tiers, center highlighted: `border-primary/50 bg-primary/5 shadow-lg`. Each tier: name, price, description, feature list with Check icons, CTA button. Check `mcp__magic__21st_magic_component_inspiration` for "pricing table SaaS" if a better layout exists.
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `pricing cards section`. Use `PricingCard` — glass-effect with `backdrop-blur`.
+- 3 tiers. Center: `border-primary/50 bg-primary/5 shadow-lg` + "Popular" badge. Each: name, price, feature list with `CheckCircle2`, CTA button.
+- Pre-launch products: skip Pricing, use Waitlist section instead (see below).
+
+**FAQ (before Final CTA — mandatory):**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `FAQ accordion`. Use `Faqs 1` (rounded card + shadcn Accordion).
+- Alternative: `RuixenAccordian02` for two-column layout (General / Billing / Technical categories).
+- Minimum 5 questions with real conversational answers.
+
+**Final CTA:**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `call to action section`. Use `Cta 4` — muted bg container, benefit checklist on right, arrow CTA button.
+
+**Waitlist (replaces Pricing + Final CTA for pre-launch products):**
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `waitlist email capture`. Use `WaitlistHero` (full-screen with rotating rings + confetti) or `WaitlistForm` (AnimatePresence input + confetti on submit).
+- Connect to Supabase `waitlist` table. Show position number after sign-up.
 
 **Footer:**
-Logo + tagline left, nav links center, legal disclaimer right. No color — purely `text-muted-foreground`.
+- `mcp__magic__21st_magic_component_inspiration` searchQuery: `footer website`. Use `Footer 2` — multi-column: logo+tagline left, 4 link columns, legal bottom row. No color — `text-muted-foreground` only. Include social icon links.
 
 #### Dashboard
 MUST include a "getting started" track for users with zero data:
