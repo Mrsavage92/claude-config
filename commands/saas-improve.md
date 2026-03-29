@@ -387,12 +387,6 @@ Log: "Phase 4 regression guard — [before] → [after]" to BUILD-LOG.md.
 
 If any fixes were made since the last deploy, redeploy:
 
-**Preferred — Vercel MCP:**
-```
-vercel.createDeployment({ target: "production" })
-```
-
-**Fallback:**
 ```bash
 npx vercel --prod --yes
 ```

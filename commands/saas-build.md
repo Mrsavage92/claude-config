@@ -83,17 +83,22 @@ Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 
 **This phase runs before /web-scope on EVERY new product. It is not optional.**
 
-Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute it completely:
-1. Identify product personality type (one of 8: Enterprise Authority, Data Intelligence, Trusted Productivity, Premium Professional, Bold Operator, Health & Care, Growth Engine, Civic/Government)
-2. **Skip competitor research if MARKET-BRIEF.md exists.** Check if MARKET-BRIEF.md exists in the project root before doing anything else. If it exists: read the competitors section directly — do NOT run new WebSearch queries. If it does not exist: run Phase 0.25 now before continuing Phase 0.5.
-3. Select a unique color system from the personality palette library — EXPLICITLY reject hsl(213 94% 58%) with a documented reason unless this is developer tooling. **Cross-product uniqueness check (monorepo):** before writing DESIGN-BRIEF.md, grep all existing `apps/*/DESIGN-BRIEF.md` files for the chosen primary HSL value. If the same hue (within ±15 degrees) is already in use by another product, select a different palette and document why.
-4. Run 6 targeted `mcp__magic__21st_magic_component_inspiration` queries using product-specific terms (NOT generic "dark SaaS"). If MCP is unavailable or returns no results: use the CSS grid pattern from web-system-prompt.md as the animated background fallback and continue — do not stop.
-5. Call `mcp__magic__21st_magic_component_builder` for the animated background. If MCP unavailable: write the CSS grid pattern inline in HeroSection.
-6. Search LottieFiles for 3 animations relevant to this product: run WebSearch "site:lottiefiles.com [product-category] animation" and pick 3 results. Add the top result URLs to DESIGN-BRIEF.md under an 'Animations' section. If WebSearch returns no results: skip and note "no LottieFiles found" in DESIGN-BRIEF.md — do not block progress.
-7. Choose marketing site tier (Tier 2 standard: /, /features, /pricing, /auth as separate routes)
-8. Write DESIGN-BRIEF.md to the project root (or `apps/[product-slug]/` in monorepo)
+Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute all 10 steps:
 
-Do not proceed to Phase 1 until DESIGN-BRIEF.md exists with all sections filled.
+1. **Personality** — classify product into one of 8 types (Enterprise Authority / Data Intelligence / Trusted Productivity / Premium Professional / Bold Operator / Health & Care / Growth Engine / Civic/Government)
+2. **Competitor research** — if MARKET-BRIEF.md exists, read it instead of running new searches. If not, run 3 WebSearch queries for category design patterns and competitor clichés.
+3. **Color system** — select from personality palette library. Explicitly reject hsl(213 94% 58%). **Monorepo cross-check:** grep `apps/*/DESIGN-BRIEF.md` for chosen primary HSL — if same hue (±15 degrees) already used, pick different palette and document why.
+4. **Typography lock** — select font pairing per personality type (not just "Inter"). Lock heading weight and tracking.
+5. **Hero architecture** — choose pattern: Centered / Split-pane / Full-screen immersive / Minimal editorial. Tie choice to personality + user type.
+6. **Component Lock** — run `mcp__magic__21st_magic_component_inspiration` for ALL 11 mandatory sections using personality-specific search terms (not generic "dark SaaS"). Apply selection criteria (visual weight, animation level, layout) to pick the right variant for each. If MCP unavailable: use defaults from Component Registry in `premium-website.md` and continue. Record all choices in DESIGN-BRIEF.md Component Lock table.
+7. **LottieFiles** — find 3 product-specific animations (empty state, success state, processing state). WebSearch `"lottiefiles.com [product-category] animation"`. Note "unavailable" if nothing fits — do not block.
+8. **Differentiation audit** — grep recent `apps/*/DESIGN-BRIEF.md` files, confirm 3+ dimensions differ from last build (color, hero pattern, features layout).
+9. **Marketing tier** — choose Tier 1/2/3. Default: Tier 2 (/, /features, /pricing, /signin as separate routes).
+10. **Write DESIGN-BRIEF.md** — must include: Product Personality, Color System, Typography, Hero Architecture, Component Lock table (all 11 sections), LottieFiles, Differentiation Audit, Marketing Structure, Build Order.
+
+**Build skills (web-scaffold, web-page) read the Component Lock from DESIGN-BRIEF.md — they do NOT re-run MCP queries.**
+
+Do not proceed to Phase 1 until DESIGN-BRIEF.md exists with the Component Lock table fully populated.
 
 Log: "Phase 0.5 complete — DESIGN-BRIEF.md written" to BUILD-LOG.md.
 
@@ -127,7 +132,8 @@ Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
 
 ### Phase 2 — Scaffold (run /web-scaffold)
 
-Execute the full /web-scaffold process using decisions from SCOPE.md:
+Execute the full /web-scaffold process using decisions from SCOPE.md and DESIGN-BRIEF.md:
+0. **Read DESIGN-BRIEF.md Component Lock table** — every landing page section has a specific 21st.dev component assigned. Use these during the landing page build. Do NOT re-run MCP queries.
 1. Generate all foundation files (package.json, tsconfig, vite.config, tailwind.config, index.css, main.tsx, App.tsx, CLAUDE.md)
 2. Apply bundle splitting from premium-website performance rules (vendor-react, vendor-motion, vendor-query, vendor-supabase chunks)
 3. tsconfig.json MUST include `"types": ["vite/client"]`
@@ -346,9 +352,14 @@ This is the core loop. For EACH page in SCOPE.md build order:
 - Confirm the page's design brief (purpose, data, empty state, loading state, error state, signature element) is clear before writing code
 
 **4b. Build the page**
-Follow /web-page rules. Apply all landing page non-negotiables from premium-website.md for the `/` page.
-- Landing page (`/`) is ALWAYS first — no exceptions
-- Auth (`/auth`) is ALWAYS second
+Follow /web-page rules.
+
+**Landing page — quality review, not rebuild:**
+The landing page was built by /web-scaffold (Phase 2). Do NOT rebuild it here.
+Instead: read `src/pages/LandingPage.tsx` (or `src/components/landing/`) in full, then run the 13-item per-page checklist + fresh eyes pass against it now — it was built outside the Phase 4 review loop and has not been quality-checked yet.
+Fix any failures before moving on. Log: "Landing page quality review — self-review passed (13/13 + fresh eyes)" to BUILD-LOG.md.
+
+- Auth (`/auth`) is ALWAYS first to BUILD in this loop — no exceptions
 - Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it. Route wrapper: `AuthRoute` (session-only, NOT `ProtectedRoute`) — the user is unauthenticated when clicking a reset link.
 - Onboarding (`/setup` or `/onboarding`) is ALWAYS fourth for any SaaS product with auth — no exceptions. If SCOPE.md does not include it, add it now before continuing.
 - **Auth-free products** (no login, no user accounts): skip auth/reset-password/onboarding positions. Build order is: `/` → app pages in SCOPE.md priority order → `/settings` (if applicable) → `/privacy` → `/terms`.
