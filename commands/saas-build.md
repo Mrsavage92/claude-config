@@ -12,6 +12,59 @@ Executes the full build loop autonomously. Only stops for genuine blockers that 
 
 ---
 
+## Persistent Context Protocol
+
+**This protocol runs throughout the entire build. It is not optional and does not stop between phases.**
+
+### Two Canonical Context Sources
+
+Every saas-build product has two persistent context anchors that survive context window resets:
+
+| Anchor | What it stores | When to read | When to write |
+|---|---|---|---|
+| **GitHub repo** | All code + BUILD-LOG.md + SCOPE.md + DESIGN-BRIEF.md | Start of every session + before every phase | After every phase completes (git commit) |
+| **Notion project doc** | Decisions, intent, blockers, sessions history, credential status | Start of every session + after every 10 user messages | After every phase completes (project-refresh PUSH) |
+
+### Session Start Rule (applies to EVERY new conversation that resumes a build)
+
+Before writing a single line of code, run ALL of these in parallel:
+1. Read `BUILD-LOG.md` — identifies last completed phase and any STUCK/NEEDS_HUMAN items
+2. Read `SCOPE.md` — page inventory and build order
+3. Read `DESIGN-BRIEF.md` — locked color system and component decisions
+4. Run `/project-refresh` PULL mode — fetches current Notion doc state into context
+
+Do NOT skip this even if the user says "continue from where we left off." The context window may have been reset. Read the files, not your memory.
+
+### After Every Phase Completes
+
+Immediately after logging "Phase X complete" to BUILD-LOG.md, run both of these:
+
+```bash
+git add -A && git commit -m "phase X: [one-line description of what was built]"
+```
+
+Then run `/project-refresh` PUSH to update Notion with:
+- Phase just completed
+- What was built
+- Any NEEDS_HUMAN items added
+- Current score or status if applicable
+
+**Never skip this.** A phase that is not committed and not in Notion does not exist from the next session's perspective.
+
+### Mid-Session Context Refresh
+
+After every 10 user messages within a build session:
+- Re-read BUILD-LOG.md
+- Run `/project-refresh` PULL to check if Notion has been updated externally
+
+This prevents long sessions from drifting away from the locked decisions.
+
+### Repo Creation Rule (fresh builds only)
+
+If no GitHub repo exists for this product: create it in Phase 0 before writing any files. A build with no repo has no persistent context. See Phase 0 for the creation steps.
+
+---
+
 ## Autonomous Build Loop
 
 ### Phase 0 — Orient
@@ -35,9 +88,64 @@ Check if BUILD-LOG.md exists in the project root (or `apps/[product-slug]/BUILD-
 If BUILD-LOG.md does not exist: this is a fresh start. Begin at Phase 0.25.
 If BUILD-LOG.md exists: read it to identify the last completed phase, then continue from the next one. If resuming from Phase 1 or later, verify DESIGN-BRIEF.md exists — if missing, run Phase 0.5 before continuing. Also verify MARKET-BRIEF.md exists — if missing, run Phase 0.25 before continuing.
 
+**If resuming (BUILD-LOG.md exists): also run `/project-refresh` PULL now before continuing.** Pull Notion state into context — decisions, blockers, and credential status may have changed since the last session.
+
 Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
 
-Log: "Phase 0 complete — context loaded" to BUILD-LOG.md.
+### Phase 0 — GitHub Repo + Notion Doc (fresh builds only)
+
+**For fresh builds (no BUILD-LOG.md), do this before Phase 0.25. For resuming builds, verify these exist and skip if already done.**
+
+**Step A — Create GitHub repo:**
+
+Check if a repo exists for this product:
+```
+mcp__plugin_github_github__search_repositories query:"[product-slug] user:Mrsavage92"
+```
+
+If no repo found: create it:
+```
+mcp__plugin_github_github__create_repository name="[product-slug]" description="[product name] — AU compliance SaaS" private=true auto_init=true
+```
+
+In monorepo mode: skip repo creation — the monorepo (`saas-platform` or `au-compliance-platform`) is already the repo. Just verify the `apps/[product-slug]/` directory will be committed there.
+
+Write the repo URL to BUILD-LOG.md and the project memory file as `github_repo`.
+
+**Step B — Create Notion project doc:**
+
+Run `/project-doc` with the product name and brief. This creates the Notion master doc under the Projects hub.
+
+Write the Notion URL to BUILD-LOG.md and the project memory file as `notion_url`.
+
+**Step C — Create project memory file:**
+
+Check if `~/.claude/projects/.../memory/project_[slug].md` exists. If not, create it now:
+```markdown
+---
+name: [Product Name]
+description: [one-line product description]
+type: project
+---
+
+[Product Name] — [brief description]
+
+**Why:** [product rationale]
+**How to apply:** Next session = continue from last BUILD-LOG.md phase.
+
+GitHub: [repo URL]
+Notion: [notion URL]
+Build state: Phase 0 started [date]
+```
+
+Add the memory file to MEMORY.md index.
+
+After Steps A-C complete: commit the initial files (BUILD-LOG.md, memory file) and push to GitHub:
+```bash
+git add BUILD-LOG.md && git commit -m "init: [product-name] saas-build started" && git push origin main
+```
+
+Log: "Phase 0 complete — context loaded, repo created, Notion doc created" to BUILD-LOG.md.
 
 ---
 
@@ -507,6 +615,8 @@ Hero override:
 | AML/CTF | No sector-specific cards (real estate / accountants / lawyers / conveyancers) | Add profession cards section showing each profession's obligations |
 | WHS/Psychosocial | Hero uses dark background / dark mode design | BLOCK and rebuild — dark UI for WHS tool is the wrong category signal. Must be light mode. |
 | WHS/Psychosocial | Copy uses "upcoming" or "coming soon" for enforcement (deadline was Dec 2025) | Update all copy to "now in effect" / "now mandatory" |
+| WHS/Psychosocial | Hero does not name "psychosocial" explicitly — uses generic "WHS software" or "workplace safety" | Rewrite hero to lead with "Psychosocial Hazard Register" or "Psychosocial Safety" — FlourishDx proves specialist naming outperforms generic WHS positioning |
+| WHS/Psychosocial | Hero copy targets field workers ("inspections", "checklists") instead of HR/OHS professionals ("risk register", "control plan", "governance") | Rewrite for correct audience — HR managers + OHS specialists, not frontline workers |
 | Procurement Intelligence | Tender feed/ticker is static (no animation, no scrolling) | Add animated scrolling tender feed or ticker to hero section |
 | Procurement Intelligence | No data source citation ("Official AusTender API") visible above fold | Add trust bar immediately below hero with data source attribution |
 
