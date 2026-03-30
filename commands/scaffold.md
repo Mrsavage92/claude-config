@@ -1,3 +1,5 @@
+> **SaaS or web product?** Use `/saas-build` (full pipeline) or `/web-scaffold` (React+Vite+Supabase bootstrap) instead. This command is for non-web projects (Python scripts, APIs, CLIs, backend services).
+
 Scaffold a new project, feature, or module with production-ready structure.
 
 Based on the provided description or arguments, generate:
