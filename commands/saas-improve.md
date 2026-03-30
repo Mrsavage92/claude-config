@@ -257,6 +257,112 @@ TOTAL: [N] findings
 
 ---
 
+### Agent 7: Market Fit
+
+Scope: landing page sections, pricing page, hero content, trust signals, product mockup.
+
+```
+CHECK — src/pages/Landing*.tsx, src/components/landing/**/*.tsx
+
+Step 1 — Identify product category:
+Read PRODUCT-CATEGORY-LIBRARY.md (at monorepo root, or C:\Users\Adam\Documents\au-compliance-platform\PRODUCT-CATEGORY-LIBRARY.md).
+Read SCOPE.md and BUILD-LOG.md. Find the "Phase 1.5 complete" entry for the detected category.
+If no Phase 1.5 entry exists: detect the category now from SCOPE.md keywords using the detection table in PRODUCT-CATEGORY-LIBRARY.md.
+
+Detected category: [write here before running checks]
+
+Step 2 — Category compliance checks:
+Load the required sections list, trust signals, and forbidden patterns for the detected category.
+
+- [ ] Hero pattern matches category expectation (not generic dark animated hero for a non-tech-tool category)
+  - Expected pattern (from PRODUCT-CATEGORY-LIBRARY.md): [write here]
+  - Actual pattern (from Landing.tsx): [write here]
+  - Match: YES / NO
+- [ ] All required landing sections present for this category (check each from the category's required list)
+  - [section name]: PRESENT / MISSING
+  - [repeat for all required sections]
+- [ ] No forbidden patterns for this category (check each from the category's forbidden list)
+  - [pattern name]: ABSENT (pass) / PRESENT (fail)
+- [ ] Trust signals correct for this category
+  - [trust signal]: PRESENT / MISSING
+  - [repeat for all required trust signals]
+- [ ] Pricing page structure matches category expectation (outcome-based / volume-based / compliance-tier)
+- [ ] Copy tone matches category (not generic "enterprise" for field-worker tools, not casual for compliance tools)
+- [ ] Mobile treatment appropriate for category (CRITICAL categories: mobile-first required)
+- [ ] Category-specific CTA framing (not generic "Get started" — must name the specific outcome)
+- [ ] At least 1 live data point or animated counter in hero (review count, tender count, company count, compliance score, deadline countdown, etc.)
+- [ ] Product demo/preview shows category-relevant content — not a generic dark dashboard with abstract charts
+  - Expected mockup content (from category): [describe]
+  - Actual mockup content: [describe from Landing.tsx]
+  - Match: YES / NO
+
+Step 3 — Category-specific deep checks:
+
+If Reputation/Reviews:
+- [ ] AU-specific platform logos visible (ProductReview.com.au, SEEK, HiPages) — not just US platforms (BirdEye AU and Podium AU both fail this test — it is our moat)
+- [ ] Star rating or score ring animated in mockup
+- [ ] Before/after rating visualization present
+- [ ] No USD pricing
+- [ ] "Every review drives 600+ Google searches" stat OR equivalent local SEO ROI stat present in social proof section
+- [ ] Hero CTA is "Start free trial" or "See your score" — NOT "Learn more" or "Book a demo"
+- [ ] Comparison table includes ProductReview.com.au support as a column — this is the AU differentiator competitors can't match
+- [ ] Copy uses SMB-accessible language — NOT "reputation intelligence platform" (say "see all your reviews in one place")
+
+If Entity/Company Intelligence:
+- [ ] Search bar visible above the fold as the PRIMARY hero element — nothing before it (Dye & Durham buries search below service listings — that is the failure pattern)
+- [ ] Sample company profile/report shown (real or realistic data) — this is the #1 conversion driver in the category. Users must see what they're buying.
+- [ ] Data source cited (ASIC, ABN Lookup) above the fold — "Official ASIC data" callout in trust bar
+- [ ] "Free search" or freemium hook present
+- [ ] Use case cards (not generic feature cards) — legal due diligence, credit decisions, sales intelligence, supplier vetting
+- [ ] Integration partner logos (legal software: LEAP, Actionstep, PracticeEvolve) — Dye & Durham shows 15+, this builds credibility with professional users
+- [ ] Pay-as-you-go or credit model explained clearly — AU professional users expect this from Dye & Durham / InfoTrack
+
+If Regulatory Compliance (AML/CTF):
+- [ ] Deadline urgency present (1 July 2026 countdown) — easyAML, First AML, and every AU competitor uses this. Its absence signals "not AU-specific."
+- [ ] "Are you affected?" section present with business type checklist
+- [ ] Sector-specific profession cards present (real estate agents, accountants, lawyers, conveyancers) — easyAML uses full separate pages per profession. Cards are the minimum. Generic "all businesses" copy leaves half the audience unsure they're covered.
+- [ ] Compliance gap assessment CTA present (quiz or checklist) — highest-intent lead gen tool in this category
+- [ ] Regulator acknowledgement (AUSTRAC) above the fold
+- [ ] Security certifications visible (ISO 27001 / AU data residency minimum — SOC 2 if available)
+- [ ] Compliance-framed pricing (not feature-list pricing) — anchor to "$179/month vs $6,020/yr compliance consultant" framing (easyAML uses this)
+- [ ] Non-compliance penalty stated: "fines up to $31,300,000 for corporations" — this is the urgency anchor
+- [ ] "No compliance experience required" or equivalent accessibility copy — this is the conversion hook for SMBs who are anxious about complexity
+
+If Regulatory Compliance (WHS):
+- [ ] ENFORCEMENT DATE CORRECT: Copy says "NOW IN EFFECT" / "now mandatory as of 1 December 2025" — NOT "upcoming" or "coming soon." Deadline passed December 2025. Stale urgency copy signals abandoned product.
+- [ ] Regulation name cited: "WHS Psychosocial Regulations — Safe Work Australia" — not just "WHS amendments"
+- [ ] Safe Work Australia referenced above the fold
+- [ ] Industry-specific hazard examples with named industries (healthcare: patient aggression, retail: customer hostility, construction: isolation) — FlourishDx maps 50+ hazards across industries. This is the conversion hook.
+- [ ] LIGHT-MODE DESIGN — dark hero for a WHS/HR tool is automatic P1 failure. FlourishDx, SafetyCulture, Employment Hero all use light mode. Dark mode signals "developer tool."
+- [ ] Hazard count visible: "X psychosocial hazard types" — FlourishDx shows 50+. Anything under 14 (Safe Work Australia's published count) looks incomplete.
+- [ ] Per-user-band pricing shown (up to 5/20/unlimited users) — this is the expected model from all WHS tools
+- [ ] "Now compliant with WHS legislation + Respect@Work + IR legislation" — triple compliance statement FlourishDx uses that signals comprehensive coverage
+
+If Procurement Intelligence:
+- [ ] Live tender ticker or animated feed — this must be ANIMATED (scrolling or updating). A static screenshot of tenders is not acceptable. TenderLink and Tendertrace both show live/dynamic data patterns.
+- [ ] Market size stat ($200B+) or live contract counter — Tendertrace leads with this
+- [ ] Government coverage map/list (federal + which states) — users care about their jurisdiction before anything else
+- [ ] Data source: "Official AusTender API" or equivalent citation in trust bar — #1 purchase decision factor
+- [ ] Alert/watchlist feature as NAMED SECTION (not buried in features) — this is the primary value prop over AusTender
+- [ ] MARKET LANE CLARITY: Is the product positioned as "intelligence" (Tendertrace lane) or "bid writing" (TenderPilot lane)? Copy must be unambiguous. Generic "tender management" language leaves users unsure which lane they're in.
+- [ ] Transparent flat-rate pricing shown — Tendertrace and TenderPilot both use demo-only/waitlist. Showing pricing is a structural advantage for SMBs.
+- [ ] "No AusTender account required" visible — this is a real friction point users worry about
+- [ ] Tender feed shows real data patterns: agency name, dollar value, close date, tender type (ATM/CN) — not "Tender #1234 - $50,000" generic placeholders
+
+Return format:
+AGENT: Market Fit
+Category detected: [name]
+[P1/P2/P3] [component:section] — [issue] — [what [competitor] does instead]
+TOTAL: [N] findings
+
+Severity guide:
+- P1 = hero pattern wrong for category, required section missing, forbidden pattern present, trust signal completely absent
+- P2 = copy tone wrong, pricing structure doesn't match category, mockup shows wrong content type
+- P3 = minor category conventions not followed, optional improvements
+```
+
+---
+
 ## Phase 2 — Stack Merge
 
 Collect all agent findings + Phase 0b production signals. Merge into a single deduplicated IMPROVEMENT-STACK.md.
@@ -283,6 +389,7 @@ Sessions run: [increment each time this runs]
 | SEO/GEO | N | P2/P3 |
 | Code Health | N | P1/P2 |
 | Revenue | N | P1/P2 |
+| Market Fit | N | P1/P2 |
 | **Total** | **N** | |
 
 ## P0 — Fix Immediately (production broken)

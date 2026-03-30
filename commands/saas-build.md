@@ -115,10 +115,12 @@ Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute all 10 steps:
 
 1. **Personality** — classify product into one of 8 types (Enterprise Authority / Data Intelligence / Trusted Productivity / Premium Professional / Bold Operator / Health & Care / Growth Engine / Civic/Government)
-2. **Competitor research** — if MARKET-BRIEF.md exists, read it instead of running new searches. If not, run 3 WebSearch queries for category design patterns and competitor clichés.
-3. **Color system** — select from personality palette library. Explicitly reject hsl(213 94% 58%). **Monorepo cross-check:** grep `apps/*/DESIGN-BRIEF.md` for chosen primary HSL — if same hue (±15 degrees) already used, pick different palette and document why.
-4. **Typography lock** — select font pairing per personality type (not just "Inter"). Lock heading weight and tracking.
-5. **Hero architecture** — choose pattern: Centered / Split-pane / Full-screen immersive / Minimal editorial. Tie choice to personality + user type.
+2. **Product category** — identify the product category (from PRODUCT-CATEGORY-LIBRARY.md categories 1-8): Reputation/Reviews, Entity Intelligence, Regulatory Compliance, Procurement Intelligence, Practice Management, HR/People Ops, Finance/Accounting, Document Management. This determines the landing page structure — it is separate from personality type and supersedes the generic dark SaaS template.
+3. **Category-specific competitor research** — look at 3 direct competitors IN THE SAME CATEGORY (not just "enterprise dark SaaS" broadly). For reputation tools, study BirdEye/Podium. For WHS tools, study SafetyCulture/FlourishDx. For tender tools, study Tendertrace/TenderPilot. Generic "B2B SaaS design inspiration" is not sufficient. If MARKET-BRIEF.md exists and has category-specific research, read it instead. If not, run 3 WebSearch queries: "[product category] software Australia landing page," "[top competitor] homepage," "[product category] SaaS design pattern."
+4. **Category hero override** — after competitor research, check if the category has a mandatory hero pattern in PRODUCT-CATEGORY-LIBRARY.md. If yes, lock this as the hero architecture. The generic dark animated hero is WRONG for: WHS tools (light-mode field tools), entity intelligence (search-bar-first), AML/CTF (deadline-urgency banner). Write the override to DESIGN-BRIEF.md.
+5. **Color system** — select from personality palette library. Explicitly reject hsl(213 94% 58%). **Monorepo cross-check:** grep `apps/*/DESIGN-BRIEF.md` for chosen primary HSL — if same hue (±15 degrees) already used, pick different palette and document why. **Category check:** WHS/health tools should NOT use dark-first. Regulatory compliance tools should NOT use bold consumer colors. Cross-check against category conventions.
+6. **Typography lock** — select font pairing per personality type (not just "Inter"). Lock heading weight and tracking.
+7. **Hero architecture** — choose pattern: Centered / Split-pane / Full-screen immersive / Minimal editorial. Tie choice to personality + user type + category convention. The category hero pattern (from step 4) overrides this if it specifies a mandatory pattern.
 6. **Component Lock** — run `mcp__magic__21st_magic_component_inspiration` for ALL 11 mandatory sections using personality-specific search terms (not generic "dark SaaS"). Apply selection criteria (visual weight, animation level, layout) to pick the right variant for each. If MCP unavailable: use defaults from Component Registry in `premium-website.md` and continue. Record all choices in DESIGN-BRIEF.md Component Lock table.
 7. **LottieFiles** — find 3 product-specific animations (empty state, success state, processing state). WebSearch `"lottiefiles.com [product-category] animation"`. Note "unavailable" if nothing fits — do not block.
 8. **Differentiation audit** — grep recent `apps/*/DESIGN-BRIEF.md` files, confirm 3+ dimensions differ from last build (color, hero pattern, features layout).
@@ -159,6 +161,74 @@ Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
 
 ---
 
+### Phase 1.5 — Product Category Detection
+
+**Run this phase between Phase 1 (Scope) and Phase 2 (Scaffold). It is not optional.**
+
+Read SCOPE.md and MARKET-BRIEF.md. Classify the product into exactly one of these 8 categories from `PRODUCT-CATEGORY-LIBRARY.md` (located at the monorepo root, or `C:\Users\Adam\Documents\au-compliance-platform\PRODUCT-CATEGORY-LIBRARY.md`):
+
+1. **Reputation/Reviews** — RepuTrack, BirdEye type
+2. **Entity/Company Intelligence** — CorpWatch, Crunchbase type
+3. **Regulatory Compliance** — AML/CTF, WHS, NDIS, Privacy Act type
+4. **Procurement Intelligence** — TenderWatch type
+5. **Practice Management** — Migration Agents, Aged Care type
+6. **HR/People Ops** — leave management, onboarding, performance type
+7. **Finance/Accounting** — cashflow, BAS, reconciliation type
+8. **Document Management** — records, version control, audit trail type
+
+**Detection rules (keyword matching in SCOPE.md + product brief):**
+
+| Keywords found | Category |
+|---|---|
+| reviews, reputation, rating, review management, star rating | Reputation/Reviews |
+| ASIC, ABN, company search, company intelligence, director, entity verification | Entity/Company Intelligence |
+| AML, CTF, AUSTRAC, KYC, sanctions, WHS, psychosocial, hazard, NDIS, incident, aged care, migration agent, Privacy Act | Regulatory Compliance |
+| tender, procurement, government contract, AusTender, BuyNSW, bid, watchlist | Procurement Intelligence |
+| visa, case management, participant, resident, practitioner, MARA | Practice Management |
+| leave, onboarding, performance review, payroll, WGEA, employees, rostering | HR/People Ops |
+| BAS, cashflow, reconciliation, invoicing, Xero, MYOB, accounting | Finance/Accounting |
+| document register, version control, policy library, records management, audit trail | Document Management |
+
+**If multiple categories match:** pick the most specific one. "WHS psychosocial hazard register" = Regulatory Compliance, not Document Management even though it involves documents.
+
+**After detection — mandatory steps:**
+
+1. Read the full category entry from `PRODUCT-CATEGORY-LIBRARY.md` for the detected category.
+
+2. **Override hero pattern** — the hero pattern from PRODUCT-CATEGORY-LIBRARY.md OVERRIDES the default dark animated hero from the generic scaffold. Write the overridden hero pattern to DESIGN-BRIEF.md under a new field: `hero_override`. Log the override with reasoning: "Hero override: [category hero pattern] — overrides default dark animated hero because [reason]."
+
+3. **Load required sections checklist** — copy the "Required Landing Sections (in order)" list from the category entry into BUILD-LOG.md as a checklist. This list is NON-NEGOTIABLE for Phase 4 (landing page build). Phase 4 must verify every section is present before marking the landing page complete.
+
+4. **Set UX dominant pattern** — the UX dominant pattern from the category entry determines the first app page's primary UI metaphor. Write to BUILD-LOG.md: "UX pattern: [pattern] — first app view must reflect this." This overrides defaulting to a KPI dashboard.
+
+5. **Flag trust signals** — list the trust signals required for this category in BUILD-LOG.md. Phase 4 (landing page) must include all of them. Phase 6 (/web-review) checks for their presence.
+
+6. **Flag mobile requirements** — if the category is CRITICAL or HIGH mobile, add to BUILD-LOG.md: "Mobile requirement: [level] — sidebar must be bottom nav on mobile / touch targets must be 44px minimum."
+
+7. **Flag forbidden patterns** — copy the "Forbidden landing patterns" list from the category into BUILD-LOG.md. These are automatic failures in Phase 5 (/web-review).
+
+8. **Check for Regulatory Compliance sub-type** — if category is Regulatory Compliance, detect the sub-type:
+   - Keywords: AML, CTF, AUSTRAC, KYC, sanctions, money laundering → Sub-type 3A (Financial Crime)
+   - Keywords: WHS, psychosocial, hazard, SafeWork, WorkSafe → Sub-type 3B (Workplace Safety)
+   - Keywords: NDIS, participant, provider → Sub-type: NDIS
+   - Keywords: aged care, ACQSC, resident → Sub-type: Aged Care
+   - Load the sub-type entry from PRODUCT-CATEGORY-LIBRARY.md, not the generic Category 3 entry.
+
+Write to BUILD-LOG.md:
+```
+Phase 1.5 complete — Product category detected: [category name]
+Hero override: [description from PRODUCT-CATEGORY-LIBRARY.md]
+UX pattern: [pattern]
+Required sections: [count] sections loaded to checklist
+Forbidden patterns: [count] loaded
+Trust signals required: [list]
+Mobile requirement: [LOW/MEDIUM/HIGH/CRITICAL]
+```
+
+Log: "Phase 1.5 complete — category [name] detected and rules loaded" to BUILD-LOG.md.
+
+---
+
 ### Phase 2 — Scaffold (run /web-scaffold)
 
 Execute the full /web-scaffold process using decisions from SCOPE.md and DESIGN-BRIEF.md:
@@ -167,7 +237,8 @@ Execute the full /web-scaffold process using decisions from SCOPE.md and DESIGN-
 2. Apply bundle splitting from premium-website performance rules (vendor-react, vendor-motion, vendor-query, vendor-supabase chunks)
 3. tsconfig.json MUST include `"types": ["vite/client"]`
 4. CLAUDE.md MUST include: color job definition, design reference site, page inventory summary
-5. AppLayout MUST include skip-nav link as first element
+5. AppLayout MUST include skip-nav link as first element. LandingNav (the public landing page header) MUST ALSO include a skip-nav link as its first child, targeting `#main-content`. LandingHero `<section>` MUST have `id="main-content"` on its root element — the skip-nav target must exist.
+5a. SVG gradient stops MUST use the React `style` prop for CSS variables — NOT presentation attributes. Correct: `<stop style={{ stopColor: 'hsl(var(--brand))', stopOpacity: 0.55 }} />`. Wrong: `<stop stopColor="hsl(148, 60%, 45%)" />`. CSS variables are NOT resolved in SVG presentation attributes — only in inline `style`.
 6. Generate vercel.json with SPA rewrites at project root
 7. Run install commands. If any command exits non-zero: read the full error output, fix the root cause (wrong Node version, missing lockfile, network issue), retry once. If retry fails, log STUCK with exact error and stop.
 ```bash
@@ -383,10 +454,68 @@ This is the core loop. For EACH page in SCOPE.md build order:
 **4b. Build the page**
 Follow /web-page rules.
 
-**Landing page — quality review, not rebuild:**
+**Landing page — category compliance check + quality review, not rebuild:**
 The landing page was built by /web-scaffold (Phase 2). Do NOT rebuild it here.
-Instead: read `src/pages/LandingPage.tsx` (or `src/components/landing/`) in full, then run the 13-item per-page checklist + fresh eyes pass against it now — it was built outside the Phase 4 review loop and has not been quality-checked yet.
-Fix any failures before moving on. Log: "Landing page quality review — self-review passed (13/13 + fresh eyes)" to BUILD-LOG.md.
+Instead: run the landing page category compliance check, then the standard quality review.
+
+**Step 1 — Category compliance check (from Phase 1.5):**
+Read BUILD-LOG.md and find the "Phase 1.5 complete" entry. Extract:
+- Required sections checklist (from PRODUCT-CATEGORY-LIBRARY.md)
+- Trust signals required
+- Forbidden patterns
+- Hero override description
+
+Then read `src/pages/LandingPage.tsx` (or `src/components/landing/`) in full and verify:
+
+```
+Landing page category compliance — [category name]
+Required sections:
+- [ ] [Section 1 from category required list]
+- [ ] [Section 2]
+... (all required sections)
+
+Trust signals:
+- [ ] [Trust signal 1 from category]
+- [ ] [Trust signal 2]
+...
+
+Forbidden patterns check (ANY of these present = FAIL):
+- [ ] [Forbidden pattern 1] — ABSENT (pass) / PRESENT (fail)
+...
+
+Hero override:
+- [ ] Hero matches category pattern: [description from Phase 1.5]
+    Current hero type: [describe what's actually there]
+    Match: YES / NO
+```
+
+**If any required section is missing:** add it now. Do not mark the landing page complete until all required sections are present.
+**If any trust signal is missing:** add it now.
+**If any forbidden pattern is present:** fix it now.
+**If hero does not match category pattern:** redesign the hero before marking complete. A dark animated hero for a WHS compliance tool is an automatic failure.
+
+**CATEGORY HARD GATES — these are binary BLOCK conditions. Do not proceed until each passes:**
+
+| Category | Hard gate condition | Correct fix |
+|---|---|---|
+| Reputation/Reviews | Platform logos (Google + ProductReview.com.au + SEEK) not visible above or immediately below fold | Add platform logo strip before any other below-fold content |
+| Reputation/Reviews | No animated score ring or review count in hero | Add animated counter or score ring to hero visual |
+| Entity/Company Intelligence | No search bar visible above the fold | Add search bar as hero primary element — nothing else above it |
+| Entity/Company Intelligence | No sample report or data preview shown | Add sample company profile section with real data shape |
+| AML/CTF | No deadline countdown banner or urgency headline | Add persistent top-of-page banner: "X days until 1 July 2026 compliance deadline" |
+| AML/CTF | No sector-specific cards (real estate / accountants / lawyers / conveyancers) | Add profession cards section showing each profession's obligations |
+| WHS/Psychosocial | Hero uses dark background / dark mode design | BLOCK and rebuild — dark UI for WHS tool is the wrong category signal. Must be light mode. |
+| WHS/Psychosocial | Copy uses "upcoming" or "coming soon" for enforcement (deadline was Dec 2025) | Update all copy to "now in effect" / "now mandatory" |
+| Procurement Intelligence | Tender feed/ticker is static (no animation, no scrolling) | Add animated scrolling tender feed or ticker to hero section |
+| Procurement Intelligence | No data source citation ("Official AusTender API") visible above fold | Add trust bar immediately below hero with data source attribution |
+
+Each hard gate is a STOP condition. The landing page CANNOT be marked complete until every hard gate for its category passes with YES.
+
+**Step 2 — Standard quality review:**
+Run the standard 13-item per-page checklist + fresh eyes pass.
+Fix any failures before moving on.
+
+Log: "Landing page quality review — category compliance [N/N sections] + self-review passed (13/13 + fresh eyes)" to BUILD-LOG.md.
 
 - Auth (`/auth`) is ALWAYS first to BUILD in this loop — no exceptions
 - Reset password (`/reset-password`) is ALWAYS third — replace the Phase 3 stub with the full ResetPasswordPage.tsx now. If not in SCOPE.md, add it. Route wrapper: `AuthRoute` (session-only, NOT `ProtectedRoute`) — the user is unauthenticated when clicking a reset link.
@@ -394,7 +523,7 @@ Fix any failures before moving on. Log: "Landing page quality review — self-re
 - **Auth-free products** (no login, no user accounts): skip auth/reset-password/onboarding positions. Build order is: `/` → app pages in SCOPE.md priority order → `/settings` (if applicable) → `/privacy` → `/terms`.
 - App pages follow in SCOPE.md priority order after onboarding
 - Settings (`/settings`) is ALWAYS built after all app pages and before /privacy + /terms — mandatory for all SaaS with auth. If SCOPE.md does not include it, add it now.
-- `/privacy` and `/terms` are ALWAYS last (static pages, minimal build time)
+- `/privacy` and `/terms` are ALWAYS last (static pages, minimal build time). Both MUST be registered as `React.lazy()` imports with `Suspense` fallback — NOT eager imports. Even though they are static, they are non-critical and should not inflate the initial bundle.
 
 **Dashboard page detection — read `/dashboard-design` skill before building:**
 Before writing any page that is a dashboard, analytics view, monitoring screen, or data management list, read `~/.claude/skills/dashboard-design/SKILL.md` in full. Apply these rules automatically:
@@ -439,6 +568,8 @@ Before writing any `/setup` or `/onboarding` route, read `~/.claude/skills/web-o
 **4c. Per-page self-review (two passes — not one)**
 
 Pass 1 — checklist: for dashboard pages, run the 28-item Pre-Ship Checklist from the dashboard-design skill (as specified in Phase 4b dashboard detection) — not the standard 13-item checklist. For all other pages, run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
+
+Pass 1.5 — React key hygiene check: grep the page component for `.map(` and verify EVERY render call uses a stable identity key — never `key={index}`. Acceptable: `key={item.id}`, `key={item.slug}`, `key={label}`, `` key={`star-${i}`} ``. If any `.map(` uses `key={i}` or `key={index}`: fix it before marking the page complete.
 
 Pass 2 — fresh eyes: re-read the page component from line 1 as if you are a new user opening this product for the first time with zero data. Ask:
 - Would I know what to do on this page right now?
