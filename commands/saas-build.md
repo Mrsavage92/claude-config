@@ -502,7 +502,8 @@ Hero override:
 | Reputation/Reviews | No animated score ring or review count in hero | Add animated counter or score ring to hero visual |
 | Entity/Company Intelligence | No search bar visible above the fold | Add search bar as hero primary element — nothing else above it |
 | Entity/Company Intelligence | No sample report or data preview shown | Add sample company profile section with real data shape |
-| AML/CTF | No deadline countdown banner or urgency headline | Add persistent top-of-page banner: "X days until 1 July 2026 compliance deadline" |
+| AML/CTF | No dual-date urgency (enrolment 31 March 2026 + compliance 1 July 2026) | Add banner with both dates. After March 31 enrolment opens: update to "Enrolment is now open — comply by 1 July 2026." |
+| AML/CTF | Hero uses generic SaaS copy ("reduce financial crime risk" / "the modern way to manage AML") | Rewrite hero: "Get compliant by July 1, 2026." Tranche 2 SMBs are forced buyers with zero AML experience — they need direction, not aspiration. |
 | AML/CTF | No sector-specific cards (real estate / accountants / lawyers / conveyancers) | Add profession cards section showing each profession's obligations |
 | WHS/Psychosocial | Hero uses dark background / dark mode design | BLOCK and rebuild — dark UI for WHS tool is the wrong category signal. Must be light mode. |
 | WHS/Psychosocial | Copy uses "upcoming" or "coming soon" for enforcement (deadline was Dec 2025) | Update all copy to "now in effect" / "now mandatory" |
