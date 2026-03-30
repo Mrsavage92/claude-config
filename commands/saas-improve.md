@@ -338,13 +338,19 @@ If Regulatory Compliance (AML/CTF):
 
 If Regulatory Compliance (WHS):
 - [ ] ENFORCEMENT DATE CORRECT: Copy says "NOW IN EFFECT" / "now mandatory as of 1 December 2025" — NOT "upcoming" or "coming soon." Deadline passed December 2025. Stale urgency copy signals abandoned product.
+- [ ] "PSYCHOSOCIAL" named explicitly in hero headline — FlourishDx leads with "Simplify Psychosocial Safety at Work." SafetyCulture/Donesafe/Riskware all bury psychosocial as a sub-feature of general WHS. Generic "WHS software" or "workplace safety" hero = losing positioning against specialists.
+- [ ] Audience framing is HR managers + OHS specialists (risk-management language) — NOT field workers (SafetyCulture's lane). Operational efficiency copy ("better way of working", "digitize inspections") signals the wrong product for this category. Look for: "risk register," "control plan," "assessment framework," "governance" — not "checklists," "inspections," "field teams."
+- [ ] Regulatory framework badge section present — must cite ALL FOUR: WHS 2023 Amendments, Respect@Work, Code of Practice 2024, ISO 45003. FlourishDx explicitly maps to all four. Competitors (SafetyCulture, Donesafe, Riskware) cite none. This is the single strongest trust signal for OHS professionals.
 - [ ] Regulation name cited: "WHS Psychosocial Regulations — Safe Work Australia" — not just "WHS amendments"
 - [ ] Safe Work Australia referenced above the fold
+- [ ] Consultation evidence tracking mentioned — WHS 2023 Amendments legally require documented consultation records. No competitor addresses this governance layer explicitly. Should appear as a named feature ("Consultation log" / "Evidence trail"). This is the gap ReFresh ($1.3M pre-seed) is building for.
+- [ ] ROI modeling or health impact prediction mentioned — FlourishDx uniquely offers "predict ROI from hazard reduction" and "predict health and productivity impacts." No other competitor makes this visible. A CFO-facing ROI calculator or even a stat ("Reducing psychosocial hazards saves $X per employee") unlocks the budget conversation.
 - [ ] Industry-specific hazard examples with named industries (healthcare: patient aggression, retail: customer hostility, construction: isolation) — FlourishDx maps 50+ hazards across industries. This is the conversion hook.
-- [ ] LIGHT-MODE DESIGN — dark hero for a WHS/HR tool is automatic P1 failure. FlourishDx, SafetyCulture, Employment Hero all use light mode. Dark mode signals "developer tool."
+- [ ] LIGHT-MODE DESIGN — dark hero for a WHS/HR tool is automatic P1 failure. FlourishDx, SafetyCulture, Donesafe, Riskware all use light mode. Dark mode signals "developer tool."
 - [ ] Hazard count visible: "X psychosocial hazard types" — FlourishDx shows 50+. Anything under 14 (Safe Work Australia's published count) looks incomplete.
 - [ ] Per-user-band pricing shown (up to 5/20/unlimited users) — this is the expected model from all WHS tools
 - [ ] "Now compliant with WHS legislation + Respect@Work + IR legislation" — triple compliance statement FlourishDx uses that signals comprehensive coverage
+- [ ] "Pure SaaS" speed positioning — FlourishDx mixes software with org psychology consulting (slow, expensive). If copy says "build your psychosocial risk register in 2 weeks, no consultant needed" — this is HazardIQ's structural advantage over the category leader. Must appear in hero or how-it-works.
 
 If Procurement Intelligence:
 - [ ] Live tender ticker or animated feed — this must be ANIMATED (scrolling or updating). A static screenshot of tenders is not acceptable. TenderLink and Tendertrace both show live/dynamic data patterns.
