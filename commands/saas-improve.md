@@ -354,14 +354,18 @@ If Regulatory Compliance (WHS):
 
 If Procurement Intelligence:
 - [ ] Live tender ticker or animated feed — this must be ANIMATED (scrolling or updating). A static screenshot of tenders is not acceptable. TenderLink and Tendertrace both show live/dynamic data patterns.
+- [ ] PORTAL FRAGMENTATION MESSAGING — hero or subheading must name the problem explicitly: "No more monitoring 8 separate portals." The 8 sources are: AusTender (Commonwealth) + NSW, VIC, QLD, WA, SA, TAS, ACT, NT + 500+ local councils. No competitor owns this message yet — it is white space.
+- [ ] Hero visual hierarchy: 60% data visualization / 30% copy / 10% CTA — the opposite of generic SaaS. A tender intelligence hero must be data-heavy (live feed cards, counts, agency names) not image-heavy. "542 new tenders this week" counter with live feed = signals platform has real content.
 - [ ] Market size stat ($200B+) or live contract counter — Tendertrace leads with this
-- [ ] Government coverage map/list (federal + which states) — users care about their jurisdiction before anything else
+- [ ] Government coverage map/list (federal + which states) — users care about their jurisdiction before anything else. Must name ALL: Commonwealth + 6 states + 2 territories + local councils. Vague "across Australia" is not enough.
 - [ ] Data source: "Official AusTender API" or equivalent citation in trust bar — #1 purchase decision factor
 - [ ] Alert/watchlist feature as NAMED SECTION (not buried in features) — this is the primary value prop over AusTender
 - [ ] MARKET LANE CLARITY: Is the product positioned as "intelligence" (Tendertrace lane) or "bid writing" (TenderPilot lane)? Copy must be unambiguous. Generic "tender management" language leaves users unsure which lane they're in.
-- [ ] Transparent flat-rate pricing shown — Tendertrace and TenderPilot both use demo-only/waitlist. Showing pricing is a structural advantage for SMBs.
+- [ ] Transparent flat-rate pricing shown — Tendertrace (demo-only) and TenderPilot (waitlist) both hide pricing. Showing pricing is a structural SMB advantage. Most SMBs currently use AusTender free; sweet spot is $29-49/month with freemium.
 - [ ] "No AusTender account required" visible — this is a real friction point users worry about
 - [ ] Tender feed shows real data patterns: agency name, dollar value, close date, tender type (ATM/CN) — not "Tender #1234 - $50,000" generic placeholders
+- [ ] AI relevance score or match score mentioned — no competitor owns "AI-powered opportunity discovery for SMBs" (Tendertrace = incumbent intel; TenderPilot = bid writing; TenderLink = dumb directory). If a relevance/match score feature exists, it must be prominently named. This is the biggest white-space differentiator in the market.
+- [ ] Government security trust signals present (IRAP certification or "Australian servers" or "Data sovereignty compliant") — government is the buyer; IRAP and AU data residency are real procurement requirements, not nice-to-haves. TenderPilot leads with ISO27001 + IRAP on Microsoft Azure. Absence signals the tool was not built for government procurement contexts.
 
 Return format:
 AGENT: Market Fit

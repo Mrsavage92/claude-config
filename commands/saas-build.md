@@ -149,6 +149,19 @@ Log: "Phase 0 complete — context loaded, repo created, Notion doc created" to 
 
 ---
 
+### Phase Completion Protocol (applies to every phase in this file)
+
+Every time a "Log: Phase X complete" line is reached:
+1. Write the log entry to BUILD-LOG.md
+2. `git add -A && git commit -m "phase X: [one-line description]" && git push origin main`
+3. Run `/project-refresh` PUSH with phase name + what was built + any new NEEDS_HUMAN items
+
+This is not optional. A phase not committed and not in Notion does not exist from the next session's perspective.
+
+In monorepo mode: commit from the monorepo root (`C:/Users/Adam/Documents/au-compliance-platform`), not the app subdirectory.
+
+---
+
 ### Phase 0.25 — Feature & Market Research
 
 Two questions to answer before any design work:
@@ -619,6 +632,8 @@ Hero override:
 | WHS/Psychosocial | Hero copy targets field workers ("inspections", "checklists") instead of HR/OHS professionals ("risk register", "control plan", "governance") | Rewrite for correct audience — HR managers + OHS specialists, not frontline workers |
 | Procurement Intelligence | Tender feed/ticker is static (no animation, no scrolling) | Add animated scrolling tender feed or ticker to hero section |
 | Procurement Intelligence | No data source citation ("Official AusTender API") visible above fold | Add trust bar immediately below hero with data source attribution |
+| Procurement Intelligence | Hero uses generic SaaS copy without naming the portal fragmentation problem | Add explicit messaging: "No more monitoring 8 separate portals" — this is the #1 pain point and no competitor owns it |
+| Procurement Intelligence | Hero is copy-heavy / image-heavy instead of data-heavy | Procurement intelligence heroes must be 60% data visualization (live tender cards, counts, agency names) + 30% copy + 10% CTA — reverse of generic SaaS |
 
 Each hard gate is a STOP condition. The landing page CANNOT be marked complete until every hard gate for its category passes with YES.
 
