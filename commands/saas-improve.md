@@ -307,6 +307,9 @@ If Reputation/Reviews:
 - [ ] Hero CTA is "Start free trial" or "See your score" — NOT "Learn more" or "Book a demo"
 - [ ] Comparison table includes ProductReview.com.au support as a column — this is the AU differentiator competitors can't match
 - [ ] Copy uses SMB-accessible language — NOT "reputation intelligence platform" (say "see all your reviews in one place")
+- [ ] SMS/WhatsApp review request shown — Podium explicitly lacks this; 98% SMS open rate vs 20% email; AU mobile-first behavior makes this a structural win. Must be visible as a named feature or shown in product mockup.
+- [ ] "Respond within 48 hours" SLA messaging — AU industry norm; no competitor calls it out. Signals AU market specificity and professionalism.
+- [ ] White-label agency resell mentioned (or separate /agencies page) — Grade.us proves the B2B2C model for AU marketing/SEO agencies wanting to resell review management to SMB clients. Even a single mention ("For agencies: white-label RepuTrack for your clients") unlocks a B2B revenue stream no AU competitor is serving.
 
 If Entity/Company Intelligence:
 - [ ] Search bar visible above the fold as the PRIMARY hero element — nothing before it (Dye & Durham buries search below service listings — that is the failure pattern)
@@ -318,15 +321,20 @@ If Entity/Company Intelligence:
 - [ ] Pay-as-you-go or credit model explained clearly — AU professional users expect this from Dye & Durham / InfoTrack
 
 If Regulatory Compliance (AML/CTF):
-- [ ] Deadline urgency present (1 July 2026 countdown) — easyAML, First AML, and every AU competitor uses this. Its absence signals "not AU-specific."
+- [ ] TWO-DATE URGENCY present: "AUSTRAC enrolment opens 31 March 2026 — compliance required by 1 July 2026" — after March 31, update to "Enrol now, comply by 1 July 2026." Single-date countdown misses the enrolment urgency window. easyAML and First AML both lead with dual-date framing.
+- [ ] "FORCED BUYER" framing in hero — NOT "the modern way to manage AML." Tranche 2 brings 80,000+ SMBs with zero AML experience. Hero must say "Get compliant by July 1" not "reduce financial crime risk." Generic SaaS hero copy signals the product was not built for this market.
 - [ ] "Are you affected?" section present with business type checklist
 - [ ] Sector-specific profession cards present (real estate agents, accountants, lawyers, conveyancers) — easyAML uses full separate pages per profession. Cards are the minimum. Generic "all businesses" copy leaves half the audience unsure they're covered.
+- [ ] "Compliance co-pilot" positioning present — "You ARE the compliance officer. Here's what to do Week 1, Week 2, Week 3." easyAML says "no compliance experience required" but does not guide the solo practitioner step by step. This is the biggest gap across all competitors. Narrative-driven onboarding beats feature lists for first-time compliance officers.
+- [ ] SMSF + Trust UBO verification explained — complex AU structures (SMSF, discretionary trust, unit trust) are the #1 compliance headache for real estate agents and accountants. No competitor addresses this explicitly. Must appear in "How it works" or profession cards for real estate/accounting.
+- [ ] STR templates by profession visible or referenced — pre-built suspicious transaction triggers (real estate: cash transactions, rushed settlements, beneficial owner refusal; accountants: offshore transfers, source-of-funds mismatch). Low-volume practitioners (3 transactions/month) do not know what triggers a STR — this is a core value prop no competitor owns.
 - [ ] Compliance gap assessment CTA present (quiz or checklist) — highest-intent lead gen tool in this category
 - [ ] Regulator acknowledgement (AUSTRAC) above the fold
 - [ ] Security certifications visible (ISO 27001 / AU data residency minimum — SOC 2 if available)
 - [ ] Compliance-framed pricing (not feature-list pricing) — anchor to "$179/month vs $6,020/yr compliance consultant" framing (easyAML uses this)
 - [ ] Non-compliance penalty stated: "fines up to $31,300,000 for corporations" — this is the urgency anchor
-- [ ] "No compliance experience required" or equivalent accessibility copy — this is the conversion hook for SMBs who are anxious about complexity
+- [ ] "No compliance experience required" or equivalent accessibility copy — this is the conversion hook for SMBs anxious about complexity
+- [ ] Hero visual is timeline or regulatory gauge ("where you are vs deadline") — NOT generic dark dashboard. A compliance progress visual (steps completed, enrolment status, days to deadline) converts anxious forced-buyers better than any feature screenshot.
 
 If Regulatory Compliance (WHS):
 - [ ] ENFORCEMENT DATE CORRECT: Copy says "NOW IN EFFECT" / "now mandatory as of 1 December 2025" — NOT "upcoming" or "coming soon." Deadline passed December 2025. Stale urgency copy signals abandoned product.
