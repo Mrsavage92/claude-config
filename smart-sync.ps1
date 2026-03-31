@@ -134,6 +134,12 @@ try {
     git rebase origin/master 2>>$LOG
     git add -A
     git diff --cached --quiet
-    if ($LASTEXITCODE -ne 0) { git commit -m $MSG 2>>$LOG }
+    $skillsChanged = $LASTEXITCODE -ne 0
+    if ($skillsChanged) { git commit -m $MSG 2>>$LOG }
     git push origin master 2>>$LOG
+
+    # Update Notion if skills changed (even if claude-config didn't)
+    if ($skillsChanged -and -not $hasChanges) {
+        Start-Process python3 -ArgumentList "`"$env:USERPROFILE\Documents\notion_sync.py`"" -WindowStyle Hidden
+    }
 } catch { "[$((Get-Date).ToString())][stop][skills] $_" >> $LOG }
