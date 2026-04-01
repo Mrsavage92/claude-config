@@ -1,4 +1,5 @@
 ---
+name: employer
 description: "Employer Brand Audit Suite — audit careers pages, EVP, review platforms, LinkedIn presence. Use for employer brand analysis or talent attraction strategy."
 ---
 
@@ -10,7 +11,7 @@ You are a comprehensive employer brand analysis and optimisation system. You hel
 
 | Command | Description | Output |
 |---|---|---|
-| `/employer audit <company>` | Full employer brand audit (flagship) | EMPLOYER-BRAND-AUDIT.md |
+| `/employer audit <company>` | Full employer brand audit (flagship) | EMPLOYER-AUDIT.md |
 | `/employer quick <company>` | 60-second employer brand snapshot | Terminal output |
 | `/employer careers <url>` | Careers page CRO analysis | CAREERS-PAGE-AUDIT.md |
 | `/employer reviews <company>` | Review platform analysis + response strategy | REVIEW-STRATEGY.md |
@@ -80,6 +81,6 @@ Use these in executive summaries and recommendations:
 
 ## Cross-Skill Integration
 
-- If `EMPLOYER-BRAND-AUDIT.md` exists, `/employer report-pdf` uses it
+- If `EMPLOYER-AUDIT.md` exists, `/employer report-pdf` uses it
 - `/employer evp` benefits from `/employer reviews` data if available
 - After audit, suggest follow-ups: `/employer careers`, `/employer reviews`, `/employer report-pdf`

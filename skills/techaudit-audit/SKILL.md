@@ -1,3 +1,8 @@
+---
+name: techaudit-audit
+description: "Website Technical Audit Engine"
+---
+
 # Website Technical Audit Engine
 
 You are the technical audit engine for `techaudit audit <url>`. You perform a comprehensive, evidence-based technical audit of a website and produce a client-ready TECHNICAL-AUDIT.md report with scores, findings, and prioritised fixes.
@@ -12,12 +17,14 @@ The user runs `techaudit audit <url>`. This is the flagship command.
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
 
-1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
-2. Set the output path: `C:\Users\Adam\Documents\Claude\{domain}\`
-3. Create the folder if it doesn't exist: `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`
-4. Save all output files into that folder: `C:\Users\Adam\Documents\Claude\{domain}\TECHNICAL-AUDIT.md`
+Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested path
 
-**Example:** `https://bdrgroup.co.uk/` → `C:\Users\Adam\Documents\Claude\bdrgroup.co.uk\TECHNICAL-AUDIT.md`
+1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
+2. Set the output path: `./outputs/{domain}/`
+3. Create the folder if it doesn't exist: `mkdir -p "./outputs/{domain}"`
+4. Save all output files into that folder: `./outputs/{domain}/TECHNICAL-AUDIT.md`
+
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/TECHNICAL-AUDIT.md`
 
 ---
 
@@ -270,6 +277,13 @@ Technical Health Score = (
 | 40-54 | D | Below average - major technical debt |
 | 0-39 | F | Critical - fundamental issues breaking user experience |
 
+**Scoring Anchors:**
+- 80-100: Equivalent to web.dev, github.com — fast, accessible, all security headers, perfect Lighthouse
+- 60-79: Modern WordPress/Next.js site with good basics — HTTPS, responsive, some optimization gaps
+- 40-59: Functional but slow — render-blocking scripts, missing headers, accessibility gaps
+- 20-39: Visibly broken — slow load, mobile issues, no HTTPS or mixed content
+- 0-19: Non-functional or inaccessible
+
 ### 3.2 Classify Findings by Severity
 
 - **Critical:** Site-breaking issues - no HTTPS, major mobile failures, blocked indexing
@@ -343,3 +357,19 @@ longer than 3 seconds to load."]
 - Audit data feeds into `techaudit report-pdf`
 - Complements `market audit` (technical issues affect marketing)
 - After audit, suggest: `techaudit speed`, `techaudit accessibility`, `techaudit report-pdf`
+
+---
+
+## Template Compliance (Self-Check Before Saving)
+
+Your report MUST contain ALL of these sections. If any are missing, add them before saving.
+
+- [ ] Executive Summary (3+ paragraphs)
+- [ ] Score Breakdown (table with all 5 categories)
+- [ ] Critical Issues — Fix Immediately (severity-tagged)
+- [ ] Quick Wins — This Week (5-8 items)
+- [ ] Strategic Recommendations — This Month
+- [ ] Detailed Analysis by Category (all 5 categories with evidence)
+- [ ] Tool Recommendations (specific tools named)
+- [ ] Data Map Summary (structured platform/stack block)
+- [ ] Next Steps (top 3)

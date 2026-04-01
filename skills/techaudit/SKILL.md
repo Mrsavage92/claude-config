@@ -1,4 +1,5 @@
 ---
+name: techaudit
 description: "Website Technical Audit Suite — audit performance, accessibility, mobile readiness, and technical SEO. Use for full technical health checks."
 ---
 

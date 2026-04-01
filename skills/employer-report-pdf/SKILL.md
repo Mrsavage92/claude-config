@@ -1,7 +1,12 @@
+---
+name: employer-report-pdf
+description: "Employer Brand PDF Report Generator"
+---
+
 # Employer Brand PDF Report Generator
 
 ## Skill Purpose
-Generate a professional, client-ready PDF employer brand audit report using the Python script `scripts/generate_pdf_report.py`. Collects all available audit data, structures it into JSON, and produces a branded PDF with score gauge, bar chart, severity-coded findings, and prioritised action plan.
+Generate a professional, client-ready PDF employer brand audit report using the production PDF engine (`~/.claude/skills/shared/audit_pdf_engine.py` via `~/.claude/skills/shared/generate_suite_pdfs.py`). The engine reads markdown directly -- no JSON intermediary needed. Produces a branded PDF with score gauge, bar chart, severity-coded findings, and prioritised action plan.
 
 ## When to Use
 - User runs `/employer report-pdf`
@@ -11,47 +16,44 @@ Generate a professional, client-ready PDF employer brand audit report using the 
 ## How to Execute
 
 ### Step 1: Check for Existing Data
-Look for `EMPLOYER-BRAND-AUDIT.md` in the working directory. If found, extract scores, findings, and recommendations. If not, recommend running `/employer audit <company>` first.
+Look for `EMPLOYER-AUDIT.md` in `./outputs/{domain}/`. If not found, recommend running `/employer audit <company>` first.
 
-### Step 2: Build JSON Structure
-The script expects this JSON format:
+### Step 2: Ensure Markdown Report Exists
+The production PDF engine parses the employer brand audit markdown directly to extract scores, findings, and recommendations. Verify the file exists and contains complete audit data. No JSON intermediary is needed.
 
-```json
-{
-  "brand_name": "Company Name",
-  "industry": "Technology",
-  "company_size": "350",
-  "date": "March 17, 2026",
-  "overall_score": 52,
-  "executive_summary": "2-4 sentence summary with key stat and revenue/hiring impact.",
-  "categories": {
-    "Review Reputation": {"score": 38, "weight": "25%"},
-    "Careers Page Quality": {"score": 45, "weight": "25%"},
-    "EVP & Messaging": {"score": 55, "weight": "15%"},
-    "LinkedIn Presence": {"score": 62, "weight": "15%"},
-    "Job Posting Quality": {"score": 58, "weight": "10%"},
-    "Social & Content": {"score": 48, "weight": "10%"}
-  },
-  "findings": [
-    {"severity": "Critical", "finding": "Description with evidence"},
-    {"severity": "High", "finding": "Description with evidence"}
-  ],
-  "quick_wins": ["Action 1", "Action 2"],
-  "medium_term": ["Action 1", "Action 2"],
-  "strategic": ["Action 1", "Action 2"]
-}
-```
+The engine extracts these scoring categories from the markdown:
+| Category | Weight |
+|---|---|
+| Review Reputation | 25% |
+| Careers Page Quality | 25% |
+| EVP & Messaging | 15% |
+| LinkedIn Presence | 15% |
+| Job Posting Quality | 10% |
+| Social & Content | 10% |
 
 ### Step 3: Generate the PDF
 ```bash
-python3 scripts/generate_pdf_report.py /tmp/report_data.json "EMPLOYER-BRAND-REPORT-[company].pdf"
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/{domain}" 7
 ```
 
-### Step 4: Clean Up
-Remove temporary JSON file after generation.
+Suite number `7` = Employer Brand.
+
+**Python API (alternative):**
+```python
+from audit_pdf_engine import generate
+
+generate(
+    directory="./outputs/{domain}",
+    output_path="./outputs/{domain}/EMPLOYER-AUDIT.pdf",
+    selected_suites=["Employer Brand"]
+)
+```
+
+### Step 4: Verify and Report
+Confirm the PDF was created, report file path and size to the user.
 
 ## PDF Design
-Uses the same enterprise design system as the Marketing Suite PDF:
+Uses the same enterprise design system as all other suite PDFs:
 - Accent color: purple (#7C3AED) instead of indigo
 - Score gauge with arc visualisation and grade letter
 - Horizontal bar chart for category scores

@@ -26,18 +26,26 @@ Traditional SEO optimizes for search engine rankings. GEO optimizes for AI citat
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
 
-1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
-2. Set the output path: `C:\Users\Adam\Documents\Claude\{domain}\`
-3. Create the folder if it doesn't exist: `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`
-4. Save all output files into that folder: `C:\Users\Adam\Documents\Claude\{domain}\GEO-AUDIT-REPORT.md`
+Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested path
 
-**Example:** `https://bdrgroup.co.uk/` → `C:\Users\Adam\Documents\Claude\bdrgroup.co.uk\GEO-AUDIT-REPORT.md`
+1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
+2. Set the output path: `./outputs/{domain}/`
+3. Create the folder if it doesn't exist: `mkdir -p "./outputs/{domain}"`
+4. Save all output files into that folder: `./outputs/{domain}/GEO-AUDIT-REPORT.md`
+
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/GEO-AUDIT-REPORT.md`
 
 ---
 
 ## Audit Workflow
 
 ### Phase 1: Discovery and Reconnaissance
+
+### Tool Budget
+- WebFetch: homepage + robots.txt + llms.txt + up to 3 service pages (max 6 fetches)
+- WebSearch: up to 8 queries (brand authority, competitor GEO, Wikipedia/Reddit presence, schema validation)
+- Total: aim for under 25 tool calls to avoid rate limits
+- Priority order: homepage → robots.txt → llms.txt → 2 service pages → WebSearch for brand/competitors
 
 **Step 1: Fetch Homepage and Detect Business Type**
 
@@ -158,6 +166,13 @@ GEO_Score = (Citability * 0.25) + (Brand * 0.20) + (EEAT * 0.20) + (Technical * 
 | 60-74 | Fair | Moderate GEO presence; significant optimization opportunities exist |
 | 40-59 | Poor | Weak GEO signals; AI systems may struggle to cite or recommend |
 | 0-39 | Critical | Minimal GEO optimization; site is largely invisible to AI systems |
+
+**Scoring Anchors:**
+- 80-100: Equivalent to Wikipedia, NHS.uk — highly citable, rich schema, cited by AI platforms
+- 60-79: Well-structured content site with FAQ schema, author attribution, some AI visibility
+- 40-59: Marketing-copy site with basic schema — content exists but is not citable or answer-formatted
+- 20-39: Thin content, no schema, no llms.txt, AI crawlers partially blocked
+- 0-19: No content of value for AI systems to extract
 
 ---
 
@@ -348,3 +363,19 @@ Generate a file called `GEO-AUDIT-REPORT.md` with the following structure:
 - Extra weight on: Case studies (citability), expertise demonstration, thought leadership
 - Check for: Portfolio schema, team credentials, industry-specific expertise signals
 - Key schema: Organization, Service, Person (team), Review
+
+---
+
+## Template Compliance (Self-Check Before Saving)
+
+Your report MUST contain ALL of these sections. If any are missing, add them before saving.
+
+- [ ] Executive Summary (with overall GEO score and score breakdown table)
+- [ ] Critical Issues — Fix Immediately (severity-tagged)
+- [ ] High Priority Issues
+- [ ] Medium Priority Issues
+- [ ] Low Priority Issues
+- [ ] Category Deep Dives (all 5 GEO categories with evidence)
+- [ ] Quick Wins — Implement This Week
+- [ ] 30-Day Action Plan
+- [ ] Appendix: Pages Analyzed (list every URL fetched)

@@ -1,3 +1,8 @@
+---
+name: market-audit
+description: "Marketing Audit Engine"
+---
+
 # Marketing Audit Engine
 
 You are the full marketing audit engine for `/market audit <url>`. You perform a comprehensive, evidence-based marketing audit and produce a client-ready MARKETING-AUDIT.md report with scores, findings, and prioritised recommendations.
@@ -13,11 +18,11 @@ The user runs `/market audit <url>`. This is the flagship command of the suite.
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
 
 1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
-2. Set the output path: `C:\Users\Adam\Documents\Claude\{domain}\`
-3. Create the folder if it doesn't exist: `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`
-4. Save all output files into that folder: `C:\Users\Adam\Documents\Claude\{domain}\MARKETING-AUDIT.md`
+2. Choose the output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested path
+3. Create the folder if it doesn't exist: `mkdir -p "./outputs/{domain}"`
+4. Save all output files into that folder: `./outputs/{domain}/MARKETING-AUDIT.md`
 
-**Example:** `https://bdrgroup.co.uk/` → `C:\Users\Adam\Documents\Claude\bdrgroup.co.uk\MARKETING-AUDIT.md`
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/MARKETING-AUDIT.md`
 
 ---
 
@@ -213,6 +218,13 @@ Score = Content*0.25 + Conversion*0.20 + SEO*0.20 + Competitive*0.15 + Brand*0.1
 | 40-54 | D | Below average - major overhaul |
 | 0-39 | F | Critical - fundamental issues |
 
+**Scoring Anchors:**
+- 80-100: Equivalent to HubSpot.com, Stripe.com — world-class content, conversion, SEO
+- 60-79: Equivalent to a well-run regional agency site — good basics, gaps in conversion/content
+- 40-59: Basic brochure site with some SEO — missing email capture, weak CTAs, no case studies
+- 20-39: Outdated site with minimal content — no blog, no trust signals, broken UX
+- 0-19: Parked domain or under construction
+
 ### 3.2 Classify Recommendations
 
 Every recommendation must include: what to change, where, why, and estimated impact.
@@ -306,3 +318,19 @@ Display condensed scorecard with bar chart, top 3 wins, top 3 strategic moves, a
 - Incorporate `COMPETITOR-REPORT.md`, `BRAND-VOICE.md` if they exist
 - Suggest follow-ups: `/market copy`, `/market seo`, `/market funnel`, `/market report-pdf`
 - Audit data feeds into `/market report-pdf` JSON structure
+
+---
+
+## Template Compliance (Self-Check Before Saving)
+
+Your report MUST contain ALL of these sections. If any are missing, add them before saving.
+
+- [ ] Executive Summary (3+ paragraphs with revenue impact estimate)
+- [ ] Score Breakdown (table with all 6 categories, weights, and key findings)
+- [ ] Quick Wins — This Week (5-8 numbered items)
+- [ ] Strategic Recommendations — This Month (3-5 numbered items)
+- [ ] Long-Term Initiatives — This Quarter (2-4 numbered items)
+- [ ] Detailed Analysis by Category (all 6 categories with evidence)
+- [ ] Competitor Comparison (2-3 named competitors)
+- [ ] Revenue Impact Summary (table with monthly estimates)
+- [ ] Next Steps (top 3 priorities)
