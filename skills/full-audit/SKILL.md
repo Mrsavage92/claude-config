@@ -20,18 +20,21 @@ You are the master orchestrator for a comprehensive, all-suites website audit. W
 
 ## Output Directory
 
-All output files are saved to a domain-specific folder under `~/Documents/Claude/`.
+**Always save report files to a domain-specific folder. Avoid hardcoded user-specific paths.**
 
 **How to determine the output directory:**
 1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
 2. Strip `www.` prefix if present
-3. Output path: `~/Documents/Claude/{domain}/`
-4. Create the folder: `mkdir -p ~/Documents/Claude/{domain}` (works on both Mac and Windows/Git Bash)
+3. Choose the output root in this order:
+   - `CLAUDE_AUDIT_OUTPUT_ROOT` environment variable if set
+   - `./outputs`
+   - A user-requested absolute path
+4. Create the folder: `mkdir -p {output_root}/{domain}`
 5. All reports — both the master `FULL-AUDIT-REPORT.md` and all 8 suite reports — save into this same folder
 
-**Example:** `https://bdrgroup.co.uk/` → all files saved to `~/Documents/Claude/bdrgroup.co.uk/`
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/`
 
-When passing tasks to subagents, always tell them: *"Save your report to `~/Documents/Claude/{domain}/{FILENAME}.md`"*
+When passing tasks to subagents, always tell them: *"Save your report to `{output_root}/{domain}/{FILENAME}.md`"*
 
 ---
 
@@ -41,7 +44,7 @@ When passing tasks to subagents, always tell them: *"Save your report to `~/Docu
 
 1. Fetch the homepage to confirm the site is reachable. If not, report the error and stop.
 2. Extract: business name, primary category (SaaS / Local / E-commerce / Agency / Publisher), location, and any immediate red flags (404, parked domain, under construction).
-3. **Determine and create the output directory:** extract the domain, run `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`, confirm path.
+3. **Determine and create the output directory:** extract the domain, run `mkdir -p "./outputs/{domain}"`, confirm path.
 4. Note the date. All audit output is timestamped.
 
 ### Phase 2: Parallel Suite Execution

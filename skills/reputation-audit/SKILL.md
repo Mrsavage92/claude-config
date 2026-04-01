@@ -1,3 +1,8 @@
+---
+name: reputation-audit
+description: "Reputation & Review Audit Engine"
+---
+
 # Reputation & Review Audit Engine
 
 You are the reputation audit engine for `reputation audit <business>`. You perform a comprehensive, evidence-based audit of a business's public review reputation across all platforms and produce a client-ready REPUTATION-AUDIT.md.
@@ -12,12 +17,14 @@ The user runs `reputation audit <business name>` (optionally with location or UR
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
 
-1. Extract the domain from the URL (or derive it from the business name if no URL is given)
-2. Set the output path: `C:\Users\Adam\Documents\Claude\{domain}\`
-3. Create the folder if it doesn't exist: `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`
-4. Save all output files into that folder: `C:\Users\Adam\Documents\Claude\{domain}\REPUTATION-AUDIT.md`
+Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested path
 
-**Example:** `https://bdrgroup.co.uk/` → `C:\Users\Adam\Documents\Claude\bdrgroup.co.uk\REPUTATION-AUDIT.md`
+1. Extract the domain from the URL (or derive it from the business name if no URL is given)
+2. Set the output path: `./outputs/{domain}/`
+3. Create the folder if it doesn't exist: `mkdir -p "./outputs/{domain}"`
+4. Save all output files into that folder: `./outputs/{domain}/REPUTATION-AUDIT.md`
+
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/REPUTATION-AUDIT.md`
 
 ---
 
@@ -240,6 +247,13 @@ Reputation Score = (
 | 40-54 | D | Below average - reputation is hurting the business |
 | 0-39 | F | Critical - reputation crisis or invisible |
 
+**Scoring Anchors:**
+- 80-100: Equivalent to Apple, Salesforce — 4.5+ across platforms, active responses, managed programme
+- 60-79: Strong ratings (4.0+) on main platform but gaps in response management or platform coverage
+- 40-59: Mixed ratings (3.0-3.9), low volume, no response management
+- 20-39: Below 3.0 on major platforms, negative press visible on page 1 of Google
+- 0-19: No review presence or overwhelmingly negative with no management
+
 ### 3.2 Revenue Impact
 
 Frame findings in revenue terms:
@@ -315,3 +329,23 @@ Here's what yours are saying."]
 - No industry-specific platform presence: Note as a gap
 - Very new business (few reviews): Adjust benchmarks, focus on generation strategy
 - Multi-location: Audit primary location, note if others need separate audits
+
+---
+
+## Template Compliance (Self-Check Before Saving)
+
+Your report MUST contain ALL of these sections. If any are missing, add them before saving.
+
+- [ ] Executive Summary (lead with review impact stat)
+- [ ] Platform Overview (table: platform, rating, count, responds?)
+- [ ] Score Breakdown (table with all 5 categories)
+- [ ] Composite Score Calculation (formula shown)
+- [ ] Revenue Impact Assessment (estimated revenue at risk)
+- [ ] Critical Issues (severity-tagged)
+- [ ] Quick Wins — This Week
+- [ ] Review Response Templates (5 templates: 5-star, 4-star, 3-star, negative, interview)
+- [ ] Competitor Comparison (2-3 named competitors)
+- [ ] Review Generation Playbook (how to get more reviews)
+- [ ] Press and Awards Summary
+- [ ] Data Confidence Notes (flag any unverifiable claims)
+- [ ] Next Steps (top 3)

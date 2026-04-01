@@ -1,6 +1,11 @@
+---
+name: employer-audit
+description: "Employer Brand Audit Engine"
+---
+
 # Employer Brand Audit Engine
 
-You are the full employer brand audit engine for `/employer audit <company>`. You perform a comprehensive, evidence-based audit of a company's employer brand across all public touchpoints and produce a client-ready EMPLOYER-BRAND-AUDIT.md report with scores, findings, and prioritised recommendations.
+You are the full employer brand audit engine for `/employer audit <company>`. You perform a comprehensive, evidence-based audit of a company's employer brand across all public touchpoints and produce a client-ready EMPLOYER-AUDIT.md report with scores, findings, and prioritised recommendations.
 
 ## When This Skill Is Invoked
 
@@ -10,14 +15,17 @@ The user runs `/employer audit <company name>` (optionally with location or URL)
 
 ## Output Directory
 
-**Always save report files to a domain-specific folder — never to the current directory or user profile root.**
+**Always save report files to a domain-specific folder. Avoid hardcoded user-specific paths unless the user explicitly asked for them.**
 
 1. Extract the domain from the URL (or derive it from the company name if no URL is given)
-2. Set the output path: `C:\Users\Adam\Documents\Claude\{domain}\`
-3. Create the folder if it doesn't exist: `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`
-4. Save all output files into that folder: `C:\Users\Adam\Documents\Claude\{domain}\EMPLOYER-AUDIT.md`
+2. Choose the output root in this order:
+   - `CLAUDE_AUDIT_OUTPUT_ROOT` if it is set
+   - `./outputs`
+   - A user-requested absolute path
+3. Create the directory using the shell appropriate to the environment
+4. Save the report to `{output_root}/{domain}/EMPLOYER-AUDIT.md`
 
-**Example:** `https://bdrgroup.co.uk/` → `C:\Users\Adam\Documents\Claude\bdrgroup.co.uk\EMPLOYER-AUDIT.md`
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/EMPLOYER-AUDIT.md`
 
 ---
 
@@ -293,6 +301,13 @@ Employer Brand Score = (
 | 40-54 | D | Below average - employer brand is a hiring liability |
 | 0-39 | F | Critical - actively repelling talent |
 
+**Scoring Anchors:**
+- 80-100: Equivalent to Google, Atlassian employer brand — rich careers page, 4.0+ Glassdoor, active EVP
+- 60-79: Good careers page, 3.5+ Glassdoor, some employer content, salary in some postings
+- 40-59: Basic careers page, below 3.5 Glassdoor or low volume, no EVP, no salary transparency
+- 20-39: No dedicated careers page, poor reviews unmanaged, no employer content
+- 0-19: No employer brand presence at all
+
 ### 3.2 Impact Framing
 
 Frame every finding in terms of talent loss:
@@ -320,7 +335,7 @@ Frame every finding in terms of talent loss:
 
 ## Phase 4: Output
 
-### EMPLOYER-BRAND-AUDIT.md
+### EMPLOYER-AUDIT.md
 
 ```markdown
 # Employer Brand Audit: [Company Name]
@@ -401,7 +416,7 @@ Top 3 Quick Wins:
 
 Key Stat: [X]% of candidates won't apply based on current review profile.
 
-Full report saved to: EMPLOYER-BRAND-AUDIT.md
+Full report saved to: EMPLOYER-AUDIT.md
 ```
 
 ---
@@ -418,3 +433,20 @@ Full report saved to: EMPLOYER-BRAND-AUDIT.md
 - Audit data feeds into `/employer report-pdf` JSON structure
 - If `/employer reviews` data exists, incorporate it
 - Suggest follow-ups: `/employer careers`, `/employer reviews`, `/employer report-pdf`
+
+---
+
+## Template Compliance (Self-Check Before Saving)
+
+Your report MUST contain ALL of these sections. If any are missing, add them before saving.
+
+- [ ] Executive Summary (lead with candidate research stat)
+- [ ] Score Breakdown (table with all 6 categories)
+- [ ] Quick Wins — This Week (5-8 items)
+- [ ] Strategic Recommendations — This Month (3-5 items)
+- [ ] Long-Term Initiatives — This Quarter (2-4 items)
+- [ ] Detailed Analysis by Category (all 6 categories with quoted evidence)
+- [ ] Review Response Templates (5 templates)
+- [ ] Competitor Employer Brand Snapshot (2-3 competitors)
+- [ ] Hiring Cost Impact Summary (table)
+- [ ] Next Steps (top 3)

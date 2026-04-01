@@ -1,4 +1,5 @@
 ---
+name: market
 description: "AI Marketing Suite — audit websites, generate copy, emails, social content, ads, and funnels. Use for any marketing task. Sub-commands: /market audit, copy, emails, social, ads, funnel, landing, gbp, proposal."
 ---
 

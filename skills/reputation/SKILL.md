@@ -1,4 +1,5 @@
 ---
+name: reputation
 description: "Reputation & Review Audit Suite — audit public review reputation, monitor sentiment, generate response strategies. Use for reputation management."
 ---
 

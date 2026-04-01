@@ -554,12 +554,51 @@ def make_hf(brand, report_title="Digital Audit Report"):
     return hf
 
 
+_cover_score = [None]  # mutable holder for cover score to draw on canvas
+
 def draw_cover_bg(canvas, doc):
     canvas.saveState()
     canvas.setFillColor(C["brand"])
     canvas.rect(0, PAGE_H * 0.38, PAGE_W, PAGE_H * 0.62, fill=1, stroke=0)
     canvas.setFillColor(C["accent"])
     canvas.rect(0, PAGE_H * 0.38, PAGE_W, 4, fill=1, stroke=0)
+
+    # Draw the score gauge at a fixed position, centered, in the dark area above the split
+    score = _cover_score[0]
+    if score is not None:
+        cx = PAGE_W / 2
+        gauge_y = PAGE_H * 0.38 + 80  # 80pt above the split line, solidly in dark area
+        r = 55
+        col = C["score_good"] if score >= 70 else (C["score_mid"] if score >= 40 else C["score_bad"])
+
+        # Background ring
+        canvas.setStrokeColor(C["surface_2"]); canvas.setLineWidth(16)
+        canvas.arc(cx - r, gauge_y - r, cx + r, gauge_y + r, 0, 360)
+
+        # Score arc
+        sweep = 360 * score / 100
+        if sweep > 0:
+            canvas.setStrokeColor(col); canvas.setLineWidth(16)
+            canvas.arc(cx - r, gauge_y - r, cx + r, gauge_y + r, 90, sweep)
+
+        # White center
+        canvas.setFillColor(C["white"])
+        canvas.circle(cx, gauge_y, r - 16, fill=1, stroke=0)
+
+        # Score number
+        canvas.setFillColor(C["ink"]); canvas.setFont(F_BOLD, 36)
+        canvas.drawCentredString(cx, gauge_y + 6, str(int(score)))
+        canvas.setFillColor(C["muted"]); canvas.setFont(F_REGULAR, 8)
+        canvas.drawCentredString(cx, gauge_y - 8, "out of 100")
+
+        # Grade badge
+        g = "A" if score >= 85 else "B" if score >= 70 else "C" if score >= 55 else "D" if score >= 40 else "F"
+        bw, bh = 48, 18
+        canvas.setFillColor(col)
+        canvas.roundRect(cx - bw/2, gauge_y - 30, bw, bh, 5, fill=1, stroke=0)
+        canvas.setFillColor(C["white"]); canvas.setFont(F_BOLD, 9)
+        canvas.drawCentredString(cx, gauge_y - 26, f"Grade  {g}")
+
     canvas.restoreState()
 
 
@@ -688,14 +727,38 @@ def build_md_table(lines, st):
     for r in rows:
         while len(r) < ncols: r.append("")
     col_lens = [max(len(str(r[ci])) if ci < len(r) else 0 for r in rows) or 4 for ci in range(ncols)]
-    total = sum(col_lens)
-    col_w = [max(CONTENT_W * (cl / total), 2.2*cm) for cl in col_lens]
-    ratio = CONTENT_W / sum(col_w)
-    col_w = [w * ratio for w in col_w]
+    total = sum(col_lens) or 1
+    # Minimum usable column width = padding (7+7=14pt) + minimum text (20pt) = 34pt ≈ 1.2cm
+    min_col_w = 1.2 * cm
+    col_w = [max(CONTENT_W * (cl / total), min_col_w) for cl in col_lens]
+    # Ensure total doesn't exceed content width
+    col_sum = sum(col_w)
+    if col_sum > CONTENT_W:
+        ratio = CONTENT_W / col_sum
+        col_w = [max(w * ratio, min_col_w) for w in col_w]
+        # If still over (many narrow columns), force-fit
+        col_sum = sum(col_w)
+        if col_sum > CONTENT_W:
+            col_w = [CONTENT_W / ncols] * ncols
+    elif col_sum < CONTENT_W:
+        ratio = CONTENT_W / col_sum
+        col_w = [w * ratio for w in col_w]
+    # Truncate very long cell values and insert break hints for wrapping
+    def _cell_safe(txt):
+        # Strip backticks (rendered as italics via p() but long ones break layout)
+        txt = re.sub(r'`([^`]*)`', r'\1', txt)
+        # Truncate extremely long values that cause ReportLab layout hangs
+        if len(txt) > 120:
+            txt = txt[:117] + '...'
+        # Insert spaces after break points in long technical strings
+        if len(txt) > 50:
+            txt = re.sub(r'([.:/_=])', r'\1 ', txt)
+        return txt
+
     fmt = []
     for ri, row in enumerate(rows):
         fn = F_SEMIBOLD if ri == 0 else F_REGULAR
-        fmt.append([p(col, ParagraphStyle("tc", fontName=fn, fontSize=8, textColor=C["body"],
+        fmt.append([p(_cell_safe(col), ParagraphStyle("tc", fontName=fn, fontSize=8, textColor=C["body"],
                                           leading=11, spaceAfter=0, spaceBefore=0)) for col in row])
     t = Table(fmt, colWidths=col_w, repeatRows=1)
     t.setStyle(TableStyle([
@@ -770,7 +833,8 @@ def render_md_body(text, st, use_severity_cards=False, current_section=""):
                 tbl_lines.append(lines[i]); i += 1
             tbl = build_md_table(tbl_lines, st)
             if tbl:
-                el.append(KeepTogether([tbl, Spacer(1, 0.25*cm)]))
+                el.append(tbl)
+                el.append(Spacer(1, 0.25*cm))
             continue
 
         if re.match(r'^\s*-\s+\[[ xX]\]\s+', line):
@@ -782,9 +846,9 @@ def render_md_body(text, st, use_severity_cards=False, current_section=""):
                 if item: el.append(p(f"\u2610  {item}", st["ni_sm"]))
             continue
 
-        if re.match(r'^\s*[-*\u2022]\s+(?!\[)', line):
+        if re.match(r'^\s*[-*\u2022]\s+(?!\[[ xX]\])', line):
             items = []
-            while i < len(lines) and re.match(r'^\s*[-*\u2022]\s+(?!\[)', lines[i]):
+            while i < len(lines) and re.match(r'^\s*[-*\u2022]\s+(?!\[[ xX]\])', lines[i]):
                 m = re.match(r'^\s*[-*\u2022]\s+(.+)', lines[i])
                 items.append(m.group(1).strip() if m else ""); i += 1
             for item in items:
@@ -903,16 +967,16 @@ def build_cover(master_content, suite_scores, suite_status, st, selected, weight
     if overall is None:
         overall = int(sum(suite_scores.get(s, 50) * weights.get(s, 0) for s in selected))
 
-    el.append(Spacer(1, 4.0 * cm))
+    el.append(Spacer(1, 3.0 * cm))
 
     # Dynamic title based on selected suites
     title_text = cover_title(selected)
     el.append(hp(f'<font color="#FFFFFF"><b>{esc(title_text)}</b></font>',
-                 ParagraphStyle("t1", fontName=F_XBOLD, fontSize=34, textColor=C["white"],
-                                spaceAfter=0, leading=40)))
+                 ParagraphStyle("t1", fontName=F_XBOLD, fontSize=30, textColor=C["white"],
+                                spaceAfter=0, leading=36)))
     el.append(hp(f'<font color="#94A3B8">Report</font>',
-                 ParagraphStyle("t2", fontName=F_BOLD, fontSize=34, textColor=HexColor("#94A3B8"),
-                                spaceAfter=16, leading=40)))
+                 ParagraphStyle("t2", fontName=F_BOLD, fontSize=30, textColor=HexColor("#94A3B8"),
+                                spaceAfter=12, leading=36)))
 
     if brand:
         el.append(hp(f'<font color="#E2E8F0"><b>{esc(brand)}</b></font>',
@@ -926,15 +990,13 @@ def build_cover(master_content, suite_scores, suite_status, st, selected, weight
                  ParagraphStyle("dt", fontName=F_REGULAR, fontSize=9, textColor=HexColor("#94A3B8"),
                                 spaceAfter=0)))
 
-    el.append(Spacer(1, 0.6 * cm))
+    # Store score for the canvas callback to draw the gauge at a fixed position
+    _cover_score[0] = overall
 
-    gauge_row = Table([[ScoreGauge(overall, size=180)]],
-                      colWidths=[CONTENT_W])
-    gauge_row.setStyle(TableStyle([("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                                   ("TOPPADDING", (0, 0), (-1, -1), 0),
-                                   ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]))
-    el.append(gauge_row)
-    el.append(Spacer(1, 0.6 * cm))
+    # Push the table down into the white area below the dark/white split
+    # Title+brand uses ~200pt from top. Split is at ~522pt from top.
+    # We need ~340pt of spacer to get the table to start in the white zone.
+    el.append(Spacer(1, 12.0 * cm))
 
     # Mini scorecard — adaptive layout: single column for <=3 suites, dual for 4+
     suite_list = [(s, f) for s, f in SUITE_ORDER if s in selected]
@@ -968,11 +1030,6 @@ def build_cover(master_content, suite_scores, suite_status, st, selected, weight
             right_cells = mk_row_cells(*right) if right else [tcell(""), tcell("")]
             rows.append(left_cells + sep + right_cells)
         tbl = Table(rows, colWidths=[4.0*cm, 2.0*cm, 0.4*cm, 4.0*cm, 2.0*cm])
-        tbl.setStyle(TableStyle([
-            ("LEFTPADDING",    (2, 0), (2, -1), 0),
-            ("RIGHTPADDING",   (2, 0), (2, -1), 0),
-            ("ALIGN",          (4, 0), (4, -1), "CENTER"),
-        ]))
 
     tbl.setStyle(TableStyle([
         ("BACKGROUND",     (0, 0), (-1, 0), C["brand"]),
@@ -985,6 +1042,15 @@ def build_cover(master_content, suite_scores, suite_status, st, selected, weight
         ("GRID",           (0, 0), (-1, -1), 0.3, C["border"]),
         ("ALIGN",          (1, 0), (1, -1), "CENTER"),
     ]))
+
+    # For dual-column layout, override separator column padding AFTER generic styles
+    if len(suite_list) > 3:
+        tbl.setStyle(TableStyle([
+            ("LEFTPADDING",    (2, 0), (2, -1), 0),
+            ("RIGHTPADDING",   (2, 0), (2, -1), 0),
+            ("ALIGN",          (4, 0), (4, -1), "CENTER"),
+            ("GRID",           (2, 0), (2, -1), 0, C["white"]),  # hide separator grid
+        ]))
     el.append(tbl)
     el.append(Spacer(1, 0.5 * cm))
     el.append(AccentBar(height=1, color=C["border"]))
@@ -1157,7 +1223,7 @@ def build_scorecard(suite_scores, suite_status, overall, st, selected, weights):
     el = []
     el.append(hp("Overall Scorecard",
                  ParagraphStyle("sch", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
-                                spaceAfter=4, leading=28)))
+                                spaceAfter=4, leading=28, keepWithNext=1)))
     el.append(AccentBar(height=2))
     el.append(Spacer(1, 0.4*cm))
 
@@ -1243,17 +1309,249 @@ def build_master_sections(master_content, st):
     for header, body in split_sections(master_content):
         if any(s in header.lower() for s in SKIP): continue
 
-        el.append(KeepTogether([
-            hp(esc(header),
+        el.append(hp(esc(header),
                ParagraphStyle("msh", fontName=F_BOLD, fontSize=16, textColor=C["ink"],
-                               spaceBefore=14, spaceAfter=6, leading=22)),
-            AccentBar(height=2),
-            Spacer(1, 0.3*cm),
-        ]))
+                               spaceBefore=14, spaceAfter=6, leading=22)))
+        el.append(AccentBar(height=2))
+        el.append(Spacer(1, 0.3*cm))
 
         is_action = any(w in header.lower() for w in ("action", "plan", "recommendation", "issue"))
         el += render_md_body(body, st, use_severity_cards=is_action, current_section=header)
         el.append(Spacer(1, 0.3*cm))
+
+    el.append(PageBreak())
+    return el
+
+
+def build_synthesized_cross_suite(directory, suite_scores, selected, st, weights):
+    """
+    Generate cross-suite analysis sections from individual suite markdown files.
+    Called when no FULL-AUDIT-REPORT.md exists. Produces:
+    1. Cross-Suite Issues (compounding problems)
+    2. Integrated Action Plan (critical/high/strategic across suites)
+    3. Revenue & Risk Impact Summary
+    """
+    el = []
+    if len(selected) < 2:
+        return el
+
+    # Load all suite contents
+    suite_contents = {}
+    for sname, fname in SUITE_ORDER:
+        if sname not in selected:
+            continue
+        path = os.path.join(directory, fname)
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                suite_contents[sname] = f.read()
+
+    if not suite_contents:
+        return el
+
+    # ── Section 1: Cross-Suite Issues ────────────────────────────────────────
+    el.append(hp("Cross-Suite Issues",
+                 ParagraphStyle("csh", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
+                                spaceAfter=4, leading=28, keepWithNext=1)))
+    el.append(p("Issues that appear across multiple audit dimensions. "
+                "Fixing one item improves several scores simultaneously.", st["body_sm"]))
+    el.append(AccentBar(height=2))
+    el.append(Spacer(1, 0.4 * cm))
+
+    # Detect compounding issues by keyword scanning
+    COMPOUND_CHECKS = [
+        ("No cookie consent", ["cookie consent", "no cookie", "zero cookie", "PECR"]),
+        ("Missing security headers", ["security header", "CSP", "Content-Security-Policy", "X-Frame-Options"]),
+        ("No DMARC enforcement", ["DMARC", "p=none", "email spoofing", "email authentication"]),
+        ("No llms.txt / AI visibility gap", ["llms.txt", "no llms", "AI citability"]),
+        ("Zero review responses", ["zero review response", "no review response", "unanswered review"]),
+        ("No email capture", ["email capture", "no newsletter", "no lead magnet", "zero email"]),
+        ("WordPress outdated", ["WordPress", "outdated", "version behind"]),
+        ("No case studies", ["no case studies", "case studies", "zero case"]),
+        ("Placeholder/template content", ["placeholder", "template text", "Enter CTA"]),
+        ("No salary transparency", ["no salary", "salary transparency", "salary range"]),
+    ]
+
+    compound_issues = []
+    for issue_name, keywords in COMPOUND_CHECKS:
+        found_in = []
+        for sname, content in suite_contents.items():
+            content_lower = content.lower()
+            if any(kw.lower() in content_lower for kw in keywords):
+                found_in.append(sname)
+        if len(found_in) >= 2:
+            compound_issues.append((issue_name, found_in))
+
+    compound_issues.sort(key=lambda x: -len(x[1]))
+
+    if compound_issues:
+        hdr = [tcell("#",      F_SEMIBOLD, 8, C["white"], TA_CENTER, bold=True),
+               tcell("Issue",  F_SEMIBOLD, 8, C["white"], bold=True),
+               tcell("Suites Affected", F_SEMIBOLD, 8, C["white"], bold=True),
+               tcell("Count",  F_SEMIBOLD, 8, C["white"], TA_CENTER, bold=True)]
+        rows = [hdr]
+        for i, (issue, suites) in enumerate(compound_issues[:8], 1):
+            sev_col = C["critical"] if len(suites) >= 4 else (C["high"] if len(suites) >= 3 else C["medium"])
+            rows.append([
+                tcell(str(i), F_BOLD, 8.5, C["white"], TA_CENTER),
+                tcell(issue, F_SEMIBOLD, 8.5, C["ink"]),
+                tcell(", ".join(suites), F_REGULAR, 8, C["muted"]),
+                tcell(str(len(suites)), F_BOLD, 9, sev_col, TA_CENTER),
+            ])
+
+        cw = [0.8 * cm, 6 * cm, CONTENT_W - 9.3 * cm, 1.5 * cm]
+        # Ensure minimum column widths
+        min_w = 1.0 * cm
+        cw = [max(w, min_w) for w in cw]
+        total = sum(cw)
+        if total > CONTENT_W:
+            ratio = CONTENT_W / total
+            cw = [w * ratio for w in cw]
+
+        tbl = Table(rows, colWidths=cw, repeatRows=1)
+        tbl.setStyle(TableStyle([
+            ("BACKGROUND",     (0, 0), (-1, 0), C["brand"]),
+            ("BACKGROUND",     (0, 1), (0, -1), C["critical"]),
+            ("ROWBACKGROUNDS", (1, 1), (-1, -1), [C["white"], C["surface"]]),
+            ("TOPPADDING",     (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING",  (0, 0), (-1, -1), 7),
+            ("LEFTPADDING",    (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING",   (0, 0), (-1, -1), 8),
+            ("GRID",           (0, 0), (-1, -1), 0.3, C["border"]),
+            ("VALIGN",         (0, 0), (-1, -1), "MIDDLE"),
+        ]))
+        el.append(tbl)
+    else:
+        el.append(p("No compounding issues detected across suites.", st["body"]))
+
+    el.append(Spacer(1, 0.5 * cm))
+
+    # ── Section 2: Integrated Action Plan ────────────────────────────────────
+    el.append(hp("Integrated Action Plan",
+                 ParagraphStyle("aph", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
+                                spaceAfter=4, leading=28, keepWithNext=1)))
+    el.append(p("Prioritised remediation across all audited dimensions.", st["body_sm"]))
+    el.append(AccentBar(height=2))
+    el.append(Spacer(1, 0.4 * cm))
+
+    # Extract action items from each suite's Quick Wins and Strategic sections
+    critical_actions = []
+    strategic_actions = []
+
+    for sname, content in suite_contents.items():
+        # Extract Quick Wins
+        m = re.search(r'##\s+(?:Quick Wins|Critical Issues).*?\n(.*?)(?=\n##\s|\Z)',
+                      content, re.IGNORECASE | re.DOTALL)
+        if m:
+            items = re.findall(r'^\s*\d+\.\s+\*?\*?(.+?)(?:\*\*)?$', m.group(1), re.MULTILINE)
+            for item in items[:3]:
+                clean = re.sub(r'\*\*([^*]+)\*\*', r'\1', item).strip().strip('*').strip()
+                if len(clean) > 10:
+                    sev = detect_severity(clean) or "high"
+                    critical_actions.append((sname, clean[:120], sev))
+
+        # Extract Strategic
+        m = re.search(r'##\s+(?:Strategic|Long.Term|Recommended).*?\n(.*?)(?=\n##\s|\Z)',
+                      content, re.IGNORECASE | re.DOTALL)
+        if m:
+            items = re.findall(r'^\s*\d+\.\s+\*?\*?(.+?)(?:\*\*)?$', m.group(1), re.MULTILINE)
+            for item in items[:2]:
+                clean = re.sub(r'\*\*([^*]+)\*\*', r'\1', item).strip().strip('*').strip()
+                if len(clean) > 10:
+                    strategic_actions.append((sname, clean[:120]))
+
+    # Render Critical/Quick actions
+    if critical_actions:
+        first_card = SeverityCard(
+            f"[{critical_actions[0][0]}] {critical_actions[0][1]}",
+            "", critical_actions[0][2], width=CONTENT_W - 6)
+        el.append(KeepTogether([
+            p("Critical & Quick Wins (This Week)", st["h2"]),
+            first_card,
+            Spacer(1, 0.12 * cm),
+        ]))
+        for sname, action, sev in critical_actions[1:10]:
+            el.append(SeverityCard(
+                f"[{sname}] {action}", "", sev, width=CONTENT_W - 6))
+            el.append(Spacer(1, 0.12 * cm))
+        el.append(Spacer(1, 0.3 * cm))
+
+    # Render Strategic actions
+    if strategic_actions:
+        first_card = SeverityCard(
+            f"[{strategic_actions[0][0]}] {strategic_actions[0][1]}",
+            "", "low", width=CONTENT_W - 6)
+        el.append(KeepTogether([
+            p("Strategic Initiatives (This Quarter)", st["h2"]),
+            first_card,
+            Spacer(1, 0.12 * cm),
+        ]))
+        for sname, action in strategic_actions[1:8]:
+            el.append(SeverityCard(
+                f"[{sname}] {action}", "", "low", width=CONTENT_W - 6))
+            el.append(Spacer(1, 0.12 * cm))
+
+    el.append(Spacer(1, 0.5 * cm))
+
+    # ── Section 3: Risk & Revenue Impact ─────────────────────────────────────
+    el.append(hp("Risk & Revenue Impact",
+                 ParagraphStyle("rrh", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
+                                spaceAfter=4, leading=28, keepWithNext=1)))
+    el.append(AccentBar(height=2))
+    el.append(Spacer(1, 0.4 * cm))
+
+    # Build suite risk summary
+    risk_rows = [
+        [tcell("Suite",  F_SEMIBOLD, 8, C["white"], bold=True),
+         tcell("Score",  F_SEMIBOLD, 8, C["white"], TA_CENTER, bold=True),
+         tcell("Grade",  F_SEMIBOLD, 8, C["white"], TA_CENTER, bold=True),
+         tcell("Risk Level", F_SEMIBOLD, 8, C["white"], TA_CENTER, bold=True),
+         tcell("Weight", F_SEMIBOLD, 8, C["white"], TA_CENTER, bold=True)],
+    ]
+    for sname, _ in SUITE_ORDER:
+        if sname not in selected:
+            continue
+        sc = suite_scores.get(sname, 0)
+        g = grade(sc)
+        w = weights.get(sname, 0)
+        risk = "CRITICAL" if sc < 30 else ("HIGH" if sc < 50 else ("MEDIUM" if sc < 70 else "LOW"))
+        risk_col = C["critical"] if sc < 30 else (C["high"] if sc < 50 else (C["medium"] if sc < 70 else C["low"]))
+        risk_rows.append([
+            tcell(sname, F_REGULAR, 8.5, C["body"]),
+            tcell(f"{sc}/100", F_BOLD, 8.5, sc_color(sc), TA_CENTER),
+            tcell(g, F_BOLD, 8.5, sc_color(sc), TA_CENTER),
+            tcell(risk, F_BOLD, 8, risk_col, TA_CENTER),
+            tcell(f"{int(w * 100)}%", F_REGULAR, 8.5, C["muted"], TA_CENTER),
+        ])
+
+    cw2 = [3.8 * cm, 1.8 * cm, 1.4 * cm, 2.2 * cm, 1.5 * cm]
+    # Fill remaining width with padding on first column
+    remaining = CONTENT_W - sum(cw2)
+    if remaining > 0:
+        cw2[0] += remaining
+
+    t2 = Table(risk_rows, colWidths=cw2, repeatRows=1)
+    t2.setStyle(TableStyle([
+        ("BACKGROUND",     (0, 0), (-1, 0), C["brand"]),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [C["white"], C["surface"]]),
+        ("TOPPADDING",     (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING",  (0, 0), (-1, -1), 7),
+        ("LEFTPADDING",    (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING",   (0, 0), (-1, -1), 8),
+        ("GRID",           (0, 0), (-1, -1), 0.3, C["border"]),
+        ("VALIGN",         (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    el.append(t2)
+    el.append(Spacer(1, 0.4 * cm))
+
+    # Overall weighted score
+    overall = int(sum(suite_scores.get(s, 0) * weights.get(s, 0) for s in selected))
+    el.append(p(f"<b>Overall Weighted Score: {overall}/100 (Grade {grade(overall)})</b>", st["body"]))
+    el.append(Spacer(1, 0.2 * cm))
+    el.append(p(
+        "Scores are weighted by relative business impact. Fixing critical-risk suites "
+        "first delivers the highest overall score improvement.",
+        st["body_sm"]
+    ))
 
     el.append(PageBreak())
     return el
@@ -1514,7 +1812,13 @@ def generate(directory, output_path=None, selected_suites=None):
     # Cross-suite analysis only makes sense for multi-suite reports
     if len(selected) > 1:
         print("  Building cross-suite analysis...")
-        story += build_master_sections(master_content, st)
+        master_sections = build_master_sections(master_content, st)
+        if master_sections:
+            story += master_sections
+        else:
+            # No FULL-AUDIT-REPORT.md — synthesize from individual suite reports
+            print("    (synthesizing from individual reports)")
+            story += build_synthesized_cross_suite(directory, suite_scores, selected, st, weights)
 
     for suite_name, filename in SUITE_ORDER:
         if suite_name not in selected: continue

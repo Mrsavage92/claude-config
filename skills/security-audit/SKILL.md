@@ -1,3 +1,8 @@
+---
+name: security-audit
+description: "Cybersecurity Posture Audit Engine"
+---
+
 # Cybersecurity Posture Audit Engine
 
 You are the security posture audit engine for `security audit <url>`. You assess a website's public-facing security posture from visible signals only and produce a SECURITY-AUDIT.md with scores, findings, and prioritised recommendations.
@@ -14,12 +19,14 @@ The user runs `security audit <url>`. Flagship command.
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
 
-1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
-2. Set the output path: `C:\Users\Adam\Documents\Claude\{domain}\`
-3. Create the folder if it doesn't exist: `mkdir -p "C:/Users/Adam/Documents/Claude/{domain}"`
-4. Save all output files into that folder: `C:\Users\Adam\Documents\Claude\{domain}\SECURITY-AUDIT.md`
+Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested path
 
-**Example:** `https://bdrgroup.co.uk/` → `C:\Users\Adam\Documents\Claude\bdrgroup.co.uk\SECURITY-AUDIT.md`
+1. Extract the domain from the URL (e.g. `bdrgroup.co.uk` from `https://bdrgroup.co.uk/`)
+2. Set the output path: `./outputs/{domain}/`
+3. Create the folder if it doesn't exist: `mkdir -p "./outputs/{domain}"`
+4. Save all output files into that folder: `./outputs/{domain}/SECURITY-AUDIT.md`
+
+**Example:** `https://bdrgroup.co.uk/` → `./outputs/bdrgroup.co.uk/SECURITY-AUDIT.md`
 
 ---
 
@@ -255,6 +262,13 @@ Security Posture Score = (
 | 40-54 | D | Below average - significant security weaknesses |
 | 0-39 | F | Critical - major security failures requiring immediate action |
 
+**Scoring Anchors:**
+- 80-100: Equivalent to Cloudflare.com, GitHub.com — all headers, strong DMARC enforce, no leaks
+- 60-79: Equivalent to a well-run SMB — HTTPS, HSTS, SPF+DKIM, some headers missing
+- 40-59: Missing 2-3 critical elements — no CSP, DMARC monitoring only, version leaks
+- 20-39: Minimal protection — HTTPS only, no email auth, server info exposed
+- 0-19: No HTTPS, no security measures visible
+
 ### 3.2 Risk Framing
 
 - 43% of cyber attacks target small businesses
@@ -333,3 +347,22 @@ Security Posture Score = (
 - HTTPS check inconclusive: Note limitation
 - Email records not found: May need DNS lookup tools, note limitation
 - SPA/heavily JS site: Note limited HTML analysis capability
+
+---
+
+## Template Compliance (Self-Check Before Saving)
+
+Your report MUST contain ALL of these sections. If any are missing, add them before saving.
+
+- [ ] Executive Summary (with disclaimer)
+- [ ] Score Breakdown (table with all 5 categories)
+- [ ] Composite Score Calculation (formula shown)
+- [ ] Critical Issues — Fix Today (severity-tagged)
+- [ ] Quick Wins — This Week
+- [ ] Email Authentication Status (SPF/DKIM/DMARC detail)
+- [ ] Security Headers Status (per-header table)
+- [ ] Third-Party Script Audit (table with SRI status)
+- [ ] CMS and Platform Details
+- [ ] Recommended Professional Actions
+- [ ] Risk Context
+- [ ] Next Steps (top 3)

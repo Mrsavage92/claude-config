@@ -1,4 +1,5 @@
 ---
+name: security
 description: "Cybersecurity Posture Audit Suite — assess public-facing security risks via observable signals. Use for security header checks, email auth, or full security posture audit."
 ---
 

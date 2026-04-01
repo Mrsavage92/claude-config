@@ -1,4 +1,5 @@
 ---
+name: ai-ready
 description: "AI Readiness Audit Suite — assess company AI maturity, adoption, automation opportunities, and data readiness. Use for AI transformation assessments."
 ---
 
