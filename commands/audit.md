@@ -11,7 +11,7 @@ Main entrypoint for the audit product.
 
 ```
 audit "<url>"
-audit "<url>" --compare "./previous-outputs/{domain}"
+audit "<url>" --compare "~/Documents/Claude/previous-outputs/{domain}"
 ```
 
 The optional `--compare` flag points to a previous audit's output directory. When set, the system passes previous scores to agents for delta tracking and flags any score shifts >10 points.
@@ -27,7 +27,7 @@ Check for `--compare` flag. If present, verify the previous directory exists and
 Create the output directory immediately:
 
 ```bash
-mkdir -p "./outputs/{domain}"
+mkdir -p ~/Documents/Claude/outputs/{domain}
 ```
 
 ### Step 2: Present the Audit Selection Menu
@@ -77,7 +77,7 @@ Suite routing table:
 
 ### Step 4: Run the Selected Audits
 
-**For 1-2 selected suites:** Run sequentially in the main conversation. For each suite, read the corresponding audit skill from `skills/{skill-name}/SKILL.md` and follow its full instructions (Phase 1-4). Save the markdown report to `./outputs/{domain}/{FILENAME}.md`.
+**For 1-2 selected suites:** Run sequentially in the main conversation. For each suite, read the corresponding audit skill from `skills/{skill-name}/SKILL.md` and follow its full instructions (Phase 1-4). Save the markdown report to `~/Documents/Claude/outputs/{domain}/{FILENAME}.md`.
 
 **For 3+ selected suites:** Spawn parallel background Agents. For each selected suite, launch one Agent with this exact prompt template:
 
@@ -92,7 +92,7 @@ INSTRUCTIONS — follow these phases in order:
 5. Phase 4 (Output): Write the COMPLETE report following the template in the skill.
 
 OUTPUT RULES:
-- Save to: ./outputs/{DOMAIN}/{MARKDOWN_FILENAME}
+- Save to: ~/Documents/Claude/outputs/{DOMAIN}/{MARKDOWN_FILENAME}
 - Your report MUST contain every ## section listed in the skill's "Template Compliance" checklist at the bottom of the skill file. Do not skip any section — if you lack evidence, write "No evidence found" rather than omitting.
 - Label every major finding: [Confirmed], [Strong inference], or [Unverified]
 - Do NOT generate a PDF — the orchestrator handles PDF generation after all audits complete
@@ -109,7 +109,7 @@ If your score differs by more than 10 points, add a "Changes Since Last Audit" s
 explaining what changed. Possible causes: real site changes, different evidence found,
 calibration difference. Be specific about which findings drove the delta.
 
-The output file MUST be saved to: ./outputs/{DOMAIN}/{MARKDOWN_FILENAME}
+The output file MUST be saved to: ~/Documents/Claude/outputs/{DOMAIN}/{MARKDOWN_FILENAME}
 ```
 
 Replace the placeholders with actual values from the routing table.
@@ -124,7 +124,7 @@ Replace the placeholders with actual values from the routing table.
 After all agents complete, run the report validator:
 
 ```bash
-python3 ~/.claude/skills/shared/validate_reports.py "./outputs/{domain}"
+python3 ~/.claude/skills/shared/validate_reports.py "~/Documents/Claude/outputs/{domain}"
 ```
 
 This checks each report for:
@@ -144,12 +144,12 @@ Review the output. If any reports FAIL validation:
 When 3 or more suites were run, run the score extractor:
 
 ```bash
-python3 ~/.claude/skills/shared/extract_scores.py "./outputs/{domain}"
+python3 ~/.claude/skills/shared/extract_scores.py "~/Documents/Claude/outputs/{domain}"
 ```
 
 If a previous audit exists for the same domain, pass it for comparison:
 ```bash
-python3 ~/.claude/skills/shared/extract_scores.py "./outputs/{domain}" "./previous-outputs/{domain}"
+python3 ~/.claude/skills/shared/extract_scores.py "~/Documents/Claude/outputs/{domain}" "~/Documents/Claude/previous-outputs/{domain}"
 ```
 
 This automatically:
@@ -170,10 +170,10 @@ When the user says "full audit", "combined audit", or "generate full audit PDF" 
 
 1. Read the `full-audit-synthesis` skill from `skills/full-audit-synthesis/SKILL.md`
 2. Follow its instructions exactly:
-   - Read ALL selected suite markdown reports from `./outputs/{domain}/` (this works for any combo — all 8, or a subset like 3 or 4 suites)
+   - Read ALL selected suite markdown reports from `~/Documents/Claude/outputs/{domain}/` (this works for any combo — all 8, or a subset like 3 or 4 suites)
    - Build the data map (scores, findings, revenue estimates, cross-references)
    - Reconcile contradictions (use the suite with direct evidence)
-   - Write `./outputs/{domain}/FULL-AUDIT-REPORT.md` following the template
+   - Write `~/Documents/Claude/outputs/{domain}/FULL-AUDIT-REPORT.md` following the template
    - Ensure every cross-suite issue has evidence tags [Confirmed] / [Strong inference]
    - Ensure every suite summary is 5-6 sentences with specific evidence
 3. Verify the output has all required sections (check the skill's Template Compliance checklist)
@@ -192,18 +192,18 @@ The PDF engine will detect `FULL-AUDIT-REPORT.md` and render its sections (Execu
 Run the PDF generator for all suites that produced valid markdown reports:
 
 ```bash
-python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/{domain}" {suite_numbers_with_reports}
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" {suite_numbers_with_reports}
 ```
 
 Example: if suites 1,3,4,5 were selected and all produced markdown:
 ```bash
-python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/bdrgroup.co.uk" 1 3 4 5
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/bdrgroup.co.uk" 1 3 4 5
 ```
 
 After PDF generation, verify the PDFs exist and are reasonable size (>50KB each):
 
 ```bash
-ls -la "./outputs/{domain}/"*.pdf
+ls -la "~/Documents/Claude/outputs/{domain}/"*.pdf
 ```
 
 **If PDF generation fails:** Report the error clearly. Do not silently deliver only markdown.
@@ -222,7 +222,7 @@ Audit complete for {domain}
   4  Security         52/100  D       AUDIT-4-SECURITY.pdf       120 KB
   ...
 
-{count} PDF report(s) generated in ./outputs/{domain}/
+{count} PDF report(s) generated in ~/Documents/Claude/outputs/{domain}/
 ```
 
 If any reports had validation issues:
@@ -256,7 +256,7 @@ Selecting `all` from the menu generates **8 separate PDFs**, NOT a combined PDF.
 
 To generate a combined report when explicitly requested:
 ```bash
-python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/{domain}" 1 2 3 4 5 6 7 8 --full
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 --full
 ```
 
 ### Evidence Standards (Non-Negotiable)
@@ -269,7 +269,7 @@ All audit agents must follow these hardening rules:
 
 ### Output Paths (Non-Negotiable)
 
-- All output goes to `./outputs/{domain}/` relative to the working directory
+- All output goes to `~/Documents/Claude/outputs/{domain}/` relative to the working directory
 - Never hardcode user-specific paths
 - The `CLAUDE_AUDIT_OUTPUT_ROOT` environment variable overrides `./outputs` if set
 - Every agent must be told the exact output path — do not let agents choose their own
