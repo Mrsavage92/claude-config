@@ -18,10 +18,17 @@ This file is synced across both machines (Mac + Windows PC) via GitHub. Update i
 
 Both machines auto-sync on session start/end via Stop and SessionStart hooks in settings.json.
 
-- **commands + agents** → `github.com/Mrsavage92/claude-config`
-- **skills** → `github.com/Mrsavage92/skills-library`
+**Single source of truth: `github.com/Mrsavage92/claude-config`**
+
+Everything lives here — skills, agents, commands, this file, sync scripts. Both machines pull from and push to this one repo.
+
+- **skills** → `claude-config/skills/` (166 skill directories)
+- **agents** → `claude-config/agents/` (60 agent .md files)
+- **commands** → `claude-config/commands/` (81 command .md files)
 - **this file** → synced as `global-context.md` in claude-config repo
 - **Notion hub** → https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917
+
+`github.com/Mrsavage92/skills-library` is a separate forked repo Adam found — NOT the working config. It's a public showcase only. Never push working content there first.
 
 Run `/sync-knowledge-base` after adding new skills/commands to update Notion docs.
 
