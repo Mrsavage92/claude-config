@@ -124,7 +124,7 @@ Replace the placeholders with actual values from the routing table.
 After all agents complete, run the report validator:
 
 ```bash
-python3 scripts/validate_reports.py "./outputs/{domain}"
+python3 ~/.claude/skills/shared/validate_reports.py "./outputs/{domain}"
 ```
 
 This checks each report for:
@@ -144,12 +144,12 @@ Review the output. If any reports FAIL validation:
 When 3 or more suites were run, run the score extractor:
 
 ```bash
-python3 scripts/extract_scores.py "./outputs/{domain}"
+python3 ~/.claude/skills/shared/extract_scores.py "./outputs/{domain}"
 ```
 
 If a previous audit exists for the same domain, pass it for comparison:
 ```bash
-python3 scripts/extract_scores.py "./outputs/{domain}" "./previous-outputs/{domain}"
+python3 ~/.claude/skills/shared/extract_scores.py "./outputs/{domain}" "./previous-outputs/{domain}"
 ```
 
 This automatically:
@@ -192,12 +192,12 @@ The PDF engine will detect `FULL-AUDIT-REPORT.md` and render its sections (Execu
 Run the PDF generator for all suites that produced valid markdown reports:
 
 ```bash
-python3 scripts/generate_suite_pdfs.py "./outputs/{domain}" {suite_numbers_with_reports}
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/{domain}" {suite_numbers_with_reports}
 ```
 
 Example: if suites 1,3,4,5 were selected and all produced markdown:
 ```bash
-python3 scripts/generate_suite_pdfs.py "./outputs/bdrgroup.co.uk" 1 3 4 5
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/bdrgroup.co.uk" 1 3 4 5
 ```
 
 After PDF generation, verify the PDFs exist and are reasonable size (>50KB each):
@@ -256,7 +256,7 @@ Selecting `all` from the menu generates **8 separate PDFs**, NOT a combined PDF.
 
 To generate a combined report when explicitly requested:
 ```bash
-python3 scripts/generate_suite_pdfs.py "./outputs/{domain}" 1 2 3 4 5 6 7 8 --full
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "./outputs/{domain}" 1 2 3 4 5 6 7 8 --full
 ```
 
 ### Evidence Standards (Non-Negotiable)
@@ -278,7 +278,7 @@ All audit agents must follow these hardening rules:
 
 - The deliverable is the PDF, not the markdown
 - Internal markdown files are implementation details
-- Every audit flow MUST end with PDF generation via `scripts/generate_suite_pdfs.py`
+- Every audit flow MUST end with PDF generation via `~/.claude/skills/shared/generate_suite_pdfs.py`
 - If PDF generation fails, report the error — do not silently deliver only markdown
 
 ### Suite Skills Do NOT Generate PDFs
