@@ -796,15 +796,24 @@ def render_md_body(text, st, use_severity_cards=False, current_section=""):
             )
             if is_finding:
                 i += 1
-                # Consume following paragraph lines as card body
+                # Consume ALL following lines as card body until we hit a blank line,
+                # another heading, a table, or another numbered item.
+                # This includes bullet lines, bold-label lines, plain paragraphs —
+                # everything belongs to this finding's card body.
                 body_lines = []
                 while i < len(lines):
                     ls = lines[i].strip()
                     if not ls:
                         i += 1; break
                     if ls.startswith('#') or ls.startswith('|'): break
-                    if re.match(r'^\s*[-*\u2022]\s', lines[i]) or re.match(r'^\s*\d+\.\s', lines[i]): break
-                    body_lines.append(ls); i += 1
+                    if re.match(r'^\s*\d+\.\s', lines[i]): break
+                    # Strip bullet prefix if present, keep content
+                    bm = re.match(r'^\s*[-*\u2022]\s+(.*)', lines[i])
+                    if bm:
+                        body_lines.append(bm.group(1).strip())
+                    else:
+                        body_lines.append(ls)
+                    i += 1
                 body = ' '.join(body_lines)
                 # Strip score suffixes like (-10) and bold markers from title
                 clean_title = re.sub(r'\s*\(-?\d+\s*(?:points?)?\)\s*$', '', title).strip()
@@ -884,7 +893,16 @@ def render_md_body(text, st, use_severity_cards=False, current_section=""):
                         if not cl: break
                         if re.match(r'^\s*\d+\.\s+', lines[i]): break
                         if cl.startswith('#') or cl.startswith('|'): break
-                        if re.match(r'^\s*[-*\u2022]\s', lines[i]): break
+                        # Consume bullet lines that are bold-label details (Evidence/Impact/Fix etc.)
+                        bm = re.match(r'^\s*[-*\u2022]\s+(.*)', lines[i])
+                        if bm:
+                            inner = bm.group(1).strip()
+                            if re.match(r'^\*\*\w+.*?:\*\*', inner):
+                                body_parts.append(inner); i += 1; continue
+                            break
+                        # Also consume bare bold-label lines (no bullet prefix)
+                        if re.match(r'^\*\*\w+.*?:\*\*', cl):
+                            body_parts.append(cl); i += 1; continue
                         body_parts.append(cl); i += 1
                     items.append((num_val, item_text, ' '.join(body_parts)))
                 else:
