@@ -169,6 +169,10 @@ In monorepo mode: commit from the monorepo root (`C:/Users/Adam/Documents/au-com
 
 ### Phase 0.25 — Feature & Market Research
 
+**Pre-research check:** If `RESEARCH-BRIEF.md` exists in the project root (output of `/saas-research`), this phase is already done at a deeper level. Extract the "For saas-build" section from RESEARCH-BRIEF.md and generate MARKET-BRIEF.md from it — mapping competitors, patterns, must-have features, differentiators, and the one-liner. Skip Steps A and B entirely. Log: "Phase 0.25 complete — MARKET-BRIEF.md generated from RESEARCH-BRIEF.md (pre-researched)" and proceed to Phase 0.5.
+
+If no RESEARCH-BRIEF.md exists, run the standard research below:
+
 Two questions to answer before any design work:
 1. "What are active, successful competitors doing that works?"
 2. "What do they miss that users need?"
@@ -228,7 +232,7 @@ Write `MARKET-BRIEF.md` to project root:
 
 SCOPE.md (Phase 1) must include the "Must-have for v1" features in the page inventory. If a must-have feature has no page defined, add the page.
 
-If resuming: check if MARKET-BRIEF.md exists. If yes, skip this phase.
+If resuming: check if MARKET-BRIEF.md exists. If yes, skip this phase. Also check for RESEARCH-BRIEF.md — if it exists but MARKET-BRIEF.md doesn't, generate MARKET-BRIEF.md from it (see pre-research check above).
 
 Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 
