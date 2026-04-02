@@ -19,6 +19,7 @@ This file is the contract. If a rule lives only in an individual skill file and 
 
 | Skill | Role |
 |---|---|
+| `/saas-research` | Pre-kickoff market research — gap analysis, competitor deep-dive (steal/avoid), profitability model, traffic feasibility, go/no-go scorecard. Runs BEFORE /saas-build. Outputs RESEARCH-BRIEF.md. Optional but recommended. |
 | `/web-design-research` | Pre-build design research — competitor analysis, 21st.dev component sourcing, LottieFiles animations, unique color system, multi-page marketing structure. Runs BEFORE /web-scope. Outputs DESIGN-BRIEF.md. |
 | `/web-scope` | Define pages, design decisions, and product architecture before writing code — reads DESIGN-BRIEF.md as primary input |
 | `/web-scaffold` | Bootstrap the full project: config files, design system, routes, AppLayout, TrialBanner, Sentry init — hero built in Phase 4 |
