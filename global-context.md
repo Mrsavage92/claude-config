@@ -87,8 +87,9 @@ The web-* skills are collectively called the **premium website suite**. It repla
 Lovable is no longer used for new projects. The full pipeline is orchestrated by `/saas-build` — just give it a product brief and it runs everything autonomously. For reference, the phases are:
 
 ```
+/saas-research     - PRE-KICKOFF — gap analysis, competitor teardown, profitability, traffic, go/no-go (RESEARCH-BRIEF.md)
 /saas-build        - ORCHESTRATOR — runs the full pipeline autonomously from brief to deploy
-  Phase 0.25       - market research (MARKET-BRIEF.md)
+  Phase 0.25       - market research (MARKET-BRIEF.md) — skips if RESEARCH-BRIEF.md exists
   Phase 0.5        - design research via /web-design-research (DESIGN-BRIEF.md)
   Phase 1          - scope via /web-scope (SCOPE.md)
   Phase 2          - scaffold: config, design system, routes, AppLayout, Sentry, NotFoundPage, useSeo
