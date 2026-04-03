@@ -69,6 +69,11 @@ If no GitHub repo exists for this product: create it in Phase 0 before writing a
 
 ### Phase 0 — Orient
 
+**Pre-flight checks (run before reading any files):**
+1. **Vercel auth:** Run `npx vercel whoami 2>&1`. If it returns an error or "not logged in": log NEEDS_HUMAN "Run `npx vercel login` before starting the build — deploy will fail at Phase 6 without it." Continue building (don't block) but the user is warned early.
+2. **Git config:** Run `git config user.name` and `git config user.email`. If either is empty: set them from GitHub: `git config user.name "$(gh api user -q '.name')"` and `git config user.email "$(gh api user -q '.email')"`. This prevents commit warnings throughout the build.
+3. **web-system-prompt.md:** Check if `~/.claude/web-system-prompt.md` exists. If not: log "MISSING: web-system-prompt.md (Design DNA) — using premium-website.md rules as fallback" to BUILD-LOG.md. Do NOT reference this file in later phases if it doesn't exist.
+
 Read these files in full — they are the source of truth for the entire build. Run all reads in parallel:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
 2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
@@ -293,9 +298,11 @@ Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
 
 ### Phase 1.5 — Product Category Detection
 
-**Run this phase between Phase 1 (Scope) and Phase 2 (Scaffold). It is not optional.**
+**Run this phase between Phase 1 (Scope) and Phase 2 (Scaffold).**
 
-Read SCOPE.md and MARKET-BRIEF.md. Classify the product into exactly one of these 8 categories from `PRODUCT-CATEGORY-LIBRARY.md` (located at the monorepo root, or `C:\Users\Adam\Documents\au-compliance-platform\PRODUCT-CATEGORY-LIBRARY.md`):
+**If `PRODUCT-CATEGORY-LIBRARY.md` does not exist** (standalone builds outside the AU compliance monorepo): skip the category detection and hard-gate rules. Log "Phase 1.5 skipped — no PRODUCT-CATEGORY-LIBRARY.md found. Using DESIGN-BRIEF.md personality type as the design driver." to BUILD-LOG.md. Proceed to Phase 2.
+
+**If `PRODUCT-CATEGORY-LIBRARY.md` exists:** Read SCOPE.md and MARKET-BRIEF.md. Classify the product into exactly one of these 8 categories from `PRODUCT-CATEGORY-LIBRARY.md` (located at the monorepo root, or `C:\Users\Adam\Documents\au-compliance-platform\PRODUCT-CATEGORY-LIBRARY.md`):
 
 1. **Reputation/Reviews** — RepuTrack, BirdEye type
 2. **Entity/Company Intelligence** — CorpWatch, Crunchbase type
@@ -373,11 +380,57 @@ Execute the full /web-scaffold process using decisions from SCOPE.md and DESIGN-
 7. Run install commands. If any command exits non-zero: read the full error output, fix the root cause (wrong Node version, missing lockfile, network issue), retry once. If retry fails, log STUCK with exact error and stop.
 ```bash
 npm install
+npm install framer-motion class-variance-authority clsx tailwind-merge sonner
 npx shadcn@latest init
 npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea switch radio-group checkbox
 npm install @sentry/react
-npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react @types/node
 ```
+**CRITICAL post-install fixes (apply EVERY build — these are known issues):**
+```bash
+# Fix 1: shadcn creates literal @/ directory instead of resolving alias
+if [ -d "./@" ]; then
+  cp -r ./@/components/ui/* src/components/ui/ 2>/dev/null
+  cp -r ./@/lib/* src/lib/ 2>/dev/null
+  cp -r ./@/hooks/* src/hooks/ 2>/dev/null
+  rm -rf ./@
+fi
+
+# Fix 2: shadcn sonner.tsx has circular self-import + next-themes dep — overwrite
+cat > src/components/ui/sonner.tsx << 'SONNER'
+import { Toaster as Sonner } from "sonner"
+function Toaster() {
+  return (
+    <Sonner theme="dark" className="toaster group" toastOptions={{
+      classNames: {
+        toast: "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+        description: "group-[.toast]:text-muted-foreground",
+        actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+        cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+      },
+    }} />
+  )
+}
+export { Toaster }
+SONNER
+
+# Fix 3: Delete Vite template boilerplate that conflicts
+rm -f src/App.css src/assets/react.svg src/assets/vite.svg src/assets/hero.png 2>/dev/null
+```
+**Animation library rule:** Always use `framer-motion` (NOT the `motion` package). The `motion` v12 package has known issues with `motion.div` in Vite bundled builds causing React error #130. Import from `'framer-motion'` everywhere. The `vendor-motion` manualChunk catches both.
+
+**tsconfig.app.json:** MUST include `"exclude": ["src/tests"]` — test files use jest-dom matchers that tsc doesn't understand. Vitest handles test types at runtime.
+
+**vite.config.ts manualChunks:** MUST use function form, not object form. Object form causes TypeScript errors in Vite 6+:
+```ts
+manualChunks(id: string) {
+  if (id.includes('react-dom') || id.includes('react-router')) return 'vendor-react'
+  if (id.includes('framer-motion') || id.includes('motion')) return 'vendor-motion'
+  if (id.includes('@tanstack/react-query')) return 'vendor-query'
+  if (id.includes('@supabase')) return 'vendor-supabase'
+}
+```
+
 After install, create `vitest.config.ts`:
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -386,7 +439,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
-  test: { environment: 'jsdom', setupFiles: ['./src/tests/setup.ts'] },
+  test: { environment: 'jsdom', globals: true, setupFiles: ['./src/tests/setup.ts'] },
 })
 ```
 Create `src/tests/setup.ts`:
