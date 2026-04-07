@@ -22,6 +22,27 @@ Traditional SEO optimizes for search engine rankings. GEO optimizes for AI citat
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a business owner, CEO, or manager — not a technical auditor. Every sentence must make sense to someone who has never heard a technical term.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "AI assistants like ChatGPT can't find or recommend your business" NOT "Low AI citability score due to missing answer blocks"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Ask your content writer to add FAQ sections to your main pages — a half-day task that makes your business visible to AI search" NOT "Implement FAQPage schema with answer blocks"
+4. **Lead with cost.** What is this costing in visibility, customers finding you via AI, or competitive position?
+5. **Use plain severity labels:**
+   - 🔴 **Fix immediately** — AI systems are actively unable to find or cite you
+   - 🟠 **Fix this month** — you're missing AI visibility opportunities
+   - 🟡 **Plan for next quarter** — worth doing, not urgent
+6. **Translate ALL technical terms.** "AI search tools can't read your website properly" NOT "AI crawlers blocked in robots.txt". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
@@ -216,6 +237,8 @@ Every issue found during the audit is classified by severity:
 
 ## Output Format
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 Generate a file called `GEO-AUDIT-REPORT.md` with the following structure:
 
 ```markdown
@@ -248,21 +271,21 @@ Generate a file called `GEO-AUDIT-REPORT.md` with the following structure:
 
 ---
 
-## Critical Issues (Fix Immediately)
+## 🔴 Fix Immediately — AI Systems Can't Find You
 
-[List each critical issue with specific page URLs and recommended fix]
+[Items where AI systems actively cannot find or cite the business. Each: plain-English problem → what it costs in AI visibility → "Ask your [role] to [action] — [time estimate]"]
 
-## High Priority Issues
+## 🟠 Fix This Month — Missing AI Visibility
 
-[List each high-priority issue with details]
+[Items where AI visibility opportunities are being missed. Same format: problem → cost → who fixes it → how long.]
 
-## Medium Priority Issues
+## 🟡 Plan for Next Quarter — Improve AI Discoverability
 
-[List each medium-priority issue]
+[Improvements worth making this quarter. Same format.]
 
-## Low Priority Issues
+## Nice to Have — Polish When Time Allows
 
-[List each low-priority issue]
+[Polish items when time allows.]
 
 ---
 
@@ -290,7 +313,7 @@ Generate a file called `GEO-AUDIT-REPORT.md` with the following structure:
 
 ## Quick Wins (Implement This Week)
 
-1. [Specific, actionable quick win with expected impact]
+1. [Specific action — who does it, how long, expected AI visibility impact]
 2. [Another quick win]
 3. [Another quick win]
 4. [Another quick win]
@@ -371,10 +394,10 @@ Generate a file called `GEO-AUDIT-REPORT.md` with the following structure:
 Your report MUST contain ALL of these sections. If any are missing, add them before saving.
 
 - [ ] Executive Summary (with overall GEO score and score breakdown table)
-- [ ] Critical Issues — Fix Immediately (severity-tagged)
-- [ ] High Priority Issues
-- [ ] Medium Priority Issues
-- [ ] Low Priority Issues
+- [ ] 🔴 Fix Immediately (with who/how-long)
+- [ ] 🟠 Fix This Month
+- [ ] 🟡 Plan for Next Quarter
+- [ ] Nice to Have
 - [ ] Category Deep Dives (all 5 GEO categories with evidence)
 - [ ] Quick Wins — Implement This Week
 - [ ] 30-Day Action Plan

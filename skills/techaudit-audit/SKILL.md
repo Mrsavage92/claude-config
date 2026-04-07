@@ -13,6 +13,27 @@ The user runs `techaudit audit <url>`. This is the flagship command.
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a business owner, CEO, or manager — not a technical auditor. Every sentence must make sense to someone who has never heard a technical term.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "Your website loads slowly because images aren't optimised — this is losing you visitors" NOT "No Lazy Loading on Images"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Ask your developer to add lazy loading — a 30-minute fix" NOT "Add `loading='lazy'` to below-fold images"
+4. **Lead with cost.** What is this costing in revenue, customers, time, or reputation?
+5. **Use plain severity labels:**
+   - 🔴 **Fix immediately** — actively costing you money or customers
+   - 🟠 **Fix this month** — you're missing opportunities
+   - 🟡 **Plan for next quarter** — worth doing, not urgent
+6. **Translate ALL technical terms.** "Your website loads slowly because of unoptimised images" NOT "No lazy loading on below-fold images". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
@@ -301,6 +322,8 @@ Technical Health Score = (
 
 ## Phase 4: Output
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 ### TECHNICAL-AUDIT.md
 
 ```markdown
@@ -313,26 +336,26 @@ Technical Health Score = (
 ---
 
 ## Executive Summary
-[3-5 paragraphs: score, biggest win, biggest risk with business impact,
-top 3 fixes. Lead with: "53% of mobile users abandon sites that take
-longer than 3 seconds to load."]
+[3-5 paragraphs in plain English. Lead with what slow/broken websites cost the business.
+Name the biggest strength, biggest risk in £/$ terms, and top 3 fixes.
+Each fix names who should do it and how long it takes.]
 
 ## Score Breakdown
 | Category | Score | Weight | Weighted | Key Finding |
 |---|---|---|---|---|
 [All 6 categories with evidence]
 
-## Critical Issues (Fix Immediately)
-[Severity-coded findings]
+## 🔴 Fix Immediately — Costing You Money Right Now
+[Items actively breaking the user experience or costing customers. Each: plain-English problem → business cost → "Ask your [role] to [action] — [time estimate]"]
 
-## Quick Wins (This Week)
-[5-8 specific fixes]
+## 🟠 Fix This Month — You're Missing Opportunities
+[5-8 fixes. Each names who does it and how long it takes.]
 
-## Strategic Recommendations (This Month)
-[3-5 items with rationale]
+## 🟡 Plan for Next Quarter — Worth Doing, Not Urgent
+[3-5 items with business rationale. Name who leads each.]
 
 ## Detailed Analysis by Category
-[Full findings per category with quoted evidence from HTML source]
+[Full findings per category. Every finding title is a business impact statement. Translate technical terms. Track confidence with HTML comments only.]
 
 ## Tool Recommendations
 [Specific tools for ongoing monitoring: Google Search Console, PageSpeed Insights, etc.]
@@ -366,9 +389,9 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 
 - [ ] Executive Summary (3+ paragraphs)
 - [ ] Score Breakdown (table with all 5 categories)
-- [ ] Critical Issues — Fix Immediately (severity-tagged)
-- [ ] Quick Wins — This Week (5-8 items)
-- [ ] Strategic Recommendations — This Month
+- [ ] 🔴 Fix Immediately (with who/how-long)
+- [ ] 🟠 Fix This Month (5-8 items with who/how-long)
+- [ ] 🟡 Plan for Next Quarter
 - [ ] Detailed Analysis by Category (all 5 categories with evidence)
 - [ ] Tool Recommendations (specific tools named)
 - [ ] Data Map Summary (structured platform/stack block)

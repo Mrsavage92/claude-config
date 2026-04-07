@@ -13,6 +13,27 @@ The user runs `/ai-ready audit <company name>` (optionally with URL or industry)
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a CEO, COO, or business owner — not a technology consultant. Every sentence must make sense to someone who just wants to know what AI can do for their business.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "You're spending 15 hours a week on tasks that AI could handle in minutes" NOT "Low automation maturity score with manual workflow dominance"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Sign up for ChatGPT Team ($25/user/month) and have your marketing manager start using it for email drafts this week" NOT "Implement LLM-assisted content generation pipeline"
+4. **Lead with cost.** What is this costing in wasted time, missed opportunities, or competitive disadvantage?
+5. **Use plain severity labels:**
+   - 🔴 **Start immediately** — you're wasting significant time or money
+   - 🟠 **Start this month** — clear opportunities you're missing
+   - 🟡 **Plan for next quarter** — worth exploring, not urgent
+6. **Translate ALL technical terms.** "Your competitors are using AI chatbots to answer customer questions 24/7 while you rely on email" NOT "Competitive AI gap in conversational AI deployment". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder. Avoid hardcoded user-specific paths unless the user explicitly asked for them.**
@@ -359,6 +380,8 @@ For each recommendation, estimate:
 
 ## Phase 4: Output
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 ### AI-READINESS-AUDIT.md
 
 ```markdown
@@ -371,10 +394,10 @@ For each recommendation, estimate:
 ---
 
 ## Executive Summary
-[3-5 paragraphs: readiness level, current AI adoption state, biggest opportunity,
-competitive context, estimated ROI of implementing the roadmap.
-Lead with: "72% of organisations have adopted AI in at least one function.
-Here's where [Company] stands."]
+[3-5 paragraphs in plain English. Lead with the business opportunity — time and money that AI could save.
+Name current state, biggest quick win, competitive context.
+Every recommendation names a specific tool, who sets it up, and how long it takes.
+Write for a CEO who wants to know "what do I buy and who installs it?".]
 
 ## Score Breakdown
 | Category | Score | Weight | Weighted | Key Finding |
@@ -387,13 +410,13 @@ Here's where [Company] stands."]
 ## 30/60/90 Day AI Roadmap
 
 ### Days 1-30: Quick Wins
-[5-8 specific, tool-named recommendations with estimated time savings and costs]
+[5-8 specific tools with: tool name, cost, who sets it up, time to implement, hours saved per week]
 
 ### Days 31-60: Strategic Pilots
-[3-5 focused pilot recommendations with success criteria and ROI projections]
+[3-5 pilots with: what to try, who runs it, cost, success criteria, expected ROI]
 
 ### Days 61-90: Scale & Integrate
-[2-4 expansion recommendations building on the pilots]
+[2-4 scaling actions with: what to expand, who leads it, investment needed]
 
 ## Automation Opportunity Map
 [Table mapping current manual processes to specific AI tools that could handle them]

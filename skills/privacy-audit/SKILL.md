@@ -15,6 +15,27 @@ The user runs `privacy audit <url>`. Flagship command.
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a business owner, CEO, or manager — not a privacy lawyer. Every sentence must make sense to someone who has never read a regulation.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "Your website tracks visitors before they give permission — this could result in a fine" NOT "Pre-consent analytics firing violates PECR Regulation 6"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Ask your developer to install a cookie consent tool like Cookiebot — a 1-2 hour setup" NOT "Implement a PECR-compliant CMP with granular opt-in"
+4. **Lead with cost.** What is this risking in fines, customer trust, or legal exposure?
+5. **Use plain severity labels:**
+   - 🔴 **Fix immediately** — you may be breaking privacy law right now
+   - 🟠 **Fix this month** — gaps that increase your legal exposure
+   - 🟡 **Plan for next quarter** — improvements that strengthen trust
+6. **Translate ALL technical terms.** "Your website doesn't have cookie consent" NOT "No PECR-compliant CMP detected". "Your privacy policy doesn't say who you share data with" NOT "Incomplete Article 13(1)(e) disclosure". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder. Avoid hardcoded user-specific paths unless the user explicitly asked for them.**
@@ -321,6 +342,8 @@ Frame findings in terms of business risk:
 
 ## Phase 4: Output
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 ### PRIVACY-AUDIT.md
 
 ```markdown
@@ -334,7 +357,7 @@ Frame findings in terms of business risk:
 ---
 
 ## Executive Summary
-[Lead with a business-risk summary that fits the site's actual jurisdiction. If jurisdiction is unclear, say that the audit found potential compliance risks rather than asserting a definitive breach.]
+[3-5 paragraphs in plain English. Lead with what the privacy gaps mean for the business — risk of fines, customer trust, legal exposure. Name top 3 fixes with who does each one.]
 
 ## Score Breakdown
 [All 6 categories with scores and evidence]
@@ -344,11 +367,11 @@ Frame findings in terms of business risk:
 |---|---|---|---|
 [Every third-party script identified]
 
-## Critical Issues
-[Severity-coded findings, with evidence status for each major claim]
+## 🔴 Fix Immediately — You May Be Breaking Privacy Law
+[Items where the business may be breaking privacy law. Each: plain-English risk → what could happen → "Ask your [role] to [action] — [time estimate]". Track confidence with HTML comments only.]
 
-## Quick Wins (This Week)
-[5-8 specific fixes]
+## 🟠 Fix This Month — Reduce Your Legal Exposure
+[5-8 fixes. Each names who does it and how long it takes.]
 
 ## Privacy Policy Review
 [Completeness checklist results with specific gaps]
@@ -380,9 +403,9 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 - [ ] Score Breakdown (table with all 6 categories)
 - [ ] Composite Score Calculation (formula shown)
 - [ ] Data Map Summary (structured block with cookie/form/script inventory)
-- [ ] Critical Issues — Severity HIGH (numbered, evidence-tagged)
-- [ ] Elevated Issues — Severity MEDIUM
-- [ ] Quick Wins — This Week
+- [ ] 🔴 Fix Immediately (with who/how-long, no evidence tags)
+- [ ] 🟠 Fix This Month
+- [ ] 🟠 Quick Wins (with who/how-long)
 - [ ] Strategic Recommendations — This Month
 - [ ] Long-Term Recommendations — This Quarter
 - [ ] Reputational Risk Note
