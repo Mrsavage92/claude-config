@@ -94,7 +94,7 @@ INSTRUCTIONS — follow these phases in order:
 OUTPUT RULES:
 - Save to: ~/Documents/Claude/outputs/{DOMAIN}/{MARKDOWN_FILENAME}
 - Your report MUST contain every ## section listed in the skill's "Template Compliance" checklist at the bottom of the skill file. Do not skip any section — if you lack evidence, write "No evidence found" rather than omitting.
-- Label every major finding: [Confirmed], [Strong inference], or [Unverified]
+- Track confidence with HTML comments only: <!-- Confirmed -->, <!-- Strong inference -->, <!-- Unverified -->. NEVER show these tags in client-facing report text.
 - Do NOT generate a PDF — the orchestrator handles PDF generation after all audits complete
 - Do NOT hardcode any user-specific paths
 
@@ -131,7 +131,7 @@ This checks each report for:
 - Minimum line count (150 lines)
 - Required sections present (per-suite checklist)
 - Score present and valid (X/100 in first 1000 chars)
-- Evidence tags present (Confirmed, Strong inference)
+- Emoji severity headers present (🔴/🟠/🟡 or legacy Quick Wins/Fix Immediately)
 - No hardcoded paths
 
 Review the output. If any reports FAIL validation:
@@ -174,7 +174,7 @@ When the user says "full audit", "combined audit", or "generate full audit PDF" 
    - Build the data map (scores, findings, revenue estimates, cross-references)
    - Reconcile contradictions (use the suite with direct evidence)
    - Write `~/Documents/Claude/outputs/{domain}/FULL-AUDIT-REPORT.md` following the template
-   - Ensure every cross-suite issue has evidence tags [Confirmed] / [Strong inference]
+   - Ensure every cross-suite issue tracks confidence via HTML comments (not inline tags)
    - Ensure every suite summary is 5-6 sentences with specific evidence
 3. Verify the output has all required sections (check the skill's Template Compliance checklist)
 
@@ -259,10 +259,20 @@ To generate a combined report when explicitly requested:
 python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 --full
 ```
 
-### Evidence Standards (Non-Negotiable)
+To generate **both** individual PDFs AND a combined PDF:
+```bash
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 --both
+```
 
-All audit agents must follow these hardening rules:
-- Label findings as `Confirmed`, `Strong inference`, or `Unverified`
+Trigger phrases for "both" mode: "individual and combined", "all PDFs", "both individual and full".
+
+### Evidence & Tone Standards (Non-Negotiable)
+
+All audit agents must follow these rules:
+- Track confidence with HTML comments only (`<!-- Confirmed -->`, `<!-- Strong inference -->`) — NEVER show evidence tags in client-facing report text
+- Write all findings as business impact statements, not technical observations
+- Every action item names WHO does it and HOW LONG it takes
+- Use emoji severity labels: 🔴 Fix immediately, 🟠 Fix this month, 🟡 Plan for next quarter
 - Reconcile contradictions across suites before presenting unified findings
 - Avoid legal certainty language unless evidence and jurisdiction are both clear
 - Never turn an inference into a certainty in the final report
