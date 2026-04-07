@@ -19,7 +19,6 @@ This file is the contract. If a rule lives only in an individual skill file and 
 
 | Skill | Role |
 |---|---|
-| `/saas-research` | Pre-kickoff market research — gap analysis, competitor deep-dive (steal/avoid), profitability model, traffic feasibility, go/no-go scorecard. Runs BEFORE /saas-build. Outputs RESEARCH-BRIEF.md. Optional but recommended. |
 | `/web-design-research` | Pre-build design research — competitor analysis, 21st.dev component sourcing, LottieFiles animations, unique color system, multi-page marketing structure. Runs BEFORE /web-scope. Outputs DESIGN-BRIEF.md. |
 | `/web-scope` | Define pages, design decisions, and product architecture before writing code — reads DESIGN-BRIEF.md as primary input |
 | `/web-scaffold` | Bootstrap the full project: config files, design system, routes, AppLayout, TrialBanner, Sentry init — hero built in Phase 4 |
@@ -281,13 +280,42 @@ Before building any page, check the type and read the relevant sub-skill:
 | `/settings` route | `web-settings` | 4-tab layout, Stripe Customer Portal for billing tab |
 | `/setup` or `/onboarding` wizard | `web-onboarding` | Max 4 steps, writes per-step, trial activation on final step |
 
+## Copy Document (enforced by Phase 2.5 — COPY.md)
+
+**Copy-first, code-second.** All user-facing strings are written to `COPY.md` BEFORE any page code exists. The builder (Phase 4) reads COPY.md and implements strings literally — it never invents copy inline.
+
+COPY.md includes: hero headline/sub/CTAs, empty state copy for every page, error messages, onboarding step headings, settings labels, email subjects/bodies, and FAQ content. Every string is product-specific — if it could be pasted into a different SaaS unchanged, it's too generic. Rewrite using MARKET-BRIEF.md data.
+
+Phase 2.5 review gate: no empty fields, no placeholder text, no generic phrases ("streamline", "all-in-one", "powerful", "Get Started", "Learn More"). Differentiator sentence appears in hero_headline.
+
+## Critic Agent Protocol (enforced at 3 checkpoints)
+
+The builder should never be the sole reviewer of its own output. After these phases, a separate Critic agent reviews adversarially:
+
+| Checkpoint | When | What the Critic asks |
+|---|---|---|
+| After COPY.md | Phase 2.5 complete | "Would a buyer understand this in 5 seconds? Does it sound like every other SaaS?" |
+| After all pages built | Phase 4 complete | "What does [top competitor] do better? Name 3 specific things." |
+| After quality gate | Phase 5 complete | "Would I share this URL in a Slack channel? What's the weakest page?" |
+
+The Critic outputs `CRITIQUE.md` with specific rewrites. The builder implements every rewrite before committing.
+
+## Phase Progress Review (enforced before every commit)
+
+Every phase must pass its review gate BEFORE committing. This prevents bad output from entering the repo — no rollback needed.
+
+Key gates: MARKET-BRIEF.md has all 7 sections populated (Phase 0.25), DESIGN-BRIEF.md has Component Lock table (Phase 0.5), SCOPE.md has all pages with 7 fields (Phase 1), `npm run build` exits 0 + hero uses differentiator (Phase 2), COPY.md has no generic phrases (Phase 2.5), per-page self-review passes (Phase 4 per page), `vitest run` exits 0 (Phase 4.5).
+
+Max 3 review-fix attempts per gate. If still failing: log STUCK.
+
 ## Two-Pass Self-Review (enforced per page in web-page)
 
 Every page requires two passes before moving to the next:
 - **Pass 1**: 13-item checklist (or 28-item dashboard checklist). Fix all failures.
-- **Pass 2**: Fresh eyes — 5 questions: Would I know what to do? Does the empty state have a reason to act? Does loading feel intentional? Is the color doing one job? Would I be embarrassed to show this to a designer? Fix anything that fails.
+- **Pass 1.5**: React key hygiene — grep for `.map(` and verify stable keys (never `key={index}`).
+- **Pass 2**: Fresh eyes — 5 questions: Would I know what to do? Does the empty state have a reason to act? Does loading feel intentional? Is the color doing one job? Would I be embarrassed to show this to a designer? Plus anti-generic check: grep for "The modern way to", "Streamline your", "All-in-one", "Powerful yet simple", "AI-powered" (unless core feature is AI), "Lorem ipsum", generic "Learn More"/"Get Started" buttons. Rewrite any matches using MARKET-BRIEF.md data.
 
-Both passes are required. Pass 1 alone is not sufficient.
+All passes are required. Pass 1 alone is not sufficient.
 
 ## Context Refresh Rule (every 3rd page in web-page)
 
@@ -417,26 +445,40 @@ Run before any deploy:
 ## Full Build Loop
 
 ```
-saas-build 0.25   → MARKET-BRIEF.md: competitor website deep-dive (hero patterns, social proof format, pricing model), feature gaps, differentiator
-/web-design-research → DESIGN-BRIEF.md: reads MARKET-BRIEF.md competitor data, 21st.dev components, LottieFiles, unique color system, multi-page structure
-/web-scope        → SCOPE.md — reads DESIGN-BRIEF.md, imports all design decisions, defines page inventory
-/web-scaffold     → foundation: config, design system, routes, AppLayout, TrialBanner, Sentry
-/web-supabase     → schema, RLS policies, auth, TypeScript types (if backend)
-/web-stripe       → checkout session, webhooks, UpgradeButton (if paid plans)
-/web-email        → transactional email setup (if email flows required)
-/web-page × N     → one page at a time — landing first, auth second, /setup third
-                    (dashboard pages: read /dashboard-design first)
-                    (list pages: read /web-table first)
-/web-settings     → /settings page (always required for SaaS with auth)
-/web-review       → audit before deploy (38+/40 required)
-/web-deploy       → Vercel (SPA) or Railway (full-stack)
+RESEARCH (discovery)
+  Phase 0.25      → MARKET-BRIEF.md: competitor deep-dive, feature gaps, differentiator
+  Phase 0.5       → DESIGN-BRIEF.md: personality, color system, component lock, hero architecture
+
+PLAN (structure)
+  Phase 1          → SCOPE.md: page inventory, 7 fields per page, build order
+  Phase 1.5        → Category rule loading: hero override, trust signals, forbidden patterns
+
+BUILD (code)
+  Phase 2          → /web-scaffold: foundation, config, routes, landing page
+  Phase 2.5        → COPY.md: ALL user-facing strings — copy-first, code-second
+                     ↳ Critic #1: "Would a buyer understand this in 5 seconds?"
+  Phase 3          → Backend: /web-supabase + /web-stripe + /web-email (parallel)
+  Phase 4          → /web-page × N: reads COPY.md for every string, per-page review gate
+                     ↳ Critic #2: "What does the top competitor do better? Name 3 things."
+
+QUALITY (gates)
+  Phase 4.5        → Vitest: auth flow, onboarding flow, core feature smoke tests
+  Phase 5          → /web-review: discovery alignment check + 38+/40 score loop
+                     ↳ Critic #3: "Would I share this URL in a Slack channel?"
+
+SHIP (deploy)
+  Phase 6          → /web-deploy: Vercel, env vars, smoke test, bundle audit
+  Phase 7          → Gap analysis loop: P1-P4 checklist, auto-fix
+  Phase 8          → Handoff: domain check, BUILD-LOG.md final entry, Notion push
 ```
 
 Page build order enforced by saas-build:
 1. `/` — Landing (non-negotiables apply: animated bg, product mockup, STAGGER hero)
-2. `/auth` — Sign in / sign up
-3. `/setup` — Onboarding wizard (mandatory for all SaaS with auth)
-4. App pages in SCOPE.md priority order
-5. `/settings` — Settings (mandatory for all SaaS with auth)
+2. `/auth` — Sign in / sign up (if Phase 3a completed)
+3. `/reset-password` — Password reset (if Phase 3a completed)
+4. `/setup` — Onboarding wizard (mandatory for all SaaS with auth)
+5. App pages in SCOPE.md priority order
+6. `/settings` — Settings (mandatory for all SaaS with auth)
+7. `/privacy` + `/terms` — Static pages (always last)
 
 Orchestrated autonomously by `/saas-build`. Update this file when the suite changes — saas-build reads it at Phase 0 and inherits everything automatically.
