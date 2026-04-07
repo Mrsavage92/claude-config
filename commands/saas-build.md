@@ -390,7 +390,14 @@ Execute the full /web-scaffold process using decisions from SCOPE.md, DESIGN-BRI
 
 **Steps 1-15 — run the full /web-scaffold process.** Read `~/.claude/commands/web-scaffold.md` for all 15 steps. The following saas-build-specific overrides apply on top of web-scaffold:
 
-- **Step 4 override:** CLAUDE.md MUST also include: product personality type and differentiator sentence from MARKET-BRIEF.md (in addition to standard color job + page inventory)
+- **Step 4 override — CLAUDE.md as single builder context:** CLAUDE.md is the ONE file the per-page builder reads. It must contain everything needed to build any page without reading other files. Include:
+  - Color job definition (brand HSL, 2 primary roles, max uses)
+  - Product personality type (from DESIGN-BRIEF.md)
+  - Differentiator sentence (from MARKET-BRIEF.md)
+  - Page inventory summary (from SCOPE.md)
+  - Category (from Phase 1.5) and any hero/UX overrides
+  - `## Content Sources` section: "All copy: COPY.md. Design decisions: DESIGN-BRIEF.md."
+  This prevents the builder from reading 7 files per page — it reads CLAUDE.md + COPY.md only.
 - **Step 14 — icon generation on Windows:** If `infsh`/`jq`/`curl` are unavailable, run the `/ai-image-generation` skill with the icon prompt from DESIGN-BRIEF.md. The skill handles download cross-platform. If that also fails: log NEEDS_HUMAN "Add icon-192.png, icon-512.png, and og-image.jpg to /public — required before Phase 6 deploy." Continue building, but Phase 6 pre-deploy checks MUST verify these files exist before deploying.
 
 Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.

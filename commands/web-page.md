@@ -14,14 +14,21 @@ The old pattern (build all pages, review at the end) produced thin, empty-feelin
 
 ## Process
 
-### Step 1 — Read Context
-Read `~/.claude/web-system-prompt.md`. If missing: continue — use sensible dark SaaS defaults (HSL color variables, Inter/Geist font, 4px grid spacing) and flag NEEDS_HUMAN "Install web-system-prompt.md — Design DNA is missing."
-Read `SCOPE.md` for the page definition (purpose, data, empty state, loading state, error state, signature element).
-Read `CLAUDE.md` for color job, design decisions. If missing: continue — read SCOPE.md and DESIGN-BRIEF.md for color decisions.
-Read `DESIGN-BRIEF.md` for personality type — this determines the tone of ALL copy on this page.
-Read `COPY.md` if it exists — this is the single source of truth for all user-facing strings. Use every string from COPY.md literally (headlines, CTAs, empty states, error messages). If a string is missing from COPY.md, add it there first (maintaining personality tone), then use it. The builder does NOT invent copy.
-Read `MARKET-BRIEF.md` if it exists — extract `Our differentiator` sentence. This must echo through the product, not just the landing page.
-Read `src/styles/index.css` and Glob `src/components/**/*.tsx` for existing component inventory. If `src/styles/index.css` missing: continue.
+### Step 1 — Read Context (priority order — stop when you have enough)
+
+**Primary source (read first, contains everything the builder needs):**
+Read `CLAUDE.md` in the project root. A well-written CLAUDE.md contains: color job, personality type, differentiator, page inventory, and design decisions. If this file is complete, it's the only context file you need for building.
+
+**Secondary sources (read only if CLAUDE.md is missing fields):**
+- `COPY.md` — single source of truth for all user-facing strings. Use every string literally. If a string is missing, add it to COPY.md first (matching personality tone), then use it. The builder does NOT invent copy.
+- `SCOPE.md` — page definition (purpose, data, empty state, loading state, error state, signature element). Read the section for THIS page only, not the full file.
+- `DESIGN-BRIEF.md` — personality type and Component Lock table. Only needed if CLAUDE.md doesn't state the personality.
+- `~/.claude/web-system-prompt.md` (Design DNA) — read ONCE per session, not per page. If you've already read it earlier in this session, don't re-read.
+
+**Component inventory (always read):**
+Read `src/styles/index.css` and Glob `src/components/**/*.tsx` to know what already exists. Never recreate a component that's already built.
+
+**Do NOT read MARKET-BRIEF.md during page builds.** Its data should already be in COPY.md and CLAUDE.md. Reading 7 files per page dilutes attention and produces inconsistent output. If the differentiator isn't in CLAUDE.md, add it there — don't read MARKET-BRIEF.md every time.
 
 If SCOPE.md does not have a definition for the requested page: define it now (all 5 fields) and add it to SCOPE.md before building.
 
