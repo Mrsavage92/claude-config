@@ -50,27 +50,36 @@ For each page component:
 - Does the hero have a real product visual (screenshot, mockup, UI preview in a frame)? Not just a gradient blob.
 - Is the headline at display or hero size with negative letter-spacing?
 
-**All pages (1 point each):**
-- Are empty states designed with a CTA? (Icon in muted circle + heading + description + button — not just text)
-- Does the dashboard have a getting-started track for new users with zero data?
-- Is typography hierarchical? (Not everything at text-sm)
-- Does each page have one "signature element" that makes it visually interesting?
-- Is spacing generous? (Not cramped — section gaps 24px+, card padding 20px+)
-- Do all cards/sections use alternating backgrounds for visual rhythm?
-- Is the color usage restrained? (Brand color in 2 places max per page)
-- Are Framer Motion scroll animations on all major sections?
+**All pages (8 criteria, 1 point each):**
 
-**Copy quality (deducts from Visual Quality — generic copy is a visual defect):**
-Read COPY.md (if exists) and MARKET-BRIEF.md (if exists). Then grep all page components for:
-- Generic phrases: "Streamline your", "All-in-one", "Powerful yet simple", "Take control of", "The modern way to" → each occurrence: -0.5 points
-- Generic CTAs: "Get Started", "Learn More" without specificity → each: -0.25 points
-- Hero headline does NOT derive from MARKET-BRIEF.md differentiator → -1.0 point
-- Tone mismatch: page copy contradicts DESIGN-BRIEF.md personality type (casual on Enterprise Authority, formal on Bold Operator) → -0.5 per page
-- Placeholder text still present ("Lorem ipsum", "[placeholder]", "TODO") → -1.0 per occurrence
+| # | Criterion | Excellent (1.0) | Good (0.75) | Needs Work (0.5) | Poor (0) |
+|---|---|---|---|---|---|
+| 1 | Empty states have a CTA (icon + heading + description + button) | All pages | Most pages | Some pages | None |
+| 2 | Dashboard has getting-started track for zero-data users | Present + actionable | Present but vague | Partial | Missing |
+| 3 | Typography is hierarchical (not all text-sm) | 3+ levels per page | 2 levels | Mostly uniform | All text-sm |
+| 4 | Each page has a signature element (counter, arc, timeline, viz) | All app pages | Most pages | Landing only | None |
+| 5 | Spacing is generous (section gaps 24px+, card padding 20px+) | Generous throughout | Mostly generous | Some cramping | Cramped |
+| 6 | Cards/sections use alternating backgrounds for rhythm | Consistent rhythm | Mostly | Inconsistent | No variation |
+| 7 | Color usage restrained (brand color in max 2 roles per page) | All pages ≤2 | Most pages ≤2 | Some pages >2 | Brand color everywhere |
+| 8 | Framer Motion scroll animations on all major sections | All sections animate | Most sections | Landing only | No animations |
 
-Minimum Visual Quality score: 0/10 (floor, not negative).
+**Copy quality (mandatory 9th and 10th criteria — NOT optional, NOT a deduction):**
 
-Score each: Excellent (1.0) / Good (0.75) / Needs Work (0.5) / Poor (0) across 10 criteria, then apply copy quality deductions.
+Read COPY.md (if exists), MARKET-BRIEF.md (if exists), and DESIGN-BRIEF.md personality type. Then:
+
+| # | Criterion | How to score |
+|---|---|---|
+| 9 | **Copy specificity** — grep ALL page components for generic phrases | Excellent (1.0): zero generic phrases found. Good (0.75): 1-2 minor generics ("Learn More" button). Needs Work (0.5): 3+ generics or hero uses non-differentiator headline. Poor (0): placeholder text present OR hero says "Streamline your [noun]" |
+| 10 | **Tone consistency** — verify copy matches DESIGN-BRIEF.md personality | Excellent (1.0): every page matches personality tone. Good (0.75): 1 page drifts. Needs Work (0.5): 2+ pages drift or mixed tones. Poor (0): no evidence personality was considered — reads like default ChatGPT SaaS copy |
+
+**Mandatory grep for criterion 9** (run this, do not skip):
+Search all `src/pages/*.tsx` and `src/components/**/*.tsx` for: `Streamline`, `All-in-one`, `Powerful yet simple`, `Take control`, `The modern way to`, `Manage your`, `Collaborate with your team`, `Enterprise-grade`, `Click here`, `Submit`, `Get Started` (without product-specific context), `Learn More` (without target), `Lorem ipsum`, `placeholder`, `TODO`.
+Count occurrences. Score per table above.
+
+**Mandatory check for criterion 10:**
+Read DESIGN-BRIEF.md personality field. Check 2 sample pages (landing + one app page): does the copy tone match? Enterprise Authority should be formal/third-person. Bold Operator should be punchy/imperative. Health & Care should be warm/reassuring.
+
+Score all 10 criteria: Landing (2 pts) + All pages (8 pts) + Copy (2 pts) = 12 raw points. Normalize to 10/10 scale: `Visual Quality = (raw / 12) × 10`, rounded to nearest 0.5.
 
 #### C. Accessibility (target: 10/10)
 
@@ -175,10 +184,11 @@ Fix everything that doesn't require a new design decision.
 ### Step 6 — Visual Quality Upgrades (if Visual Quality < 8/10)
 
 For each page scoring below 0.75 average:
-1. Identify the specific gap (no empty state CTA, cramped spacing, missing skeleton, no signature element)
+1. Identify the specific gap (no empty state CTA, cramped spacing, missing skeleton, no signature element, generic copy)
 2. Fix it — do not just recommend it
-3. Use `mcp__magic__21st_magic_component_refiner` on components scoring Poor
-4. For landing page hero: if no product visual exists, generate a dashboard mockup using shadcn Card components arranged to look like the actual app UI
+3. **If criteria 9 or 10 scored below Good:** rewrite generic copy using COPY.md (if exists) or MARKET-BRIEF.md differentiator + DESIGN-BRIEF.md personality tone. Replace every flagged generic phrase with product-specific language. This is not cosmetic — generic copy is why products look templated.
+4. Use `mcp__magic__21st_magic_component_refiner` on components scoring Poor
+5. For landing page hero: if no product visual exists, generate a dashboard mockup using shadcn Card components arranged to look like the actual app UI
 
 ### Step 7 — Re-score After Fixes
 After all fixes: re-run the scoring. Report the final score.

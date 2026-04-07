@@ -37,7 +37,7 @@ NO → build the landing page first. No exceptions. The landing page is the prod
 
 Before writing a single component, answer these for this specific page:
 
-1. **What does a brand-new user with zero data see?** Define the empty state CTA.
+1. **What does a brand-new user with zero data see?** Look up the empty state in COPY.md under `[PageName].empty_state_headline`, `empty_state_body`, `empty_state_cta`. If COPY.md exists and has this page's section: use those strings exactly. If COPY.md is missing or the page isn't in it: write the empty state copy, add it to COPY.md first, then use it. Never invent copy inline in the component.
 2. **What is the signature element?** One thing that makes this page visually interesting. Not decoration — something that makes the data/purpose feel alive. Examples: animated stat counter, progress arc, timeline, data visualisation, contextual illustration.
 3. **Where does the primary color appear?** Maximum 2 semantic roles (e.g. "primary CTA button" and "feature icon accent"). A single semantic role used many times (e.g. 6 feature icon instances) counts as 1 role, not 6. Name the 2 roles explicitly.
 4. **What is the typography hierarchy?** At minimum: one heading (font-semibold text-base or larger) + body text (text-sm) + captions (text-xs). Never all text-sm.
@@ -204,9 +204,14 @@ Never just download buttons. Always show live data preview at the top:
 
 ### Step 5 — Build the Page
 
+**COPY.md enforcement rule (applies to every string in every component):**
+Before writing ANY user-facing string (headline, button label, empty state text, error message, placeholder, tooltip), check COPY.md for this page's section. If the string exists in COPY.md: use it literally — do not paraphrase, shorten, or "improve" it. If the string is missing from COPY.md: write it in COPY.md first (matching the DESIGN-BRIEF.md personality tone), then use the COPY.md version. If COPY.md does not exist: this is a standalone /web-page run without /saas-build — write copy that matches MARKET-BRIEF.md differentiator and DESIGN-BRIEF.md personality. Never default to generic SaaS phrasing.
+
+This applies to: EmptyState title/description/CTA, page headlines, section headings, button labels, form placeholders, error messages, loading text, tooltip content, and banner copy.
+
 Write components following these rules:
 - All colors via CSS variables — never hardcoded hex/rgb
-- EmptyState from `src/components/ui/EmptyState.tsx` — never write inline empty states. If `src/components/ui/EmptyState.tsx` does not exist: create it now (accepts `{ title: string, description: string, action?: { label: string, href: string } }`, renders a centered container with icon, text, and optional CTA button) before building the page.
+- EmptyState from `src/components/ui/EmptyState.tsx` — never write inline empty states. If `src/components/ui/EmptyState.tsx` does not exist: create it now (accepts `{ title: string, description: string, action?: { label: string, href: string } }`, renders a centered container with icon, text, and optional CTA button) before building the page. **All EmptyState strings come from COPY.md** — look up `[PageName].empty_state_headline`, `empty_state_body`, `empty_state_cta`.
 - Loading states use skeleton divs at the same dimensions as real content
 - Status indicators: muted colored dot (`before:content-['•']` with text-[color]) + text label — never full colored badge fills
 - framer-motion whileInView + viewport={{ once: true }} on all major sections
