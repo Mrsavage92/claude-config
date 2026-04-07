@@ -4,7 +4,7 @@ AuditHQ Suite PDF Generator
 Generates individual PDFs per suite. Full combined PDF only with --full flag.
 
 Usage:
-    python generate_suite_pdfs.py <directory> [suite_numbers...] [--full]
+    python generate_suite_pdfs.py <directory> [suite_numbers...] [--full] [--both]
 
 Suite numbers:
     1 = Marketing
@@ -16,11 +16,16 @@ Suite numbers:
     7 = Employer Brand
     8 = AI Readiness
 
+Flags:
+    --full   Generate only a combined PDF (no individual PDFs)
+    --both   Generate individual PDFs AND a combined PDF
+
 Examples:
     python generate_suite_pdfs.py "./outputs/example.com"                 # all 8 individual PDFs
     python generate_suite_pdfs.py "./outputs/example.com" 1 3 4 5        # 4 individual PDFs
     python generate_suite_pdfs.py "./outputs/example.com" --full          # 1 combined full audit PDF
     python generate_suite_pdfs.py "./outputs/example.com" 1 3 4 --full   # 1 combined 3-suite PDF
+    python generate_suite_pdfs.py "./outputs/example.com" 1 3 4 --both   # 3 individual + 1 combined
 """
 import sys, os, re
 
@@ -60,12 +65,16 @@ def main():
         print(f"Error: directory not found: {directory}")
         sys.exit(1)
 
-    # Parse arguments: suite numbers and optional --full flag
+    # Parse arguments: suite numbers and optional --full/--both flags
     full_mode = False
+    both_mode = False
     nums = []
     for arg in sys.argv[2:]:
         if arg == "--full":
             full_mode = True
+            continue
+        if arg == "--both":
+            both_mode = True
             continue
         try:
             n = int(arg)
@@ -82,7 +91,12 @@ def main():
     else:
         selected_suites = [SUITE_MAP[n] for n in sorted(nums)]
 
-    mode_label = "FULL combined" if full_mode else f"{len(selected_suites)} individual"
+    if both_mode:
+        mode_label = f"{len(selected_suites)} individual + 1 combined"
+    elif full_mode:
+        mode_label = "FULL combined"
+    else:
+        mode_label = f"{len(selected_suites)} individual"
     print(f"\nAuditHQ Suite PDF Generator")
     print(f"Directory : {directory}")
     print(f"Suites    : {', '.join(selected_suites)}")
@@ -90,7 +104,46 @@ def main():
 
     generated = []
 
-    if full_mode:
+    if both_mode:
+        # --- Both: individual PDFs first, then combined ---
+        for suite in selected_suites:
+            slug = SUITE_SLUG[suite]
+            out_path = os.path.join(directory, f"AUDIT-{slug}.pdf")
+            print(f"  Generating: AUDIT-{slug}.pdf ...")
+            try:
+                generate(
+                    directory=directory,
+                    output_path=out_path,
+                    selected_suites=[suite],
+                )
+                size_kb = os.path.getsize(out_path) // 1024
+                print(f"  Done: {out_path} ({size_kb} KB)")
+                generated.append(out_path)
+            except Exception as e:
+                print(f"  ERROR generating {suite}: {e}")
+
+        # Now the combined PDF
+        all_suite_names = list(SUITE_MAP.values())
+        if set(selected_suites) == set(all_suite_names):
+            out_name = "FULL-AUDIT-REPORT.pdf"
+        else:
+            nums_str = "-".join(str(n) for n, s in SUITE_MAP.items() if s in selected_suites)
+            out_name = f"COMBINED-AUDIT-{nums_str}.pdf"
+        out_path = os.path.join(directory, out_name)
+        print(f"  Generating: {out_name} (combined) ...")
+        try:
+            generate(
+                directory=directory,
+                output_path=out_path,
+                selected_suites=selected_suites,
+            )
+            size_kb = os.path.getsize(out_path) // 1024
+            print(f"  Done: {out_path} ({size_kb} KB)")
+            generated.append(out_path)
+        except Exception as e:
+            print(f"  ERROR generating combined audit: {e}")
+
+    elif full_mode:
         # --- Full combined PDF (explicit request only) ---
         all_suite_names = list(SUITE_MAP.values())
         if set(selected_suites) == set(all_suite_names):
