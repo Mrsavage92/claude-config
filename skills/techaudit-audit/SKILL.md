@@ -388,11 +388,11 @@ Each fix names who should do it and how long it takes.]
 Your report MUST contain ALL of these sections. If any are missing, add them before saving.
 
 - [ ] Executive Summary (3+ paragraphs)
-- [ ] Score Breakdown (table with all 5 categories)
+- [ ] Score Breakdown (table with all 6 categories)
 - [ ] 🔴 Fix Immediately (with who/how-long)
 - [ ] 🟠 Fix This Month (5-8 items with who/how-long)
 - [ ] 🟡 Plan for Next Quarter
-- [ ] Detailed Analysis by Category (all 5 categories with evidence)
+- [ ] Detailed Analysis by Category (all 6 categories with evidence)
 - [ ] Tool Recommendations (specific tools named)
 - [ ] Data Map Summary (structured platform/stack block)
 - [ ] Next Steps (top 3)
