@@ -15,6 +15,27 @@ The user runs `security audit <url>`. Flagship command.
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a business owner, CEO, or manager — not a cybersecurity professional. Every sentence must make sense to someone who has never configured a server.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "Your website is missing basic security protection that could expose customer data" NOT "Missing Content-Security-Policy Header"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Ask your developer or hosting provider to enable HTTPS-only mode — a 15-minute configuration change" NOT "Configure HSTS header with includeSubDomains"
+4. **Lead with cost.** What is this risking in data breaches, customer trust, or regulatory fines?
+5. **Use plain severity labels:**
+   - 🔴 **Fix immediately** — your business is actively exposed to attack
+   - 🟠 **Fix this month** — security gaps that could be exploited
+   - 🟡 **Plan for next quarter** — hardening that reduces long-term risk
+6. **Translate ALL technical terms.** "Your emails can be faked by scammers" NOT "No DMARC enforcement at p=reject". "Your website doesn't force secure connections" NOT "Missing HSTS header". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
@@ -288,6 +309,8 @@ Security Posture Score = (
 
 ## Phase 4: Output
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 ### SECURITY-AUDIT.md
 
 ```markdown
@@ -302,16 +325,16 @@ Security Posture Score = (
 ---
 
 ## Executive Summary
-[Lead with: "43% of cyber attacks target small businesses. 60% of those businesses close within 6 months."]
+[3-5 paragraphs in plain English. Lead with business risk: what could happen if these gaps are exploited. Name the biggest strength and biggest risk in plain language. Top 3 fixes — each naming who does it and how long it takes.]
 
 ## Score Breakdown
 [All 6 categories with scores and evidence]
 
-## Critical Issues (Fix Today)
-[Severity-coded findings]
+## 🔴 Fix Immediately — Your Business Is Exposed
+[Items where the business is actively exposed. Each: plain-English risk → what could happen → "Ask your [role] to [action] — [time estimate]"]
 
-## Quick Wins (This Week)
-[5-8 specific fixes with implementation steps]
+## 🟠 Fix This Month — Close These Security Gaps
+[5-8 fixes. Each names who does it (developer, hosting provider, IT) and how long it takes.]
 
 ## Email Authentication Status
 | Record | Status | Policy | Assessment |
@@ -357,8 +380,8 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 - [ ] Executive Summary (with disclaimer)
 - [ ] Score Breakdown (table with all 5 categories)
 - [ ] Composite Score Calculation (formula shown)
-- [ ] Critical Issues — Fix Today (severity-tagged)
-- [ ] Quick Wins — This Week
+- [ ] 🔴 Fix Immediately (with who/how-long)
+- [ ] 🟠 Fix This Month (with who/how-long)
 - [ ] Email Authentication Status (SPF/DKIM/DMARC detail)
 - [ ] Security Headers Status (per-header table)
 - [ ] Third-Party Script Audit (table with SRI status)

@@ -13,6 +13,27 @@ The user runs `/employer audit <company name>` (optionally with location or URL)
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a CEO, HR director, or hiring manager — not an employer branding consultant. Every sentence must make sense to someone who just wants to hire better people faster.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "Candidates are reading your 2.8-star Glassdoor rating and choosing your competitors instead" NOT "Below-benchmark Glassdoor rating with negative sentiment clustering"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Have your HR manager respond to the 20 unanswered Glassdoor reviews this week — 15 minutes each" NOT "Implement review response management across employer review platforms"
+4. **Lead with cost.** What is this costing in hiring time, salary premiums, or lost candidates?
+5. **Use plain severity labels:**
+   - 🔴 **Fix immediately** — actively repelling candidates
+   - 🟠 **Fix this month** — missing opportunities to attract talent
+   - 🟡 **Plan for next quarter** — longer-term employer brand building
+6. **Translate ALL technical terms.** "Your careers page doesn't explain why someone should work here" NOT "Missing EVP articulation on careers landing page". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder. Avoid hardcoded user-specific paths unless the user explicitly asked for them.**
@@ -335,6 +356,8 @@ Frame every finding in terms of talent loss:
 
 ## Phase 4: Output
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 ### EMPLOYER-AUDIT.md
 
 ```markdown
@@ -347,9 +370,9 @@ Frame every finding in terms of talent loss:
 ---
 
 ## Executive Summary
-[3-5 paragraphs: score, biggest strength, biggest gap with talent impact,
-top 3 actions, estimated hiring cost impact. Lead with the fear stat:
-"87% of candidates won't apply to a company with negative reviews."]
+[3-5 paragraphs in plain English. Lead with what the employer brand means for hiring costs.
+Name the biggest strength, biggest gap in hiring impact terms, and top 3 actions.
+Each action names who does it and how long it takes.]
 
 ## Score Breakdown
 | Category | Score | Weight | Weighted | Key Finding |
@@ -362,14 +385,14 @@ top 3 actions, estimated hiring cost impact. Lead with the fear stat:
 | Social & Content | X/100 | 10% | X | [finding] |
 | **TOTAL** | | **100%** | **X/100** | |
 
-## Quick Wins (This Week)
-[5-8 numbered items with specific steps]
+## 🔴 Fix Immediately — Repelling Candidates Right Now
+[3-5 items actively repelling candidates. Each: plain-English problem → hiring cost → "Have your [role] do [action] — [time estimate]"]
 
-## Strategic Recommendations (This Month)
-[3-5 numbered items with rationale]
+## 🟠 Fix This Month — Attract Better Talent
+[5-8 items to attract better talent. Same format: problem → cost → who fixes it → how long.]
 
-## Long-Term Initiatives (This Quarter)
-[2-4 numbered items with business case]
+## 🟡 Plan for Next Quarter — Build Your Employer Brand
+[2-4 longer-term initiatives with business case. Name who leads each.]
 
 ## Detailed Analysis by Category
 [Full findings per category with quoted evidence]
@@ -442,9 +465,9 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 
 - [ ] Executive Summary (lead with candidate research stat)
 - [ ] Score Breakdown (table with all 6 categories)
-- [ ] Quick Wins — This Week (5-8 items)
-- [ ] Strategic Recommendations — This Month (3-5 items)
-- [ ] Long-Term Initiatives — This Quarter (2-4 items)
+- [ ] 🔴 Fix Immediately (3-5 items with who/how-long)
+- [ ] 🟠 Fix This Month (5-8 items with who/how-long)
+- [ ] 🟡 Plan for Next Quarter (2-4 items)
 - [ ] Detailed Analysis by Category (all 6 categories with quoted evidence)
 - [ ] Review Response Templates (5 templates)
 - [ ] Competitor Employer Brand Snapshot (2-3 competitors)

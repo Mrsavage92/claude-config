@@ -13,6 +13,27 @@ The user runs `reputation audit <business name>` (optionally with location or UR
 
 ---
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+The person reading this report is a business owner, CEO, or manager — not a marketing analyst. Every sentence must make sense to someone who just wants to know how their business looks online.
+
+**Rules for report writing:**
+
+1. **Lead every finding with business impact.** "Customers are complaining about slow service — this is your #1 review theme and it's costing you bookings" NOT "Negative sentiment cluster identified around service speed"
+2. **No evidence tags in report text.** Never write `[Confirmed]` or `[Strong inference]` in the report. Track confidence with HTML comments only: `<!-- Confirmed -->` — the client never sees these.
+3. **Every action item names WHO does it and HOW LONG it takes.** "Have your front-of-house manager respond to the 15 unanswered Google reviews this week — 10 minutes each" NOT "Implement review response management protocol"
+4. **Lead with cost.** What is this costing in lost customers, revenue, or competitive position?
+5. **Use plain severity labels:**
+   - 🔴 **Fix immediately** — your reputation is actively losing you customers
+   - 🟠 **Fix this month** — missed opportunities to build trust
+   - 🟡 **Plan for next quarter** — longer-term reputation building
+6. **Translate ALL technical terms.** "People searching for your business see competitor ads first" NOT "Competitor SERP domination in branded queries". If you must use a technical term, follow it immediately with a plain-English explanation in parentheses.
+7. **Write like you're explaining to a smart friend over coffee.** Short sentences. No jargon. Concrete consequences.
+
+These rules apply to the final markdown report only. Internal analysis (Phases 1-3) should use technical language for accuracy. The translation to business language happens when writing the report output.
+
+---
+
 ## Output Directory
 
 **Always save report files to a domain-specific folder — never to the current directory or user profile root.**
@@ -272,6 +293,8 @@ Frame findings in revenue terms:
 
 ## Phase 4: Output
 
+**IMPORTANT: Apply all Report Tone rules when writing this report. Every finding leads with business cost. Every action names who does it and how long it takes. No jargon. No `[Confirmed]` tags in client-facing text. Write for the business owner.**
+
 ### REPUTATION-AUDIT.md
 
 ```markdown
@@ -283,8 +306,8 @@ Frame findings in revenue terms:
 ---
 
 ## Executive Summary
-[Lead with: "93% of consumers say online reviews impact purchasing decisions.
-Here's what yours are saying."]
+[3-5 paragraphs in plain English. Lead with what the review profile means for revenue.
+Name the biggest strength and biggest gap. Top 3 actions — each naming who does it.]
 
 ## Platform Overview
 | Platform | Rating | Reviews | Responds? | Status |
@@ -298,11 +321,11 @@ Here's what yours are saying."]
 **What customers love:** [top 3 themes with examples]
 **What customers complain about:** [top 3 themes with examples]
 
-## Critical Issues
-[Severity-coded findings]
+## 🔴 Fix Immediately — Actively Losing You Customers
+[Items actively losing customers. Each: plain-English problem → revenue impact → "Have your [role] do [action] — [time estimate]"]
 
-## Quick Wins (This Week)
-[5-8 specific actions]
+## 🟠 Fix This Month — Build Trust Fast
+[5-8 actions. Each names who does it and how long it takes.]
 
 ## Review Response Templates
 [Provide 5 templates: 5-star, 4-star, 3-star, negative, fake/spam]
@@ -341,8 +364,8 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 - [ ] Score Breakdown (table with all 5 categories)
 - [ ] Composite Score Calculation (formula shown)
 - [ ] Revenue Impact Assessment (estimated revenue at risk)
-- [ ] Critical Issues (severity-tagged)
-- [ ] Quick Wins — This Week
+- [ ] 🔴 Fix Immediately (with who/how-long)
+- [ ] 🟠 Fix This Month (with who/how-long)
 - [ ] Review Response Templates (5 templates: 5-star, 4-star, 3-star, negative, interview)
 - [ ] Competitor Comparison (2-3 named competitors)
 - [ ] Review Generation Playbook (how to get more reviews)

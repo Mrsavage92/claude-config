@@ -5,6 +5,17 @@ description: "Synthesize a FULL-AUDIT-REPORT.md from individual suite markdown r
 
 # Full Audit Synthesis Skill
 
+## Report Tone — Write for Business Owners, Not Auditors
+
+This combined report is the document a CEO reads. Apply these rules strictly:
+
+1. **Lead every finding with business impact** — revenue, customers, time, risk
+2. **No evidence tags in report text** — no [Confirmed] or [Strong inference]. Use HTML comments only: <!-- Confirmed -->
+3. **Every action names WHO does it and HOW LONG it takes**
+4. **Use plain severity labels:** 🔴 Fix immediately, 🟠 Fix this month, 🟡 Plan for next quarter
+5. **Translate all technical terms** — "your emails can be faked by scammers" not "missing DMARC enforcement"
+6. **Write like explaining to a smart friend over coffee**
+
 You read all individual suite audit markdown reports from a directory and write a single FULL-AUDIT-REPORT.md that synthesizes them into a consultancy-quality combined report. This file is then rendered into a polished PDF by the production engine.
 
 ## When This Skill Is Invoked
@@ -135,18 +146,18 @@ These issues each appear in multiple audit dimensions. Fixing one item improves 
 
 ## Integrated Action Plan
 
-### Critical — Fix This Week
+### 🔴 Fix Immediately — Costing You Money Right Now
 | # | Action | Suites Improved | How | Impact |
 |---|--------|-----------------|-----|--------|
 | 1 | {Specific action name} | {Suite, Suite} | {How to do it — time, cost, tool} | {What it fixes — specific outcome} |
 [4-6 critical actions]
 
-### High Impact — This Month
+### 🟠 Fix This Month — You're Missing Opportunities
 | # | Action | Suites Improved | How | Impact |
 |---|--------|-----------------|-----|--------|
 [4-6 high actions]
 
-### Strategic — This Quarter
+### 🟡 Plan for Next Quarter — Worth Doing, Not Urgent
 | # | Action | Suites Improved | How | Impact |
 |---|--------|-----------------|-----|--------|
 [3-5 strategic actions]
@@ -169,7 +180,7 @@ These issues each appear in multiple audit dimensions. Fixing one item improves 
 
 | Recommendation | Monthly Impact | Risk Level | Source Suite | Priority |
 |---|---|---|---|---|
-| {Action} | {£X–£Y} | {Critical/High/Medium/Low} | {Suite} | {1-N} |
+| {Action} | {£X–£Y} | {🔴🟠🟡} | {Suite} | {1-N} |
 [10-15 rows aggregating from individual suite Revenue/Impact tables]
 
 **Conservative total monthly impact (critical + high items): £{X}–£{Y}/month**
@@ -195,8 +206,8 @@ Individual suite reports with full evidence and analysis:
 2. **Cross-reference everything** — If Reputation says Trustpilot is 4.6/5 and Marketing says 4.0/5, resolve it. Use the suite with direct evidence.
 3. **Score drag must be estimated** — Every compounding issue needs "fixing this would improve X by ~N points". Calculate from the category rubrics.
 4. **Revenue must come from the reports** — Do not invent revenue estimates. Aggregate from individual suite Revenue Impact tables. If a suite has no revenue table, note it as "not estimated".
-5. **Tone must be consultative** — This is the document a CEO reads. Lead with business impact, not technical jargon. Name specific actions with cost and timeframe.
-6. **Evidence tags carry through** — If a finding was [Strong inference] in the suite report, don't upgrade it to certain in the synthesis. Every cross-suite issue description must include at least 2 evidence tags (e.g. "Five trackers fire on page load without consent [Confirmed]. This is a direct PECR Regulation 6 violation [Strong inference based on observed behaviour and UK jurisdiction]."). The executive summary must tag the top 3 claims.
+5. **Tone must be business-owner friendly** — This is the document a CEO reads. Lead with business impact, not technical jargon. Name specific actions with who does them, cost, and timeframe. No evidence tags in client-facing text.
+6. **Evidence confidence tracks internally only** — If a finding was uncertain in the suite report, keep it uncertain in the synthesis. Track confidence with HTML comments <!-- Confirmed --> or <!-- Strong inference --> but NEVER show these tags in client-facing text.
 7. **No legal certainty** — Privacy and security findings must retain their disclaimers.
 8. **Subset awareness** — This skill works for any combination of 2+ suites, not just all 8. If only 3 suites were audited, the cross-suite analysis covers only those 3. Adjust language accordingly ("across 3 audit dimensions" not "across 8").
 
