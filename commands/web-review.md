@@ -60,7 +60,17 @@ For each page component:
 - Is the color usage restrained? (Brand color in 2 places max per page)
 - Are Framer Motion scroll animations on all major sections?
 
-Score each: Excellent (1.0) / Good (0.75) / Needs Work (0.5) / Poor (0) across 10 criteria.
+**Copy quality (deducts from Visual Quality — generic copy is a visual defect):**
+Read COPY.md (if exists) and MARKET-BRIEF.md (if exists). Then grep all page components for:
+- Generic phrases: "Streamline your", "All-in-one", "Powerful yet simple", "Take control of", "The modern way to" → each occurrence: -0.5 points
+- Generic CTAs: "Get Started", "Learn More" without specificity → each: -0.25 points
+- Hero headline does NOT derive from MARKET-BRIEF.md differentiator → -1.0 point
+- Tone mismatch: page copy contradicts DESIGN-BRIEF.md personality type (casual on Enterprise Authority, formal on Bold Operator) → -0.5 per page
+- Placeholder text still present ("Lorem ipsum", "[placeholder]", "TODO") → -1.0 per occurrence
+
+Minimum Visual Quality score: 0/10 (floor, not negative).
+
+Score each: Excellent (1.0) / Good (0.75) / Needs Work (0.5) / Poor (0) across 10 criteria, then apply copy quality deductions.
 
 #### C. Accessibility (target: 10/10)
 
