@@ -292,12 +292,14 @@ export function EmptyState({ icon: Icon, heading, description, action, className
 #### `src/components/landing/` + `src/pages/Landing.tsx`
 Landing page is built during scaffold — not deferred. The hero is the most important file in the project.
 
-**Before writing a single component: check for DESIGN-BRIEF.md in the project root.**
+**Before writing a single component: read all research files in the project root.**
 
-- **If DESIGN-BRIEF.md exists** → read the Component Lock table. Use the exact components listed there. Do NOT re-run MCP queries. The research phase already made these decisions.
-- **If DESIGN-BRIEF.md is missing** → run `/web-design-research` first. Do not proceed without it.
+- **DESIGN-BRIEF.md** (required) → read the Component Lock table. Use the exact components listed. Do NOT re-run MCP queries. If missing → run `/web-design-research` first.
+- **COPY.md** (if exists) → use the `Landing Page` section for ALL hero copy, CTA labels, feature headlines, FAQ content, and social proof text. The builder does NOT invent landing page copy — COPY.md is the source of truth.
+- **MARKET-BRIEF.md** (if exists, no COPY.md) → extract `Our differentiator` for the hero headline, `Patterns worth adopting` for social proof format, `Features users consistently request` for feature section content. Never use generic SaaS copy when research data exists.
+- **DESIGN-BRIEF.md personality type** → determines tone of all copy. Enterprise Authority = formal. Bold Operator = punchy. Health & Care = warm. Match tone to personality.
 
-The Component Lock table in DESIGN-BRIEF.md lists the exact 21st.dev component for every section. It also records the hero architecture pattern (Centered/Split-pane/Full-screen/Minimal). Follow it exactly — the choices were made based on this product's specific personality and competitor landscape.
+The Component Lock table lists the exact 21st.dev component for every section plus the hero architecture pattern (Centered/Split-pane/Full-screen/Minimal). Follow it exactly — the choices were made based on this product's specific personality and competitor landscape.
 
 Landing page section order: [Banner] → Nav → Hero (animated bg) → Logo Cloud → Stats → Features → Testimonials → Pricing → FAQ → Final CTA → Footer
 

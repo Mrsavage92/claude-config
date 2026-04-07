@@ -18,6 +18,9 @@ The old pattern (build all pages, review at the end) produced thin, empty-feelin
 Read `~/.claude/web-system-prompt.md`. If missing: continue — use sensible dark SaaS defaults (HSL color variables, Inter/Geist font, 4px grid spacing) and flag NEEDS_HUMAN "Install web-system-prompt.md — Design DNA is missing."
 Read `SCOPE.md` for the page definition (purpose, data, empty state, loading state, error state, signature element).
 Read `CLAUDE.md` for color job, design decisions. If missing: continue — read SCOPE.md and DESIGN-BRIEF.md for color decisions.
+Read `DESIGN-BRIEF.md` for personality type — this determines the tone of ALL copy on this page.
+Read `COPY.md` if it exists — this is the single source of truth for all user-facing strings. Use every string from COPY.md literally (headlines, CTAs, empty states, error messages). If a string is missing from COPY.md, add it there first (maintaining personality tone), then use it. The builder does NOT invent copy.
+Read `MARKET-BRIEF.md` if it exists — extract `Our differentiator` sentence. This must echo through the product, not just the landing page.
 Read `src/styles/index.css` and Glob `src/components/**/*.tsx` for existing component inventory. If `src/styles/index.css` missing: continue.
 
 If SCOPE.md does not have a definition for the requested page: define it now (all 5 fields) and add it to SCOPE.md before building.
@@ -248,6 +251,8 @@ Per-page review — Pass 1: [page name]
 [ ] Modals (if any): close button has aria-label="Close", Escape closes
 ```
 
+**Pass 1.5 — React key hygiene.** Grep for `.map(` — every render call must use a stable identity key (`key={item.id}`, `key={item.slug}`), never `key={index}`. Fix before continuing.
+
 **Pass 2 — Fresh eyes.** Re-read the page component from line 1 as if you are a new user opening this product for the first time with zero data. Ask these 5 questions:
 
 1. Would I know what to do on this page right now?
@@ -256,7 +261,16 @@ Per-page review — Pass 1: [page name]
 4. Is the signature color doing exactly one job on this page?
 5. Would I be embarrassed to show this to a designer?
 
-Fix anything that fails Pass 2. Both passes are required — passing Pass 1 alone is not sufficient to move on.
+**Pass 2b — Anti-generic copy check.** Grep the page for these phrases — if ANY appear, rewrite using COPY.md or MARKET-BRIEF.md data:
+- "The modern way to" / "Streamline your" / "All-in-one" / "Powerful yet simple" / "Take control of"
+- "AI-powered" (unless the product's core feature is literally AI)
+- "Lorem ipsum" or any placeholder text
+- Button labels "Learn More" or "Get Started" without specificity — should reference the actual action ("Start 14-day trial" / "Create your first [entity]")
+- Any copy that could be pasted into a different SaaS product unchanged — it's too generic. Rewrite with product-specific language from COPY.md.
+
+**Pass 2c — Tone consistency.** Check that the page's copy matches the DESIGN-BRIEF.md personality type. Enterprise Authority pages should not have casual contractions. Bold Operator pages should not have formal third-person language. Health & Care pages should not have aggressive urgency. Fix any mismatches.
+
+Fix anything that fails Pass 2/2b/2c. All passes are required — passing Pass 1 alone is not sufficient to move on.
 
 Log: "Page [name] — self-review passed (13/13 + fresh eyes)" before proceeding.
 
