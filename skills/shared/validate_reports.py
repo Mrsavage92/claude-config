@@ -136,8 +136,9 @@ SUITE_REQUIREMENTS = {
     },
 }
 
-# Evidence tags that must appear in every report
-EVIDENCE_TAGS = ["Confirmed", "Strong inference"]
+# Evidence tags are now tracked via HTML comments only (not visible in report text)
+# Validation checks for emoji severity headers instead
+EVIDENCE_TAGS = []  # No longer required in client-facing text
 
 
 def validate_report(filepath, requirements):
@@ -176,13 +177,13 @@ def validate_report(filepath, requirements):
         if score < 0 or score > 100:
             issues.append(f"Invalid score: {score}")
 
-    # Check evidence tagging
-    has_confirmed = "confirmed" in content.lower()
-    has_inference = "strong inference" in content.lower()
-    if not has_confirmed:
-        issues.append("No [Confirmed] evidence tags found")
-    if not has_inference and line_count > 200:
-        issues.append("No [Strong inference] tags (expected in reports > 200 lines)")
+    # Check for business-owner severity headers (emoji format)
+    has_emoji_severity = any(e in content for e in ("🔴", "🟠", "🟡"))
+    if not has_emoji_severity:
+        # Also accept legacy format for backwards compat
+        has_legacy = any(w in content for w in ("CRITICAL", "Quick Wins", "Fix Immediately"))
+        if not has_legacy:
+            issues.append("No severity/priority sections found (expected 🔴/🟠/🟡 headers or Quick Wins/Fix Immediately)")
 
     # Check for hardcoded paths
     if re.search(r"C:\\Users\\|/Users/\w+/|~/Documents/", content):
