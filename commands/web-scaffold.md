@@ -364,23 +364,25 @@ export function ProductMockup() {
   )
 }
 ```
-Swap `[product]`, `KPI 1/2/3` labels, and dot colors to match the actual product before using.
+Swap `[product]`, `KPI 1/2/3` labels, and dot colors to match the actual product before using. **If COPY.md exists:** read the `metrics` section for KPI labels. If MARKET-BRIEF.md exists: use competitor data to determine which metrics matter most.
 
-4. **Logo Cloud** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `logo cloud marquee`. Use `Logo Cloud 4` (`InfiniteSlider` + `ProgressiveBlur`). Source SVGs from `svgl.app`. Heading: "Trusted by teams at" in `text-muted-foreground`.
+**COPY.md sourcing rule for ALL sections below:** If COPY.md exists, read the `Landing Page` section for every string — headings, descriptions, stat labels, CTA labels, FAQ questions, testimonial text. If COPY.md does not exist but MARKET-BRIEF.md does, derive copy from the differentiator and competitor gaps. Never use generic placeholder copy when research data is available.
 
-4b. **Stats / CountUp** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `stats metrics counter`. Use `CaseStudies`. Install `react-countup` with `enableScrollSpy: true`. Minimum 3 stats from product value prop. Dark bg section to visually break from logo cloud.
+4. **Logo Cloud** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `logo cloud marquee`. Use `Logo Cloud 4` (`InfiniteSlider` + `ProgressiveBlur`). Source SVGs from `svgl.app`. Heading: read from `COPY.md social_proof_heading` — fallback: "Trusted by teams at" in `text-muted-foreground`.
 
-5. **Features section** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `features grid section`. Use `Features 4` (border-grid, icon + title + body). Apply `whileInView` stagger from `web-animations` Technique 3. Alternative: `BentoGrid` (searchQuery: `bento grid layout`) when a hero feature needs colSpan emphasis.
+4b. **Stats / CountUp** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `stats metrics counter`. Use `CaseStudies`. Install `react-countup` with `enableScrollSpy: true`. **Read stat labels and values from COPY.md `metrics` section.** If no COPY.md: read MARKET-BRIEF.md `Features users consistently request` to determine which stats matter. Never use generic "10,000+ users" — use product-specific numbers. Dark bg section to visually break from logo cloud.
 
-6. **Testimonials** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `testimonials social proof`. Use `TestimonialSlider` (Framer Motion `AnimatePresence`, photo, stars, dots). Minimum 3 testimonials.
+5. **Features section** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `features grid section`. Use `Features 4` (border-grid, icon + title + body). **Read feature headlines and descriptions from COPY.md `features` section.** If no COPY.md: read MARKET-BRIEF.md `Features users consistently request` for feature names and `Top 3 competitors: Gaps` for differentiating features. Apply `whileInView` stagger from `web-animations` Technique 3. Alternative: `BentoGrid` (searchQuery: `bento grid layout`) when a hero feature needs colSpan emphasis.
 
-7. **Pricing section** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `pricing cards section`. Use `PricingCard` (glass-effect, `backdrop-blur`). 3 tiers, center: `border-primary/50 bg-primary/5 shadow-lg` + "Popular" badge. Pre-launch: skip Pricing, go to step 7b instead.
+6. **Testimonials** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `testimonials social proof`. Use `TestimonialSlider` (Framer Motion `AnimatePresence`, photo, stars, dots). Minimum 3 testimonials. **Read from COPY.md `testimonials` section.** Use realistic Australian names/roles matching the product's target audience (from MARKET-BRIEF.md).
+
+7. **Pricing section** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `pricing cards section`. Use `PricingCard` (glass-effect, `backdrop-blur`). 3 tiers, center: `border-primary/50 bg-primary/5 shadow-lg` + "Popular" badge. **Read tier names, prices, and feature lists from COPY.md `pricing` section.** If no COPY.md: read MARKET-BRIEF.md `Competitor website analysis: Pricing model` to match proven pricing patterns. Pre-launch: skip Pricing, go to step 7b instead.
 
 7b. **Waitlist (pre-launch only — replaces Pricing + Final CTA)** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `waitlist email capture`. Use `WaitlistHero` or `WaitlistForm`. Connect to Supabase `waitlist` table. Show position number on submit.
 
-8. **FAQ** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `FAQ accordion`. Use `Faqs 1` (rounded card + shadcn Accordion). Alternative: `RuixenAccordian02` (two-column, General/Billing/Technical). Minimum 5 questions with real answers.
+8. **FAQ** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `FAQ accordion`. Use `Faqs 1` (rounded card + shadcn Accordion). Alternative: `RuixenAccordian02` (two-column, General/Billing/Technical). **Read questions and answers from COPY.md `faq_items` section.** Minimum 5 questions. Never use generic Q&A — questions should address the specific objections a buyer in this category would have (from MARKET-BRIEF.md competitor gaps).
 
-9. **Final CTA** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `call to action section`. Use `Cta 4`.
+9. **Final CTA** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `call to action section`. Use `Cta 4`. **Read CTA headline and button label from COPY.md.** CTA must echo the hero's differentiator, not introduce new messaging.
 
 10. **Footer** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `footer website`. Use `Footer 2` (multi-column with legal row).
 
