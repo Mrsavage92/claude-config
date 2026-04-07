@@ -138,7 +138,7 @@ These issues each appear in multiple audit dimensions. Fixing one item improves 
 ### 1. {Issue Title} — affects {N} suites
 **Suites:** {Suite} · {Suite} · {Suite}
 
-{3-4 sentences describing the issue with specific evidence from the reports. For each key claim, carry through the evidence tag from the source suite: [Confirmed] if directly observed, [Strong inference] if highly likely, [Unverified] if uncertain. End with score drag estimate: "Combined score impact: estimated −X {Suite}, −Y {Suite}, −Z {Suite}. Fixing this alone could improve the overall score by ~{N} points."}
+{3-4 sentences describing the issue with specific evidence from the reports. For each key claim, track confidence with HTML comments only (<!-- Confirmed -->, <!-- Strong inference -->, <!-- Unverified -->). Never show these tags in the report text. End with score drag estimate: "Combined score impact: estimated −X {Suite}, −Y {Suite}, −Z {Suite}. Fixing this alone could improve the overall score by ~{N} points."}
 
 [Repeat for 5-8 compounding issues, sorted by number of suites affected]
 

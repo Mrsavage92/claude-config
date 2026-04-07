@@ -327,6 +327,9 @@ Name the biggest strength and biggest gap. Top 3 actions — each naming who doe
 ## 🟠 Fix This Month — Build Trust Fast
 [5-8 actions. Each names who does it and how long it takes.]
 
+## 🟡 Plan for Next Quarter — Build Long-Term Reputation
+[Longer-term reputation building initiatives. Same format: what to do → expected impact → who leads it → timeline.]
+
 ## Review Response Templates
 [Provide 5 templates: 5-star, 4-star, 3-star, negative, fake/spam]
 
@@ -361,7 +364,7 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 
 - [ ] Executive Summary (lead with review impact stat)
 - [ ] Platform Overview (table: platform, rating, count, responds?)
-- [ ] Score Breakdown (table with all 5 categories)
+- [ ] Score Breakdown (table with all 6 categories)
 - [ ] Composite Score Calculation (formula shown)
 - [ ] Revenue Impact Assessment (estimated revenue at risk)
 - [ ] 🔴 Fix Immediately (with who/how-long)

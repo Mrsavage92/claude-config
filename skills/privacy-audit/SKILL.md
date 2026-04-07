@@ -373,6 +373,9 @@ Frame findings in terms of business risk:
 ## 🟠 Fix This Month — Reduce Your Legal Exposure
 [5-8 fixes. Each names who does it and how long it takes.]
 
+## 🟡 Plan for Next Quarter — Strengthen Privacy Practices
+[Improvements that build long-term trust. Same format: plain-English improvement → benefit → who leads it → timeline.]
+
 ## Privacy Policy Review
 [Completeness checklist results with specific gaps]
 

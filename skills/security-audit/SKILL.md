@@ -378,7 +378,7 @@ Security Posture Score = (
 Your report MUST contain ALL of these sections. If any are missing, add them before saving.
 
 - [ ] Executive Summary (with disclaimer)
-- [ ] Score Breakdown (table with all 5 categories)
+- [ ] Score Breakdown (table with all 6 categories)
 - [ ] Composite Score Calculation (formula shown)
 - [ ] 🔴 Fix Immediately (with who/how-long)
 - [ ] 🟠 Fix This Month (with who/how-long)

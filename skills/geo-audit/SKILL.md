@@ -398,7 +398,7 @@ Your report MUST contain ALL of these sections. If any are missing, add them bef
 - [ ] 🟠 Fix This Month
 - [ ] 🟡 Plan for Next Quarter
 - [ ] Nice to Have
-- [ ] Category Deep Dives (all 5 GEO categories with evidence)
+- [ ] Category Deep Dives (all 6 GEO categories with evidence)
 - [ ] Quick Wins — Implement This Week
 - [ ] 30-Day Action Plan
 - [ ] Appendix: Pages Analyzed (list every URL fetched)
