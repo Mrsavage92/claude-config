@@ -99,7 +99,7 @@ Read these files in full — they are the source of truth for the entire build. 
 
 **Architecture: Each product is its own standalone repo.** No monorepo, no shared backend, no FastAPI, no Railway. Each product: React/Vite frontend + Supabase (backend/auth/db) + Stripe + Vercel.
 
-Check if BUILD-LOG.md exists in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo). This is the primary resume signal — not git log.
+Check if BUILD-LOG.md exists in the project root. This is the primary resume signal — not git log.
 
 If BUILD-LOG.md does not exist: this is a fresh start. Run Phase 0b (repo + Notion) first, then Phase 0.25.
 If BUILD-LOG.md exists: read it to identify the last completed phase, then continue from the next one. If resuming from Phase 1 or later, verify DESIGN-BRIEF.md exists — if missing, run Phase 0.5 before continuing. Also verify MARKET-BRIEF.md exists — if missing, run Phase 0.25 before continuing.
