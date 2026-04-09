@@ -122,11 +122,13 @@ In monorepo mode: skip repo creation — the monorepo (`saas-platform` or `au-co
 
 Write the repo URL to BUILD-LOG.md and the project memory file as `github_repo`.
 
-**Step B — Create Notion project doc:**
+**Step B — Create Notion project doc (optional but recommended):**
 
-Run `/project-doc` with the product name and brief. This creates the Notion master doc under the Projects hub.
+Attempt to run `/project-doc` with the product name and brief. This creates the Notion master doc under the Projects hub.
 
-Write the Notion URL to BUILD-LOG.md and the project memory file as `notion_url`.
+If `/project-doc` fails or Notion MCP is unavailable: log "Notion doc creation skipped — create manually later or re-run /project-doc" to BUILD-LOG.md. Do NOT block the build. Continue to Step C.
+
+If successful: write the Notion URL to BUILD-LOG.md and the project memory file as `notion_url`.
 
 **Step C — Create project memory file:**
 
@@ -380,7 +382,7 @@ Execute the full /web-scaffold process using decisions from SCOPE.md and DESIGN-
 7. Run install commands. If any command exits non-zero: read the full error output, fix the root cause (wrong Node version, missing lockfile, network issue), retry once. If retry fails, log STUCK with exact error and stop.
 ```bash
 npm install
-npm install framer-motion class-variance-authority clsx tailwind-merge sonner
+npm install class-variance-authority clsx tailwind-merge sonner
 npx shadcn@latest init
 npx shadcn@latest add button input label card dialog dropdown-menu sheet sonner separator badge skeleton avatar tabs table select textarea switch radio-group checkbox
 npm install @sentry/react
@@ -417,7 +419,16 @@ SONNER
 # Fix 3: Delete Vite template boilerplate that conflicts
 rm -f src/App.css src/assets/react.svg src/assets/vite.svg src/assets/hero.png 2>/dev/null
 ```
-**Animation library rule:** Always use `framer-motion` (NOT the `motion` package). The `motion` v12 package has known issues with `motion.div` in Vite bundled builds causing React error #130. Import from `'framer-motion'` everywhere. The `vendor-motion` manualChunk catches both.
+**Animation library rule: DO NOT USE framer-motion OR the motion package.** Both cause production crashes (React error #130, blank pages, scroll crashes) in Vite bundled builds. The vendor-motion chunk gets preloaded on every page — if it fails to initialize, the entire app is blank.
+
+Use CSS transitions and Tailwind animation utilities ONLY:
+- `transition-all duration-300` for hover/state transitions
+- `animate-pulse` for loading states
+- `animate-spin` for spinners
+- Custom `@keyframes` in index.css for scroll animations
+- CSS `transition: transform 0.2s` for accordions/dropdowns
+
+Do NOT install framer-motion. Do NOT import from 'framer-motion' or 'motion/react'. If a 21st.dev component requires framer-motion, strip the motion wrappers and replace with CSS equivalents before using it. Remove `vendor-motion` from the manualChunks config.
 
 **tsconfig.app.json:** MUST include `"exclude": ["src/tests"]` — test files use jest-dom matchers that tsc doesn't understand. Vitest handles test types at runtime.
 
@@ -425,7 +436,6 @@ rm -f src/App.css src/assets/react.svg src/assets/vite.svg src/assets/hero.png 2
 ```ts
 manualChunks(id: string) {
   if (id.includes('react-dom') || id.includes('react-router')) return 'vendor-react'
-  if (id.includes('framer-motion') || id.includes('motion')) return 'vendor-motion'
   if (id.includes('@tanstack/react-query')) return 'vendor-query'
   if (id.includes('@supabase')) return 'vendor-supabase'
 }
@@ -638,14 +648,24 @@ Log: "Phase 3c complete — email configured" to BUILD-LOG.md.
 
 ---
 
+### Session Break Point (recommended)
+
+After Phase 3 completes, the scaffold + backend are done and committed. This is the natural place to start a new conversation if context window is getting large. The next session reads BUILD-LOG.md, SCOPE.md, and DESIGN-BRIEF.md to pick up where this one left off.
+
+Log to BUILD-LOG.md: "SESSION CHECKPOINT — Phases 0-3 complete. Next: Phase 4 Pages. Re-read SCOPE.md, DESIGN-BRIEF.md, MARKET-BRIEF.md on resume."
+
+---
+
 ### Phase 4 — Pages (run /web-page per page, in SCOPE.md build order)
 
 This is the core loop. For EACH page in SCOPE.md build order:
 
 **4a. Pre-build check**
 - Re-read SCOPE.md (full file) — the source of truth for page definitions and build order
+- Re-read DESIGN-BRIEF.md — confirm color system, component lock, and typography are fresh in context
 - Re-read CLAUDE.md — confirm the COLOR JOB sentence and design decisions are fresh in context
 - Confirm the page's design brief (purpose, data, empty state, loading state, error state, signature element) is clear before writing code
+- **When delegating to an agent:** the agent does NOT have conversation context. The prompt MUST include: the DESIGN-BRIEF.md path and instruction to read it, the exact brand color HSL, the product name, and the design personality. Do not assume the agent knows anything.
 
 **4b. Build the page**
 Follow /web-page rules.
@@ -877,10 +897,15 @@ Use the `vercel` MCP server (preferred — no CLI auth issues on Windows):
 - For monorepo: set `rootDirectory: apps/[product-slug]`
 - Capture the production URL from the response
 
-Fallback if MCP unavailable:
+Fallback if MCP unavailable — **use prebuilt deploy (preferred, avoids Vercel build server issues):**
 ```bash
-npx vercel --prod --yes
+npx vercel pull --yes --environment production
+npx vercel build --prod
+npx vercel deploy --prebuilt --prod --yes
 ```
+This builds locally and uploads the output — bypasses Vercel's build servers entirely. More reliable than `npx vercel --prod --yes` which depends on Vercel's build infra.
+
+If prebuilt deploy also fails: try `npx vercel --prod --yes` as last resort.
 
 **6c. Set all env vars in Vercel**
 
