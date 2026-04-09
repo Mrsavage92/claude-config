@@ -875,7 +875,6 @@ Run through the pre-deploy checklist in premium-website.md. All items must pass.
 
 **First: confirm the Vercel project exists.** Via MCP: check if a project named `[product-slug]` already exists. If not, create it first before deploying — never deploy to a non-existent project.
 
-**Monorepo: check for stale `.vercel/project.json`.** Before deploying, check if `apps/[product-slug]/.vercel/project.json` exists. If it does, read it and verify the `projectId` matches a project named `[product-slug]` (not another product). If the project name doesn't match, delete the file — it was inherited from a scaffold copy and will deploy to the wrong Vercel project. After deleting, Vercel will create a fresh one pointing to the correct project.
 
 Use the `vercel` MCP server (preferred — no CLI auth issues on Windows):
 - Call `createDeployment` with `target: production`
