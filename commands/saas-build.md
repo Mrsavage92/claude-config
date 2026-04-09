@@ -948,10 +948,8 @@ supabase.auth.admin.deleteUser([saved-user-id])
 
 Log: "Phase 6d smoke test complete — all checks passed" to BUILD-LOG.md.
 
-**6e. Update CORS**
-In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
-
-Use the Railway GraphQL mutation to update the env var (see `~/.claude/projects/C--Users-Adam/memory/reference_railway.md` for the `upsertVariable` mutation template and service/env IDs — if that path does not exist on this machine, check `~/.claude/projects/*/memory/reference_railway.md`). If Railway MCP is unavailable: log NEEDS_HUMAN "Update FRONTEND_URL in Railway dashboard to include [production-url] — required for CORS."
+**6e. Supabase CORS**
+No separate CORS step needed — Supabase handles CORS automatically. The Supabase anon key + RLS policies enforce access control. No Railway, no FastAPI, no separate backend to configure.
 
 **6f. Bundle audit and auto-fix**
 
