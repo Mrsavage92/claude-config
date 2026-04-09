@@ -106,7 +106,7 @@ If BUILD-LOG.md exists: read it to identify the last completed phase, then conti
 
 **If resuming (BUILD-LOG.md exists): also run `/project-refresh` PULL now before continuing.** Pull Notion state into context — decisions, blockers, and credential status may have changed since the last session.
 
-Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
+Log every phase start and completion to `BUILD-LOG.md` in the project root.
 
 ### Phase 0b — GitHub Repo + Notion Doc (fresh builds only)
 
@@ -1099,7 +1099,7 @@ Updates the project's Notion master doc with deploy URL, review score, and remai
 |---|---|
 | Domain registration needed | Log NEEDS_HUMAN with purchase link (Phase 8a), continue with .vercel.app URL |
 | Stripe live price IDs needed | Log as NEEDS_HUMAN with test prices in place |
-| Railway auth token needed | Log as NEEDS_HUMAN, document which env vars to set |
+| Supabase project URL needed | Log as NEEDS_HUMAN, document which env vars to set |
 | External API key not in env | Log as NEEDS_HUMAN with exact variable name needed |
 | Same error 3 times on a single fix attempt | Log as STUCK, explain what was tried, skip and continue with other work |
 | Ambiguous product requirements | Log assumption and continue — format: "Brief was vague — assumed [X] based on [Y]. Correct SCOPE.md if wrong." |
