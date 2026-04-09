@@ -90,22 +90,14 @@ If no GitHub repo exists for this product: create it in Phase 0 before writing a
 
 Read these files in full — they are the source of truth for the entire build. Run all reads in parallel:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
-2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
-3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
+2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI. If this file does not exist: log "Design DNA missing — using premium-website.md design rules as substitute" and continue. Do NOT block.
+3. `~/.claude/commands/web-animations.md` — CSS + Tailwind animation patterns. Technique 3 STAGGER is mandatory for the hero. **IMPORTANT: Do NOT use framer-motion.** Use CSS animations, Tailwind animate utilities, or `@keyframes` instead. Framer Motion causes production crashes on Vercel (proven in TradieJobFlow build — 7 fix commits to strip it). If web-animations.md references framer-motion patterns, implement them with CSS equivalents.
 4. `CLAUDE.md` (project root, if exists) — project-specific overrides.
 5. `DESIGN-BRIEF.md` (project root, if exists) — locked color system, typography, marketing tier, and component decisions from Phase 0.5. If this file exists, all design decisions are already made — do NOT re-decide them.
 6. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
+7. `COPY.md` (project root, if exists) — all user-facing copy. If this file exists, Phase 2.5 already ran.
 
-**Monorepo detection:** Check if the working directory contains `turbo.json` or an `apps/` directory. If yes, this is a monorepo build.
-- In monorepo mode: the frontend lives in `apps/[product-slug]/`. All Phase 2-6 file operations target that subdirectory.
-- The backend is the shared FastAPI service at `services/api/` — do NOT scaffold a new backend or create a new Railway service. Note the existing Railway URL from `CLAUDE.md` for VITE_API_URL.
-- If `apps/[product-slug]/` already exists (created by `/product-add`): skip Phase 2 directory creation, only fill in the files.
-- If `apps/[product-slug]/` does not exist: run `/product-add` first, then scaffold.
-- **Scaffold copy cleanup (MANDATORY if the app directory was created by copying another product's directory):** Before writing any content, run these checks in `apps/[product-slug]/`:
-  1. Delete `.vercel/project.json` if it exists — it points to the source product's Vercel project and will silently deploy to the wrong project on first deploy. Vercel creates a fresh `project.json` automatically on next deploy.
-  2. Grep for the source product's `product_id` string (e.g. `whs-psychosocial`) across all src files and replace all occurrences with the new product's id.
-  3. Check `src/styles/index.css` for the old `--brand:` HSL value and replace with the new product's brand colour.
-  4. Grep `src/pages/*.tsx` for any imported type names that have been removed from `src/types/index.ts`. TypeScript compiles ALL files in the project, not just routes imported in App.tsx — orphan pages with deleted type imports will fail `tsc --noEmit` even if they are unreachable at runtime. Stub those files to `// Unused - replaced by [NewPage].tsx\nexport {}` immediately.
+**Architecture: Each product is its own standalone repo.** No monorepo, no shared backend, no FastAPI, no Railway. Each product: React/Vite frontend + Supabase (backend/auth/db) + Stripe + Vercel.
 
 Check if BUILD-LOG.md exists in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo). This is the primary resume signal — not git log.
 
@@ -129,10 +121,8 @@ mcp__plugin_github_github__search_repositories query:"[product-slug] user:Mrsava
 
 If no repo found: create it:
 ```
-mcp__plugin_github_github__create_repository name="[product-slug]" description="[product name] — AU compliance SaaS" private=true auto_init=true
+mcp__plugin_github_github__create_repository name="[product-slug]" description="[product name] — [one-line pitch from brief]" private=true auto_init=true
 ```
-
-In monorepo mode: skip repo creation — the monorepo (`saas-platform` or `au-compliance-platform`) is already the repo. Just verify the `apps/[product-slug]/` directory will be committed there.
 
 Write the repo URL to BUILD-LOG.md and the project memory file as `github_repo`.
 
@@ -198,8 +188,6 @@ Run the review gate for the phase that just completed (see table below). If it f
 
 **Step 2 — Commit + push context.**
 Only after the review gate passes: follow the "After Every Phase Completes" protocol defined in the Persistent Context Protocol section above (git commit + `/project-refresh` PUSH).
-
-In monorepo mode: commit from the monorepo root, not the app subdirectory.
 
 ---
 
@@ -326,51 +314,60 @@ Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
 
 ---
 
-### Phase 1.5 — Category Rule Loading
+### Phase 1.5 — Personality Rule Loading
 
 **Run this phase between Phase 1 (Scope) and Phase 2 (Scaffold). It is not optional.**
 
-**Phase 0.5 already detected the product category and wrote it to DESIGN-BRIEF.md.** This phase does NOT re-detect — it reads the `product_category` field from DESIGN-BRIEF.md and loads the category-specific build rules into BUILD-LOG.md for enforcement in later phases.
+Phase 0.5 already detected the product personality and wrote it to DESIGN-BRIEF.md. This phase reads the `personality` field and derives build rules from it — no external file dependency.
 
-Read DESIGN-BRIEF.md and extract the `product_category` field. If the field is missing (Phase 0.5 was skipped or pre-dates this field): run Phase 0.5 now before continuing — do NOT attempt category detection here.
+Read DESIGN-BRIEF.md and extract the `personality` field. If missing: run Phase 0.5 now.
 
-Locate `PRODUCT-CATEGORY-LIBRARY.md` (check monorepo root first, then `C:/Users/Adam/Documents/au-compliance-platform/`). If the file does not exist at either path: log NEEDS_HUMAN "PRODUCT-CATEGORY-LIBRARY.md not found — category rules cannot be loaded" and skip to Phase 2.
+**Derive rules from personality type:**
 
-**Load rules for the detected category — mandatory steps:**
+1. **Hero pattern** — derive from personality:
+   - Enterprise Authority / Civic: Centered hero, formal headline, compliance language
+   - Bold Operator: Split-pane hero, punchy headline, product mockup right
+   - Data Intelligence: Search-bar-first hero, data preview below
+   - Trusted Productivity / Premium Professional: Minimal editorial hero, clean typography
+   - Health & Care: Light-mode hero (NOT dark), warm reassuring tone
+   - Growth Engine: Stats-forward hero, ROI language
+   Write the hero pattern to DESIGN-BRIEF.md as `hero_override` if it differs from the default.
 
-1. Read the full category entry from `PRODUCT-CATEGORY-LIBRARY.md` for the detected category.
+2. **Required landing sections** — every product needs these (log as checklist to BUILD-LOG.md):
+   - Hero with product-specific headline (from MARKET-BRIEF.md differentiator)
+   - Social proof (format from competitor research)
+   - Feature highlights (from MARKET-BRIEF.md must-haves)
+   - Pricing section
+   - FAQ section (minimum 5 questions — critical for SEO and AI citability)
+   - CTA section
 
-2. **Override hero pattern** — the hero pattern from PRODUCT-CATEGORY-LIBRARY.md OVERRIDES the default dark animated hero from the generic scaffold. Write the overridden hero pattern to DESIGN-BRIEF.md under a new field: `hero_override`. Log the override with reasoning: "Hero override: [category hero pattern] — overrides default dark animated hero because [reason]."
+3. **UX dominant pattern** — what the first app page should look like:
+   - Job management / field service → Kanban/dispatch board
+   - CRM / client management → Pipeline view
+   - Checklist / SOP → Daily task list with completion tracking
+   - Analytics / intelligence → Dashboard with KPI cards
+   - Process design → Canvas/editor
+   Write to BUILD-LOG.md: "UX pattern: [pattern] — first app view must reflect this."
 
-3. **Load required sections checklist** — copy the "Required Landing Sections (in order)" list from the category entry into BUILD-LOG.md as a checklist. This list is NON-NEGOTIABLE for Phase 4 (landing page build). Phase 4 must verify every section is present before marking the landing page complete.
+4. **Forbidden patterns** — log to BUILD-LOG.md:
+   - Generic "Streamline your [X]" hero copy
+   - Dark mode for health/safety/care products
+   - Dashboard-first for products where the core action is NOT monitoring
+   - Stock photo hero images (always use product mockup or illustration)
 
-4. **Set UX dominant pattern** — the UX dominant pattern from the category entry determines the first app page's primary UI metaphor. Write to BUILD-LOG.md: "UX pattern: [pattern] — first app view must reflect this." This overrides defaulting to a KPI dashboard.
-
-5. **Flag trust signals** — list the trust signals required for this category in BUILD-LOG.md. Phase 4 (landing page) must include all of them. Phase 6 (/web-review) checks for their presence.
-
-6. **Flag mobile requirements** — if the category is CRITICAL or HIGH mobile, add to BUILD-LOG.md: "Mobile requirement: [level] — sidebar must be bottom nav on mobile / touch targets must be 44px minimum."
-
-7. **Flag forbidden patterns** — copy the "Forbidden landing patterns" list from the category into BUILD-LOG.md. These are automatic failures in Phase 5 (/web-review).
-
-8. **Check for Regulatory Compliance sub-type** — if category is Regulatory Compliance, detect the sub-type:
-   - Keywords: AML, CTF, AUSTRAC, KYC, sanctions, money laundering → Sub-type 3A (Financial Crime)
-   - Keywords: WHS, psychosocial, hazard, SafeWork, WorkSafe → Sub-type 3B (Workplace Safety)
-   - Keywords: NDIS, participant, provider → Sub-type: NDIS
-   - Keywords: aged care, ACQSC, resident → Sub-type: Aged Care
-   - Load the sub-type entry from PRODUCT-CATEGORY-LIBRARY.md, not the generic Category 3 entry.
+5. **Mobile requirement** — field service / trades / checklist products = CRITICAL mobile. All others = MEDIUM minimum.
 
 Write to BUILD-LOG.md:
 ```
-Phase 1.5 complete — Product category detected: [category name]
-Hero override: [description from PRODUCT-CATEGORY-LIBRARY.md]
+Phase 1.5 complete — Personality: [type]
+Hero pattern: [description]
 UX pattern: [pattern]
-Required sections: [count] sections loaded to checklist
+Required sections: [count] loaded
 Forbidden patterns: [count] loaded
-Trust signals required: [list]
-Mobile requirement: [LOW/MEDIUM/HIGH/CRITICAL]
+Mobile requirement: [level]
 ```
 
-Log: "Phase 1.5 complete — category [name] detected and rules loaded" to BUILD-LOG.md.
+Log: "Phase 1.5 complete — personality [type] rules loaded" to BUILD-LOG.md.
 
 ---
 
@@ -387,6 +384,8 @@ Execute the full /web-scaffold process using decisions from SCOPE.md, DESIGN-BRI
      - `Top 3 competitors: Gaps` → these gaps become feature highlight cards or a comparison table section
      - `Features users consistently request` → these become landing page feature section bullets, not generic "AI-powered" filler
    - **DESIGN-BRIEF.md personality + category** → determines tone. Enterprise Authority = formal, no emoji, "trusted by" language. Bold Operator = punchy, short sentences, action verbs. Health & Care = warm, reassuring, compliance-focused.
+
+**PHASE 2.5 GATE: Do NOT proceed to Phase 3 without COPY.md.** Phase 2.5 (below) writes COPY.md. If it does not exist after Phase 2 completes, Phase 2.5 MUST run before Phase 3. This was the single biggest quality failure in the first build — all copy was invented inline, making every page sound generic. COPY.md is non-negotiable.
 
 **Steps 1-15 — run the full /web-scaffold process.** Read `~/.claude/commands/web-scaffold.md` for all 15 steps. The following saas-build-specific overrides apply on top of web-scaffold:
 
@@ -549,8 +548,6 @@ If the product needs Supabase:
 7. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
 8. Register `/reset-password` route in App.tsx as a lazy-loaded stub pointing to a placeholder component — full `ResetPasswordPage.tsx` is built in Phase 4 (so it gets the per-page self-review pass). Mark it in SCOPE.md as a required auth page if not already present.
 
-If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one.
-
 Log: "Phase 3a complete — Supabase configured" to BUILD-LOG.md.
 
 ---
@@ -605,7 +602,7 @@ If the product has any paid plan or trial-to-paid flow:
    Write both values to `.env.local` and Vercel env vars (Phase 6c).
    If the curl returns empty: the secret key is live mode (`sk_live_`) — get the live publishable key from stripe.com/apikeys and log as NEEDS_HUMAN.
    If `STRIPE_SECRET_KEY` is not in env: log NEEDS_HUMAN: "Add STRIPE_SECRET_KEY to env — then re-run Phase 3b to auto-create price ID."
-3. Create Stripe checkout session endpoint in FastAPI (or Supabase edge function for standalone)
+3. Create Stripe checkout session endpoint as a Supabase edge function
 4. Create webhook handler — verify signature first with `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`, then handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Reject any request that fails signature verification with 400.
 5. Write `UpgradeButton` component and `PricingCards` component
 6. Wire trial banner "Upgrade now" CTA to checkout session
@@ -629,10 +626,10 @@ Log: "Phase 3b complete — Stripe integrated" to BUILD-LOG.md.
 Skip only if the product is a pure landing page with no auth.
 
 1. Read `~/.claude/skills/web-email/SKILL.md` in full
-2. Set up Resend integration in `services/api/email_service.py` (or equivalent)
+2. Set up Resend integration as a Supabase edge function
 3. Write React Email templates: welcome, trial-ending (if free-trial), team-invite (if team features), password-reset, invoice (if paid)
-4. Wire welcome email to auth signup trigger
-5. If trial model is `free-trial`: write `services/api/trial_reminders.py` — cron job that queries orgs where `trial_ends_at` is 7, 3, or 1 day away and sends the trial-ending template. Deploy as Railway cron (`0 9 * * *`).
+4. Wire welcome email to auth signup trigger (Supabase auth hook or database trigger)
+5. If trial model is `free-trial`: create a Supabase edge function for trial reminders — triggered by a Vercel cron job (`/api/cron/trial-reminders`, schedule `0 9 * * *`) that queries orgs where `trial_ends_at` is 7, 3, or 1 day away.
 6. Add `RESEND_API_KEY` to `.env.example`
 
 Log NEEDS_HUMAN: "Add RESEND_API_KEY — verify sending domain at resend.com/domains before emails will deliver"
