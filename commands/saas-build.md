@@ -712,27 +712,18 @@ Hero override:
 **If any forbidden pattern is present:** fix it now.
 **If hero does not match category pattern:** redesign the hero before marking complete. A dark animated hero for a WHS compliance tool is an automatic failure.
 
-**CATEGORY HARD GATES — these are binary BLOCK conditions. Do not proceed until each passes:**
+**UNIVERSAL HARD GATES — these are binary BLOCK conditions. Do not proceed until each passes:**
 
-| Category | Hard gate condition | Correct fix |
+| Gate | Condition | Correct fix |
 |---|---|---|
-| Reputation/Reviews | Platform logos (Google + ProductReview.com.au + SEEK) not visible above or immediately below fold | Add platform logo strip before any other below-fold content |
-| Reputation/Reviews | No animated score ring or review count in hero | Add animated counter or score ring to hero visual |
-| Entity/Company Intelligence | No search bar visible above the fold | Add search bar as hero primary element — nothing else above it |
-| Entity/Company Intelligence | No sample report or data preview shown | Add sample company profile section with real data shape |
-| AML/CTF | No dual-date urgency (enrolment 31 March 2026 + compliance 1 July 2026) | Add banner with both dates. After March 31 enrolment opens: update to "Enrolment is now open — comply by 1 July 2026." |
-| AML/CTF | Hero uses generic SaaS copy ("reduce financial crime risk" / "the modern way to manage AML") | Rewrite hero: "Get compliant by July 1, 2026." Tranche 2 SMBs are forced buyers with zero AML experience — they need direction, not aspiration. |
-| AML/CTF | No sector-specific cards (real estate / accountants / lawyers / conveyancers) | Add profession cards section showing each profession's obligations |
-| WHS/Psychosocial | Hero uses dark background / dark mode design | BLOCK and rebuild — dark UI for WHS tool is the wrong category signal. Must be light mode. |
-| WHS/Psychosocial | Copy uses "upcoming" or "coming soon" for enforcement (deadline was Dec 2025) | Update all copy to "now in effect" / "now mandatory" |
-| WHS/Psychosocial | Hero does not name "psychosocial" explicitly — uses generic "WHS software" or "workplace safety" | Rewrite hero to lead with "Psychosocial Hazard Register" or "Psychosocial Safety" — FlourishDx proves specialist naming outperforms generic WHS positioning |
-| WHS/Psychosocial | Hero copy targets field workers ("inspections", "checklists") instead of HR/OHS professionals ("risk register", "control plan", "governance") | Rewrite for correct audience — HR managers + OHS specialists, not frontline workers |
-| Procurement Intelligence | Tender feed/ticker is static (no animation, no scrolling) | Add animated scrolling tender feed or ticker to hero section |
-| Procurement Intelligence | No data source citation ("Official AusTender API") visible above fold | Add trust bar immediately below hero with data source attribution |
-| Procurement Intelligence | Hero uses generic SaaS copy without naming the portal fragmentation problem | Add explicit messaging: "No more monitoring 8 separate portals" — this is the #1 pain point and no competitor owns it |
-| Procurement Intelligence | Hero is copy-heavy / image-heavy instead of data-heavy | Procurement intelligence heroes must be 60% data visualization (live tender cards, counts, agency names) + 30% copy + 10% CTA — reverse of generic SaaS |
+| Hero specificity | Hero headline is generic ("Streamline your X" / "The modern way to Y") | Rewrite using MARKET-BRIEF.md differentiator. Must name the specific problem or competitor gap. |
+| Hero visual | Hero has no product mockup — just text or stock imagery | Add a product screenshot, dispatch board mockup, or UI preview that shows the product DOING something |
+| Pricing visible | No pricing section on landing page | Add pricing section — transparency is a positioning weapon against enterprise competitors |
+| Social proof | No social proof of any kind (logos, testimonials, stats, ratings) | Add the format identified in MARKET-BRIEF.md competitor analysis |
+| CTA specificity | Primary CTA says "Get Started" or "Learn More" | Rewrite to state the outcome: "Start 14-day trial", "Create your first quote", etc. |
+| Mobile hero | Hero text unreadable on 375px viewport | Fix font size, layout, and ensure no horizontal overflow |
 
-Each hard gate is a STOP condition. The landing page CANNOT be marked complete until every hard gate for its category passes with YES.
+Each hard gate is a STOP condition. The landing page CANNOT be marked complete until every gate passes.
 
 **Step 3 — Standard quality review:**
 Run the standard 13-item per-page checklist + fresh eyes pass.
