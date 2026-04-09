@@ -879,7 +879,6 @@ Run through the pre-deploy checklist in premium-website.md. All items must pass.
 
 Use the `vercel` MCP server (preferred — no CLI auth issues on Windows):
 - Call `createDeployment` with `target: production`
-- For monorepo: set `rootDirectory: apps/[product-slug]`
 - Capture the production URL from the response
 
 Fallback if MCP unavailable:
