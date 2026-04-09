@@ -894,8 +894,6 @@ Fallback if MCP unavailable:
 npx vercel env add [VAR_NAME] production --value [value] --yes
 ```
 
-VITE_API_URL is required if there is a backend — set it now, not later.
-
 **Redeploy after env vars are set.** Env vars set after the initial deploy do not take effect until the next deploy. Trigger a redeploy:
 ```bash
 npx vercel --prod --yes
