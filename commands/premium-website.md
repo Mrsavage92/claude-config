@@ -27,6 +27,7 @@ This file is the contract. If a rule lives only in an individual skill file and 
 | `/web-page` | Build one page at a time with per-page self-review loop |
 | `/web-component` | Add individual components to an existing page |
 | `/web-review` | Design + a11y + performance audit (target 38+/40) before deploy |
+| `/review` | Deep code audit (x/100) — 9 passes: security, correctness, performance, design system, a11y, completeness, code quality, testing, **copy & brand quality (Pass I)**. Run alongside /web-review or standalone on any project. |
 | `/web-deploy` | Vercel (SPAs) or Railway (full-stack) with smoke tests |
 | `/web-fix` | Fix a specific component, bug, or review failure |
 | `/web-stripe` | Stripe checkout session, webhook handler, UpgradeButton + PricingCards components, trial-to-paid flow |
@@ -76,7 +77,7 @@ Then call `mcp__magic__21st_magic_component_builder` to generate it, then adapt 
 |---|---|---|---|
 | Announcement banner | `announcement banner bar` | `Banner 1` | Mounts above navbar. Use for launches, feature flags, promotions. Optional — include when there's a real announcement. |
 | Animated background | `animated background gradient` | `BackgroundGradientAnimation` | Interactive WebGL blobs. Opacity 0.15-0.2, z-index -1. Wrap in `useReducedMotion` check. |
-| Navigation | `navigation header navbar` | `HeroSection 2` (extract its `HeroHeader`) | Scroll-aware blur header. CSS `backdrop-blur-lg` on scroll (no motion library). **MANDATORY: nav must include BOTH a "Sign In" text link (for existing users) AND a primary CTA button (for new signups). Never ship a nav with only a CTA and no sign-in link.** |
+| Navigation | `navigation header navbar` | `HeroSection 2` (extract its `HeroHeader`) | Scroll-aware blur header. `useScroll` from motion/react. |
 | Hero section | `hero section landing page` | `HeroSection 2` | `AnimatedGroup` spring blur entrance built-in. Adapt stagger order to Technique 3. |
 | Logo cloud | `logo cloud marquee` | `Logo Cloud 3` or `Logo Cloud 4` | `InfiniteSlider` + mask fade edges. Use `Logo Cloud 4` when ProgressiveBlur suits the style. |
 | Stats / metrics | `stats metrics counter` | `CaseStudies` (CountUp layout) | `react-countup` with `enableScrollSpy`. Sits between Logo Cloud and Features. Minimum 3 numbers. |
@@ -118,22 +119,18 @@ Note: Banner is optional — include when there's a real announcement. All other
 - This is NOT optional. Every hero must have this.
 
 ### 3. Hero Entrance Animation
-**DO NOT USE framer-motion or the motion package.** Both cause production crashes (React error #130, blank pages) in Vite builds. Use CSS-only animations:
+Technique 3 STAGGER (Framer Motion) — entrance order is always:
+Pill → headline → subheadline → CTAs → trust stats → product visual (0.6s delay — loads last for effect)
 
-```css
-/* In index.css */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
-.animate-fade-up-delay-1 { animation: fadeUp 0.5s ease-out 0.1s forwards; opacity: 0; }
-.animate-fade-up-delay-2 { animation: fadeUp 0.5s ease-out 0.2s forwards; opacity: 0; }
-.animate-fade-up-delay-3 { animation: fadeUp 0.5s ease-out 0.3s forwards; opacity: 0; }
-.animate-fade-up-delay-4 { animation: fadeUp 0.5s ease-out 0.5s forwards; opacity: 0; }
+Implementation pattern:
+```tsx
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.12 } } };
+const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } } };
+// Wrap section in <motion.div variants={container} initial="hidden" animate="show">
+// Wrap each element in <motion.div variants={item}>
+// Product visual gets delay={0.6} override
 ```
-
-Entrance order: Pill (delay-1) → headline (delay-2) → subheadline (delay-3) → CTAs (delay-4) → product visual (delay-4).
+Full detail: `/web-animations` Technique 3.
 
 ### 0. Announcement Banner (optional — include when there's a real announcement)
 - Use `Banner 1` from 21st.dev (searchQuery: `announcement banner bar`) — mounts above the navbar
@@ -243,7 +240,7 @@ Use Vitest + `@testing-library/react`. Mock Supabase with `vi.mock('@/lib/supaba
 
 Apply from scaffold onwards — not just at review time:
 
-- `vite.config.ts` MUST have `manualChunks` splitting vendor-react, vendor-query, vendor-supabase (NO vendor-motion — framer-motion is banned)
+- `vite.config.ts` MUST have `manualChunks` splitting vendor-react, vendor-motion, vendor-query, vendor-supabase
 - All routes in App.tsx MUST use `React.lazy` + `Suspense`
 - No `useEffect` for data fetching — TanStack Query only
 - All images: `alt`, `loading="lazy"`, explicit `width` + `height`
@@ -393,12 +390,21 @@ Landing page additional checks:
 
 ---
 
-## Quality Gate Loop (enforced by Phase 5 / web-review)
+## Quality Gate Loop (enforced by Phase 5 / web-review + /review)
+
+**Two complementary reviews — both apply to every product:**
+
+| Review | Scores | What it catches | When |
+|---|---|---|---|
+| `/web-review` | x/40 | Visual quality, a11y, performance, copy quality (criteria 9+10) | Phase 5 mandatory gate — blocks deploy if <38 |
+| `/review` | x/100 | Security, correctness, code quality, testing, **copy & brand (Pass I)** | Run after /web-review passes. Does not block deploy but flags P0-P2 for immediate fix. |
 
 `/web-review` runs inside an explicit loop when called from `/saas-build`:
 - **Exit condition**: score >= 38 AND pre-deploy checklist fully green
 - **Fix loop**: for each failure, run `/web-fix` targeting the exact failure, commit, re-run `/web-review`
 - **Hard stop**: after 5 iterations with score still < 38 — log `STUCK`, list all remaining failures, and STOP. Do not proceed to deploy.
+
+After `/web-review` passes: optionally run `/review` for the deep code audit (x/100). This catches security issues, logic bugs, and copy drift that /web-review's visual focus misses. `/review` Pass I greps for generic copy and scores COPY.md compliance — the same standard enforced across the entire suite.
 
 ## Deploy Rules (enforced by Phase 6 / web-deploy)
 
@@ -467,7 +473,7 @@ BUILD (code)
 
 QUALITY (gates)
   Phase 4.5        → Vitest: auth flow, onboarding flow, core feature smoke tests
-  Phase 5          → /web-review: discovery alignment check + 38+/40 score loop
+  Phase 5          → /web-review (38+/40) + /review (x/100 with Pass I copy quality)
                      ↳ Critic #3: "Would I share this URL in a Slack channel?"
 
 SHIP (deploy)
