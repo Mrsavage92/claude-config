@@ -97,6 +97,23 @@ Read this file during Phase 0a (Orient) and Phase 2 (Scaffold). Update it during
 
 ---
 
+## Performance Learnings
+
+(Entries added by Phase 6g post-deploy measurement)
+
+## Cross-Build Analysis
+
+**This section is auto-generated after 3+ builds.** Phase 0a reads it to weight decisions.
+
+| Build | Category | Personality | Score | Hero pattern | Fix iterations | LCP |
+|---|---|---|---|---|---|---|
+| (populated after each build) | | | | | | |
+
+**Best patterns (auto-derived):**
+- Highest-scoring personality: (needs data)
+- Fastest hero pattern (fewest Phase 5 fixes): (needs data)
+- Components to avoid: (needs data)
+
 ## Per-Build Log
 
-(Entries added automatically after each build)
+(Entries added automatically after each build — Phase 8c)

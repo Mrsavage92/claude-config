@@ -94,6 +94,20 @@ Read these files in full — they are the source of truth for the entire build. 
 3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
 4. `~/.claude/skills/shared/golden-reference.md` — proven patterns from 10 benchmark SaaS products (Linear, Stripe, Vercel, Notion, Vanta, Raycast, SafetyCulture, Loom, Cal.com, Loops). Use these as the quality standard, not generic LLM defaults. Match hero pattern, social proof format, and copy quality to these references.
 5. `~/.claude/skills/shared/component-memory.md` — learnings from previous builds. Component quirks, patterns that work/don't work per personality type. Grows after each build.
+
+**Anti-pattern pre-flight (runs after reading component-memory.md):**
+Read the "Patterns That Don't Work" section. For each anti-pattern listed, check if the current build is at risk:
+- If this product's category matches a known bad pattern (e.g., "dark hero for Health & Care") → log to BUILD-LOG.md: "PRE-FLIGHT: [anti-pattern] blocked — component memory says this fails. Using [alternative] instead."
+- If DESIGN-BRIEF.md exists and specifies a choice that conflicts with a known anti-pattern → flag before Phase 2, not after Phase 5. Catching it here saves an entire build-review cycle.
+
+**Cross-build learning (runs if 3+ builds recorded in component-memory.md):**
+Read ALL per-build log entries at the bottom of component-memory.md. Identify:
+- Which personality type scored highest on web-review? → Weight those design choices higher.
+- Which hero pattern required the fewest Phase 5 fix iterations? → Default to that pattern for similar categories.
+- Which components appeared in "Issues found" across 2+ builds? → Flag them as high-risk before using again.
+Log to BUILD-LOG.md: "CROSS-BUILD: [N] builds analysed. Best-scoring pattern: [pattern] ([score]/40). High-risk components: [list]."
+If fewer than 3 builds recorded: skip this step, log "Cross-build learning: insufficient data ([N] builds)."
+
 6. `CLAUDE.md` (project root, if exists) — project-specific overrides.
 7. `DESIGN-BRIEF.md` (project root, if exists) — locked color system, typography, marketing tier, and component decisions from Phase 0.5. If this file exists, all design decisions are already made — do NOT re-decide them.
 8. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
@@ -1072,6 +1086,32 @@ Bundle sizes (gzipped):
 4. Re-run build and verify all chunks are < 250KB gzipped
 5. If a chunk cannot be reduced below 250KB after splitting: log as NEEDS_HUMAN with exact module name and size
 
+**6g. Post-deploy performance measurement (feeds back to component memory)**
+
+After deploy is confirmed live, measure real production performance via agent-browser:
+
+1. Open the production URL in agent-browser at 1440px
+2. Capture: page load time, whether hero is visible above fold, whether animations play smoothly
+3. If agent-browser supports Lighthouse or performance timing: capture LCP, CLS, FID/INP
+
+Record results in BUILD-LOG.md:
+```
+Performance baseline:
+  LCP: [value]s (target: <2.5s)
+  CLS: [value] (target: <0.1)
+  Hero above fold: [yes/no]
+  Animations smooth: [yes/no]
+```
+
+**Feed back to component memory:** If LCP > 2.5s, identify the cause (large hero image, unoptimized WebGL, blocking font) and append to `component-memory.md`:
+```
+### Performance: [product-name] — LCP [value]s
+Cause: [component] — [what made it slow]
+Fix for next build: [what to do differently]
+```
+
+If agent-browser is unavailable: log "Performance measurement skipped — agent-browser unavailable. Run Lighthouse manually at pagespeed.web.dev" and continue.
+
 ---
 
 ### Phase 7 — Gap Analysis Loop (post-build self-improvement)
@@ -1200,6 +1240,16 @@ Time: [total build time estimate]
 Score: [web-review x/40]
 ```
 Also update any component-specific sections if you discovered new quirks or patterns during this build.
+
+**Update the Cross-Build Analysis table:** Add a row with this build's data:
+`| [product-name] | [category] | [personality] | [score]/40 | [hero pattern used] | [Phase 5 iterations] | [LCP from 6g] |`
+
+If there are now 3+ rows: re-derive the "Best patterns" summary:
+- Highest-scoring personality → update the line
+- Fewest Phase 5 fix iterations → update the line
+- Components in "Issues found" across 2+ builds → add to "Components to avoid"
+
+This is the self-improvement mechanism — future builds at Phase 0a will read these derived patterns and weight decisions accordingly.
 
 **8d. Push build summary to Notion via `/project-refresh` PUSH mode.**
 Updates the project's Notion master doc with deploy URL, review score, and remaining human actions — required for cross-session context.
