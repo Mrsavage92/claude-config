@@ -1250,6 +1250,23 @@ Score: [web-review x/40]
 ```
 Also update any component-specific sections if you discovered new quirks or patterns during this build.
 
+**Convert every issue into an enforceable rule (THIS IS WHAT MAKES IT SELF-IMPROVING):**
+For each issue discovered during this build, write TWO things to component-memory.md:
+
+1. **Human-readable learning** (in the relevant component section):
+   `TestimonialSlider: star rating uses yellow-400 which clashes with brand palette`
+
+2. **Grep-enforceable rule** (in a new `## Enforcement Rules` section):
+   ```
+   RULE: no-yellow-stars
+   GREP: "yellow-400" in any TestimonialSlider import file
+   FIX: replace with text-brand or text-amber-500/80
+   SEVERITY: P2
+   ADDED: [date] from [product-name] build
+   ```
+
+Phase 0a post-scaffold enforcement reads the `## Enforcement Rules` section and runs EVERY grep. This is the mechanism that turns experience into prevention — prose is for humans, grep rules are for machines. If an issue was found but no grep rule was written, it WILL happen again.
+
 **Update the Cross-Build Analysis table:** Add a row with this build's data:
 `| [product-name] | [category] | [personality] | [score]/40 | [hero pattern used] | [Phase 5 iterations] | [LCP from 6g] |`
 

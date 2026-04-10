@@ -68,7 +68,9 @@ Specific enforced checks:
 - Any component listed in memory's "Components to avoid" for this personality type → P1 per import
 - Generic copy phrases from memory's anti-patterns → inject into UX/Friction agent findings
 
-These are not optional checks. Component memory is only useful if violations are caught by grep, not relied on being "read and remembered." Every anti-pattern in memory must have a corresponding grep that runs automatically.
+**Read the `## Enforcement Rules` section of component-memory.md.** Each rule has a GREP field — run that exact grep. Each match = finding at the stated SEVERITY. These rules were created from real build failures. They grow after every build. The more builds that have run, the more rules exist, the fewer mistakes get through.
+
+These are not optional checks. Component memory is only useful if violations are caught by grep, not relied on being "read and remembered."
 
 ### 0b. Pull live production signals
 

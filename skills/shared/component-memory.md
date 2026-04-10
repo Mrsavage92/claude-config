@@ -97,6 +97,45 @@ Read this file during Phase 0a (Orient) and Phase 2 (Scaffold). Update it during
 
 ---
 
+## Enforcement Rules
+
+**These are machine-readable. Phase 0a and Phase 0c (saas-improve) grep for every rule automatically.**
+**Each rule was created from a real build failure. If it's here, it happened.**
+
+```
+RULE: no-key-index
+GREP: key={i} OR key={index} in any .tsx file with .map(
+FIX: use stable identity key (key={item.id}, key={item.slug})
+SEVERITY: P1
+ADDED: seed — universal React anti-pattern
+
+RULE: no-generic-stats
+GREP: "10,000+" OR "99.9%" OR "happy users" OR "satisfied customers" in landing page
+FIX: use product-specific numbers from COPY.md metrics section
+SEVERITY: P2
+ADDED: seed — from golden-reference copy standards
+
+RULE: no-dark-health
+GREP: --background: 240 10% 3.9% in index.css WHEN category is Health & Care or WHS
+FIX: use light-mode base (--background: 0 0% 100%)
+SEVERITY: P1
+ADDED: seed — category hard gate, confirmed by SafetyCulture/FlourishDx research
+
+RULE: no-generic-cta
+GREP: "Get Started" OR "Learn More" OR "Sign up" as button text without product context
+FIX: use specific action from COPY.md (e.g., "Start compliance check", "Create first hazard")
+SEVERITY: P2
+ADDED: seed — from golden-reference copy standards
+
+RULE: no-heavy-border
+GREP: border-border (without /30 or /20 or /40 suffix) on feature grid cards
+FIX: use border-border/30 — full opacity overpowers content
+SEVERITY: P3
+ADDED: seed — from component quirks
+```
+
+(New rules added automatically by Phase 8c after each build)
+
 ## Performance Learnings
 
 (Entries added by Phase 6g post-deploy measurement)
