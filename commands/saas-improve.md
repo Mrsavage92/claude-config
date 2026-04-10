@@ -18,16 +18,35 @@ Six specialist agents scan the product simultaneously — each from a different 
 
 ## Phase 0 — Orient + Production Signal Read
 
-### 0a. Read state
-Read these files before doing anything else:
+### 0a. Detect build mode + Read state
+
+**Detect mode first:** Check which files exist in the project root. This determines how the swarm runs.
+
+| File exists? | Mode | What it means |
+|---|---|---|
+| COPY.md + DESIGN-BRIEF.md + BUILD-LOG.md | **saas-build product** | Full research pipeline was used. All agents read COPY.md and benchmark against golden reference. |
+| Neither COPY.md nor DESIGN-BRIEF.md | **existing project** | Built on Lovable, hand-coded, or older build. Agents adapt — skip COPY.md checks, generate baseline research on the fly. |
+
+**Read these files (all that exist — skip missing ones without error):**
 1. `BUILD-LOG.md` — last completed phase, STUCK items, deployed URL
-2. `IMPROVEMENT-STACK.md` — previous stack (if exists and was generated in the last 24 hours: skip Phase 1 and Phase 2, jump directly to Phase 3 execution with the existing stack. If older than 24 hours: re-run Phase 1 and Phase 2 to refresh findings)
+2. `IMPROVEMENT-STACK.md` — previous stack (if exists and < 24 hours old: skip Phase 1+2, jump to Phase 3)
 3. `SCOPE.md` — page inventory and feature set
 4. `DESIGN-BRIEF.md` — locked color + typography contract
-5. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
-6. `~/.claude/commands/premium-website.md` — quality standard
-7. `~/.claude/skills/shared/saas-gap-checklist.md` — base completeness checklist
-8. `~/.claude/web-system-prompt.md` — Design DNA
+5. `COPY.md` — source of truth for all user-facing strings (saas-build mode only)
+6. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
+7. `~/.claude/commands/premium-website.md` — quality standard
+8. `~/.claude/skills/shared/golden-reference.md` — benchmark patterns from 10 reference SaaS products
+9. `~/.claude/skills/shared/component-memory.md` — learnings from previous builds
+10. `~/.claude/skills/shared/saas-gap-checklist.md` — base completeness checklist
+11. `~/.claude/web-system-prompt.md` — Design DNA
+12. `CLAUDE.md` — project context (personality, differentiator, color job)
+
+**Existing project bootstrap (if no DESIGN-BRIEF.md):**
+Before running the swarm, create minimal context files so agents have something to benchmark against:
+1. Read `src/styles/index.css` → extract brand color HSL → log as "detected brand color"
+2. Read `src/pages/` directory → build a page inventory → log as working SCOPE.md equivalent
+3. Grep landing page for hero headline → log as "detected differentiator" (even if generic)
+4. Note: "Existing project — no COPY.md. Agents will flag generic copy as P2 and generate COPY.md as a fix."
 
 Run `git log --oneline -20` and `git status`.
 
@@ -159,6 +178,15 @@ CHECK — src/pages/**/*.tsx, src/components/**/*.tsx
 - [ ] ProtectedRoute checks trial/subscription status — expired users redirected to billing/settings, not silently left in the app
 - [ ] "Coming soon" buttons (those that fire toast.info instead of navigating) have `aria-disabled="true"` so assistive tech knows they are inactive
 
+Copy quality checks (apply whether COPY.md exists or not):
+- [ ] Hero headline is product-specific (not "Streamline your [noun]" / "The modern way to" / "All-in-one")
+- [ ] All CTA buttons name the action (not generic "Get Started" / "Learn More" / "Sign up")
+- [ ] Empty states include a time estimate and specific action (not "No data found")
+- [ ] Error messages are helpful (not "Something went wrong" without guidance)
+- [ ] Tone is consistent across all pages (formal pages don't suddenly use casual contractions, and vice versa)
+- [ ] If COPY.md exists: verify page strings match COPY.md — any drift = P2
+- [ ] If COPY.md does NOT exist: grep for 15 generic phrases (Streamline, All-in-one, Powerful yet simple, Take control, Manage your, Collaborate, Enterprise-grade, Click here, Submit, Lorem ipsum, placeholder, TODO). Each occurrence = P2. If 5+ found: generate COPY.md as a P1 fix.
+
 Return format:
 AGENT: UX/Friction
 [P1/P2/P3] [file:line] — [issue]
@@ -238,7 +266,9 @@ CHECK — src/pages/LandingPage.tsx, src/pages/Pricing*.tsx, src/components/Upgr
 
 - [ ] Pricing section exists on landing page
 - [ ] Social proof section exists on landing page (logos, testimonials, or review count)
-- [ ] Hero CTA is specific (not just "Get started")
+- [ ] Hero CTA is specific (not just "Get started" / "Learn More" / "Sign up" — must name the action)
+- [ ] Hero headline is product-specific — compare against golden-reference.md copy standards. If it reads like "Streamline your [noun]", it's a P1.
+- [ ] Compare landing page against golden-reference.md hero patterns — does the hero pattern match the product's personality type? (e.g., compliance product should use Pattern 4 Urgency, not Pattern 1 Declarative Minimum)
 - [ ] UpgradeButton component exists and is wired to Stripe checkout
 - [ ] Trial banner shows countdown + upgrade CTA (not just static text)
 - [ ] Stripe webhook handles: checkout.session.completed, subscription.updated, subscription.deleted
@@ -585,6 +615,15 @@ If this is not a 3rd-session run: skip Phase 6, log "Phase 6 skipped (session [N
 ## Phase 7 — Intelligence Sync
 
 Push the session's output to all intelligence layers:
+
+**Update component memory:**
+Append learnings from this improvement session to `~/.claude/skills/shared/component-memory.md`:
+- Any component quirks discovered (e.g., "TestimonialSlider star color clashes with brand palette")
+- Any patterns that worked well when fixing issues
+- Any anti-patterns confirmed (e.g., "dark hero for WHS products always fails")
+
+**Generate COPY.md for existing projects (if it doesn't exist):**
+If this is an existing project (no COPY.md) and the UX/Friction agent found 5+ generic copy occurrences: generate COPY.md now from the current page content. Read every page component, extract all user-facing strings, and write them to COPY.md. This gives future sessions a single copy source to work from. Mark as P1 in the stack: "COPY.md generated — all future copy changes should go through COPY.md."
 
 **Update IMPROVEMENT-STACK.md:**
 - Mark session complete with timestamp
