@@ -50,6 +50,26 @@ Before running the swarm, create minimal context files so agents have something 
 
 Run `git log --oneline -20` and `git status`.
 
+### 0c. Anti-pattern enforcement from component memory (HARD GATE)
+
+Read `~/.claude/skills/shared/component-memory.md` "Patterns That Don't Work" section. Grep the codebase for each known anti-pattern:
+
+```
+For each anti-pattern in memory:
+  1. Convert to a grep-able pattern (e.g., "dark hero for Health & Care" → check index.css dark mode + SCOPE.md category)
+  2. Grep the codebase
+  3. If found: inject as P0 into the swarm findings — these are KNOWN failures, not new discoveries
+```
+
+Specific enforced checks:
+- `key={index}` or `key={i}` in any `.map()` → P1 per file (grep all .tsx files)
+- Hardcoded `"10,000+"` or `"99.9%"` stat strings → P2 per occurrence
+- Dark mode CSS on Health & Care / WHS product → P1
+- Any component listed in memory's "Components to avoid" for this personality type → P1 per import
+- Generic copy phrases from memory's anti-patterns → inject into UX/Friction agent findings
+
+These are not optional checks. Component memory is only useful if violations are caught by grep, not relied on being "read and remembered." Every anti-pattern in memory must have a corresponding grep that runs automatically.
+
 ### 0b. Pull live production signals
 
 Before any code analysis, check what the live product is telling us. Read these in parallel:

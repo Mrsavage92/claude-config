@@ -95,10 +95,19 @@ Read these files in full — they are the source of truth for the entire build. 
 4. `~/.claude/skills/shared/golden-reference.md` — proven patterns from 10 benchmark SaaS products (Linear, Stripe, Vercel, Notion, Vanta, Raycast, SafetyCulture, Loom, Cal.com, Loops). Use these as the quality standard, not generic LLM defaults. Match hero pattern, social proof format, and copy quality to these references.
 5. `~/.claude/skills/shared/component-memory.md` — learnings from previous builds. Component quirks, patterns that work/don't work per personality type. Grows after each build.
 
-**Anti-pattern pre-flight (runs after reading component-memory.md):**
-Read the "Patterns That Don't Work" section. For each anti-pattern listed, check if the current build is at risk:
-- If this product's category matches a known bad pattern (e.g., "dark hero for Health & Care") → log to BUILD-LOG.md: "PRE-FLIGHT: [anti-pattern] blocked — component memory says this fails. Using [alternative] instead."
-- If DESIGN-BRIEF.md exists and specifies a choice that conflicts with a known anti-pattern → flag before Phase 2, not after Phase 5. Catching it here saves an entire build-review cycle.
+**Anti-pattern pre-flight (runs after reading component-memory.md) — HARD GATE:**
+Read the "Patterns That Don't Work" section. For each anti-pattern listed:
+- If this product's category matches a known bad pattern (e.g., "dark hero for Health & Care") → log to BUILD-LOG.md: "PRE-FLIGHT BLOCKED: [anti-pattern] — component memory says this fails. Using [alternative] instead."
+- If DESIGN-BRIEF.md exists and specifies a choice that conflicts with a known anti-pattern → BLOCK: do not proceed to Phase 2. Fix the DESIGN-BRIEF.md choice first.
+
+**Post-scaffold enforcement (runs after Phase 2 completes, before Phase 2.5):**
+Grep the scaffolded codebase for every anti-pattern in component-memory.md "Patterns That Don't Work":
+- Dark background on Health & Care product → grep `bg-background: 240 10% 3.9%` in index.css for a health product = BLOCK
+- Generic stat numbers ("10,000+ users") → grep landing page for exact strings = BLOCK
+- `key={index}` on any `.map()` → grep all tsx files = BLOCK
+- Any component flagged in "Components to avoid" for this personality type → grep imports = BLOCK
+
+If ANY grep matches: fix before proceeding to Phase 2.5 (COPY.md). This is not advisory — it's a gate. The memory only works if violations are caught automatically, not relied on being "remembered."
 
 **Cross-build learning (runs if 3+ builds recorded in component-memory.md):**
 Read ALL per-build log entries at the bottom of component-memory.md. Identify:
