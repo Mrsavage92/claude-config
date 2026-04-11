@@ -126,6 +126,8 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
+    "README.md",
+    "SKILL-AUTHORING-STANDARD.md",
     "a11y-audit",
     "agent-browser",
     "ai-image-generation",
@@ -195,6 +197,7 @@
     "privacy-policy",
     "privacy-report-pdf",
     "product-team",
+    "product-validator",
     "project-doc",
     "project-management",
     "project-manager",
@@ -252,6 +255,6 @@
   "counts": {
     "commands": 61,
     "agents": 59,
-    "skills": 122
+    "skills": 125
   }
 }
