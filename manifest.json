@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-11",
+  "last_updated": "2026-04-15",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -188,6 +188,7 @@
     "marketing-skill",
     "notion",
     "orchestration",
+    "outbound",
     "parallel-audit",
     "prd",
     "premium-website",
@@ -255,6 +256,6 @@
   "counts": {
     "commands": 61,
     "agents": 59,
-    "skills": 125
+    "skills": 126
   }
 }
