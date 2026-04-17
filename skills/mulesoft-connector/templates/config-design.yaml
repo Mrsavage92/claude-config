@@ -1,0 +1,20 @@
+# Design environment properties — dev credentials, local testing
+# DO NOT COMMIT real credentials. Add this file to .gitignore if repo is shared.
+
+salesforce:
+  consumer_key: ""
+  consumer_secret: ""
+  username: ""
+  password: ""
+  security_token: ""
+  authorization_url: "https://test.salesforce.com/services/Soap/u/66.0"
+
+netsuite:
+  account_id: ""          # e.g. "1234567_SB1" for sandbox
+  consumer_key: ""
+  consumer_secret: ""
+  token_id: ""
+  token_secret: ""
+
+http:
+  port: "8081"

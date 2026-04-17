@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+  xmlns:netsuite="http://www.mulesoft.org/schema/mule/netsuite"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http"
+  xmlns:os="http://www.mulesoft.org/schema/mule/os"
+  xmlns:configuration-properties="http://www.mulesoft.org/schema/mule/configuration-properties"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+    http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+    http://www.mulesoft.org/schema/mule/netsuite http://www.mulesoft.org/schema/mule/netsuite/current/mule-netsuite.xsd
+    http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+    http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+    http://www.mulesoft.org/schema/mule/configuration-properties http://www.mulesoft.org/schema/mule/configuration-properties/current/mule-configuration-properties.xsd">
+
+  <!-- Load environment-specific properties. Set env=design|sandbox|production at deploy time. -->
+  <configuration-properties file="config-${env}.yaml" />
+
+  <!-- ObjectStore for watermarks and idempotency tracking -->
+  <os:object-store name="Integration_Object_Store" persistent="true" />
+
+  <!-- Salesforce: OAuth Username-Password (dev/test only). Upgrade to JWT for production. -->
+  <salesforce:sfdc-config name="Salesforce_Config">
+    <salesforce:oauth-user-pass-connection
+      consumerKey="${salesforce.consumer_key}"
+      consumerSecret="${salesforce.consumer_secret}"
+      username="${salesforce.username}"
+      password="${salesforce.password}"
+      securityToken="${salesforce.security_token}"
+      authorizationUrl="${salesforce.authorization_url}" />
+  </salesforce:sfdc-config>
+
+  <!-- NetSuite: Token-Based Authentication -->
+  <netsuite:config name="NetSuite_Config">
+    <netsuite:token-authentication-connection
+      accountId="${netsuite.account_id}"
+      consumerKey="${netsuite.consumer_key}"
+      consumerSecret="${netsuite.consumer_secret}"
+      tokenId="${netsuite.token_id}"
+      tokenSecret="${netsuite.token_secret}"
+      signatureAlgorithm="HMAC_SHA256" />
+  </netsuite:config>
+
+  <!-- HTTP Listener (for triggered flows or health checks) -->
+  <http:listener-config name="HTTP_Listener_config">
+    <http:listener-connection host="0.0.0.0" port="${http.port}" />
+  </http:listener-config>
+
+</mule>
