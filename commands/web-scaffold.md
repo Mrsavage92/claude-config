@@ -333,16 +333,15 @@ export function ProductMockup() {
         <div className="flex h-48">
           {/* Sidebar */}
           <div className="flex w-10 flex-col items-center gap-2 border-r border-border/30 bg-muted/20 py-3">
-            {['dashboard', 'reports', 'settings', 'help'].map((item, i) => (
-              <div key={item} className={`h-5 w-5 rounded ${i === 0 ? 'bg-primary/80' : 'bg-muted/60'}`} />
+            {[true, false, false, false].map((active, i) => (
+              <div key={i} className={`h-5 w-5 rounded ${active ? 'bg-primary/80' : 'bg-muted/60'}`} />
             ))}
           </div>
           {/* Content */}
           <div className="flex-1 p-3 space-y-2">
             {/* Stat cards */}
             <div className="grid grid-cols-3 gap-2">
-              {/* REPLACE these with product-specific KPIs from COPY.md metrics section */}
-              {[['Active items', '124'], ['Compliance', '89%'], ['Pending', '12']].map(([label, val]) => (
+              {[['KPI 1', '124'], ['KPI 2', '89%'], ['KPI 3', '12']].map(([label, val]) => (
                 <div key={label} className="rounded border border-border/40 bg-background/60 p-2">
                   <div className="text-[9px] text-muted-foreground">{label}</div>
                   <div className="text-xs font-semibold text-foreground">{val}</div>
@@ -470,12 +469,6 @@ Backend: [Supabase / FastAPI on Railway / none]
 - EmptyState component for all empty states — always includes a CTA
 - Status indicators: muted dot + text only — never colored badge fills
 - Typography: use type scale (text-display/hero/title) not just text-sm everywhere
-
-## Content Sources
-- All user-facing copy: COPY.md (if exists) — headlines, CTAs, empty states, error messages, FAQ
-- Design decisions: DESIGN-BRIEF.md — personality type, color system, component lock
-- Competitor context: MARKET-BRIEF.md — differentiator, gaps, patterns
-- The builder reads THIS file (CLAUDE.md) + COPY.md per page. All other research files are consumed here.
 
 ## shadcn/ui
 Components in src/components/ui/ — never edit directly.

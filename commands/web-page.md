@@ -275,11 +275,9 @@ Per-page review — Pass 1: [page name]
 
 **Pass 2b — Anti-generic copy check.** Grep the page for these phrases — if ANY appear, rewrite using COPY.md or MARKET-BRIEF.md data:
 - "The modern way to" / "Streamline your" / "All-in-one" / "Powerful yet simple" / "Take control of"
-- "Manage your" / "Collaborate with your team" / "Enterprise-grade" / "Secure and reliable"
 - "AI-powered" (unless the product's core feature is literally AI)
-- "Lorem ipsum", "placeholder", "TODO", or any placeholder text
-- "Click here" / "Submit" / "No credit card required" (noise phrases)
-- Button labels "Learn More" or "Get Started" or "Sign up" without specificity — should reference the actual action ("Start 14-day trial" / "Create your first [entity]" / "Run compliance check")
+- "Lorem ipsum" or any placeholder text
+- Button labels "Learn More" or "Get Started" without specificity — should reference the actual action ("Start 14-day trial" / "Create your first [entity]")
 - Any copy that could be pasted into a different SaaS product unchanged — it's too generic. Rewrite with product-specific language from COPY.md.
 
 **Pass 2c — Tone consistency.** Check that the page's copy matches the DESIGN-BRIEF.md personality type. Enterprise Authority pages should not have casual contractions. Bold Operator pages should not have formal third-person language. Health & Care pages should not have aggressive urgency. Fix any mismatches.

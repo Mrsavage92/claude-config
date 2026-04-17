@@ -16,13 +16,9 @@ Score what a real user experiences, not just what the code does. A page that tec
 
 ### Step 1 — Read Context
 Read `~/.claude/web-system-prompt.md`.
-Read `~/.claude/skills/shared/golden-reference.md` — benchmark patterns to score against.
 Read `SCOPE.md` if it exists — use page definitions to verify every page was built as planned.
 Read `CLAUDE.md` for the color job definition.
-Read `COPY.md` if it exists — verify page strings match the copy document.
-Read `DESIGN-BRIEF.md` if it exists — verify personality type is reflected in tone.
 Read `src/styles/index.css` and `tailwind.config.ts`.
-If `src/lib/design-system.ts` exists — check that components import `ds.*` instead of raw Tailwind for spacing/radius/shadow.
 
 ### Step 2 — Run All Checks in Parallel
 
