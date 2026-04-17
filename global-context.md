@@ -22,7 +22,7 @@ Both machines auto-sync on session start/end via Stop and SessionStart hooks in 
 
 Everything lives here — skills, agents, commands, this file, sync scripts. Both machines pull from and push to this one repo.
 
-- **skills** → `claude-config/skills/` + `~/.claude/skills/claude-skills/`
+- **skills** → `claude-config/skills/` (170 skill directories, source of truth)
 - **agents** → `claude-config/agents/` (60 agent .md files)
 - **commands** → `claude-config/commands/`
 - **this file** → synced as `global-context.md` in claude-config repo
