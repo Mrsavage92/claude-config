@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Global error handler — reusable across flows -->
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+  <error-handler name="Global_Error_Handler">
+
+    <!-- Auth errors — don't retry, alert immediately -->
+    <on-error-propagate type="SALESFORCE:MUTUAL_AUTHENTICATION_FAILED">
+      <logger level="ERROR"
+        message='#["SF AUTH FAIL: cert/credentials may need renewal. flow=" ++ flow.name ++ " correlationId=" ++ correlationId]' />
+    </on-error-propagate>
+
+    <on-error-propagate type="NETSUITE:INVALID_CREDENTIAL">
+      <logger level="ERROR"
+        message='#["NS AUTH FAIL: TBA credentials invalid. flow=" ++ flow.name ++ " correlationId=" ++ correlationId]' />
+    </on-error-propagate>
+
+    <on-error-propagate type="NETSUITE:INSUFFICIENT_PERMISSION">
+      <logger level="ERROR"
+        message='#["NS PERMISSION FAIL: role missing permission. flow=" ++ flow.name ++ " correlationId=" ++ correlationId]' />
+    </on-error-propagate>
+
+    <!-- Transient errors — logged at WARN, retryable at flow level -->
+    <on-error-propagate type="HTTP:CONNECTIVITY">
+      <logger level="WARN"
+        message='#["Transient connectivity: " ++ error.description ++ " flow=" ++ flow.name]' />
+    </on-error-propagate>
+
+    <on-error-propagate type="HTTP:TIMEOUT">
+      <logger level="WARN"
+        message='#["HTTP timeout: " ++ error.description ++ " flow=" ++ flow.name]' />
+    </on-error-propagate>
+
+    <!-- Validation errors — don't retry -->
+    <on-error-propagate type="APP:VALIDATION_ERROR">
+      <logger level="WARN"
+        message='#["Validation: " ++ error.description ++ " flow=" ++ flow.name ++ " correlationId=" ++ correlationId]' />
+    </on-error-propagate>
+
+    <!-- Catch-all -->
+    <on-error-propagate type="ANY">
+      <logger level="ERROR"
+        message='#["UNHANDLED: " ++ error.description ++ " at " ++ error.failingComponent ++ " flow=" ++ flow.name ++ " correlationId=" ++ correlationId]' />
+    </on-error-propagate>
+
+  </error-handler>
+
+</mule>

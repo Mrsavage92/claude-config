@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-15",
+  "last_updated": "2026-04-17",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -126,6 +126,7 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
+    "AUTOPILOT_LOG.md",
     "README.md",
     "SKILL-AUTHORING-STANDARD.md",
     "a11y-audit",
@@ -186,6 +187,12 @@
     "market-seo",
     "market-social",
     "marketing-skill",
+    "mulesoft",
+    "mulesoft-bdr",
+    "mulesoft-connector",
+    "mulesoft-dataweave",
+    "mulesoft-flow",
+    "mulesoft-platform",
     "notion",
     "orchestration",
     "outbound",
@@ -256,6 +263,6 @@
   "counts": {
     "commands": 61,
     "agents": 59,
-    "skills": 126
+    "skills": 133
   }
 }

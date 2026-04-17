@@ -1,0 +1,20 @@
+# Production environment properties — all values pulled from Anypoint Secrets Manager
+# This file is SAFE to commit because it references secrets, not raw values.
+
+salesforce:
+  # Production uses OAuth JWT Bearer — no passwords
+  consumer_key: "${secure::sf-consumer-key}"
+  keystore_file: "mulesoft_jwt_cert.jks"
+  keystore_password: "${secure::sf-keystore-password}"
+  integration_username: "${secure::sf-integration-username}"
+  audience_url: "https://login.salesforce.com"
+
+netsuite:
+  account_id: "${secure::ns-account-id}"
+  consumer_key: "${secure::ns-consumer-key}"
+  consumer_secret: "${secure::ns-consumer-secret}"
+  token_id: "${secure::ns-token-id}"
+  token_secret: "${secure::ns-token-secret}"
+
+http:
+  port: "8081"

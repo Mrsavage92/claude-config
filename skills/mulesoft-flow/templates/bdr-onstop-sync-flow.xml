@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- BDR Phase 1A: NetSuite entitystatus → Salesforce On Stop flag -->
+<!-- Polls NS every 15 min, filters by watermark, pushes to SF with upsert -->
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+  xmlns:netsuite="http://www.mulesoft.org/schema/mule/netsuite"
+  xmlns:os="http://www.mulesoft.org/schema/mule/os"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+    http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+    http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+    http://www.mulesoft.org/schema/mule/netsuite http://www.mulesoft.org/schema/mule/netsuite/current/mule-netsuite.xsd
+    http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+
+  <flow name="netsuite-to-sf-onstop-sync">
+
+    <!-- Trigger: every 15 minutes -->
+    <scheduler doc:name="Poll Every 15 Min">
+      <scheduling-strategy>
+        <fixed-frequency frequency="15" timeUnit="MINUTES" />
+      </scheduling-strategy>
+    </scheduler>
+
+    <!-- Capture poll start time (before querying to avoid race condition) -->
+    <ee:transform doc:name="Capture Poll Time">
+      <ee:variables>
+        <ee:set-variable variableName="pollStartTime">#[now()]</ee:set-variable>
+        <ee:set-variable variableName="correlationId">#[correlationId]</ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+
+    <!-- Read watermark from Object Store (fallback to now() on first run) -->
+    <try doc:name="Read Watermark">
+      <os:retrieve
+        objectStore="Integration_Object_Store"
+        key="ns-customer-watermark"
+        target="lastWatermark" />
+      <error-handler>
+        <on-error-continue type="OS:KEY_NOT_FOUND">
+          <ee:transform doc:name="First Run — Watermark = now()">
+            <ee:variables>
+              <ee:set-variable variableName="lastWatermark">#[now()]</ee:set-variable>
+            </ee:variables>
+          </ee:transform>
+          <logger level="INFO" message="First run — watermark initialised to now(), historical records skipped" />
+        </on-error-continue>
+      </error-handler>
+    </try>
+
+    <!-- Query NetSuite via pre-built Saved Search -->
+    <!-- Saved Search filter: lastModifiedDate > vars.lastWatermark -->
+    <netsuite:saved-search
+      doc:name="NetSuite Saved Search"
+      config-ref="NetSuite_Config"
+      recordType="CUSTOMER"
+      savedSearchId="${netsuite.customer_status_saved_search_id}" />
+
+    <!-- Early exit if no results -->
+    <choice doc:name="Has Records?">
+      <when expression="#[sizeOf(payload) == 0]">
+        <logger level="DEBUG" message='#["No records modified since " ++ vars.lastWatermark]' />
+      </when>
+      <otherwise>
+
+        <!-- Transform: map NS Customer → SF Account fields -->
+        <ee:transform doc:name="NS → SF Mapping">
+          <ee:message>
+            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var onStopTriggers = ["CUSTOMER-ACCOUNT ON STOP", "CUSTOMER-SUSPENDED", "CUSTOMER-DEBT COLLECTION"]
+---
+payload map (customer) -> {
+  NetSuite_Internal_ID__c: customer.internalId,
+  On_Stop__c: customer.entityStatus.name in onStopTriggers,
+  On_Stop_Status__c: customer.entityStatus.name default ""
+}]]></ee:set-payload>
+          </ee:message>
+        </ee:transform>
+
+        <!-- Write to SF with retry wrapper -->
+        <until-successful
+          maxRetries="3"
+          millisBetweenRetries="2000"
+          doc:name="SF Upsert with Retry">
+          <salesforce:upsert
+            config-ref="Salesforce_Config"
+            objectType="Account"
+            externalIdFieldName="NetSuite_Internal_ID__c">
+            <salesforce:records>#[payload]</salesforce:records>
+          </salesforce:upsert>
+        </until-successful>
+
+        <!-- Log success -->
+        <logger level="INFO"
+          message='#["NS->SF On-Stop sync: " ++ sizeOf(payload) ++ " records processed, correlationId=" ++ vars.correlationId]' />
+
+      </otherwise>
+    </choice>
+
+    <!-- Checkpoint: update watermark ONLY after successful processing -->
+    <os:store
+      doc:name="Update Watermark"
+      objectStore="Integration_Object_Store"
+      key="ns-customer-watermark"
+      value="#[vars.pollStartTime]" />
+
+    <!-- Flow error handler -->
+    <error-handler>
+      <on-error-propagate type="SALESFORCE:MUTUAL_AUTHENTICATION_FAILED">
+        <logger level="ERROR"
+          message='#["SF auth expired — Connected App cert may need renewal. correlationId=" ++ vars.correlationId]' />
+      </on-error-propagate>
+
+      <on-error-propagate type="NETSUITE:INSUFFICIENT_PERMISSION">
+        <logger level="ERROR"
+          message='#["NS role missing permission — check TBA role config. correlationId=" ++ vars.correlationId]' />
+      </on-error-propagate>
+
+      <on-error-propagate type="ANY">
+        <logger level="ERROR"
+          message='#["NS->SF sync FAILED: " ++ error.description ++ " at " ++ error.failingComponent ++ " correlationId=" ++ vars.correlationId]' />
+        <!-- Watermark NOT updated → records will be retried next poll -->
+      </on-error-propagate>
+    </error-handler>
+
+  </flow>
+
+</mule>

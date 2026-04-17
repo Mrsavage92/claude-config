@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generic polling flow template — replace source/target/mappings per integration -->
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:os="http://www.mulesoft.org/schema/mule/os"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+    http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+    http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+
+  <flow name="GENERIC-polling-flow">
+
+    <scheduler>
+      <scheduling-strategy>
+        <fixed-frequency frequency="15" timeUnit="MINUTES" />
+      </scheduling-strategy>
+    </scheduler>
+
+    <ee:transform doc:name="Capture Poll Time">
+      <ee:variables>
+        <ee:set-variable variableName="pollStartTime">#[now()]</ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+
+    <try>
+      <os:retrieve objectStore="Integration_Object_Store" key="WATERMARK-KEY" target="lastWatermark" />
+      <error-handler>
+        <on-error-continue type="OS:KEY_NOT_FOUND">
+          <ee:transform>
+            <ee:variables>
+              <ee:set-variable variableName="lastWatermark">#[now()]</ee:set-variable>
+            </ee:variables>
+          </ee:transform>
+        </on-error-continue>
+      </error-handler>
+    </try>
+
+    <!-- TODO: replace with source system query -->
+    <!-- Example: <netsuite:search> or <salesforce:query> or <db:select> -->
+
+    <choice>
+      <when expression="#[sizeOf(payload) > 0]">
+
+        <!-- TODO: replace with actual DataWeave mapping -->
+        <ee:transform>
+          <ee:message>
+            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item) -> {
+  // field mapping here
+}]]></ee:set-payload>
+          </ee:message>
+        </ee:transform>
+
+        <!-- TODO: replace with target system write, wrapped in until-successful -->
+        <until-successful maxRetries="3" millisBetweenRetries="2000">
+          <!-- target write -->
+        </until-successful>
+
+        <logger level="INFO"
+          message='#["Sync completed: " ++ sizeOf(payload) ++ " records"]' />
+
+      </when>
+    </choice>
+
+    <os:store objectStore="Integration_Object_Store" key="WATERMARK-KEY" value="#[vars.pollStartTime]" />
+
+    <error-handler>
+      <on-error-propagate type="ANY">
+        <logger level="ERROR"
+          message='#["Sync FAILED: " ++ error.description]' />
+      </on-error-propagate>
+    </error-handler>
+
+  </flow>
+
+</mule>
