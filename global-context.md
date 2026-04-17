@@ -11,7 +11,7 @@ This file is synced across both machines (Mac + Windows PC) via GitHub. Update i
 
 ## Machine Context
 
-- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew, no Node (use npx for one-off tools).
+- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1, Homebrew, Node v25.8.1, npm 11.11.0.
 - **PC** — Windows, VS Code extension. Config synced from GitHub.
 
 ## Sync Architecture
@@ -22,9 +22,9 @@ Both machines auto-sync on session start/end via Stop and SessionStart hooks in 
 
 Everything lives here — skills, agents, commands, this file, sync scripts. Both machines pull from and push to this one repo.
 
-- **skills** → `claude-config/skills/` (166 skill directories)
+- **skills** → `claude-config/skills/` + `~/.claude/skills/claude-skills/`
 - **agents** → `claude-config/agents/` (60 agent .md files)
-- **commands** → `claude-config/commands/` (81 command .md files)
+- **commands** → `claude-config/commands/`
 - **this file** → synced as `global-context.md` in claude-config repo
 - **Notion hub** → https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917
 
