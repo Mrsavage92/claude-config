@@ -90,56 +90,23 @@ If no GitHub repo exists for this product: create it in Phase 0 before writing a
 
 Read these files in full — they are the source of truth for the entire build. Run all reads in parallel:
 1. `~/.claude/commands/premium-website.md` — all suite rules, landing page non-negotiables, performance requirements, per-page quality bar, and pre-deploy checklist. Everything in that file applies automatically to every phase below.
-2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI.
-3. `~/.claude/commands/web-animations.md` — Framer Motion patterns. Technique 3 STAGGER is mandatory for the hero. Read before writing any animated component.
-4. `~/.claude/skills/shared/golden-reference.md` — proven patterns from 10 benchmark SaaS products (Linear, Stripe, Vercel, Notion, Vanta, Raycast, SafetyCulture, Loom, Cal.com, Loops). Use these as the quality standard, not generic LLM defaults. Match hero pattern, social proof format, and copy quality to these references.
-5. `~/.claude/skills/shared/component-memory.md` — learnings from previous builds. Component quirks, patterns that work/don't work per personality type. Grows after each build.
+2. `~/.claude/web-system-prompt.md` — Design DNA. Read before generating any UI. If this file does not exist: log "Design DNA missing — using premium-website.md design rules as substitute" and continue. Do NOT block.
+3. `~/.claude/commands/web-animations.md` — CSS + Tailwind animation patterns. Technique 3 STAGGER is mandatory for the hero. **IMPORTANT: Do NOT use framer-motion.** Use CSS animations, Tailwind animate utilities, or `@keyframes` instead. Framer Motion causes production crashes on Vercel (proven in TradieJobFlow build — 7 fix commits to strip it). If web-animations.md references framer-motion patterns, implement them with CSS equivalents.
+4. `CLAUDE.md` (project root, if exists) — project-specific overrides.
+5. `DESIGN-BRIEF.md` (project root, if exists) — locked color system, typography, marketing tier, and component decisions from Phase 0.5. If this file exists, all design decisions are already made — do NOT re-decide them.
+6. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
+7. `COPY.md` (project root, if exists) — all user-facing copy. If this file exists, Phase 2.5 already ran.
 
-**Anti-pattern pre-flight (runs after reading component-memory.md) — HARD GATE:**
-Read the "Patterns That Don't Work" section. For each anti-pattern listed:
-- If this product's category matches a known bad pattern (e.g., "dark hero for Health & Care") → log to BUILD-LOG.md: "PRE-FLIGHT BLOCKED: [anti-pattern] — component memory says this fails. Using [alternative] instead."
-- If DESIGN-BRIEF.md exists and specifies a choice that conflicts with a known anti-pattern → BLOCK: do not proceed to Phase 2. Fix the DESIGN-BRIEF.md choice first.
+**Architecture: Each product is its own standalone repo.** No monorepo, no shared backend, no FastAPI, no Railway. Each product: React/Vite frontend + Supabase (backend/auth/db) + Stripe + Vercel.
 
-**Post-scaffold enforcement (runs after Phase 2 completes, before Phase 2.5):**
-Grep the scaffolded codebase for every anti-pattern in component-memory.md "Patterns That Don't Work":
-- Dark background on Health & Care product → grep `bg-background: 240 10% 3.9%` in index.css for a health product = BLOCK
-- Generic stat numbers ("10,000+ users") → grep landing page for exact strings = BLOCK
-- `key={index}` on any `.map()` → grep all tsx files = BLOCK
-- Any component flagged in "Components to avoid" for this personality type → grep imports = BLOCK
-
-If ANY grep matches: fix before proceeding to Phase 2.5 (COPY.md). This is not advisory — it's a gate. The memory only works if violations are caught automatically, not relied on being "remembered."
-
-**Cross-build learning (runs if 3+ builds recorded in component-memory.md):**
-Read ALL per-build log entries at the bottom of component-memory.md. Identify:
-- Which personality type scored highest on web-review? → Weight those design choices higher.
-- Which hero pattern required the fewest Phase 5 fix iterations? → Default to that pattern for similar categories.
-- Which components appeared in "Issues found" across 2+ builds? → Flag them as high-risk before using again.
-Log to BUILD-LOG.md: "CROSS-BUILD: [N] builds analysed. Best-scoring pattern: [pattern] ([score]/40). High-risk components: [list]."
-If fewer than 3 builds recorded: skip this step, log "Cross-build learning: insufficient data ([N] builds)."
-
-6. `CLAUDE.md` (project root, if exists) — project-specific overrides.
-7. `DESIGN-BRIEF.md` (project root, if exists) — locked color system, typography, marketing tier, and component decisions from Phase 0.5. If this file exists, all design decisions are already made — do NOT re-decide them.
-8. `SCOPE.md` (project root, if exists) — page inventory and design decisions.
-
-**Monorepo detection:** Check if the working directory contains `turbo.json` or an `apps/` directory. If yes, this is a monorepo build.
-- In monorepo mode: the frontend lives in `apps/[product-slug]/`. All Phase 2-6 file operations target that subdirectory.
-- The backend is the shared FastAPI service at `services/api/` — do NOT scaffold a new backend or create a new Railway service. Note the existing Railway URL from `CLAUDE.md` for VITE_API_URL.
-- If `apps/[product-slug]/` already exists (created by `/product-add`): skip Phase 2 directory creation, only fill in the files.
-- If `apps/[product-slug]/` does not exist: run `/product-add` first, then scaffold.
-- **Scaffold copy cleanup (MANDATORY if the app directory was created by copying another product's directory):** Before writing any content, run these checks in `apps/[product-slug]/`:
-  1. Delete `.vercel/project.json` if it exists — it points to the source product's Vercel project and will silently deploy to the wrong project on first deploy. Vercel creates a fresh `project.json` automatically on next deploy.
-  2. Grep for the source product's `product_id` string (e.g. `whs-psychosocial`) across all src files and replace all occurrences with the new product's id.
-  3. Check `src/styles/index.css` for the old `--brand:` HSL value and replace with the new product's brand colour.
-  4. Grep `src/pages/*.tsx` for any imported type names that have been removed from `src/types/index.ts`. TypeScript compiles ALL files in the project, not just routes imported in App.tsx — orphan pages with deleted type imports will fail `tsc --noEmit` even if they are unreachable at runtime. Stub those files to `// Unused - replaced by [NewPage].tsx\nexport {}` immediately.
-
-Check if BUILD-LOG.md exists in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo). This is the primary resume signal — not git log.
+Check if BUILD-LOG.md exists in the project root. This is the primary resume signal — not git log.
 
 If BUILD-LOG.md does not exist: this is a fresh start. Run Phase 0b (repo + Notion) first, then Phase 0.25.
 If BUILD-LOG.md exists: read it to identify the last completed phase, then continue from the next one. If resuming from Phase 1 or later, verify DESIGN-BRIEF.md exists — if missing, run Phase 0.5 before continuing. Also verify MARKET-BRIEF.md exists — if missing, run Phase 0.25 before continuing.
 
 **If resuming (BUILD-LOG.md exists): also run `/project-refresh` PULL now before continuing.** Pull Notion state into context — decisions, blockers, and credential status may have changed since the last session.
 
-Log every phase start and completion to `BUILD-LOG.md` in the project root (or `apps/[product-slug]/BUILD-LOG.md` in monorepo mode).
+Log every phase start and completion to `BUILD-LOG.md` in the project root.
 
 ### Phase 0b — GitHub Repo + Notion Doc (fresh builds only)
 
@@ -154,10 +121,8 @@ mcp__plugin_github_github__search_repositories query:"[product-slug] user:Mrsava
 
 If no repo found: create it:
 ```
-mcp__plugin_github_github__create_repository name="[product-slug]" description="[product name] — AU compliance SaaS" private=true auto_init=true
+mcp__plugin_github_github__create_repository name="[product-slug]" description="[product name] — [one-line pitch from brief]" private=true auto_init=true
 ```
-
-In monorepo mode: skip repo creation — the monorepo (`saas-platform` or `au-compliance-platform`) is already the repo. Just verify the `apps/[product-slug]/` directory will be committed there.
 
 Write the repo URL to BUILD-LOG.md and the project memory file as `github_repo`.
 
@@ -223,8 +188,6 @@ Run the review gate for the phase that just completed (see table below). If it f
 
 **Step 2 — Commit + push context.**
 Only after the review gate passes: follow the "After Every Phase Completes" protocol defined in the Persistent Context Protocol section above (git commit + `/project-refresh` PUSH).
-
-In monorepo mode: commit from the monorepo root, not the app subdirectory.
 
 ---
 
@@ -305,15 +268,15 @@ Log: "Phase 0.25 complete — MARKET-BRIEF.md written" to BUILD-LOG.md.
 Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute all 12 steps:
 
 1. **Personality** — classify product into one of 8 types (Enterprise Authority / Data Intelligence / Trusted Productivity / Premium Professional / Bold Operator / Health & Care / Growth Engine / Civic/Government)
-2. **Product category** — identify the product category (from PRODUCT-CATEGORY-LIBRARY.md categories 1-8): Reputation/Reviews, Entity Intelligence, Regulatory Compliance, Procurement Intelligence, Practice Management, HR/People Ops, Finance/Accounting, Document Management. This determines the landing page structure — it is separate from personality type and supersedes the generic dark SaaS template.
-3. **Category-specific competitor research** — look at 3 direct competitors IN THE SAME CATEGORY (not just "enterprise dark SaaS" broadly). For reputation tools, study BirdEye/Podium. For WHS tools, study SafetyCulture/FlourishDx. For tender tools, study Tendertrace/TenderPilot. Generic "B2B SaaS design inspiration" is not sufficient. If MARKET-BRIEF.md exists and has category-specific research, read it instead. If not, run 3 WebSearch queries: "[product category] software Australia landing page," "[top competitor] homepage," "[product category] SaaS design pattern."
-4. **Category hero override** — after competitor research, check if the category has a mandatory hero pattern in PRODUCT-CATEGORY-LIBRARY.md. If yes, lock this as the hero architecture. The generic dark animated hero is WRONG for: WHS tools (light-mode field tools), entity intelligence (search-bar-first), AML/CTF (deadline-urgency banner). Write the override to DESIGN-BRIEF.md.
-5. **Color system** — select from personality palette library. Explicitly reject hsl(213 94% 58%). **Monorepo cross-check:** grep `apps/*/DESIGN-BRIEF.md` AND `apps/*/src/styles/index.css` for existing `--brand:` values — if same hue (±15 degrees) already used in either file, pick different palette and document why. (DESIGN-BRIEF.md may be stale or missing; index.css is the ground truth for what colour is actually deployed.) **Category check:** WHS/health tools should NOT use dark-first. Regulatory compliance tools should NOT use bold consumer colors. Cross-check against category conventions.
+2. **Product category** — identify the product's market category from MARKET-BRIEF.md competitor research. Examples: Field Service/Job Management, Client Management/CRM, SOP/Checklist, IT Process Design, etc. This determines the landing page structure and hero pattern.
+3. **Category-specific competitor research** — look at 3 direct competitors IN THE SAME CATEGORY (not just "enterprise dark SaaS" broadly). Use MARKET-BRIEF.md if it exists. If not, run 3 WebSearch queries: "[product category] software landing page," "[top competitor] homepage," "[product category] SaaS design pattern."
+4. **Hero override** — after competitor research, determine if the personality + category requires a non-default hero. Write any override to DESIGN-BRIEF.md. Examples: field service tools = split-pane with dispatch mockup, CRM tools = pipeline view, checklist tools = daily task list preview.
+5. **Color system** — select from personality palette library. Explicitly reject hsl(213 94% 58%). Each product repo is standalone, so no cross-check needed — just ensure the color fits the personality type.
 6. **Typography lock** — select font pairing per personality type (not just "Inter"). Lock heading weight and tracking.
 7. **Hero architecture** — choose pattern: Centered / Split-pane / Full-screen immersive / Minimal editorial. Tie choice to personality + user type + category convention. The category hero pattern (from step 4) overrides this if it specifies a mandatory pattern.
 8. **Component Lock** — run `mcp__magic__21st_magic_component_inspiration` for ALL 11 mandatory sections using personality-specific search terms (not generic "dark SaaS"). Apply selection criteria (visual weight, animation level, layout) to pick the right variant for each. If MCP unavailable: use defaults from Component Registry in `premium-website.md` and continue. Record all choices in DESIGN-BRIEF.md Component Lock table.
 9. **LottieFiles** — find 3 product-specific animations (empty state, success state, processing state). WebSearch `"lottiefiles.com [product-category] animation"`. Note "unavailable" if nothing fits — do not block.
-10. **Differentiation audit** — grep recent `apps/*/DESIGN-BRIEF.md` files, confirm 3+ dimensions differ from last build (color, hero pattern, features layout).
+10. **Differentiation audit** — if other products have been built, compare this DESIGN-BRIEF.md against prior builds. Confirm 3+ dimensions differ (color, hero pattern, features layout). For the first product, skip this step.
 11. **Marketing tier** — choose Tier 1/2/3. Default: Tier 2 (/, /features, /pricing, /auth as separate routes).
 12. **Write DESIGN-BRIEF.md** — must include: Product Personality, Color System, Typography, Hero Architecture, Component Lock table (all 11 sections), LottieFiles, Differentiation Audit, Marketing Structure, Build Order.
 
@@ -351,51 +314,60 @@ Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
 
 ---
 
-### Phase 1.5 — Category Rule Loading
+### Phase 1.5 — Personality Rule Loading
 
 **Run this phase between Phase 1 (Scope) and Phase 2 (Scaffold). It is not optional.**
 
-**Phase 0.5 already detected the product category and wrote it to DESIGN-BRIEF.md.** This phase does NOT re-detect — it reads the `product_category` field from DESIGN-BRIEF.md and loads the category-specific build rules into BUILD-LOG.md for enforcement in later phases.
+Phase 0.5 already detected the product personality and wrote it to DESIGN-BRIEF.md. This phase reads the `personality` field and derives build rules from it — no external file dependency.
 
-Read DESIGN-BRIEF.md and extract the `product_category` field. If the field is missing (Phase 0.5 was skipped or pre-dates this field): run Phase 0.5 now before continuing — do NOT attempt category detection here.
+Read DESIGN-BRIEF.md and extract the `personality` field. If missing: run Phase 0.5 now.
 
-Locate `PRODUCT-CATEGORY-LIBRARY.md` (check monorepo root first, then `C:/Users/Adam/Documents/au-compliance-platform/`). If the file does not exist at either path: log NEEDS_HUMAN "PRODUCT-CATEGORY-LIBRARY.md not found — category rules cannot be loaded" and skip to Phase 2.
+**Derive rules from personality type:**
 
-**Load rules for the detected category — mandatory steps:**
+1. **Hero pattern** — derive from personality:
+   - Enterprise Authority / Civic: Centered hero, formal headline, compliance language
+   - Bold Operator: Split-pane hero, punchy headline, product mockup right
+   - Data Intelligence: Search-bar-first hero, data preview below
+   - Trusted Productivity / Premium Professional: Minimal editorial hero, clean typography
+   - Health & Care: Light-mode hero (NOT dark), warm reassuring tone
+   - Growth Engine: Stats-forward hero, ROI language
+   Write the hero pattern to DESIGN-BRIEF.md as `hero_override` if it differs from the default.
 
-1. Read the full category entry from `PRODUCT-CATEGORY-LIBRARY.md` for the detected category.
+2. **Required landing sections** — every product needs these (log as checklist to BUILD-LOG.md):
+   - Hero with product-specific headline (from MARKET-BRIEF.md differentiator)
+   - Social proof (format from competitor research)
+   - Feature highlights (from MARKET-BRIEF.md must-haves)
+   - Pricing section
+   - FAQ section (minimum 5 questions — critical for SEO and AI citability)
+   - CTA section
 
-2. **Override hero pattern** — the hero pattern from PRODUCT-CATEGORY-LIBRARY.md OVERRIDES the default dark animated hero from the generic scaffold. Write the overridden hero pattern to DESIGN-BRIEF.md under a new field: `hero_override`. Log the override with reasoning: "Hero override: [category hero pattern] — overrides default dark animated hero because [reason]."
+3. **UX dominant pattern** — what the first app page should look like:
+   - Job management / field service → Kanban/dispatch board
+   - CRM / client management → Pipeline view
+   - Checklist / SOP → Daily task list with completion tracking
+   - Analytics / intelligence → Dashboard with KPI cards
+   - Process design → Canvas/editor
+   Write to BUILD-LOG.md: "UX pattern: [pattern] — first app view must reflect this."
 
-3. **Load required sections checklist** — copy the "Required Landing Sections (in order)" list from the category entry into BUILD-LOG.md as a checklist. This list is NON-NEGOTIABLE for Phase 4 (landing page build). Phase 4 must verify every section is present before marking the landing page complete.
+4. **Forbidden patterns** — log to BUILD-LOG.md:
+   - Generic "Streamline your [X]" hero copy
+   - Dark mode for health/safety/care products
+   - Dashboard-first for products where the core action is NOT monitoring
+   - Stock photo hero images (always use product mockup or illustration)
 
-4. **Set UX dominant pattern** — the UX dominant pattern from the category entry determines the first app page's primary UI metaphor. Write to BUILD-LOG.md: "UX pattern: [pattern] — first app view must reflect this." This overrides defaulting to a KPI dashboard.
-
-5. **Flag trust signals** — list the trust signals required for this category in BUILD-LOG.md. Phase 4 (landing page) must include all of them. Phase 6 (/web-review) checks for their presence.
-
-6. **Flag mobile requirements** — if the category is CRITICAL or HIGH mobile, add to BUILD-LOG.md: "Mobile requirement: [level] — sidebar must be bottom nav on mobile / touch targets must be 44px minimum."
-
-7. **Flag forbidden patterns** — copy the "Forbidden landing patterns" list from the category into BUILD-LOG.md. These are automatic failures in Phase 5 (/web-review).
-
-8. **Check for Regulatory Compliance sub-type** — if category is Regulatory Compliance, detect the sub-type:
-   - Keywords: AML, CTF, AUSTRAC, KYC, sanctions, money laundering → Sub-type 3A (Financial Crime)
-   - Keywords: WHS, psychosocial, hazard, SafeWork, WorkSafe → Sub-type 3B (Workplace Safety)
-   - Keywords: NDIS, participant, provider → Sub-type: NDIS
-   - Keywords: aged care, ACQSC, resident → Sub-type: Aged Care
-   - Load the sub-type entry from PRODUCT-CATEGORY-LIBRARY.md, not the generic Category 3 entry.
+5. **Mobile requirement** — field service / trades / checklist products = CRITICAL mobile. All others = MEDIUM minimum.
 
 Write to BUILD-LOG.md:
 ```
-Phase 1.5 complete — Product category detected: [category name]
-Hero override: [description from PRODUCT-CATEGORY-LIBRARY.md]
+Phase 1.5 complete — Personality: [type]
+Hero pattern: [description]
 UX pattern: [pattern]
-Required sections: [count] sections loaded to checklist
+Required sections: [count] loaded
 Forbidden patterns: [count] loaded
-Trust signals required: [list]
-Mobile requirement: [LOW/MEDIUM/HIGH/CRITICAL]
+Mobile requirement: [level]
 ```
 
-Log: "Phase 1.5 complete — category [name] detected and rules loaded" to BUILD-LOG.md.
+Log: "Phase 1.5 complete — personality [type] rules loaded" to BUILD-LOG.md.
 
 ---
 
@@ -413,54 +385,7 @@ Execute the full /web-scaffold process using decisions from SCOPE.md, DESIGN-BRI
      - `Features users consistently request` → these become landing page feature section bullets, not generic "AI-powered" filler
    - **DESIGN-BRIEF.md personality + category** → determines tone. Enterprise Authority = formal, no emoji, "trusted by" language. Bold Operator = punchy, short sentences, action verbs. Health & Care = warm, reassuring, compliance-focused.
 
-**Step 0 — Generate `src/lib/design-system.ts` (design system as code).**
-Before scaffolding, generate a typed design constants file based on DESIGN-BRIEF.md personality. Components import `ds.*` instead of raw Tailwind — drift becomes impossible.
-
-```ts
-// src/lib/design-system.ts — generated per product, do not edit manually
-export const ds = {
-  spacing: {
-    section: 'py-16 md:py-24 lg:py-32',
-    card: 'p-6',
-    component: 'gap-4',
-    tight: 'gap-2',
-  },
-  radius: {
-    card: 'rounded-xl',
-    button: 'rounded-lg',
-    badge: 'rounded-full',
-  },
-  shadow: {
-    card: 'shadow-sm',
-    elevated: 'shadow-lg',
-    glow: 'shadow-[0_0_30px_-5px_hsl(var(--brand)/0.3)]',
-  },
-  motion: {
-    duration: 0.5,
-    easing: [0.25, 0.1, 0.25, 1] as const,
-    stagger: 0.12,
-    staggerMany: 0.08,
-    heroDelay: 0.6,
-  },
-  type: {
-    display: 'text-display font-bold tracking-tight',
-    hero: 'text-hero font-semibold tracking-tight',
-    title: 'text-title font-semibold',
-    body: 'text-sm text-muted-foreground',
-    caption: 'text-xs text-muted-foreground',
-    label: 'text-sm font-medium',
-  },
-  primaryRoles: {
-    action: 'bg-primary text-primary-foreground',
-    active: 'text-primary',
-  },
-} as const
-```
-
-Adjust values based on DESIGN-BRIEF.md personality:
-- Enterprise Authority / Data Intelligence → tighter spacing (`py-12 md:py-20`), `rounded-lg` cards, `shadow-sm`
-- Bold Operator / Growth Engine → generous spacing (`py-20 md:py-32`), `rounded-2xl` cards, `shadow-lg`
-- Health & Care → warm spacing (`py-16 md:py-24`), `rounded-xl` cards, `shadow-md`
+**PHASE 2.5 GATE: Do NOT proceed to Phase 3 without COPY.md.** Phase 2.5 (below) writes COPY.md. If it does not exist after Phase 2 completes, Phase 2.5 MUST run before Phase 3. This was the single biggest quality failure in the first build — all copy was invented inline, making every page sound generic. COPY.md is non-negotiable.
 
 **Steps 1-15 — run the full /web-scaffold process.** Read `~/.claude/commands/web-scaffold.md` for all 15 steps. The following saas-build-specific overrides apply on top of web-scaffold:
 
@@ -623,8 +548,6 @@ If the product needs Supabase:
 7. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
 8. Register `/reset-password` route in App.tsx as a lazy-loaded stub pointing to a placeholder component — full `ResetPasswordPage.tsx` is built in Phase 4 (so it gets the per-page self-review pass). Mark it in SCOPE.md as a required auth page if not already present.
 
-If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one.
-
 Log: "Phase 3a complete — Supabase configured" to BUILD-LOG.md.
 
 ---
@@ -679,7 +602,7 @@ If the product has any paid plan or trial-to-paid flow:
    Write both values to `.env.local` and Vercel env vars (Phase 6c).
    If the curl returns empty: the secret key is live mode (`sk_live_`) — get the live publishable key from stripe.com/apikeys and log as NEEDS_HUMAN.
    If `STRIPE_SECRET_KEY` is not in env: log NEEDS_HUMAN: "Add STRIPE_SECRET_KEY to env — then re-run Phase 3b to auto-create price ID."
-3. Create Stripe checkout session endpoint in FastAPI (or Supabase edge function for standalone)
+3. Create Stripe checkout session endpoint as a Supabase edge function
 4. Create webhook handler — verify signature first with `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`, then handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Reject any request that fails signature verification with 400.
 5. Write `UpgradeButton` component and `PricingCards` component
 6. Wire trial banner "Upgrade now" CTA to checkout session
@@ -703,10 +626,10 @@ Log: "Phase 3b complete — Stripe integrated" to BUILD-LOG.md.
 Skip only if the product is a pure landing page with no auth.
 
 1. Read `~/.claude/skills/web-email/SKILL.md` in full
-2. Set up Resend integration in `services/api/email_service.py` (or equivalent)
+2. Set up Resend integration as a Supabase edge function
 3. Write React Email templates: welcome, trial-ending (if free-trial), team-invite (if team features), password-reset, invoice (if paid)
-4. Wire welcome email to auth signup trigger
-5. If trial model is `free-trial`: write `services/api/trial_reminders.py` — cron job that queries orgs where `trial_ends_at` is 7, 3, or 1 day away and sends the trial-ending template. Deploy as Railway cron (`0 9 * * *`).
+4. Wire welcome email to auth signup trigger (Supabase auth hook or database trigger)
+5. If trial model is `free-trial`: create a Supabase edge function for trial reminders — triggered by a Vercel cron job (`/api/cron/trial-reminders`, schedule `0 9 * * *`) that queries orgs where `trial_ends_at` is 7, 3, or 1 day away.
 6. Add `RESEND_API_KEY` to `.env.example`
 
 Log NEEDS_HUMAN: "Add RESEND_API_KEY — verify sending domain at resend.com/domains before emails will deliver"
@@ -789,27 +712,18 @@ Hero override:
 **If any forbidden pattern is present:** fix it now.
 **If hero does not match category pattern:** redesign the hero before marking complete. A dark animated hero for a WHS compliance tool is an automatic failure.
 
-**CATEGORY HARD GATES — these are binary BLOCK conditions. Do not proceed until each passes:**
+**UNIVERSAL HARD GATES — these are binary BLOCK conditions. Do not proceed until each passes:**
 
-| Category | Hard gate condition | Correct fix |
+| Gate | Condition | Correct fix |
 |---|---|---|
-| Reputation/Reviews | Platform logos (Google + ProductReview.com.au + SEEK) not visible above or immediately below fold | Add platform logo strip before any other below-fold content |
-| Reputation/Reviews | No animated score ring or review count in hero | Add animated counter or score ring to hero visual |
-| Entity/Company Intelligence | No search bar visible above the fold | Add search bar as hero primary element — nothing else above it |
-| Entity/Company Intelligence | No sample report or data preview shown | Add sample company profile section with real data shape |
-| AML/CTF | No dual-date urgency (enrolment 31 March 2026 + compliance 1 July 2026) | Add banner with both dates. After March 31 enrolment opens: update to "Enrolment is now open — comply by 1 July 2026." |
-| AML/CTF | Hero uses generic SaaS copy ("reduce financial crime risk" / "the modern way to manage AML") | Rewrite hero: "Get compliant by July 1, 2026." Tranche 2 SMBs are forced buyers with zero AML experience — they need direction, not aspiration. |
-| AML/CTF | No sector-specific cards (real estate / accountants / lawyers / conveyancers) | Add profession cards section showing each profession's obligations |
-| WHS/Psychosocial | Hero uses dark background / dark mode design | BLOCK and rebuild — dark UI for WHS tool is the wrong category signal. Must be light mode. |
-| WHS/Psychosocial | Copy uses "upcoming" or "coming soon" for enforcement (deadline was Dec 2025) | Update all copy to "now in effect" / "now mandatory" |
-| WHS/Psychosocial | Hero does not name "psychosocial" explicitly — uses generic "WHS software" or "workplace safety" | Rewrite hero to lead with "Psychosocial Hazard Register" or "Psychosocial Safety" — FlourishDx proves specialist naming outperforms generic WHS positioning |
-| WHS/Psychosocial | Hero copy targets field workers ("inspections", "checklists") instead of HR/OHS professionals ("risk register", "control plan", "governance") | Rewrite for correct audience — HR managers + OHS specialists, not frontline workers |
-| Procurement Intelligence | Tender feed/ticker is static (no animation, no scrolling) | Add animated scrolling tender feed or ticker to hero section |
-| Procurement Intelligence | No data source citation ("Official AusTender API") visible above fold | Add trust bar immediately below hero with data source attribution |
-| Procurement Intelligence | Hero uses generic SaaS copy without naming the portal fragmentation problem | Add explicit messaging: "No more monitoring 8 separate portals" — this is the #1 pain point and no competitor owns it |
-| Procurement Intelligence | Hero is copy-heavy / image-heavy instead of data-heavy | Procurement intelligence heroes must be 60% data visualization (live tender cards, counts, agency names) + 30% copy + 10% CTA — reverse of generic SaaS |
+| Hero specificity | Hero headline is generic ("Streamline your X" / "The modern way to Y") | Rewrite using MARKET-BRIEF.md differentiator. Must name the specific problem or competitor gap. |
+| Hero visual | Hero has no product mockup — just text or stock imagery | Add a product screenshot, dispatch board mockup, or UI preview that shows the product DOING something |
+| Pricing visible | No pricing section on landing page | Add pricing section — transparency is a positioning weapon against enterprise competitors |
+| Social proof | No social proof of any kind (logos, testimonials, stats, ratings) | Add the format identified in MARKET-BRIEF.md competitor analysis |
+| CTA specificity | Primary CTA says "Get Started" or "Learn More" | Rewrite to state the outcome: "Start 14-day trial", "Create your first quote", etc. |
+| Mobile hero | Hero text unreadable on 375px viewport | Fix font size, layout, and ensure no horizontal overflow |
 
-Each hard gate is a STOP condition. The landing page CANNOT be marked complete until every hard gate for its category passes with YES.
+Each hard gate is a STOP condition. The landing page CANNOT be marked complete until every gate passes.
 
 **Step 3 — Standard quality review:**
 Run the standard 13-item per-page checklist + fresh eyes pass.
@@ -852,17 +766,7 @@ Pass 2 — fresh eyes: re-read the page component from line 1 as if you are a ne
   - "Lorem ipsum" or placeholder text of any kind
   - Button labels that say "Learn More" or "Get Started" without specificity — should reference the actual action ("Start 14-day trial" / "Create your first [entity]")
 
-Fix anything that fails Pass 2.
-
-**Pass 3 — Visual screenshot (if agent-browser available):**
-Start dev server if not running (`npm run dev` in background). Use `agent-browser` to:
-1. Navigate to `http://localhost:5173[route]` at 1440px width → screenshot to `screenshots/[page-name]-desktop.png`
-2. Navigate at 375px width → screenshot to `screenshots/[page-name]-mobile.png`
-3. If competitor screenshots exist in `research/competitor-screenshots/`: visually compare — "Does ours look as polished? What's weaker?"
-4. Fix any visual issues found (spacing imbalance, color dominance, empty-feeling layout)
-If agent-browser unavailable: skip, log "Visual screenshot skipped — agent-browser unavailable."
-
-Log: "Page [name] complete — self-review passed (13/13 + fresh eyes + screenshot)" to BUILD-LOG.md. **This per-page log entry is critical for session resume** — if the context window resets mid-Phase 4, the next session reads BUILD-LOG.md to identify which pages are already built and skips them. Only then move to the next page.
+Fix anything that fails Pass 2. Log: "Page [name] complete — self-review passed (13/13 + fresh eyes)" to BUILD-LOG.md. **This per-page log entry is critical for session resume** — if the context window resets mid-Phase 4, the next session reads BUILD-LOG.md to identify which pages are already built and skips them. Only then move to the next page.
 
 **4d. Context refresh (every 3 pages)**
 After completing every 3rd page (i.e. pages 3, 6, 9...), re-read DESIGN-BRIEF.md and SCOPE.md in full before starting the next page. Long build sessions compress early context — this prevents late pages drifting from the locked design contract.
@@ -881,35 +785,6 @@ After each page, add the route with React.lazy + Suspense. Never leave routes un
 Before logging Phase 4 complete, run the overall Phase 4 gate from the Phase Completion Protocol table: verify all SCOPE.md pages built, all routes reconciled, `npm run build` exits 0. Fix any failures. Only then log and commit.
 
 Log: "Phase 4 complete — all pages built, routes reconciled, build clean" to BUILD-LOG.md.
-
----
-
-### Phase 4.75 — User Journey Simulation
-
-**Runs after all pages built, before tests. Tests whether the experience makes sense, not just whether routes load.**
-
-Use `agent-browser` to simulate 4 user journeys against the dev server. If agent-browser is unavailable: Critic agent narrates the journeys by reading page code (log "Journey simulation: code-based, agent-browser unavailable").
-
-**Journey 1 — Cold Visitor (5-second test):**
-Open `/` at 1440px. Wait 3 seconds (animations finish). Screenshot.
-Report: "In 5 seconds I understood: [what the product does]." If the hero is too vague to explain the product in one sentence: FAIL.
-
-**Journey 2 — Signup → Dashboard:**
-Click primary CTA → fill auth → complete onboarding → land on dashboard.
-Per step: "Did I know what to do? Was anything confusing?" Screenshot each step.
-If the dashboard empty state doesn't guide to a first action: FAIL.
-
-**Journey 3 — Core Feature First Use:**
-From dashboard, navigate to the core feature page. Attempt the primary action.
-Report: "Primary action took [N] clicks. Empty state said [quote]. I [understood / didn't understand] what to do."
-
-**Journey 4 — Mobile Visitor:**
-Open `/` at 375px. Scroll full landing. Click CTA → auth → onboard → dashboard.
-Report: horizontal scroll [yes/no], touch targets too small [list], text too small [list].
-
-Write `JOURNEY-REPORT.md` with pass/fail per journey. Fix all FAILs before Phase 4.5.
-
-Log: "Phase 4.75 complete — [N/4] journeys passed" to BUILD-LOG.md.
 
 ---
 
@@ -991,11 +866,9 @@ Run through the pre-deploy checklist in premium-website.md. All items must pass.
 
 **First: confirm the Vercel project exists.** Via MCP: check if a project named `[product-slug]` already exists. If not, create it first before deploying — never deploy to a non-existent project.
 
-**Monorepo: check for stale `.vercel/project.json`.** Before deploying, check if `apps/[product-slug]/.vercel/project.json` exists. If it does, read it and verify the `projectId` matches a project named `[product-slug]` (not another product). If the project name doesn't match, delete the file — it was inherited from a scaffold copy and will deploy to the wrong Vercel project. After deleting, Vercel will create a fresh one pointing to the correct project.
 
 Use the `vercel` MCP server (preferred — no CLI auth issues on Windows):
 - Call `createDeployment` with `target: production`
-- For monorepo: set `rootDirectory: apps/[product-slug]`
 - Capture the production URL from the response
 
 Fallback if MCP unavailable:
@@ -1011,8 +884,6 @@ Fallback if MCP unavailable:
 ```bash
 npx vercel env add [VAR_NAME] production --value [value] --yes
 ```
-
-VITE_API_URL is required if there is a backend — set it now, not later.
 
 **Redeploy after env vars are set.** Env vars set after the initial deploy do not take effect until the next deploy. Trigger a redeploy:
 ```bash
@@ -1064,10 +935,8 @@ supabase.auth.admin.deleteUser([saved-user-id])
 
 Log: "Phase 6d smoke test complete — all checks passed" to BUILD-LOG.md.
 
-**6e. Update CORS**
-In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.
-
-Use the Railway GraphQL mutation to update the env var (see `~/.claude/projects/C--Users-Adam/memory/reference_railway.md` for the `upsertVariable` mutation template and service/env IDs — if that path does not exist on this machine, check `~/.claude/projects/*/memory/reference_railway.md`). If Railway MCP is unavailable: log NEEDS_HUMAN "Update FRONTEND_URL in Railway dashboard to include [production-url] — required for CORS."
+**6e. Supabase CORS**
+No separate CORS step needed — Supabase handles CORS automatically. The Supabase anon key + RLS policies enforce access control. No Railway, no FastAPI, no separate backend to configure.
 
 **6f. Bundle audit and auto-fix**
 
@@ -1094,32 +963,6 @@ Bundle sizes (gzipped):
 3. If a page chunk is large, move its heaviest dependency import to a dedicated chunk
 4. Re-run build and verify all chunks are < 250KB gzipped
 5. If a chunk cannot be reduced below 250KB after splitting: log as NEEDS_HUMAN with exact module name and size
-
-**6g. Post-deploy performance measurement (feeds back to component memory)**
-
-After deploy is confirmed live, measure real production performance via agent-browser:
-
-1. Open the production URL in agent-browser at 1440px
-2. Capture: page load time, whether hero is visible above fold, whether animations play smoothly
-3. If agent-browser supports Lighthouse or performance timing: capture LCP, CLS, FID/INP
-
-Record results in BUILD-LOG.md:
-```
-Performance baseline:
-  LCP: [value]s (target: <2.5s)
-  CLS: [value] (target: <0.1)
-  Hero above fold: [yes/no]
-  Animations smooth: [yes/no]
-```
-
-**Feed back to component memory:** If LCP > 2.5s, identify the cause (large hero image, unoptimized WebGL, blocking font) and append to `component-memory.md`:
-```
-### Performance: [product-name] — LCP [value]s
-Cause: [component] — [what made it slow]
-Fix for next build: [what to do differently]
-```
-
-If agent-browser is unavailable: log "Performance measurement skipped — agent-browser unavailable. Run Lighthouse manually at pagespeed.web.dev" and continue.
 
 ---
 
@@ -1236,48 +1079,7 @@ NEEDS_HUMAN: Check domain availability for [product-slug].com.au and [product-sl
 [anything non-obvious about the build that future sessions should know]
 ```
 
-**8c. Update component memory.**
-Append a per-build log entry to `~/.claude/skills/shared/component-memory.md`:
-```
-### Build: [product-name] — [date]
-Category: [category]
-Personality: [personality type]
-Components used: [list of 21st.dev components]
-Issues found: [list with fixes applied]
-Patterns that worked well: [what to repeat]
-Time: [total build time estimate]
-Score: [web-review x/40]
-```
-Also update any component-specific sections if you discovered new quirks or patterns during this build.
-
-**Convert every issue into an enforceable rule (THIS IS WHAT MAKES IT SELF-IMPROVING):**
-For each issue discovered during this build, write TWO things to component-memory.md:
-
-1. **Human-readable learning** (in the relevant component section):
-   `TestimonialSlider: star rating uses yellow-400 which clashes with brand palette`
-
-2. **Grep-enforceable rule** (in a new `## Enforcement Rules` section):
-   ```
-   RULE: no-yellow-stars
-   GREP: "yellow-400" in any TestimonialSlider import file
-   FIX: replace with text-brand or text-amber-500/80
-   SEVERITY: P2
-   ADDED: [date] from [product-name] build
-   ```
-
-Phase 0a post-scaffold enforcement reads the `## Enforcement Rules` section and runs EVERY grep. This is the mechanism that turns experience into prevention — prose is for humans, grep rules are for machines. If an issue was found but no grep rule was written, it WILL happen again.
-
-**Update the Cross-Build Analysis table:** Add a row with this build's data:
-`| [product-name] | [category] | [personality] | [score]/40 | [hero pattern used] | [Phase 5 iterations] | [LCP from 6g] |`
-
-If there are now 3+ rows: re-derive the "Best patterns" summary:
-- Highest-scoring personality → update the line
-- Fewest Phase 5 fix iterations → update the line
-- Components in "Issues found" across 2+ builds → add to "Components to avoid"
-
-This is the self-improvement mechanism — future builds at Phase 0a will read these derived patterns and weight decisions accordingly.
-
-**8d. Push build summary to Notion via `/project-refresh` PUSH mode.**
+**8c. Push build summary to Notion via `/project-refresh` PUSH mode.**
 Updates the project's Notion master doc with deploy URL, review score, and remaining human actions — required for cross-session context.
 
 ---
@@ -1288,7 +1090,7 @@ Updates the project's Notion master doc with deploy URL, review score, and remai
 |---|---|
 | Domain registration needed | Log NEEDS_HUMAN with purchase link (Phase 8a), continue with .vercel.app URL |
 | Stripe live price IDs needed | Log as NEEDS_HUMAN with test prices in place |
-| Railway auth token needed | Log as NEEDS_HUMAN, document which env vars to set |
+| Supabase project URL needed | Log as NEEDS_HUMAN, document which env vars to set |
 | External API key not in env | Log as NEEDS_HUMAN with exact variable name needed |
 | Same error 3 times on a single fix attempt | Log as STUCK, explain what was tried, skip and continue with other work |
 | Ambiguous product requirements | Log assumption and continue — format: "Brief was vague — assumed [X] based on [Y]. Correct SCOPE.md if wrong." |
