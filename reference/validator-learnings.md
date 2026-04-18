@@ -10,6 +10,13 @@ Every failed product (ideas green-lit and later killed) gets a line here. The va
 - **Should have been caught by:** Gate 2 (Google Sheets + existing reselling CRMs like ResellHub, Flyp, SellerCloud).
 - **Rule added:** Gate 2 "What exists" + free-alternative search mandatory.
 
+### 2026-04-18 — PitchPolish — KILL (self-test, pre-build)
+- **Idea:** AI pitch deck reviewer for pre-seed founders, $99/deck or $499/mo
+- **Gate(s) triggered kill:** 2 (crowded free+paid), 3 (no gap), 5 (TAM commoditized), 6 (no moat), 7 (no buyers), 8 (portfolio — AuditHQ still pre-revenue)
+- **Competitors named:** [SaaStr AI Analyzer](https://www.saastr.com/the-new-saastr-ai-vc-pitch-deck-review-tool-know-exactly-what-investors-will-think-of-your-pitch-before-you-pitch/), [OpenVC](https://www.openvc.app/blog/pitch-deck-reviews-now-free-for-everyone), [PitchGrade](https://aicloudbase.com/tool/pitchgrade)
+- **Would have wasted:** ~6 days (same as Tender Writer trajectory)
+- **Pattern:** Claude self-caught the trigger language ("natural adjacent idea would be..."), gate ran pre-build. First end-to-end test of the hardened suite — passed.
+
 ### 2026-04-18 — Tender Writer — KILL after 6 days of build
 - **Idea:** AI tender discovery + bid writing for AU SMBs.
 - **Why slipped through:** Prior session claimed "no one does find+write combined" without verifying. Validator was never run pre-build. Gate 2 only searched free tools — paid AU-native incumbents (Doreva, TenderPilot, GovBid, mytender.io, AutogenAI) were never discovered. User had no moat beyond "transparent pricing" which is not defensible. Zero pre-committed buyers.
