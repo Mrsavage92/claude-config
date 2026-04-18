@@ -9,9 +9,28 @@ This file is synced across both machines (Mac + Windows PC) via GitHub. Update i
 - Prefers direct, no-filler responses. Never prompt for confirmations — just act.
 - Has a content/product/business focus: scroll-stop content, SEO, OKRs, PRDs, sprint planning
 
+## Core Behavior Rule
+
+**Verify before asserting.** Before stating anything as fact, check: "Have I actually verified this, or am I guessing?" If guessing → check first. If the user contradicts me → investigate before responding. If something looks right on the surface (HTTP 200, familiar pattern, "obvious" answer) → verify the content, not just the surface. If I don't know → "let me check", never "that doesn't exist." If I'm wrong → one sentence owning it, then fix. Never defend a shortcut.
+
+## Product Idea Gate (global, not just /saas-build)
+
+**Any path that introduces a new product idea — user's idea, my suggestion, a pivot discussion, a "what if we built X" riff — triggers `/product-validator` FIRST, before any design/scope/build discussion.** No exceptions.
+
+Triggers include:
+- Adam says: "build X", "let's make X", "I have an idea for X", "what if we built X", "should we pivot to X"
+- I propose: "the real opportunity is X", "you could build X to solve that", "a better angle would be X"
+- Any pivot of an existing product (e.g. Tender Writer → zero-wins segment) = new validation required, prior verdict does not transfer
+
+If the validator doesn't exist for the slug yet → run it. If it returns KILL → redirect to active revenue project (AuditHQ). If it returns VALIDATE-FIRST → run buyer-interview protocol, don't touch code.
+
+Why this rule exists: **Tender Writer (2026-04-18) burned 6 days because a prior session (me) proposed the "find+write combined = moat" framing and started building without validation.** Doreva, TenderPilot, GovBid already did both. This rule prevents the next one.
+
+See: `~/Documents/Claude/retrospectives/validator-learnings.md` for the full post-mortem log. Every new KILL adds a line there.
+
 ## Machine Context
 
-- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1, Homebrew, Node v25.8.1, npm 11.11.0.
+- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew, no Node (use npx for one-off tools).
 - **PC** — Windows, VS Code extension. Config synced from GitHub.
 
 ## Sync Architecture
@@ -22,9 +41,9 @@ Both machines auto-sync on session start/end via Stop and SessionStart hooks in 
 
 Everything lives here — skills, agents, commands, this file, sync scripts. Both machines pull from and push to this one repo.
 
-- **skills** → `claude-config/skills/` (170 skill directories, source of truth)
+- **skills** → `claude-config/skills/` (166 skill directories)
 - **agents** → `claude-config/agents/` (60 agent .md files)
-- **commands** → `claude-config/commands/`
+- **commands** → `claude-config/commands/` (81 command .md files)
 - **this file** → synced as `global-context.md` in claude-config repo
 - **Notion hub** → https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917
 
@@ -39,6 +58,42 @@ Run `/sync-knowledge-base` after adding new skills/commands to update Notion doc
 - When giving the user setup instructions, always make them a single copy-paste prompt for Claude Code — never a manual step-by-step list
 - Keep responses short and direct — lead with the answer, not the reasoning
 - Both Claude instances share this context — if you learn something worth remembering, update this file
+
+## Token Budget — Model Routing Rules
+
+Claude Max has a finite token budget per period. Route subagents to the cheapest model that can do the job.
+
+**Use `model: "haiku"` for Agent calls that:**
+- Search/explore codebases (subagent_type: Explore)
+- Look up files, grep for symbols, read configs
+- Summarize or extract info from files
+- Do web searches or fetch URLs for research
+- Run simple git commands or status checks
+- Any read-only reconnaissance task
+
+**Use `model: "sonnet"` for Agent calls that:**
+- Write or edit code (implementation work)
+- Review PRs or audit code quality
+- Generate content (copy, emails, social posts)
+- Run multi-step analysis requiring judgment
+
+**Keep Opus (default, no model param) only for:**
+- `/saas-build`, `/saas-improve` orchestration
+- `/audit`, `/full-audit`, `/parallel-audit` — client deliverables
+- Architecture decisions (`/design`, `/validate`, `/decide`)
+- Complex PRDs, pitch decks, strategic planning
+- Anything the user is paying a client for
+
+**Rule of thumb:** If the agent's job is to FIND information → haiku. If it's to THINK about information → sonnet. If it's to PRODUCE client-quality output → opus.
+
+**New conversation nudge:** When you detect the user is switching to an unrelated topic (different project, different domain, or a quick question unrelated to the current work), append a one-liner: `💡 This is a new topic — starting a fresh conversation would save your token budget.` Don't block the work — answer first, nudge after.
+
+**Token conservation tactics (Opus 4.7 burns tokens fast — these are mandatory):**
+- Run `/compact` after any large output (audit results, long code gen, big file reads) before continuing
+- Keep responses short — no summaries of what you just did, no recaps unless asked
+- When reading files, only read the lines you need (`offset`/`limit`), never the whole file unless necessary
+- Prefer direct Grep/Glob over spawning Explore agents when the search target is clear
+- Never re-read a file you just wrote or edited — the tool confirms success
 
 ## Project Context Protocol
 
@@ -56,77 +111,15 @@ When a conversation clearly involves a specific project (building features, debu
 3. If no memory file → create one immediately
 4. If no Notion URL → run `/project-doc` to create the Notion master doc
 
-### Notion Audit (as of 2026-03-24)
-| Project | Memory | Notion |
-|---|---|---|
-| GrowLocal | ✅ | ✅ |
-| Brainrot Factory | ✅ | ✅ |
-| AuditHQ | ✅ | ❌ needs /project-doc |
-| Authmark | ✅ | ❌ needs /project-doc |
-| Gloss Beauty | ✅ | ❌ needs /project-doc |
-| BDR MuleSoft | ✅ | ❌ needs /project-doc |
-
-When one of these projects comes up, run `/project-doc` to create the missing Notion page.
-
-### Long Session Context Rule
-- Every ~20 messages in a project session: offer to run `/project-refresh` to re-inject context
-- After completing significant work (feature shipped, deploy done, decision made, blocker cleared): push an update to Notion via `/project-refresh` PUSH mode
-- When user says "where were we?" or resumes after a gap: run `/project-refresh` PULL mode automatically
-
-### New Project Rule
-When a new project is identified (no memory file exists):
-1. Create `project_{slug}.md` memory file immediately
-2. Add it to `MEMORY.md` index
-3. Run `/project-doc` to create the Notion master doc with everything known so far
-4. Update the memory file with the Notion URL
+### Project Rules
+- Projects without Notion pages: AuditHQ, Authmark, Gloss Beauty, BDR MuleSoft → run `/project-doc` when they come up
+- Long sessions (~20 msgs): offer `/project-refresh`. After significant work: PUSH mode. On resume: PULL mode.
+- New project: create `project_{slug}.md` → add to MEMORY.md → run `/project-doc` → update memory with Notion URL
 
 ## Standard Web Build Loop (Premium Website Suite)
 
-The web-* skills are collectively called the **premium website suite**. It replaces Lovable. Run `/premium-website` in any session for the full suite reference.
-
-Lovable is no longer used for new projects. The full pipeline is orchestrated by `/saas-build` — just give it a product brief and it runs everything autonomously. For reference, the phases are:
-
-```
-/saas-research     - PRE-KICKOFF — gap analysis, competitor teardown, profitability, traffic, go/no-go (RESEARCH-BRIEF.md)
-/saas-build        - ORCHESTRATOR — runs the full pipeline autonomously from brief to deploy
-  Phase 0.25       - market research (MARKET-BRIEF.md) — skips if RESEARCH-BRIEF.md exists
-  Phase 0.5        - design research via /web-design-research (DESIGN-BRIEF.md)
-  Phase 1          - scope via /web-scope (SCOPE.md)
-  Phase 2          - scaffold: config, design system, routes, AppLayout, Sentry, NotFoundPage, useSeo
-  Phase 3          - backend via /web-supabase (schema, RLS, auth, TypeScript types)
-  Phase 3b         - payments via /web-stripe (checkout, webhooks, UpgradeButton)
-  Phase 3c         - email via /web-email (Resend + React Email, 5 templates, trial reminders)
-  Phase 4          - pages (landing first, auth, /setup, app pages, /settings, /privacy, /terms)
-  Phase 4.5        - tests (auth flow, onboarding flow, core feature smoke)
-  Phase 5          - quality gate via /web-review (38+/40 required, fix loop)
-  Phase 6          - deploy via /web-deploy (Vercel or Railway, bundle audit, smoke test)
-  Phase 7          - gap analysis loop (saas-gap-checklist.md, ~110 items)
-  Phase 8          - handoff (BUILD-LOG.md final entry, NEEDS_HUMAN list)
-
-/saas-improve      - post-launch improvement swarm (6 agents, production signals, gap stack)
-```
-
-**Skill detection in Phase 4 — saas-build reads the right skill automatically:**
-- Dashboard/analytics page → reads `/dashboard-design`
-- List page with records → reads `/web-table`
-- `/setup` or `/onboarding` → reads `/web-onboarding`
-- `/settings` → reads `/web-settings`
-- Transactional email → reads `/web-email`
-
-All web skills read `~/.claude/web-system-prompt.md` (the Design DNA) before generating anything.
-
-**Landing page non-negotiables (every product, every time):**
-- Animated background via `mcp__magic__21st_magic_component_inspiration` - mandatory
-- Product visual mockup: **max-w-4xl minimum, never max-w-2xl** — the mockup IS the hero, it must dominate
-- For AI products: split-pane mockup (input/inbox left, AI output with typewriter right) — Technique 5 in `/web-animations`
-- Hero headline: minimum `text-5xl sm:text-6xl lg:text-7xl` with `letterSpacing: '-0.03em'` — never text-4xl
-- Hero entrance: Technique 3 STAGGER from `/web-animations` (pill → headline → sub → CTAs → stats → visual last)
-- The mockup must show the product DOING SOMETHING — typewriter, animated counters, sparklines drawing in
-- Floating AI toast/badge that slides in after mockup renders (signals live activity)
-
-For animation patterns: read `/web-animations` (5 techniques — Technique 3 STAGGER is hero entrance, Technique 5 is typewriter for AI products).
-
-**Suite maintenance rule:** When any web-* skill is created or updated with a new non-negotiable, pattern, or checklist item — update `premium-website.md` in the same session. That file is the contract saas-build reads. If a rule isn't in premium-website.md, saas-build won't enforce it.
+Run `/premium-website` for the full suite reference. Pipeline: `/saas-build` (orchestrator) → `/saas-improve` (post-launch).
+All web skills read `~/.claude/web-system-prompt.md` (Design DNA) before generating. Landing page rules and phase details are in `premium-website.md` — the contract saas-build reads. When any web-* skill adds a non-negotiable, update `premium-website.md` in the same session.
 
 ## Power User Shortcuts
 
