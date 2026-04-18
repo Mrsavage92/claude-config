@@ -2,8 +2,24 @@
 
 Map every page, design decision, and data dependency before writing a single line of code. Produces SCOPE.md — the build contract that all other /web-* skills read.
 
+## Phase 0.0 — Product Validation Gate (MANDATORY for new products)
+
+Before scoping ANY new product, HALT unless a fresh BUILD verdict exists at `~/Documents/Claude/outputs/product-validation-{slug}.md`.
+
+- Missing file → HALT, run `/product-validator` first
+- KILL verdict → HALT, surface reasoning
+- VALIDATE-FIRST → HALT, surface interview protocol
+- BUILD (<30 days) → proceed
+- BUILD (>30 days) → STALE, re-run `/product-validator`
+
+Gate does NOT apply to scoping features inside a product already listed in `~/Documents/Claude/outputs/active-revenue-projects.md`.
+
+See `~/Documents/Claude/retrospectives/validator-learnings.md` for Tender Writer retrospective.
+
+---
+
 ## When to Use
-- Always. Run this before /web-scaffold on any new product.
+- Always. Run this before /web-scaffold on any new product (validator gate applies first).
 - When requirements change mid-build and you need to re-plan.
 
 ## Why This Exists
