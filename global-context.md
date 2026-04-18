@@ -13,20 +13,55 @@ This file is synced across both machines (Mac + Windows PC) via GitHub. Update i
 
 **Verify before asserting.** Before stating anything as fact, check: "Have I actually verified this, or am I guessing?" If guessing → check first. If the user contradicts me → investigate before responding. If something looks right on the surface (HTTP 200, familiar pattern, "obvious" answer) → verify the content, not just the surface. If I don't know → "let me check", never "that doesn't exist." If I'm wrong → one sentence owning it, then fix. Never defend a shortcut.
 
-## Product Idea Gate (global, not just /saas-build)
+## Product Idea Gate (global — applies BEFORE any response)
 
-**Any path that introduces a new product idea — user's idea, my suggestion, a pivot discussion, a "what if we built X" riff — triggers `/product-validator` FIRST, before any design/scope/build discussion.** No exceptions.
+**Imperative: BEFORE responding to any message or suggestion that introduces a new product idea, invoke `/product-validator`.** Not "eventually." Not "at some point." Before the next response.
 
-Triggers include:
-- Adam says: "build X", "let's make X", "I have an idea for X", "what if we built X", "should we pivot to X"
-- I propose: "the real opportunity is X", "you could build X to solve that", "a better angle would be X"
-- Any pivot of an existing product (e.g. Tender Writer → zero-wins segment) = new validation required, prior verdict does not transfer
+### Trigger detection — any of these fires the gate
 
-If the validator doesn't exist for the slug yet → run it. If it returns KILL → redirect to active revenue project (AuditHQ). If it returns VALIDATE-FIRST → run buyer-interview protocol, don't touch code.
+Adam language:
+- "build X", "let's make X", "I have an idea for X", "what if we built X", "should we pivot to X"
+- "new SaaS for", "tool that does", "product for {niche}"
 
-Why this rule exists: **Tender Writer (2026-04-18) burned 6 days because a prior session (me) proposed the "find+write combined = moat" framing and started building without validation.** Doreva, TenderPilot, GovBid already did both. This rule prevents the next one.
+My own language (catch myself):
+- "the real opportunity is X", "you could build X", "a better angle would be X", "what you really need is"
 
-See: `~/Documents/Claude/retrospectives/validator-learnings.md` for the full post-mortem log. Every new KILL adds a line there.
+Pivot language (even if product already exists):
+- "pivot to X", "re-target at X", "change the ICP to X", "zero-wins angle", "enterprise angle"
+- **Pivots ALWAYS require fresh validation.** Prior BUILD verdicts do NOT transfer across pivots.
+
+### What is NOT a product idea (no gate needed)
+
+- A feature inside an already-validated product (e.g. "add dark mode to AuditHQ" = feature, not product)
+- A bug fix, refactor, or polish task on an existing product
+- A research question ("what's the market for X?") — this is NOT a build instruction, just information
+- Client work (MuleSoft at BDR, etc.)
+
+If unclear whether it's a product or feature: check `~/Documents/Claude/outputs/active-revenue-projects.md`. If the work plugs into a listed project, it's a feature. Otherwise it's a new product and needs the gate.
+
+### Gate flow
+
+1. Detect trigger (above).
+2. Derive slug (kebab-case product name).
+3. Check `~/Documents/Claude/outputs/product-validation-{slug}.md`:
+   - **Missing or >30 days old** → run `/product-validator` now. Do not start design/scope/build discussion.
+   - **BUILD (fresh, <30 days)** → proceed to the relevant build skill.
+   - **VALIDATE-FIRST** → surface interview protocol, do not touch code.
+   - **KILL** → surface reasoning, redirect to primary revenue focus in `active-revenue-projects.md` (currently AuditHQ).
+
+### Hardened build skills (each independently gated)
+
+- `/saas-build` — Phase 0.0 HALTS without BUILD verdict
+- `/saas-improve` — Phase 0.0 BLOCKS polish on pre-revenue-unvalidated
+- `/web-scaffold` — same Phase 0.0 gate applies
+- `/web-scope` — same Phase 0.0 gate applies
+- `/scaffold` — same Phase 0.0 gate applies
+
+### Why this rule exists
+
+**Tender Writer (2026-04-18)** burned 6 days because a prior session (me) proposed the "find+write combined = moat" framing and started building without validation. Doreva, TenderPilot, GovBid all already did both. Four-layer redundancy now prevents this failure class: (1) this CLAUDE.md trigger detection, (2) `/product-validator` gate, (3) individual build-skill Phase 0.0 checks, (4) `active-revenue-projects.md` registry for Gate 8.
+
+See `~/Documents/Claude/retrospectives/validator-learnings.md` — every new KILL appends a line there automatically as part of validator step 5.
 
 ## Machine Context
 

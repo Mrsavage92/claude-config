@@ -4,9 +4,19 @@ Hard gate skill that validates whether a product idea is worth building. Runs BE
 
 ## When to Use
 - User says "build X", "I want to make X", or describes any product/SaaS idea
-- MUST run before `/saas-build`, `/web-scaffold`, or any build pipeline
+- Claude (self) catches itself proposing a new product (CLAUDE.md trigger detection)
+- MUST run before `/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`, or any build pipeline
 - User explicitly asks to validate an idea
 - Mid-build if `/saas-build` Phase 0.25 surfaces competitors not listed in the original validation
+- Any PIVOT of an existing product (different ICP / value prop / vertical) — prior verdicts do NOT transfer
+
+## When NOT to Use (to prevent false positives)
+- A feature inside an already-validated product (e.g. "add Stripe webhooks to AuditHQ") — this is build work inside a validated shell, not a new product
+- A bug fix, refactor, or polish task
+- A research question asking what the market looks like (answer it, don't gate it)
+- Client work (delivering against a signed contract, not productizing it)
+
+**Disambiguation:** if unsure whether something is a product or a feature, read `~/Documents/Claude/outputs/active-revenue-projects.md`. If the work plugs into a project listed there, it's a feature. Otherwise it's a new product.
 
 ## What This Does
 Answers 8 questions, delivers a trinary verdict (BUILD / KILL / VALIDATE-FIRST), and saves the result to a file that `/saas-build` checks as a hard gate.
@@ -178,11 +188,52 @@ Talk to {5} people in the target segment. Ask:
 Return here with ≥3 "yes I'd pay" answers + contact info.
 ```
 
-### 5. Save Verdict File
+### 5. Save Verdict File + Append Retrospective Log
+
+**Step 5a — Save verdict file:**
 
 Save to: `~/Documents/Claude/outputs/product-validation-{slug}.md`
 
-This file is the gate. `/saas-build` HARD-CHECKS this file at Phase 0 and refuses to proceed without a BUILD verdict.
+Include the verdict date in the frontmatter or first line so freshness can be checked. All build-gated skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) HARD-CHECK this file and refuse to proceed without a fresh BUILD verdict.
+
+**Freshness rule:** if the verdict is >30 days old, it is STALE. Market conditions, competitors, and the user's portfolio will have shifted. Re-run the validator before proceeding.
+
+**Step 5b — Append to retrospective log (mandatory on KILL and VALIDATE-FIRST):**
+
+On verdict = KILL, append a line to `~/Documents/Claude/retrospectives/validator-learnings.md`:
+
+```markdown
+### {YYYY-MM-DD} — {Product Name} — KILL
+- **Idea:** {one sentence}
+- **Gate(s) that triggered kill:** {list gate numbers + reasons}
+- **Competitors named:** {top 3 with URLs}
+- **Would have wasted:** {rough estimate — "6 days" / "2 sessions" / "unknown"}
+- **Pattern:** {what class of failure this is — "paid incumbents missed", "no moat", "no buyers", "portfolio conflict", etc.}
+```
+
+On verdict = VALIDATE-FIRST, append:
+
+```markdown
+### {YYYY-MM-DD} — {Product Name} — VALIDATE-FIRST
+- **Idea:** {one sentence}
+- **Why not BUILD:** {usually Gate 7 — no pre-committed buyers}
+- **Interview plan:** talk to {N} people in {segment}
+- **Return condition:** ≥3 named "yes I'd pay $X/mo" commitments
+```
+
+This keeps the retrospective log a living artefact. Future validator runs benefit from pattern recognition across prior failures.
+
+**Step 5c — Update portfolio registry on BUILD:**
+
+On verdict = BUILD, append one line to `~/Documents/Claude/outputs/active-revenue-projects.md` under "Active Builds":
+
+```markdown
+- **{Product Name}** — validated {YYYY-MM-DD}, target ${N}K MRR by {YYYY-MM-DD}, buyers: {names}
+```
+
+### 6. Pivot Handling
+
+If the user is pivoting an existing product (different ICP, different value prop, different vertical), this is NOT a continuation — it's a new product idea. Save the verdict under a new slug (e.g. `tender-writer-ndis-pivot.md`) so the prior verdict file remains intact for audit. The old product's verdict does not transfer.
 
 ---
 
