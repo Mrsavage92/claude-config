@@ -39,6 +39,14 @@ Pivot language (even if product already exists):
 
 If unclear whether it's a product or feature: check `~/Documents/Claude/outputs/active-revenue-projects.md`. If the work plugs into a listed project, it's a feature. Otherwise it's a new product and needs the gate.
 
+### Current active projects (embedded for fast lookup — updated by validator)
+
+- **AuditHQ** — PRIMARY revenue focus, target $10K/mo MRR, currently $0 MRR (credits withheld until audit/report quality validated). New product builds BLOCKED until AuditHQ hits $5K/mo or is explicitly parked.
+- **BDR MuleSoft** — client delivery, go-live week of 5 May 2026. Does NOT block SaaS portfolio gate (client work, not SaaS).
+- **Parked / dead:** Tender Writer (KILL 2026-04-18), FlipTracker (KILL earlier).
+
+If a new project is validated and built, the `/product-validator` appends it to `~/Documents/Claude/outputs/active-revenue-projects.md` and to this section. If the embedded summary here disagrees with the registry file, trust the file — it's canonical.
+
 ### Gate flow
 
 1. Detect trigger (above).

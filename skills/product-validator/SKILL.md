@@ -190,11 +190,25 @@ Return here with ≥3 "yes I'd pay" answers + contact info.
 
 ### 5. Save Verdict File + Append Retrospective Log
 
-**Step 5a — Save verdict file:**
+**Step 5a — Save verdict file + mirror to canonical repo:**
 
-Save to: `~/Documents/Claude/outputs/product-validation-{slug}.md`
+Primary location: `~/Documents/Claude/outputs/product-validation-{slug}.md`
 
-Include the verdict date in the frontmatter or first line so freshness can be checked. All build-gated skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) HARD-CHECK this file and refuse to proceed without a fresh BUILD verdict.
+**Also mirror to the canonical repo** so the verdict travels cross-machine:
+
+```bash
+# Locate claude-config repo
+REPO="$HOME/Documents/Git/claude-config"         # Windows
+[ -d "$REPO" ] || REPO="$HOME/claude-config"    # Mac fallback
+mkdir -p "$REPO/reference/product-validations"
+cp "$HOME/Documents/Claude/outputs/product-validation-{slug}.md" \
+   "$REPO/reference/product-validations/{slug}.md"
+cd "$REPO" && git add "reference/product-validations/{slug}.md" && \
+  git commit -m "validator: {VERDICT} — {Product Name}" && \
+  git push origin main
+```
+
+Include the verdict date in the first line so freshness can be checked. All build-gated skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) HARD-CHECK this file and refuse to proceed without a fresh BUILD verdict. If the primary location doesn't have the file, skills MUST fall back to reading from `reference/product-validations/{slug}.md` in the repo.
 
 **Freshness rule:** if the verdict is >30 days old, it is STALE. Market conditions, competitors, and the user's portfolio will have shifted. Re-run the validator before proceeding.
 
