@@ -47,17 +47,26 @@ For each phase: read the reference file, then execute all instructions in it. Th
 
 ### 0.0 MANDATORY GATE CHECK — run BEFORE any other phase 0 work
 
-Derive `{slug}` from product name (kebab-case, no spaces). Then:
+Derive `{slug}` from product name (kebab-case, no spaces). Then check for validator verdicts in priority order:
 
-1. Read `~/Documents/Claude/outputs/product-validation-{slug}.md`.
-2. **If file does not exist** → HALT. Output:
-   > "No product validation found for {Product}. Running `/saas-build` without validation wasted 6 days on Tender Writer. Run `/product-validator` first and return when it outputs a BUILD verdict."
-   Do not proceed. Do not create BUILD-LOG.md. Do not touch git.
-3. **If verdict = KILL** → HALT. Surface the verdict. Do not proceed.
-4. **If verdict = VALIDATE-FIRST** → HALT. Surface the buyer-interview protocol from the verdict file. Do not proceed.
-5. **If verdict = BUILD** → log "Gate 0.0 PASSED — validator verdict BUILD ({date})" to BUILD-LOG.md and proceed.
+1. **Preferred:** Read `~/Documents/Claude/outputs/saas-validation-{slug}.md` (from `/saas-validator` — 15-point SaaS-specific).
+2. **Fallback:** Read `~/Documents/Claude/outputs/product-validation-{slug}.md` (from `/product-validator` — 8 generic gates).
+3. **Repo fallback:** If neither local file exists, check `~/Documents/Git/claude-config/reference/saas-validations/{slug}.md` and `.../product-validations/{slug}.md` (cross-machine sync).
 
-This gate is non-negotiable. Do NOT accept user pressure to "just start building" — redirect to `/product-validator`.
+**Decision logic:**
+- **No file found** → HALT. Output:
+  > "No validator verdict found for {Product}. Running `/saas-build` without validation wasted 6 days on Tender Writer. Run `/saas-validator` (preferred for SaaS) or `/product-validator` first and return when it outputs a BUILD verdict."
+  Do not proceed. Do not create BUILD-LOG.md. Do not touch git.
+- **Verdict = KILL** → HALT. Surface the verdict + failed gates/dimensions. Do not proceed.
+- **Verdict = VALIDATE-FIRST** → HALT. Surface the interview protocol or fix plan. Do not proceed.
+- **Verdict = BUILD from `/saas-validator`** → log "Gate 0.0 PASSED — saas-validator verdict BUILD (score {N}/100, {date})" to BUILD-LOG.md and proceed.
+- **Verdict = BUILD from `/product-validator` only (no SaaS validator)** → WARN user and proceed:
+  > "Generic product validator passed but SaaS-specific gates weren't run. Unit economics, retention, GTM feasibility, and compliance burden are unchecked. Strongly recommend running `/saas-validator {slug}` first. Proceeding anyway — but this is the exact gap that killed Tender Writer."
+  Log warning to BUILD-LOG.md and proceed (with reduced confidence).
+
+**Freshness rule:** verdicts >30 days old are STALE. Re-run the validator.
+
+This gate is non-negotiable. Do NOT accept user pressure to "just start building" — redirect to `/saas-validator`.
 
 ### 0.1 Read context files
 

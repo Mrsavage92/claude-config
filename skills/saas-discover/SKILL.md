@@ -124,7 +124,14 @@ Top 3–5 surviving themes become candidates:
 
 ## Phase 5 — Auto-Validate (MANDATORY — NO BYPASS)
 
-For EVERY candidate from Phase 4, invoke `/product-validator` with the slug. Each candidate runs the full 8-gate validator. Collect trinary verdicts.
+For EVERY candidate from Phase 4, invoke the validator with the slug. Each candidate must return a trinary verdict before Phase 6 can run.
+
+**Validator selection (per candidate):**
+- SaaS candidates (subscription product) → `/saas-validator` (full 15-point deep-dive: 8 generic gates + 7 SaaS-specific dimensions with numeric thresholds)
+- Non-SaaS candidates (physical, service, one-time purchase) → `/product-validator` (8 generic gates)
+- Default when ambiguous → `/saas-validator` (our primary interest is SaaS)
+
+`/saas-validator` is stronger confidence because it forces CAC payback, churn, gross margin, GTM feasibility, and compliance burden checks — the exact dimensions that kill SaaS after a generic green light.
 
 Do NOT write any summary or present candidates to Adam until all validator runs complete. The verdict is non-negotiable output.
 
