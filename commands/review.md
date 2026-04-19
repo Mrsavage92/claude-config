@@ -32,7 +32,7 @@ DO NOT TRIGGER when: user explicitly asks to "improve", "fix gaps", "make it pro
 
 Before starting, identify what type of target is being reviewed. This determines which passes apply.
 
-**Code project** — has src/, package.json, or requirements.txt: run all passes A-H.
+**Code project** — has src/, package.json, or requirements.txt: run all passes A-I (Pass I only if project has user-facing UI).
 **Python/FastAPI backend only** — no frontend: run passes A (security), B (correctness), G (quality), H (testing). From Pass C, run only the backend item: "No blocking synchronous operations in request handlers (no time.sleep, no blocking I/O)" — skip all other Pass C checks.
 **Command/Skill spec file** — .md file that is a Claude command or skill: run Spec passes I-L instead of A-H.
 **Mixed monorepo** — frontend + backend: run all passes, apply frontend checks to frontend files and backend checks to backend files.
@@ -68,6 +68,10 @@ Before reviewing a single line, build the complete inventory. Run in parallel:
 - Read `SCOPE.md` - what was planned (if exists)
 - Read `CLAUDE.md` - project-specific rules (if exists)
 - Read `BUILD-LOG.md` - what phases completed (if exists)
+- Read `COPY.md` - source of truth for user-facing strings (if exists)
+- Read `DESIGN-BRIEF.md` - personality type and design decisions (if exists)
+- Read `MARKET-BRIEF.md` - differentiator and competitor data (if exists)
+- Read `~/.claude/skills/shared/golden-reference.md` - benchmark quality standards
 
 State the inventory count upfront: "X components, X pages, X hooks, X Python files."
 
@@ -262,6 +266,40 @@ Severity: P2/P3 per item.
 - [ ] No skipped tests (`test.skip`, `pytest.mark.skip`) without a documented reason
 
 Severity: no tests at all = P1. Failing tests = P1. Auth/payment coverage < 60% = P1. Skipped tests without reason = P2.
+
+#### Pass I — Copy & Brand Quality
+
+Applies to all code projects with user-facing UI. Skip for pure backends/APIs (mark N/A).
+
+**Mandatory grep (run on all page/component files):**
+Search `src/pages/*.tsx` and `src/components/**/*.tsx` for these generic phrases:
+`Streamline`, `All-in-one`, `Powerful yet simple`, `Take control`, `The modern way to`, `Manage your`, `Collaborate with your team`, `Enterprise-grade`, `Click here`, `Submit`, `Lorem ipsum`, `placeholder`, `TODO`, `Get Started` (without product context), `Learn More` (without target), `Sign up` (without specificity).
+
+Each occurrence = P2 finding. 5+ occurrences = P1 "generic copy throughout — product needs COPY.md."
+
+**COPY.md compliance (if COPY.md exists):**
+- [ ] Hero headline matches COPY.md `hero_headline` field (not drifted)
+- [ ] All CTA button labels match COPY.md (no builder-invented copy)
+- [ ] Empty state strings match COPY.md per-page sections
+- [ ] Any string that differs from COPY.md = P2 "copy drift: [page] [expected] vs [actual]"
+
+**If no COPY.md exists:** Flag as P3 "No COPY.md — copy is unmanaged. Run /saas-improve to generate one."
+
+**Tone consistency (if DESIGN-BRIEF.md exists):**
+- [ ] Read personality type from DESIGN-BRIEF.md
+- [ ] Spot-check landing page + one app page: does tone match?
+  - Enterprise Authority with casual contractions = P2
+  - Bold Operator with formal third-person = P2
+  - Health & Care with aggressive urgency = P2
+- [ ] If no DESIGN-BRIEF.md: check if tone is at least internally consistent across pages
+
+**Golden reference benchmark (if golden-reference.md was read):**
+- [ ] Hero pattern matches one of the 5 patterns in golden-reference.md (not an unrecognised pattern)
+- [ ] Social proof format follows one of the 4 reference patterns (logo strip / hard metrics / named authority / compliance badges)
+- [ ] Empty states follow the reference pattern (icon + heading + description + CTA with time estimate)
+- [ ] Any deviation from reference patterns without clear product-specific justification = P3
+
+Severity: 5+ generic phrases = P1. Each generic phrase = P2. Copy drift from COPY.md = P2. Tone mismatch = P2. No COPY.md = P3. Reference deviations = P3.
 
 ---
 
