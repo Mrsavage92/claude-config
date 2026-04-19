@@ -10,6 +10,13 @@ Every failed product (ideas green-lit and later killed) gets a line here. The va
 - **Should have been caught by:** Gate 2 (Google Sheets + existing reselling CRMs like ResellHub, Flyp, SellerCloud).
 - **Rule added:** Gate 2 "What exists" + free-alternative search mandatory.
 
+### 2026-04-18 — Discovery run (market mode) — 0 BUILD / 1 VF / 2 KILL
+- **Source:** /saas-discover market (first live run)
+- **Signals:** 35+ across Reddit, G2, ProductHunt+IndieHackers, HackerNews+Upwork
+- **Surviving candidates:** ICP Lead Builder (VF, 62/100), CaptionHQ (KILL, 48 — reroute to AuditHQ feature), ReceiptFlow AU (KILL, 52 — Hubdoc free killer)
+- **Pattern:** Broad market scan produces low-fit candidates when user lacks Adam-specific advantages (distribution, domain expertise). `clients` or `pipeline` modes would score higher. `market` mode best for exploration, not commitment.
+- **Validator effectiveness:** Portfolio gate blocked all builds (AuditHQ pre-revenue). Suite worked as designed — caught that even the "best" candidate needs buyer interviews before build.
+
 ### 2026-04-18 — PitchPolish — KILL (self-test, pre-build)
 - **Idea:** AI pitch deck reviewer for pre-seed founders, $99/deck or $499/mo
 - **Gate(s) triggered kill:** 2 (crowded free+paid), 3 (no gap), 5 (TAM commoditized), 6 (no moat), 7 (no buyers), 8 (portfolio — AuditHQ still pre-revenue)
