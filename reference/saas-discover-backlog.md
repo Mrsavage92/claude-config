@@ -35,8 +35,10 @@ _(none yet — ICP Lead Builder would move here once buyers pre-commit)_
 
 ## KILL (archived — do not revisit without new signal)
 
-### CaptionHQ — 48/100 — 2026-04-18
-- **Reroute:** Fold into AuditHQ as "post-audit content generator" feature (build after AuditHQ hits target, not as separate product)
+### CaptionHQ — 48/100 — 2026-04-18 → REROUTED to GrowLocal
+- **Original plan:** Fold into AuditHQ. **Corrected 2026-04-18:** fits GrowLocal far better (same target customer, same subscription model, existing business-profile data as AI input).
+- **Status:** PRD drafted at `C:\Users\Adam\Documents\Claude\growlocal\PRD-CONTENT-FLOW.md` as "Content Flow" feature
+- **Build gate:** Blocked until GrowLocal closes 3 paying customers at full price per its own fix plan. Until then, just add the demand-validation question to GrowLocal sales intake calls.
 
 ### ReceiptFlow AU — 52/100 — 2026-04-18
 - **Kill reason:** Hubdoc free with Xero = zero-cost incumbent beats any $19-49/mo pricing
