@@ -21,13 +21,14 @@ Full SaaS opportunity discovery pipeline. Ingests real pain signals from actual 
 ```
 
 Signal source formats:
-- `reddit:{subreddit}` — e.g. `reddit:smallbusiness`, `reddit:NDIS`, `reddit:accounting`
-- `g2:{category}` — e.g. `g2:project-management`, `g2:crm-software`
-- `niche:"{description}"` — e.g. `niche:"AU allied health providers"`
+- `reddit:{subreddit}` — one subreddit (focused)
+- `g2:{category}` — one G2/Capterra category (focused)
+- `niche:"{description}"` — one niche segment (focused)
 - `clients` — mines Adam's existing client signals (BDR MuleSoft tickets, AuditHQ user requests)
-- `pipeline` — no arg; scans all Adam's active signal sources at once
+- `pipeline` — Adam's distribution sources (clients + agency network + existing-product users)
+- `market` — **broad internet scan for market gaps across MANY sources** (Reddit top SMB/founder/industry subs, G2 1-2★ reviews of top 20 paid SaaS categories, Product Hunt last-30-days, Indie Hackers revenue+complaints, HackerNews "Ask HN" pain threads, Upwork/Fiverr recurring gig patterns, Twitter/X complaint threads about named tools). Use this when you want "find me a product with a gap" rather than "find a product in X category."
 
-Without a signal source → HALT with: *"I need a signal source. Discovery from thin air was the Tender Writer failure mode. Give me `reddit:X`, `g2:Y`, `niche:"Z"`, `clients`, or `pipeline`."*
+Without a signal source → HALT with: *"I need a signal source. Discovery from thin air was the Tender Writer failure mode. Give me `reddit:X`, `g2:Y`, `niche:"Z"`, `clients`, `pipeline`, or `market`."*
 
 ---
 
@@ -60,7 +61,22 @@ Extract: post title, pain statement (verbatim), upvote count, recency, commenter
 
 ### pipeline
 - Runs `clients` + scans MuleSoft community forums + AU agency Slack (if links provided)
-- Aggregates across sources
+- Aggregates across Adam's distribution-adjacent sources (not broad market)
+
+### market
+Broadest mode — scans 7+ source types in parallel (haiku agents):
+
+1. **Reddit SMB/founder subreddits** — r/smallbusiness, r/Entrepreneur, r/SaaS, r/startups, r/SideProject, r/indiehackers, r/sweatystartup + 3 industry subs derived from AU context (r/AusFinance, r/AusBusiness, r/australia). Same pain-trigger queries as `reddit:` mode.
+2. **G2/Capterra 1-2★ reviews** — top 20 paid SaaS categories (CRM, Project Mgmt, Accounting, Email Marketing, Analytics, HR, Invoicing, Inventory, Helpdesk, Scheduling, Forms, Surveys, eSign, Time Tracking, Expenses, Payroll, Booking, POS, Reviews, Proposals). Extract recurring complaints per category.
+3. **Product Hunt last 30 days** — what's launching with >500 upvotes = validated pain categories; what's launching with <50 upvotes across the same niche = saturation signal. Find gaps.
+4. **Indie Hackers** — new milestones ($1K-$10K MRR range — small enough to indicate a reachable niche). Extract what they built + what they complain about.
+5. **HackerNews "Ask HN"** — search "Ask HN" posts asking about tools/workflows in last 90 days. Commenter agreement = volume signal.
+6. **Upwork/Fiverr recurring gig patterns** — tasks being outsourced repeatedly = automatable SaaS. Search for high-volume gigs under "virtual assistant", "admin", "data entry", "research" categories.
+7. **Twitter/X complaint threads** — search for tool names + "frustrating", "wish", "hate". Count engagement on complaint posts.
+
+Dedupe across sources. Any theme that appears in 3+ source types gets boosted — that's cross-signal validation, not echo chamber.
+
+Output: raw `SIGNALS.md` with source attribution per signal.
 
 **Output:** raw `SIGNALS.md` with every pain point: source URL, date, volume proxy, verbatim quote.
 
