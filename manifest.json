@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-17",
+  "last_updated": "2026-04-19",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -126,9 +126,6 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
-    "AUTOPILOT_LOG.md",
-    "README.md",
-    "SKILL-AUTHORING-STANDARD.md",
     "a11y-audit",
     "agent-browser",
     "ai-image-generation",
@@ -194,7 +191,6 @@
     "mulesoft-flow",
     "mulesoft-platform",
     "notion",
-    "orchestration",
     "outbound",
     "parallel-audit",
     "prd",
@@ -219,8 +215,10 @@
     "reputation-response",
     "review",
     "saas-build",
+    "saas-discover",
     "saas-health",
     "saas-improve",
+    "saas-validator",
     "scaffold",
     "security",
     "security-audit",
@@ -245,7 +243,6 @@
     "web-animations",
     "web-component",
     "web-deploy",
-    "web-design",
     "web-design-guidelines",
     "web-design-research",
     "web-email",
@@ -263,6 +260,6 @@
   "counts": {
     "commands": 61,
     "agents": 59,
-    "skills": 133
+    "skills": 130
   }
 }
