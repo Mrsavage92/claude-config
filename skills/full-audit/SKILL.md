@@ -1,11 +1,11 @@
 ---
 name: full-audit
-description: Master audit orchestrator — runs all 8 audit suites (Marketing, Technical, GEO, Security, Privacy, Reputation, Employer Brand, AI Readiness) against a URL and produces a single combined FULL-AUDIT-REPORT.md with cross-suite scores, priority issues, and an integrated action plan.
+description: Master audit orchestrator — runs all 9 audit suites (Marketing, Technical, GEO, Security, Privacy, Reputation, Employer Brand, AI Readiness, Social Footprint) against a URL and produces a single combined FULL-AUDIT-REPORT.md with cross-suite scores, priority issues, and an integrated action plan.
 ---
 
 # Full Audit Suite — Master Orchestrator
 
-You are the master orchestrator for a comprehensive, all-suites website audit. When invoked, you run all 8 audit suites against the target URL and consolidate the results into a single, executive-ready report.
+You are the master orchestrator for a comprehensive, all-suites website audit. When invoked, you run all 9 audit suites against the target URL and consolidate the results into a single, executive-ready report.
 
 ## Commands
 
@@ -49,7 +49,7 @@ When passing tasks to subagents, always tell them: *"Save your report to `{outpu
 
 ### Phase 2: Parallel Suite Execution
 
-Launch **8 subagents in parallel**, one per suite. Each subagent runs its flagship audit command and returns:
+Launch **9 subagents in parallel**, one per suite. Each subagent runs its flagship audit command and returns:
 - Suite name
 - Composite score (0-100)
 - Grade (A/B/C/D/F)
@@ -69,6 +69,7 @@ Launch **8 subagents in parallel**, one per suite. Each subagent runs its flagsh
 | 6 | Reputation | `reputation-audit` | Reputation Score | REPUTATION-AUDIT.md |
 | 7 | Employer Brand | `employer-audit` | Employer Score | EMPLOYER-AUDIT.md |
 | 8 | AI Readiness | `ai-ready-audit` | AI Readiness Score | AI-READINESS-AUDIT.md |
+| 9 | Social Footprint | `social-audit` | Social Score | SOCIAL-AUDIT.md |
 
 **Important:** Each subagent must produce its own detailed report file. The master report references these but does not duplicate their full content.
 
@@ -77,19 +78,21 @@ Launch **8 subagents in parallel**, one per suite. Each subagent runs its flagsh
 Calculate the **Overall Digital Health Score**:
 
 ```
-Overall = (Marketing*0.20) + (Technical*0.18) + (GEO*0.15) + (Security*0.15) +
-          (Privacy*0.12) + (Reputation*0.10) + (EmployerBrand*0.05) + (AIReadiness*0.05)
+Overall = (Marketing*0.18) + (Technical*0.16) + (GEO*0.14) + (Security*0.14) +
+          (Privacy*0.11) + (Reputation*0.09) + (Social*0.10) +
+          (EmployerBrand*0.04) + (AIReadiness*0.04)
 ```
 
 **Weight rationale:**
-- Marketing (20%): Directly drives revenue and customer acquisition
-- Technical (18%): Foundation — everything else sits on technical health
-- GEO (15%): Emerging critical channel as AI replaces search
-- Security (15%): Risk/liability — one breach can end the business
-- Privacy (12%): Regulatory compliance — fines and trust
-- Reputation (10%): Word of mouth amplifier or inhibitor
-- Employer Brand (5%): Talent acquisition signal
-- AI Readiness (5%): Forward-looking strategic indicator
+- Marketing (18%): Directly drives revenue and customer acquisition
+- Technical (16%): Foundation — everything else sits on technical health
+- GEO (14%): Emerging critical channel as AI replaces search
+- Security (14%): Risk/liability — one breach can end the business
+- Privacy (11%): Regulatory compliance — fines and trust
+- Social Footprint (10%): Primary audience acquisition channel for most modern brands; dormancy or absence leaks audience and share of voice
+- Reputation (9%): Word of mouth amplifier or inhibitor
+- Employer Brand (4%): Talent acquisition signal
+- AI Readiness (4%): Forward-looking strategic indicator
 
 **Grade scale:**
 | Score | Grade | Meaning |
@@ -162,6 +165,7 @@ estimated revenue/risk impact of acting vs not acting]
 | Reputation | [X]/100 | [A-F] | [🟢/🟡/🔴] | [one line] |
 | Employer Brand | [X]/100 | [A-F] | [🟢/🟡/🔴] | [one line] |
 | AI Readiness | [X]/100 | [A-F] | [🟢/🟡/🔴] | [one line] |
+| Social Footprint | [X]/100 | [A-F] | [🟢/🟡/🔴] | [one line] |
 | **Overall** | **[X]/100** | **[A-F]** | | |
 
 🟢 70+ &nbsp; 🟡 40-69 &nbsp; 🔴 <40
@@ -253,6 +257,14 @@ estimated revenue/risk impact of acting vs not acting]
 2. [finding]
 3. [finding]
 
+### 9. Social Footprint ([X]/100)
+[Summary. Reference SOCIAL-AUDIT.md.]
+
+**Top 3 Findings:**
+1. [finding]
+2. [finding]
+3. [finding]
+
 ---
 
 ## Revenue & Risk Impact Summary
@@ -274,6 +286,7 @@ Each suite produced a full detailed report file:
 - [REPUTATION-AUDIT.md](./REPUTATION-AUDIT.md)
 - [EMPLOYER-AUDIT.md](./EMPLOYER-AUDIT.md)
 - [AI-READINESS-AUDIT.md](./AI-READINESS-AUDIT.md)
+- [SOCIAL-AUDIT.md](./SOCIAL-AUDIT.md)
 
 ---
 

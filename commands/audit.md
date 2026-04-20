@@ -45,10 +45,11 @@ Which audits would you like to run?
   6. Reputation
   7. AI Readiness
   8. Employer Brand
+  9. Social Footprint
 
 Enter your selection:
-  - Comma-separated numbers: 1,3,4,5
-  - Range: 1-5
+  - Comma-separated numbers: 1,3,4,5,9
+  - Range: 1-9
   - All suites: all
 ```
 
@@ -57,10 +58,10 @@ Enter your selection:
 ### Step 3: Parse the Selection
 
 Parse the user's input:
-- `all` → suites 1-8
-- Comma-separated: `1,3,4,5` → Marketing, GEO, Security, Privacy
+- `all` → suites 1-9
+- Comma-separated: `1,3,4,5,9` → Marketing, GEO, Security, Privacy, Social
 - Range: `1-5` → Marketing, Technical, GEO, Security, Privacy
-- Mixed: `1-3,7` → Marketing, Technical, GEO, AI Readiness
+- Mixed: `1-3,7,9` → Marketing, Technical, GEO, AI Readiness, Social
 
 Suite routing table:
 
@@ -74,6 +75,7 @@ Suite routing table:
 | 6 | Reputation | `reputation-audit` | `REPUTATION-AUDIT.md` |
 | 7 | AI Readiness | `ai-ready-audit` | `AI-READINESS-AUDIT.md` |
 | 8 | Employer Brand | `employer-audit` | `EMPLOYER-AUDIT.md` |
+| 9 | Social Footprint | `social-audit` | `SOCIAL-AUDIT.md` |
 
 ### Step 4: Run the Selected Audits
 
@@ -252,16 +254,16 @@ Failed suites: GEO (agent rate limit)
 - "combined audit"
 - "generate full audit PDF"
 
-Selecting `all` from the menu generates **8 separate PDFs**, NOT a combined PDF.
+Selecting `all` from the menu generates **9 separate PDFs**, NOT a combined PDF.
 
 To generate a combined report when explicitly requested:
 ```bash
-python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 --full
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 9 --full
 ```
 
 To generate **both** individual PDFs AND a combined PDF:
 ```bash
-python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 --both
+python3 ~/.claude/skills/shared/generate_suite_pdfs.py "~/Documents/Claude/outputs/{domain}" 1 2 3 4 5 6 7 8 9 --both
 ```
 
 Trigger phrases for "both" mode: "individual and combined", "all PDFs", "both individual and full".

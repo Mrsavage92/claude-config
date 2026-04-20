@@ -117,6 +117,7 @@ SUITE_COLORS = {
     "Reputation":     HexColor("#D97706"),
     "Employer Brand": HexColor("#2563EB"),
     "AI Readiness":   HexColor("#6D28D9"),
+    "Social":         HexColor("#EC4899"),
 }
 
 # Canonical suite order and their source filenames
@@ -129,12 +130,14 @@ SUITE_ORDER = [
     ("Reputation",     "REPUTATION-AUDIT.md"),
     ("Employer Brand", "EMPLOYER-AUDIT.md"),
     ("AI Readiness",   "AI-READINESS-AUDIT.md"),
+    ("Social",         "SOCIAL-AUDIT.md"),
 ]
 
-# Base weights (sum to 1.0 for the full 8-suite audit)
+# Base weights (sum to 1.0 for the full 9-suite audit)
 SUITE_WEIGHTS_BASE = {
-    "Marketing": 0.20, "Technical": 0.18, "GEO": 0.15, "Security": 0.15,
-    "Privacy": 0.12, "Reputation": 0.10, "Employer Brand": 0.05, "AI Readiness": 0.05,
+    "Marketing": 0.18, "Technical": 0.16, "GEO": 0.14, "Security": 0.14,
+    "Privacy": 0.11, "Reputation": 0.09, "Social": 0.10,
+    "Employer Brand": 0.04, "AI Readiness": 0.04,
 }
 
 # Methodology descriptions per suite
@@ -147,6 +150,7 @@ SUITE_DESCRIPTIONS = {
     "Reputation":     "Review ratings & volume, response strategy, brand mentions, press coverage",
     "Employer Brand": "Careers page, EVP clarity, Glassdoor rating, LinkedIn presence, D&I signals",
     "AI Readiness":   "AI adoption signals, automation opportunity, competitive positioning, AI search readiness",
+    "Social":         "Profile quality, content mechanics, engagement depth, platform-fit, competitive position, paid creative, brand consistency across 8 platforms",
 }
 
 PAGE_W, PAGE_H = A4
@@ -981,11 +985,151 @@ def suite_header(suite_name, score, color):
 
 # ─── SECTION BUILDERS ────────────────────────────────────────────────────────
 
-def build_cover(master_content, suite_scores, suite_status, st, selected, weights):
+# ─── PDF v3 Phase 4: shock-stat pool (mirrors shock_stats.ts) ──────────────
+# When the run-audit edge function resolves a shock_stat_id on a suite result,
+# the engine looks up the full text here to render on the cover. Pool MUST
+# stay in sync with supabase/functions/run-audit/shock_stats.ts.
+SHOCK_STATS = {
+    # Marketing
+    "mkt-01": ("marketing",  "risk",
+               "75% of consumers judge a company's credibility based on website design.",
+               "Stanford Web Credibility Research"),
+    "mkt-02": ("marketing",  "risk",
+               "88% of B2B buyers say they are less likely to return to a site after a poor experience.",
+               "Sweor Web Experience Report 2023"),
+    "mkt-03": ("marketing",  "opportunity",
+               "Pages that load in under 1 second convert 3x better than those that take 5 seconds.",
+               "Portent Conversion Benchmark 2022"),
+    "mkt-04": ("marketing",  "opportunity",
+               "Only 22% of B2B websites have a clear benefit-led hero — the other 78% compete on features.",
+               "SaaS Landing Page Report 2024"),
+    # Technical
+    "tec-01": ("technical",  "risk",
+               "A 1-second delay in page load causes a 7% drop in conversions.",
+               "Akamai Online Retail Performance Report"),
+    "tec-02": ("technical",  "risk",
+               "53% of mobile visitors abandon a site that takes longer than 3 seconds to load.",
+               "Google Mobile Speed Benchmarks"),
+    "tec-03": ("technical",  "opportunity",
+               "Sites passing all Core Web Vitals see on average 24% lower bounce rates.",
+               "Google Web Almanac 2023"),
+    # GEO
+    "geo-01": ("geo",        "risk",
+               "By 2026, Gartner forecasts 40% of product research will start with an AI assistant rather than a search engine.",
+               "Gartner AI Search Forecast 2024"),
+    "geo-02": ("geo",        "opportunity",
+               "Pages with FAQPage schema are 3x more likely to appear in Google AI Overviews.",
+               "SEMrush AI Overviews Study 2024"),
+    "geo-03": ("geo",        "opportunity",
+               "llms.txt adoption grew 12x in the six months after Anthropic published the spec.",
+               "llmstxt.org registry 2024"),
+    # Security
+    "sec-01": ("security",   "risk",
+               "43% of cyber attacks target small businesses, and 60% of those hit close within six months.",
+               "Verizon DBIR / National Cyber Security Alliance"),
+    "sec-02": ("security",   "risk",
+               "Domains without DMARC enforcement are 4x more likely to be used in phishing campaigns.",
+               "Valimail Email Fraud Landscape 2024"),
+    "sec-03": ("security",   "risk",
+               "The average cost of a B2B data breach is $4.45M globally.",
+               "IBM Cost of a Data Breach Report 2023"),
+    # Privacy
+    "pri-01": ("privacy",    "risk",
+               "GDPR fines have totalled over \u20ac4.5 billion since 2018; most were levied against mid-market businesses, not the Big Tech names in the headlines.",
+               "CMS Law GDPR Enforcement Tracker 2024"),
+    "pri-02": ("privacy",    "risk",
+               "75% of consumers say they will not buy from a brand they do not trust with their data.",
+               "Cisco Consumer Privacy Survey 2023"),
+    "pri-03": ("privacy",    "opportunity",
+               "Clear privacy disclosures at the point of collection lift form completion rates by an average of 11%.",
+               "Baymard Institute Checkout UX Study 2023"),
+    # Reputation
+    "rep-01": ("reputation", "risk",
+               "93% of consumers say online reviews influence their purchase decisions.",
+               "Podium State of Local Business Report 2024"),
+    "rep-02": ("reputation", "opportunity",
+               "A 1-star improvement in a business's average Google rating yields a 5\u20139% revenue increase.",
+               "Harvard Business Review, Michael Luca 2016"),
+    "rep-03": ("reputation", "opportunity",
+               "68% of customers will leave a review when asked. Only 29% leave one unprompted.",
+               "BrightLocal Local Consumer Review Survey 2024"),
+    # Employer Brand
+    "emp-01": ("employer_brand", "opportunity",
+               "A strong employer brand reduces cost per hire by 50% and improves quality of hire, according to LinkedIn.",
+               "LinkedIn Talent Solutions Employer Brand Report"),
+    "emp-02": ("employer_brand", "risk",
+               "86% of job seekers research company reviews and ratings before deciding to apply.",
+               "Glassdoor Mission & Culture Survey 2024"),
+    "emp-03": ("employer_brand", "opportunity",
+               "Companies with active Glassdoor profiles receive on average 3x more qualified applicants.",
+               "Glassdoor Engage Employer Report"),
+    # AI Readiness
+    "air-01": ("ai_readiness", "opportunity",
+               "Companies using AI in customer operations see an average 35% reduction in response time.",
+               "McKinsey State of AI Report 2024"),
+    "air-02": ("ai_readiness", "risk",
+               "77% of SMBs say they lack the talent to deploy AI, but only 14% have an AI training budget in place.",
+               "PwC AI SMB Readiness Survey 2024"),
+    "air-03": ("ai_readiness", "opportunity",
+               "Early AI adopters are growing revenue 1.9x faster than peers in the same industry.",
+               "Accenture Technology Vision 2024"),
+}
+
+
+def resolve_shock_stat(suite_results_data, suite_scores):
+    """Pick the best shock_stat for the cover.
+    Priority:
+      1. Suite with the worst score (risk-tagged stat hits hardest)
+      2. Any suite with a risk-tagged stat
+      3. First available stat
+    Returns (text, source) or (None, None)."""
+    if not suite_results_data:
+        return None, None
+
+    # Build list of (score, stat_id) pairs for suites that emitted a valid id
+    candidates = []
+    for sr in suite_results_data:
+        sid = sr.get("shock_stat_id")
+        if not sid or sid not in SHOCK_STATS:
+            continue
+        # Normalise suite name to score lookup
+        suite_name = (sr.get("suite") or "").strip()
+        score = None
+        for disp, _sc in suite_scores.items():
+            if disp.lower() == suite_name.lower() or disp.lower().replace(" ", "_") == suite_name.lower():
+                score = _sc
+                break
+        if score is None:
+            score = sr.get("score", 50)
+        candidates.append((int(score), sid))
+
+    if not candidates:
+        return None, None
+
+    # Prefer risk-tagged stat from the worst-scoring suite
+    candidates.sort(key=lambda x: x[0])  # worst score first
+    for _, sid in candidates:
+        _suite, kind, text, source = SHOCK_STATS[sid]
+        if kind == "risk":
+            return text, source
+    # No risk-tagged — use the worst-scoring suite's stat
+    _suite, _kind, text, source = SHOCK_STATS[candidates[0][1]]
+    return text, source
+
+
+def build_cover(master_content, suite_scores, suite_status, st, selected, weights,
+                shock_stat_text=None, shock_stat_source=None, audit_data=None):
     el = []
     brand, url, date_str = ("", "", datetime.now().strftime("%d %B %Y"))
     if master_content:
         brand, url, date_str = extract_meta(master_content)
+    # v3: fall back to audit_data for brand/url when no master markdown exists.
+    # The cover must always show WHO the audit is for — structured flow was
+    # rendering an empty brand/url band, making PDFs look generic.
+    if audit_data and not brand:
+        brand = str(audit_data.get("domain") or "").strip()
+    if audit_data and not url:
+        url = str(audit_data.get("url") or "").strip().rstrip("/")
     date_str = datetime.now().strftime("%d %B %Y")
 
     overall = None
@@ -1004,14 +1148,19 @@ def build_cover(master_content, suite_scores, suite_status, st, selected, weight
                  ParagraphStyle("t2", fontName=F_BOLD, fontSize=30, textColor=HexColor("#94A3B8"),
                                 spaceAfter=12, leading=36)))
 
+    # Normalize url for dedupe: strip scheme, www., trailing slash, lowercase
+    def _bare(s):
+        return re.sub(r'^(https?://)?(www\.)?', '', str(s or '').strip().rstrip('/'), flags=re.I).lower()
+    show_url = bool(url) and _bare(url) != _bare(brand)
+
     if brand:
         el.append(hp(f'<font color="#E2E8F0"><b>{esc(brand)}</b></font>',
                      ParagraphStyle("bn", fontName=F_BOLD, fontSize=18, textColor=HexColor("#E2E8F0"),
-                                    spaceAfter=4)))
-    if url:
+                                    spaceAfter=6, leading=22)))
+    if show_url:
         el.append(hp(f'<font color="#94A3B8">{esc(url)}</font>',
                      ParagraphStyle("url", fontName=F_REGULAR, fontSize=11, textColor=HexColor("#94A3B8"),
-                                    spaceAfter=4)))
+                                    spaceAfter=4, leading=14)))
     el.append(hp(f'<font color="#94A3B8">{esc(date_str)}  -  {suite_label(selected)}</font>',
                  ParagraphStyle("dt", fontName=F_REGULAR, fontSize=9, textColor=HexColor("#94A3B8"),
                                 spaceAfter=0)))
@@ -1080,6 +1229,24 @@ def build_cover(master_content, suite_scores, suite_status, st, selected, weight
     el.append(tbl)
     el.append(Spacer(1, 0.5 * cm))
     el.append(AccentBar(height=1, color=C["border"]))
+
+    # ── PDF v3 Phase 4: shock-stat band (decision 8.1) ────────────────────
+    # Curated stat from the pool, chosen via resolve_shock_stat() at the
+    # generate() level. Italic, centred, with source attribution. Sits at
+    # the bottom of the cover as a parting hook.
+    if shock_stat_text:
+        el.append(Spacer(1, 0.5 * cm))
+        el.append(p(f'"{esc(shock_stat_text)}"',
+                    ParagraphStyle("shockQ", fontName=F_REGULAR, fontSize=10,
+                                    textColor=C["body"], leading=14,
+                                    alignment=TA_CENTER, spaceAfter=3,
+                                    leftIndent=1.0*cm, rightIndent=1.0*cm)))
+        if shock_stat_source:
+            el.append(p(f'\u2014 {esc(shock_stat_source)}',
+                        ParagraphStyle("shockSrc", fontName=F_REGULAR, fontSize=8,
+                                        textColor=C["muted"], leading=11,
+                                        alignment=TA_CENTER)))
+
     el.append(NextPageTemplate("content"))
     el.append(PageBreak())
     return el, overall
@@ -1136,7 +1303,7 @@ def build_toc(suite_scores, st, selected):
     return el
 
 
-def build_executive_briefing(master_content, suite_scores, overall, st, selected):
+def build_executive_briefing(master_content, suite_scores, overall, st, selected, audit_data=None, suite_results_data=None):
     el = []
     el.append(hp("Executive Briefing",
                  ParagraphStyle("ebh", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
@@ -1217,7 +1384,27 @@ def build_executive_briefing(master_content, suite_scores, overall, st, selected
     right_el.append(p("Top Opportunities", ParagraphStyle("oh", fontName=F_BOLD, fontSize=11,
                                                            textColor=C["low"], spaceAfter=6, leading=14)))
 
-    if master_content:
+    # Primary source: structured action_plan from audit_data. Falls back to
+    # regex-scan of master_content, then to high-impact findings across suites.
+    opportunities = []
+    if audit_data:
+        ap = audit_data.get("action_plan") or {}
+        # Prefer high_impact, then quick_wins — both are "opportunities", not risks.
+        for tier_key in ("high_impact", "quick_wins"):
+            for item in (ap.get(tier_key) or []):
+                if isinstance(item, dict):
+                    t = item.get("action") or item.get("title") or ""
+                else:
+                    t = str(item)
+                t = str(t).strip()
+                if t and t not in opportunities:
+                    opportunities.append(t)
+                if len(opportunities) >= 3:
+                    break
+            if len(opportunities) >= 3:
+                break
+
+    if not opportunities and master_content:
         m = re.search(r'High Impact.*?\n(.*?)(?=###|##|\Z)', master_content, re.IGNORECASE|re.DOTALL)
         if m:
             wins = re.findall(r'^\d+\.\s+(.+)$', m.group(1), re.MULTILINE)
@@ -1225,8 +1412,31 @@ def build_executive_briefing(master_content, suite_scores, overall, st, selected
                 clean = re.sub(r'\*\*([^*]+)\*\*', r'\1', win)
                 clean = re.sub(r'\*([^*]*)\*', '', clean).strip()
                 clean = clean.strip('*').strip()
-                right_el.append(SeverityCard(clean[:80], "", "low", width=(CONTENT_W/2 - 0.5*cm)))
-                right_el.append(Spacer(1, 0.15*cm))
+                if clean:
+                    opportunities.append(clean)
+
+    # Last resort: mine the suite results for high-severity findings
+    if not opportunities and suite_results_data:
+        for sr in suite_results_data:
+            for f in (sr.get("findings") or []):
+                sev = (f.get("severity") or "").lower()
+                if sev in ("high", "medium"):
+                    t = str(f.get("title") or "").strip()
+                    if t and t not in opportunities:
+                        opportunities.append(t)
+                if len(opportunities) >= 3:
+                    break
+            if len(opportunities) >= 3:
+                break
+
+    for opp in opportunities[:3]:
+        right_el.append(SeverityCard(opp[:80], "", "low", width=(CONTENT_W/2 - 0.5*cm)))
+        right_el.append(Spacer(1, 0.15*cm))
+
+    if not opportunities:
+        right_el.append(p("No opportunities surfaced — synthesis may be incomplete.",
+                          ParagraphStyle("oempty", fontName=F_REGULAR, fontSize=8.5,
+                                         textColor=C["muted"], leading=12)))
 
     col_tbl = Table([[left_el, right_el]],
                     colWidths=[CONTENT_W/2 - 0.2*cm, CONTENT_W/2 - 0.2*cm])
@@ -1240,6 +1450,34 @@ def build_executive_briefing(master_content, suite_scores, overall, st, selected
     el.append(col_tbl)
     el.append(Spacer(1, 0.4*cm))
     el.append(AccentBar(height=1, color=C["border"]))
+
+    # ── Cross-suite consistency paragraph (decision 8.3) ──────────────────
+    # Always renders. If contradictions present: "We detected N..."
+    # If not: positive-frame pass message. Not a standalone page.
+    if audit_data:
+        ap = audit_data.get("action_plan") or {}
+        contradictions = ap.get("contradictions") or []
+        el.append(Spacer(1, 0.3*cm))
+        el.append(p("Cross-Suite Consistency Check",
+                    ParagraphStyle("ccch", fontName=F_BOLD, fontSize=10,
+                                    textColor=C["ink_soft"], spaceAfter=4, leading=12)))
+        if contradictions:
+            example = ""
+            try:
+                first = contradictions[0]
+                topic = first.get("topic") or ""
+                if topic:
+                    example = f" (e.g. {esc(str(topic)[:80])})"
+            except Exception:
+                pass
+            msg = (f"We detected {len(contradictions)} cross-suite contradiction"
+                   f"{'s' if len(contradictions) != 1 else ''}{example}. "
+                   "These have been reconciled below using the suite with direct evidence.")
+        else:
+            msg = ("Cross-suite consistency check: passed. All audit dimensions align "
+                   "on shared facts \u2014 your reporting is internally coherent.")
+        el.append(p(msg, st["body_sm"]))
+
     el.append(NextPageTemplate("content"))
     el.append(PageBreak())
     return el
@@ -1307,7 +1545,7 @@ def build_scorecard(suite_scores, suite_status, overall, st, selected, weights):
         tcell("-",             F_REGULAR, 8.5, C["muted"], TA_CENTER),
         tcell("",              F_REGULAR, 8,   C["body"]),
     ])
-    cw = [3.8*cm, 1.9*cm, 1.6*cm, 1.5*cm, CONTENT_W - 8.8*cm]
+    cw = [3.8*cm, 1.9*cm, 1.6*cm, 2.0*cm, CONTENT_W - 9.3*cm]
     tbl = Table(rows, colWidths=cw, repeatRows=1)
     tbl.setStyle(TableStyle([
         ("BACKGROUND",     (0, 0), (-1, 0), C["brand"]),
@@ -1320,6 +1558,253 @@ def build_scorecard(suite_scores, suite_status, overall, st, selected, weights):
         ("GRID",           (0, 0), (-1, -1), 0.3, C["border"]),
         ("VALIGN",         (0, 0), (-1, -1), "MIDDLE"),
         ("LINEABOVE",      (0, -1), (-1, -1), 1.5, C["medium"]),
+    ]))
+    el.append(tbl)
+    el.append(PageBreak())
+    return el
+
+
+# ─── PDF v3 Phase 2: structured cross-suite pages ─────────────────────────
+# Activated when the caller passes audit_data + suite_results_data (structured
+# DB flow via Vercel/Supabase). Markdown-only callers skip these and fall
+# through to build_master_sections / build_synthesized_cross_suite.
+
+def _period_table(rows, st):
+    """3-col task table used for action plan + quick wins.
+    colWidths sum to CONTENT_W exactly (Rule 4 of spec §4).
+    """
+    if not rows:
+        return None
+    hdr = [
+        tcell("Task",   F_SEMIBOLD, 8, C["white"], bold=True),
+        tcell("Owner",  F_SEMIBOLD, 8, C["white"], bold=True, align=TA_CENTER),
+        tcell("Effort", F_SEMIBOLD, 8, C["white"], bold=True, align=TA_CENTER),
+    ]
+    data = [hdr]
+    for r in rows:
+        data.append([
+            tcell(str(r.get("title") or r.get("task") or ""),  F_REGULAR, 8.5, C["body"]),
+            tcell(str(r.get("owner") or ""),                   F_REGULAR, 8.5, C["muted"], TA_CENTER),
+            tcell(str(r.get("effort") or ""),                  F_REGULAR, 8.5, C["muted"], TA_CENTER),
+        ])
+    # colWidths sum = CONTENT_W
+    col1 = CONTENT_W - 6.0 * cm
+    tbl = Table(data, colWidths=[col1, 3.0 * cm, 3.0 * cm], repeatRows=1)
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND",     (0, 0), (-1, 0), C["brand"]),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [C["white"], C["surface"]]),
+        ("TOPPADDING",     (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING",  (0, 0), (-1, -1), 7),
+        ("LEFTPADDING",    (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING",   (0, 0), (-1, -1), 8),
+        ("GRID",           (0, 0), (-1, -1), 0.3, C["border"]),
+        ("VALIGN",         (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    return tbl
+
+
+def build_action_plan_30_60_90(audit_data, st):
+    """Renders the 30/60/90 integrated action plan from synthesize-audit output.
+    Returns [] if audit_data is missing or the action_plan has no periods populated."""
+    if not audit_data:
+        return []
+    ap = audit_data.get("action_plan") or {}
+    d30 = ap.get("first_30_days") or []
+    d60 = ap.get("first_60_days") or []
+    d90 = ap.get("first_90_days") or []
+    if not any([d30, d60, d90]):
+        return []
+
+    el = []
+    el.append(KeepTogether([
+        hp("30 / 60 / 90 Action Plan",
+           ParagraphStyle("aph", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
+                          spaceAfter=4, leading=28, keepWithNext=1)),
+        p("An integrated cross-suite sequence — the fixes that move the most dials in the shortest time.",
+          st["body_sm"]),
+        AccentBar(height=2),
+        Spacer(1, 0.4 * cm),
+    ]))
+
+    periods = [
+        ("Next 30 Days — fix what's actively costing you", d30, C["critical"]),
+        ("Next 60 Days — close the exposure window",        d60, C["high"]),
+        ("Next 90 Days — harden and compound",              d90, C["medium"]),
+    ]
+    for title, rows, colour in periods:
+        if not rows:
+            continue
+        el.append(KeepTogether([
+            p(title, ParagraphStyle("aph2", fontName=F_BOLD, fontSize=13,
+                                    textColor=colour, spaceBefore=6, spaceAfter=6, leading=16)),
+            AccentBar(height=1, color=C["border"]),
+            Spacer(1, 0.2 * cm),
+        ]))
+        tbl = _period_table(rows, st)
+        if tbl is not None:
+            el.append(tbl)
+        el.append(Spacer(1, 0.4 * cm))
+
+    # Revenue impact context if the synthesis populated one
+    revenue = (audit_data.get("action_plan") or {}).get("aggregated_revenue_impact")
+    if revenue:
+        el.append(KeepTogether([
+            p("Revenue Impact", ParagraphStyle("aprev", fontName=F_BOLD, fontSize=11,
+                                                textColor=C["ink_soft"], spaceBefore=4, spaceAfter=4, leading=14)),
+            p(str(revenue)[:800], st["body_sm"]),
+        ]))
+
+    el.append(PageBreak())
+    return el
+
+
+def build_cross_suite_critical(suite_results_data, st):
+    """Renders every critical-severity finding across suites on one dedicated page.
+    Positive-frames when no criticals exist (still renders the page — the absence is a headline)."""
+    if not suite_results_data:
+        return []
+
+    criticals = []
+    for sr in suite_results_data:
+        suite_name = sr.get("suite") or sr.get("name") or ""
+        for f in (sr.get("findings") or []):
+            if (f.get("severity") or "").lower() == "critical":
+                criticals.append((suite_name, f))
+
+    el = []
+    el.append(KeepTogether([
+        hp("Cross-Suite Critical Issues",
+           ParagraphStyle("csch", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
+                          spaceAfter=4, leading=28, keepWithNext=1)),
+        p("Every finding flagged as 'fix immediately' across all audited dimensions. These are the items actively costing the business money or exposure today.",
+          st["body_sm"]),
+        AccentBar(height=2),
+        Spacer(1, 0.4 * cm),
+    ]))
+
+    if not criticals:
+        # Positive frame — no standalone skip (decision 8.3 mirror)
+        el.append(KeepTogether([
+            p("No critical issues detected.",
+              ParagraphStyle("cscnone", fontName=F_BOLD, fontSize=13,
+                             textColor=C["low"], spaceBefore=4, spaceAfter=6, leading=18)),
+            p("Your digital presence has no immediate red flags across the audited suites. "
+              "Focus shifts to the 30/60/90 plan and quick wins below for compounding improvements.",
+              st["body_sm"]),
+        ]))
+        el.append(PageBreak())
+        return el
+
+    # Cap at 16; overflow will naturally flow to a page 2 via Platypus
+    for i, (suite_name, f) in enumerate(criticals[:16], 1):
+        # Normalise suite name for colour lookup (DB slugs vs display names)
+        colour = None
+        for display, colour_val in SUITE_COLORS.items():
+            if suite_name.lower().replace(" ", "_") == display.lower().replace(" ", "_") \
+               or suite_name.lower() == display.lower():
+                colour = colour_val
+                break
+        if colour is None:
+            colour = C["critical"]
+
+        title = str(f.get("title") or "")[:120]
+        desc  = str(f.get("description") or "")[:600]
+        rec   = str(f.get("recommendation") or "")[:500]
+        cat   = str(f.get("category") or "")
+
+        card_rows = [[
+            p(f"{i}. {title}",
+              ParagraphStyle(f"cscT{i}", fontName=F_BOLD, fontSize=11,
+                             textColor=C["ink"], leading=14)),
+            p(suite_name + (f" · {cat}" if cat else ""),
+              ParagraphStyle(f"cscB{i}", fontName=F_BOLD, fontSize=8,
+                             textColor=colour, alignment=TA_RIGHT, leading=12)),
+        ]]
+        header_tbl = Table(card_rows, colWidths=[CONTENT_W - 5.0 * cm, 5.0 * cm])
+        header_tbl.setStyle(TableStyle([
+            ("TOPPADDING",    (0, 0), (-1, -1), 2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 0),
+            ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+        ]))
+
+        el.append(KeepTogether([
+            header_tbl,
+            Spacer(1, 0.1 * cm),
+            p(desc, st["body_sm"]),
+            Spacer(1, 0.1 * cm),
+            p(f"**Fix:** {rec}", ParagraphStyle(f"cscR{i}", fontName=F_REGULAR,
+                                                     fontSize=8.5, textColor=C["body"],
+                                                     leftIndent=8, spaceBefore=0, leading=12)),
+            AccentBar(height=1, color=C["border"]),
+            Spacer(1, 0.25 * cm),
+        ]))
+
+    if len(criticals) > 16:
+        el.append(p(f"+{len(criticals) - 16} more critical findings — see the per-suite sections for detail.",
+                    ParagraphStyle("cscMore", fontName=F_REGULAR, fontSize=8.5,
+                                   textColor=C["muted"], spaceBefore=6, leading=12)))
+
+    el.append(PageBreak())
+    return el
+
+
+def build_consolidated_quick_wins(suite_results_data, st):
+    """Flattens quick_wins across all suites into one checklist. Skips page if zero wins total."""
+    if not suite_results_data:
+        return []
+    wins = []
+    for sr in suite_results_data:
+        suite_name = sr.get("suite") or sr.get("name") or ""
+        for qw in (sr.get("quick_wins") or []):
+            wins.append({
+                "title":  str(qw.get("title") or ""),
+                "owner":  str(qw.get("owner") or ""),
+                "effort": str(qw.get("effort") or ""),
+                "suite":  suite_name,
+            })
+    if not wins:
+        return []
+
+    el = []
+    el.append(KeepTogether([
+        hp("Consolidated Quick Wins",
+           ParagraphStyle("qwh", fontName=F_BOLD, fontSize=22, textColor=C["ink"],
+                          spaceAfter=4, leading=28, keepWithNext=1)),
+        p("Low-effort fixes drawn from every audited suite. Each is under 1 hour of work or under £50. Run through these first before committing to the 30-day plan.",
+          st["body_sm"]),
+        AccentBar(height=2),
+        Spacer(1, 0.4 * cm),
+    ]))
+
+    # 4-col table: suite tag + Task + Owner + Effort
+    hdr = [
+        tcell("Suite",  F_SEMIBOLD, 8, C["white"], bold=True),
+        tcell("Task",   F_SEMIBOLD, 8, C["white"], bold=True),
+        tcell("Owner",  F_SEMIBOLD, 8, C["white"], bold=True, align=TA_CENTER),
+        tcell("Effort", F_SEMIBOLD, 8, C["white"], bold=True, align=TA_CENTER),
+    ]
+    data = [hdr]
+    for w in wins:
+        data.append([
+            tcell(w["suite"][:18], F_REGULAR, 8, C["muted"]),
+            tcell(w["title"],      F_REGULAR, 8.5, C["body"]),
+            tcell(w["owner"],      F_REGULAR, 8.5, C["muted"], TA_CENTER),
+            tcell(w["effort"],     F_REGULAR, 8.5, C["muted"], TA_CENTER),
+        ])
+    # colWidths sum = CONTENT_W
+    cw = [3.0 * cm, CONTENT_W - 9.2 * cm, 3.2 * cm, 3.0 * cm]
+    tbl = Table(data, colWidths=cw, repeatRows=1)
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND",     (0, 0), (-1, 0), C["brand"]),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [C["white"], C["surface"]]),
+        ("TOPPADDING",     (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING",  (0, 0), (-1, -1), 7),
+        ("LEFTPADDING",    (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING",   (0, 0), (-1, -1), 7),
+        ("GRID",           (0, 0), (-1, -1), 0.3, C["border"]),
+        ("VALIGN",         (0, 0), (-1, -1), "MIDDLE"),
     ]))
     el.append(tbl)
     el.append(PageBreak())
@@ -1583,7 +2068,145 @@ def build_synthesized_cross_suite(directory, suite_scores, selected, st, weights
     return el
 
 
-def build_suite_section(suite_name, filename, directory, suite_scores, st):
+# ─── PDF v3 Phase 3: per-category deep-dive pages ──────────────────────────
+# Grade-adaptive density per decision 8.2 — A-grade suites show 2 pages
+# (best + worst), B show worst 3, C/D/F show all 6. Activated when the
+# structured v3 data contract supplies category_breakdown per suite.
+
+def select_categories_by_grade(category_breakdown, suite_score):
+    """Pick which categories become dedicated pages based on suite score.
+    Decision 8.2 — avoids padding strong suites with 'all good' pages and
+    giving full depth where things are broken."""
+    if not category_breakdown:
+        return []
+    # Drop malformed entries, normalise scores, sort worst-first
+    valid = [c for c in category_breakdown if isinstance(c, dict) and c.get("name")]
+    if not valid:
+        return []
+    by_score = sorted(valid, key=lambda c: int(c.get("score", 50)))
+    if suite_score >= 85:  # A — best + worst (positive framing for strong suites)
+        if len(by_score) >= 2:
+            return [by_score[0], by_score[-1]]
+        return by_score
+    if suite_score >= 70:  # B — worst 3 (improvement-focused)
+        return by_score[:3]
+    return by_score  # C/D/F — every category needs a page
+
+
+def build_category_page(category, suite_name, suite_colour, st, findings_for_category=None):
+    """Renders one category deep-dive page.
+    Strict block order (spec §4 rule 5): title/score → weight → what_we_looked_at
+    → what_we_found → findings → how_to_fix inset.
+    Coords all derive from CONTENT_W. No magic numbers."""
+    if not isinstance(category, dict) or not category.get("name"):
+        return []
+    name      = str(category.get("name", ""))
+    weight    = category.get("weight") or 0
+    score     = int(category.get("score", 0))
+    grade_ltr = str(category.get("grade") or grade(score))
+    col       = sc_color(score)
+
+    el = []
+
+    # Block 1 — suite crumb + category title + score chip
+    title_row = Table([[
+        p(name, ParagraphStyle("catT", fontName=F_BOLD, fontSize=17,
+                                     textColor=C["ink"], leading=22)),
+        p(f"{score}/100  {grade_ltr}",
+          ParagraphStyle("catS", fontName=F_BOLD, fontSize=14,
+                         textColor=col, alignment=TA_RIGHT, leading=18)),
+    ]], colWidths=[CONTENT_W - 4.2 * cm, 4.2 * cm])
+    title_row.setStyle(TableStyle([
+        ("LEFTPADDING",   (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 0),
+        ("TOPPADDING",    (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+
+    weight_pct = f"{int(float(weight) * 100)}%" if weight else "—"
+    el.append(KeepTogether([
+        p(suite_name,
+          ParagraphStyle("catCrumb", fontName=F_SEMIBOLD, fontSize=8.5,
+                         textColor=suite_colour, leading=11, spaceAfter=2)),
+        title_row,
+        AccentBar(height=2, color=col),
+        Spacer(1, 0.12 * cm),
+        p(f"Category weight: {weight_pct} of {suite_name} score",
+          ParagraphStyle("catW", fontName=F_REGULAR, fontSize=8.5,
+                         textColor=C["muted"], leading=11)),
+        Spacer(1, 0.45 * cm),
+    ]))
+
+    # Block 3 — What we looked at
+    looked = str(category.get("what_we_looked_at") or "").strip()
+    if looked:
+        el.append(KeepTogether([
+            p("What we looked at",
+              ParagraphStyle("catH1", fontName=F_BOLD, fontSize=10.5,
+                             textColor=C["ink_soft"], spaceAfter=3, leading=13)),
+            p(looked[:600], st["body_sm"]),
+        ]))
+        el.append(Spacer(1, 0.35 * cm))
+
+    # Block 4 — What we found
+    found = str(category.get("what_we_found") or "").strip()
+    if found:
+        el.append(KeepTogether([
+            p("What we found",
+              ParagraphStyle("catH2", fontName=F_BOLD, fontSize=10.5,
+                             textColor=C["ink_soft"], spaceAfter=3, leading=13)),
+            p(found[:800], st["body_sm"]),
+        ]))
+        el.append(Spacer(1, 0.35 * cm))
+
+    # Block 5 — Up to 3 matching findings
+    if findings_for_category:
+        matching = [
+            f for f in findings_for_category
+            if (f.get("category") or "").strip().lower() == name.lower()
+        ]
+        if matching:
+            el.append(p("Key findings",
+                        ParagraphStyle("catH3", fontName=F_BOLD, fontSize=10.5,
+                                       textColor=C["ink_soft"], spaceAfter=4, leading=13)))
+            for f in matching[:3]:
+                sev  = (f.get("severity") or "info").lower()
+                ft   = str(f.get("title") or "")[:110]
+                fd   = str(f.get("description") or "")[:340]
+                el.append(SeverityCard(esc(ft), esc(fd), sev, width=CONTENT_W))
+                el.append(Spacer(1, 0.15 * cm))
+            el.append(Spacer(1, 0.25 * cm))
+
+    # Block 6 — How to fix (inset, coloured left rule)
+    fix = str(category.get("how_to_fix") or "").strip()
+    if fix:
+        fix_tbl = Table(
+            [[p("How to fix",
+                ParagraphStyle("catHFix", fontName=F_BOLD, fontSize=10.5,
+                               textColor=C["ink"], spaceAfter=3, leading=13))],
+             [p(fix[:600],
+                ParagraphStyle("catHFixB", fontName=F_REGULAR, fontSize=9,
+                               textColor=C["body"], leading=13))]],
+            colWidths=[CONTENT_W]
+        )
+        fix_tbl.setStyle(TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, -1), C["surface"]),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 12),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 12),
+            ("TOPPADDING",    (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+            ("LINEBEFORE",    (0, 0), (0, -1), 3, col),
+        ]))
+        el.append(fix_tbl)
+
+    el.append(PageBreak())
+    return el
+
+
+def build_suite_section(suite_name, filename, directory, suite_scores, st,
+                         category_breakdown=None, findings=None,
+                         executive_summary=None, business_context=None):
     score = suite_scores.get(suite_name, 0)
     color = SUITE_COLORS.get(suite_name, C["brand"])
     path  = os.path.join(directory, filename)
@@ -1592,6 +2215,40 @@ def build_suite_section(suite_name, filename, directory, suite_scores, st):
     el.append(suite_header(suite_name, score, color))
     el.append(Spacer(1, 0.4*cm))
 
+    if score:
+        el.append(ScoreBar(suite_name, score, color=color))
+        el.append(Spacer(1, 0.4*cm))
+
+    # ── PDF v3 Phase 3: structured per-category deep-dive pages ───────────
+    # Gated on presence of category_breakdown. Renders grade-adaptive set of
+    # category pages per decision 8.2. Falls through to legacy markdown-dump
+    # below if category_breakdown is None/empty (local /audit skill path).
+    if category_breakdown:
+        # Business context + executive summary block (once per suite)
+        intro_el = []
+        if business_context:
+            intro_el.append(p(str(business_context)[:600],
+                              ParagraphStyle("suiteCtx", fontName=F_REGULAR,
+                                             fontSize=9.5, textColor=C["muted"],
+                                             leading=13, spaceAfter=6)))
+        if executive_summary:
+            intro_el.append(p("Executive Summary",
+                              ParagraphStyle("suiteExH", fontName=F_BOLD,
+                                             fontSize=11, textColor=C["ink_soft"],
+                                             spaceAfter=4, leading=14)))
+            intro_el.append(p(str(executive_summary)[:1200], st["body_sm"]))
+        if intro_el:
+            el.append(KeepTogether(intro_el))
+            el.append(Spacer(1, 0.45 * cm))
+            el.append(PageBreak())
+
+        selected_categories = select_categories_by_grade(category_breakdown, score)
+        for cat in selected_categories:
+            el += build_category_page(cat, suite_name, color, st,
+                                       findings_for_category=findings)
+        return el
+
+    # ── Legacy markdown-dump path (unchanged) ─────────────────────────────
     if not os.path.exists(path):
         el.append(p(f"Suite report not available for: {suite_name}", st["body_sm"]))
         el.append(PageBreak())
@@ -1599,10 +2256,6 @@ def build_suite_section(suite_name, filename, directory, suite_scores, st):
 
     with open(path, encoding="utf-8") as f:
         content = f.read()
-
-    if score:
-        el.append(ScoreBar(suite_name, score, color=color))
-        el.append(Spacer(1, 0.4*cm))
 
     SKIP = {
         "when this skill is invoked", "output directory", "commands",
@@ -1724,7 +2377,8 @@ def build_methodology(st, selected, weights):
 
 # ─── MAIN ENTRY POINT ────────────────────────────────────────────────────────
 
-def generate(directory, output_path=None, selected_suites=None):
+def generate(directory, output_path=None, selected_suites=None,
+             audit_data=None, suite_results_data=None):
     """
     Generate a PDF audit report.
 
@@ -1733,6 +2387,19 @@ def generate(directory, output_path=None, selected_suites=None):
         output_path: Output PDF path. Defaults to FULL-AUDIT-REPORT.pdf or subset name.
         selected_suites: List of suite names to include, e.g. ["Marketing", "GEO"].
                          None or empty = all 8 suites.
+        audit_data: Optional structured dict from Supabase audits row. When present,
+                    activates PDF v3 Phase 2 pages (action plan, contradictions
+                    paragraph, cross-suite critical, quick wins). Shape:
+                    {url, domain, overall_score, overall_grade, suite_scores,
+                     action_plan: {first_30_days, first_60_days, first_90_days,
+                                   contradictions, executive_narrative,
+                                   aggregated_revenue_impact}}
+        suite_results_data: Optional list of audit_suite_results rows for the v3
+                    structured flow. Each item: {suite, score, grade, findings,
+                    quick_wins, raw_markdown, business_context,
+                    executive_summary, category_breakdown, shock_stat_id}.
+                    Markdown-only callers (the local /audit skill) leave both
+                    structured params None and the legacy behaviour is preserved.
     """
     # Resolve selected suites
     all_suite_names = [s for s, _ in SUITE_ORDER]
@@ -1786,6 +2453,24 @@ def generate(directory, output_path=None, selected_suites=None):
             if name in selected and name not in suite_scores:
                 suite_scores[name] = info["score"]
 
+    # ── PDF v3: structured audit_data overrides markdown-derived scores ──
+    # When a caller passes audit_data with suite_scores/overall_score, use
+    # those authoritative values. Normalise DB slug keys ("security") to
+    # canonical display names ("Security") so the cover + scorecard render
+    # the right numbers regardless of how the API addressed suites.
+    if audit_data and isinstance(audit_data.get("suite_scores"), dict):
+        for k, v in audit_data["suite_scores"].items():
+            try:
+                score_int = int(v)
+            except (TypeError, ValueError):
+                continue
+            # Match by display name or slug
+            for disp in all_suite_names:
+                if disp.lower() == str(k).lower() or \
+                   disp.lower().replace(" ", "_") == str(k).lower():
+                    suite_scores[disp] = score_int
+                    break
+
     # Fallback scores for selected suites with no data
     for n in selected:
         if n not in suite_scores:
@@ -1796,6 +2481,12 @@ def generate(directory, output_path=None, selected_suites=None):
     if master_content and set(selected) == set(all_suite_names):
         mc_score = extract_score(master_content)
         if mc_score: overall = mc_score
+    # v3: honour explicit overall_score from audit_data if provided
+    if audit_data and audit_data.get("overall_score") is not None:
+        try:
+            overall = int(audit_data["overall_score"])
+        except (TypeError, ValueError):
+            pass
 
     st = mkstyles()
     brand, _, _ = extract_meta(master_content) if master_content else ("", "", "")
@@ -1823,20 +2514,46 @@ def generate(directory, output_path=None, selected_suites=None):
     story = []
 
     print("  Building cover...")
-    cover_el, overall = build_cover(master_content, suite_scores, suite_status, st, selected, weights)
+    # v3 Phase 4: resolve shock-stat for the cover from structured suite data
+    cover_stat_text, cover_stat_source = resolve_shock_stat(suite_results_data, suite_scores)
+    cover_el, overall = build_cover(master_content, suite_scores, suite_status, st, selected, weights,
+                                     shock_stat_text=cover_stat_text,
+                                     shock_stat_source=cover_stat_source,
+                                     audit_data=audit_data)
     story += cover_el
 
     print("  Building table of contents...")
     story += build_toc(suite_scores, st, selected)
 
     print("  Building executive briefing...")
-    story += build_executive_briefing(master_content, suite_scores, overall, st, selected)
+    story += build_executive_briefing(master_content, suite_scores, overall, st, selected,
+                                      audit_data=audit_data,
+                                      suite_results_data=suite_results_data)
 
     print("  Building scorecard + radar chart...")
     story += build_scorecard(suite_scores, suite_status, overall, st, selected, weights)
 
-    # Cross-suite analysis only makes sense for multi-suite reports
-    if len(selected) > 1:
+    # ── PDF v3 Phase 2 pages (forward-first per decision 8.4) ──────────────
+    # Each builder returns [] when its data is missing, so markdown-only
+    # callers pass straight through to the legacy path below.
+    if audit_data:
+        ap_pages = build_action_plan_30_60_90(audit_data, st)
+        if ap_pages:
+            print("  Building 30/60/90 action plan...")
+            story += ap_pages
+    if suite_results_data:
+        crit_pages = build_cross_suite_critical(suite_results_data, st)
+        if crit_pages:
+            print("  Building cross-suite critical issues...")
+            story += crit_pages
+        qw_pages = build_consolidated_quick_wins(suite_results_data, st)
+        if qw_pages:
+            print("  Building consolidated quick wins...")
+            story += qw_pages
+
+    # Legacy cross-suite synthesis — only when structured v3 data is absent
+    # (keeps local /audit markdown flow working unchanged).
+    if len(selected) > 1 and not (audit_data and suite_results_data):
         print("  Building cross-suite analysis...")
         master_sections = build_master_sections(master_content, st)
         if master_sections:
@@ -1846,11 +2563,33 @@ def generate(directory, output_path=None, selected_suites=None):
             print("    (synthesizing from individual reports)")
             story += build_synthesized_cross_suite(directory, suite_scores, selected, st, weights)
 
+    # Build a lookup keyed by normalised suite name so we can match both the
+    # DB slug ("security") and the canonical display name ("Security").
+    suite_result_lookup = {}
+    if suite_results_data:
+        for sr in suite_results_data:
+            key = str(sr.get("suite") or sr.get("name") or "").strip().lower()
+            if key:
+                suite_result_lookup[key] = sr
+                suite_result_lookup[key.replace("_", " ")] = sr
+
     for suite_name, filename in SUITE_ORDER:
         if suite_name not in selected: continue
         sc = suite_scores.get(suite_name, 0)
+
+        # Look up the v3 structured row for this suite (by display name or slug)
+        sr_match = suite_result_lookup.get(suite_name.lower())
+        cat_bd   = sr_match.get("category_breakdown") if sr_match else None
+        findings = sr_match.get("findings")           if sr_match else None
+        exec_sum = sr_match.get("executive_summary")  if sr_match else None
+        biz_ctx  = sr_match.get("business_context")   if sr_match else None
+
         print(f"  Building {suite_name} section ({sc}/100)...")
-        story += build_suite_section(suite_name, filename, directory, suite_scores, st)
+        story += build_suite_section(suite_name, filename, directory, suite_scores, st,
+                                      category_breakdown=cat_bd,
+                                      findings=findings,
+                                      executive_summary=exec_sum,
+                                      business_context=biz_ctx)
 
     print("  Building methodology...")
     story += build_methodology(st, selected, weights)
