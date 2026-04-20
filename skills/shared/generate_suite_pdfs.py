@@ -41,6 +41,7 @@ SUITE_MAP = {
     6: "Reputation",
     7: "Employer Brand",
     8: "AI Readiness",
+    9: "Social",
 }
 
 SUITE_SLUG = {
@@ -52,6 +53,7 @@ SUITE_SLUG = {
     "Reputation":     "6-REPUTATION",
     "Employer Brand": "7-EMPLOYER",
     "AI Readiness":   "8-AI-READINESS",
+    "Social":         "9-SOCIAL",
 }
 
 
@@ -81,7 +83,7 @@ def main():
             if n in SUITE_MAP:
                 nums.append(n)
             else:
-                print(f"Warning: suite number {n} out of range (1-8), skipping")
+                print(f"Warning: suite number {n} out of range (1-9), skipping")
         except ValueError:
             print(f"Warning: '{arg}' is not a valid suite number, skipping")
 

@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-04-19",
-  "generated_by": "DESKTOP-5VSTN0N",
+  "last_updated": "2026-04-20",
+  "generated_by": "Windows PC",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
     "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
@@ -9,7 +9,7 @@
     "agent-brief.md": "f0a9e19f4c8e07ba380309969d8b6a9e",
     "api-docs.md": "4cd6a7bd9b30383c6251d9400392e5f4",
     "architecture.md": "6cb8b2ce59fe7d078d602ccf33bbfa59",
-    "audit.md": "19c5e742fc3a096a36041975825bce27",
+    "audit.md": "285ab41d19d9823d7c5c47b6c3d228cb",
     "brand-dna.md": "3175d64215fe9ecddcc14794ef45e115",
     "changelog.md": "b1810e99e7843e795cb8c4ea477ba321",
     "code-to-prd.md": "445637ac9ddaa12034aa1d56b804ba05",
@@ -191,6 +191,7 @@
     "mulesoft-flow",
     "mulesoft-platform",
     "notion",
+    "orchestration",
     "outbound",
     "parallel-audit",
     "prd",
@@ -230,6 +231,8 @@
     "senior-frontend",
     "senior-qa",
     "seo-strategy",
+    "social-audit",
+    "social-report-pdf",
     "sprint-plan",
     "stock-photos",
     "sync-knowledge-base",
@@ -243,6 +246,7 @@
     "web-animations",
     "web-component",
     "web-deploy",
+    "web-design",
     "web-design-guidelines",
     "web-design-research",
     "web-email",
@@ -260,6 +264,6 @@
   "counts": {
     "commands": 61,
     "agents": 59,
-    "skills": 130
+    "skills": 134
   }
 }
