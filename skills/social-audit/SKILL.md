@@ -120,13 +120,34 @@ This context is required for platform-fit scoring. Without it, recommendations a
 
 ### 1.2 Discover Platform Profiles
 
-Check these sources in order:
+**CRITICAL: Use RAW HTML curl FIRST. Never rely on WebFetch's AI-summarised output for discovery — it strips anchor tags.** The Gloss Beauty audit (2026-04-20) failed because WebFetch returned "no social links found" when raw curl showed `instagram.com/glossbeauty.bylouise` + `facebook.com/glossbeauty.bylouise1` in the HTML. Never make this mistake again.
 
-1. **Homepage + footer** — scan for social icons/links
-2. **Contact page / About page** — secondary link locations
-3. **Google SERP** — `site:linkedin.com/company "[brand]"`, repeat for instagram.com, tiktok.com, youtube.com, facebook.com, x.com, pinterest.com, threads.net, bsky.app
-4. **Branded search** — `"[brand]" social`, `"[brand]" instagram`, etc.
-5. **Handle consistency check** — test the same handle across all 8 platforms (e.g. `@brandname`)
+**Step 1 — Raw HTML extraction (mandatory):**
+```bash
+curl -sL -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" {homepage_url} \
+  | grep -oiE 'https?://(www\.)?(instagram|facebook|tiktok|pinterest|youtube|linkedin|twitter|x\.com|threads|bsky)\.[a-z./_-]+[a-zA-Z0-9_]' \
+  | sort -u
+```
+Also grab all outbound hrefs:
+```bash
+curl -sL -A "Mozilla/5.0" {homepage_url} | grep -oE 'https?://[^"'\''<>]+' | sort -u
+```
+
+**Step 2 — Profile existence + metadata probe (per platform found):**
+Use `curl` with `-A "facebookexternalhit/1.1"` to fetch Open Graph meta — this bypasses most logged-out walls and returns follower counts from `og:description`.
+```bash
+curl -sL -A "facebookexternalhit/1.1" {profile_url} | grep -oiE 'og:(description|title)[^>]{0,400}'
+```
+Instagram returns `"X Followers, Y Following, Z Posts"` in og:description. Facebook returns likes + bio text. TikTok returns `"@handle X Followers, Y Following, Z Likes"`. Pinterest/YouTube return 302/404 if handle doesn't exist.
+
+**Step 3 — Secondary sources (only if raw HTML discovery returned nothing):**
+- Contact page + About page (raw curl, same grep)
+- Google SERP via WebSearch: `site:instagram.com "[brand]"`, repeat for each platform
+- Branded search: `"[exact brand name]" instagram`
+
+**Step 4 — Handle consistency check** — test the same handle across remaining platforms via curl HEAD request (HTTP 200 = exists, 302/404 = absent).
+
+**Golden rule:** if raw HTML contains a social URL, TRUST IT. Do not discard it because WebSearch/WebFetch couldn't confirm — those tools have indexing/summarisation blind spots that raw HTML does not.
 
 For each of the 8 target platforms, record:
 - **Status:** Present / Claimed-but-dormant (no posts in 90 days) / Not found / Handle squatted by unrelated account
