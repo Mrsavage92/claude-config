@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-04-20",
-  "generated_by": "Windows PC",
+  "last_updated": "2026-04-21",
+  "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
     "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
@@ -126,6 +126,9 @@
     "test-engineer.md": "45b64f0a7861381b618667a0753f7500"
   },
   "skills": [
+    "AUTOPILOT_LOG.md",
+    "README.md",
+    "SKILL-AUTHORING-STANDARD.md",
     "a11y-audit",
     "agent-browser",
     "ai-image-generation",
@@ -264,6 +267,6 @@
   "counts": {
     "commands": 61,
     "agents": 59,
-    "skills": 134
+    "skills": 137
   }
 }
