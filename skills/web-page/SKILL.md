@@ -59,10 +59,17 @@ If the sub-skill file does not exist: continue building but flag as NEEDS_HUMAN 
 
 **Before writing a single component: read DESIGN-BRIEF.md in the project root.**
 
-- **If DESIGN-BRIEF.md exists with a Component Lock table** → use those exact components. Do NOT call `mcp__magic__21st_magic_component_inspiration`. The `/web-design-research` phase already made these decisions for this specific product.
+- **If DESIGN-BRIEF.md exists** → read the FULL brief, not just Component Lock. These sections are MANDATORY to execute:
+  - **Aesthetic Direction** (brutalist/maximalist/luxury/editorial/etc.) — drives everything below. Match implementation complexity to the chosen flavor.
+  - **Memorability hook** — the one detail to make unforgettable. Build it deliberately.
+  - **Component Lock table** — exact components to use. Do NOT call `mcp__magic__21st_magic_component_inspiration`.
+  - **Visual Atmosphere** — implement the locked atmosphere (noise, gradient mesh, spotlight, photo, etc.) instead of any hardcoded `BackgroundGradientAnimation`.
+  - **Motion Strategy** — apply the locked philosophy (Choreographed entrance / Continuous ambient / Scroll-driven). Don't mix.
+  - **Surprise Hover element** — implement on the specified element, exactly as locked.
+  - **Decorative detail** — implement (custom cursor, drop caps, marquee, asymmetric break, etc.).
 - **If no DESIGN-BRIEF.md** → stop and run `/web-design-research` first. Do not proceed without it.
 
-The section instructions below show default MCP queries. They are fallback reference only — when a Component Lock exists, ignore the defaults entirely and use what's locked.
+The section instructions below show default MCP queries and patterns. They are fallback reference only — **when the brief locks a choice, the brief wins. The "NON-NEGOTIABLE" markers below apply only when the brief is silent on that section.**
 
 Structure: [Banner] → Nav → Hero (with animated bg) → Logo Cloud → Stats → Features → Testimonials → Pricing → FAQ → Final CTA → Footer
 
