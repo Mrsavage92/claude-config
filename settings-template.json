@@ -35,6 +35,28 @@
     "supabase"
   ],
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\gateguard.ps1\"",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\config-protection.ps1\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
