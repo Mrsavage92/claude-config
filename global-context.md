@@ -13,6 +13,15 @@ This file is synced across both machines (Mac + Windows PC) via GitHub. Update i
 
 **Verify before asserting.** Before stating anything as fact, check: "Have I actually verified this, or am I guessing?" If guessing → check first. If the user contradicts me → investigate before responding. If something looks right on the surface (HTTP 200, familiar pattern, "obvious" answer) → verify the content, not just the surface. If I don't know → "let me check", never "that doesn't exist." If I'm wrong → one sentence owning it, then fix. Never defend a shortcut.
 
+## Goal-Driven Execution
+
+**Before starting any non-trivial task, state the success criterion. Loop until it's verified — don't hand back on the first green light.**
+
+- Translate vague asks into checkable goals: "fix the bug" → "test/repro shows broken, then shows fixed"; "add feature" → "I used it end-to-end and it behaves as described"; "audit X" → "report produced, scores computed, PDF renders, findings not hallucinated"; "deploy" → "live URL returns the NEW content, not the old one".
+- For multi-step work use TodoWrite with a verify step per item. Never mark a todo complete from circumstantial evidence (compile passed, 200 OK, file written). Verify the *content or behavior* — the thing the user actually cares about.
+- If no verification is possible in this environment (no tests, no preview, can't load the URL, can't run the PDF engine), say so explicitly in the end-of-turn summary. Don't imply success.
+- Weak criteria = infinite clarifying loops. Strong criteria = finish without checking back in.
+
 ## Product Idea Gate (global — applies BEFORE any response)
 
 **Imperative: BEFORE responding to any message or suggestion that introduces a new product idea, invoke `/product-validator`.** Not "eventually." Not "at some point." Before the next response.
@@ -163,6 +172,17 @@ When a conversation clearly involves a specific project (building features, debu
 
 Run `/premium-website` for the full suite reference. Pipeline: `/saas-build` (orchestrator) → `/saas-improve` (post-launch).
 All web skills read `~/.claude/web-system-prompt.md` (Design DNA) before generating. Landing page rules and phase details are in `premium-website.md` — the contract saas-build reads. When any web-* skill adds a non-negotiable, update `premium-website.md` in the same session.
+
+## Language & Domain Rules
+
+Before writing code, load the relevant rulebook from `~/.claude/rules/`:
+
+- **TS / React / Vite** → `common/` + `typescript/` + `web/`
+- **Python / FastAPI / Supabase** → `common/` + `python/`
+- **Design-heavy frontend** → add `web/design-quality.md`
+- **Code review or PR prep** → `common/code-review.md`
+
+Index: `~/.claude/rules/README.md`. Language rules override common rules where they conflict. These enforce: no `any` in TS, Zod/Pydantic at boundaries, Supabase service role server-only, RLS on every public table, compositor-only animation, no CSS `@apply`, no mocked DB in integration tests, no silent error swallowing.
 
 ## Power User Shortcuts
 
