@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-22",
+  "last_updated": "2026-04-24",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -138,6 +138,7 @@
   },
   "skills": [
     "a11y-audit",
+    "adapt",
     "agent-browser",
     "ai-image-generation",
     "ai-ready",
@@ -146,9 +147,17 @@
     "ai-ready-automation",
     "ai-ready-data",
     "ai-ready-report-pdf",
+    "animate",
+    "audit",
     "autopilot",
+    "bolder",
     "c-level-advisor",
+    "clarify",
+    "colorize",
+    "critique",
     "dashboard-design",
+    "delight",
+    "distill",
     "employer",
     "employer-audit",
     "employer-careers",
@@ -176,6 +185,8 @@
     "geo-schema",
     "geo-technical",
     "handoff",
+    "impeccable",
+    "layout",
     "linkedin-post",
     "market",
     "market-ads",
@@ -202,8 +213,11 @@
     "mulesoft-flow",
     "mulesoft-platform",
     "notion",
+    "optimize",
     "outbound",
+    "overdrive",
     "parallel-audit",
+    "polish",
     "prd",
     "premium-website",
     "privacy",
@@ -218,6 +232,7 @@
     "project-manager",
     "project-refresh",
     "project-review",
+    "quieter",
     "ra-qm-team",
     "reputation",
     "reputation-audit",
@@ -241,6 +256,7 @@
     "senior-frontend",
     "senior-qa",
     "seo-strategy",
+    "shape",
     "social-audit",
     "social-report-pdf",
     "sprint-plan",
@@ -252,6 +268,7 @@
     "techaudit-mobile",
     "techaudit-report-pdf",
     "techaudit-speed",
+    "typeset",
     "usage-report",
     "web-animations",
     "web-component",
@@ -273,6 +290,6 @@
   "counts": {
     "commands": 70,
     "agents": 61,
-    "skills": 132
+    "skills": 149
   }
 }
