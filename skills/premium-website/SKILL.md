@@ -37,6 +37,7 @@ This file is the contract. If a rule lives only in an individual skill file and 
 | `/web-review` | Design + a11y + performance audit (target 38+/40) before deploy |
 | `/web-deploy` | Vercel deploy (Supabase handles backend) with smoke tests |
 | `/web-fix` | Fix a specific component, bug, or review failure |
+| `/web-evolve` | Score-driven continuous improvement loop. Captures screenshots, runs the binary checklist (`shared/landing-page-checklist.md`), iteratively fixes the lowest-scoring failure via the right refinement skill, reverts any fix that doesn't raise the score. Use when an existing site needs to be vastly improved without a wipe-and-rebuild. |
 | `/web-stripe` | Stripe checkout session, webhook handler, UpgradeButton + PricingCards components, trial-to-paid flow |
 | `/web-table` | TanStack Table implementation — sorting, filtering, pagination, column visibility, row selection, export |
 | `/web-onboarding` | Multi-step onboarding wizard — progress bar, step data collection, Supabase writes, trial activation |
