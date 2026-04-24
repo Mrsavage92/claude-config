@@ -64,6 +64,11 @@ This file is the contract. If a rule lives only in an individual skill file and 
 | `/web-storage` | Supabase Storage — file upload hook, drag-and-drop UI, signed URLs, avatar upload, bucket RLS policies. |
 | `/web-realtime` | Supabase Realtime — table subscriptions → TanStack Query invalidation, presence tracking, broadcast channels. |
 | `/web-rbac` | Role-based access control — org_members schema, RLS policies, permission hook, PermissionGate component, WorkspaceSwitcher. |
+| `/web-search` | CMD+K command palette (cmdk), Supabase full-text search (tsvector + GIN), Fuse.js fuzzy search, recent items, inline SearchBar. |
+| `/web-legal` | Cookie consent banner (GDPR/CCPA/AU), useConsent hook, PostHog opt-in wiring, Privacy Policy page, Terms of Service page. |
+| `/web-oauth` | OAuth social login — Google, GitHub, Apple via Supabase Auth. PKCE flow, callback route, account linking, user metadata extraction. |
+| `/web-supabase-local` | Local dev workflow — Supabase CLI, Docker stack, migration authoring, seed data, type generation, Edge Function local testing. |
+| `/web-pdf` | PDF export — @react-pdf/renderer (structured reports) or Puppeteer Edge Function (HTML capture). Download button, preview modal, lazy loading. |
 
 ---
 
