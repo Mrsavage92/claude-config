@@ -1,8 +1,12 @@
-### Phase 0.5 — Design Research (run /web-design-research) — MANDATORY
+### Phase 0.5 — Design Research — MANDATORY
 
-**This phase runs before /web-scope on EVERY new product. It is not optional.**
+**This phase runs before Phase 1 (/web-scope) on EVERY new product. It is not optional.**
 
-Read `~/.claude/skills/web-design-research/SKILL.md` in full and execute all 10 steps:
+**Action: invoke `Skill('web-design-research')` now.**
+
+Do NOT read `~/.claude/skills/web-design-research/SKILL.md` and execute its steps inline. That bypasses the skill's own enforcement, the Component Lock contract, and the 21st.dev MCP queries — and produces generic AI-SaaS output. The Skill tool exists; use it.
+
+If you find yourself about to write DESIGN-BRIEF.md from main-context knowledge, STOP — that is the failure mode that wasted the AuditHQ v2 build (April 2026 retro). The numbered steps below are a **summary of what `Skill('web-design-research')` does**, not a substitute for invoking it. They exist so you can recognise the expected outputs and verify the skill ran end-to-end:
 
 1. **Personality** — classify product into one of 8 types (Enterprise Authority / Data Intelligence / Trusted Productivity / Premium Professional / Bold Operator / Health & Care / Growth Engine / Civic/Government)
 2. **Product category** — identify the product category (from PRODUCT-CATEGORY-LIBRARY.md categories 1-8): Reputation/Reviews, Entity Intelligence, Regulatory Compliance, Procurement Intelligence, Practice Management, HR/People Ops, Finance/Accounting, Document Management. This determines the landing page structure — it is separate from personality type and supersedes the generic dark SaaS template.
@@ -25,8 +29,22 @@ Do not proceed to Phase 1 until DESIGN-BRIEF.md exists with the Component Lock t
 
 Impeccable teach reads DESIGN-BRIEF.md and creates `.agents/context.json` with the project's target audience, brand personality, and use cases. This context file is required by all refinement skills (`/typeset`, `/layout`, `/colorize`, `/animate`, `/critique`, etc.) that fire during Phase 5 (`/web-review`). Without it they produce generic output. One-time cost — permanent benefit across the entire build.
 
-If `/impeccable` skill is unavailable: log NEEDS_HUMAN "Run /impeccable teach manually before Phase 5" and continue — do not block Phase 1.
+If `Skill('impeccable')` is unavailable: HALT Phase 0.5 and surface NEEDS_HUMAN with the exact missing skill name. Do NOT continue without it — generic refinement output downstream is worse than no output, because it looks done but isn't.
 
-Log: "Phase 0.5 complete — DESIGN-BRIEF.md written, impeccable context established" to BUILD-LOG.md.
+---
+
+### Phase 0.5 completion gate (transcript-verifiable — do not self-grade)
+
+Phase 0.5 cannot be marked complete unless THIS conversation's tool-call log contains all of:
+
+- [ ] At least one `Skill('web-design-research')` invocation
+- [ ] At least 11 `mcp__magic__21st_magic_component_inspiration` invocations (one per mandatory landing section: Nav, Hero, Logo Cloud, Stats, Features, Testimonials, Pricing, FAQ, Final CTA, Footer, plus the personality-specific section from the Component Lock table)
+- [ ] One `Skill('impeccable')` invocation with `args: 'teach'`
+
+If any of the above are missing → Phase 0.5 has NOT completed. Re-invoke the missing tools. Do NOT advance to Phase 1. Do NOT write "Phase 0.5 complete" to BUILD-LOG.md.
+
+**Self-grading is forbidden.** If you find yourself about to write "DESIGN-BRIEF.md complete (synthesised in main context because subagent failed / MCP unavailable / time pressure)" — stop. That sentence IS the bug. Either the tools fired or the phase did not complete.
+
+Log to BUILD-LOG.md: "Phase 0.5 complete — Skill('web-design-research') invoked, 11/11 MCP component queries fired, Skill('impeccable teach') established context."
 
 ---
