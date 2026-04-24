@@ -1,4 +1,6 @@
-### Phase 4 — Pages (run /web-page per page, in SCOPE.md build order)
+### Phase 4 — Pages
+
+**Action: invoke `Skill('web-page')` for EACH page in SCOPE.md build order.** Do NOT read `~/.claude/skills/web-page/SKILL.md` and execute its steps inline per page. The Skill tool exists; use it once per page.
 
 This is the core loop. For EACH page in SCOPE.md build order:
 
@@ -8,7 +10,7 @@ This is the core loop. For EACH page in SCOPE.md build order:
 - Confirm the page's design brief (purpose, data, empty state, loading state, error state, signature element) is clear before writing code
 
 **4b. Build the page**
-Follow /web-page rules.
+Invoke `Skill('web-page')` with the page's name and SCOPE.md entry. The skill enforces the per-page contract — do not paraphrase its rules in main context.
 
 **Landing page — category compliance check + quality review, not rebuild:**
 The landing page was built by /web-scaffold (Phase 2). Do NOT rebuild it here.
@@ -86,8 +88,8 @@ Log: "Landing page quality review — category compliance [N/N sections] + self-
 - Settings (`/settings`) is ALWAYS built after all app pages and before /privacy + /terms — mandatory for all SaaS with auth. If SCOPE.md does not include it, add it now.
 - `/privacy` and `/terms` are ALWAYS last (static pages, minimal build time). Both MUST be registered as `React.lazy()` imports with `Suspense` fallback — NOT eager imports. Even though they are static, they are non-critical and should not inflate the initial bundle.
 
-**Dashboard page detection — read `/dashboard-design` skill before building:**
-Before writing any page that is a dashboard, analytics view, monitoring screen, or data management list, read `~/.claude/skills/dashboard-design/SKILL.md` in full. Apply these rules automatically:
+**Dashboard page detection — invoke `Skill('dashboard-design')` before building:**
+Before writing any page that is a dashboard, analytics view, monitoring screen, or data management list, **invoke `Skill('dashboard-design')` via the Skill tool**. Do NOT read `~/.claude/skills/dashboard-design/SKILL.md` and apply rules inline — the skill enforces the 28-item Pre-Ship Checklist; main-context paraphrase does not. The rules below are a summary of what the skill enforces:
 - Determine page type (Overview / Analytics / List / Detail / Settings) from the skill's Page Types table
 - Use KpiCard + Sparkline components (from skill spec) for any metric display
 - Use TanStack Query for all data fetching — never useEffect
@@ -102,24 +104,24 @@ Before writing any page that is a dashboard, analytics view, monitoring screen, 
 - Mobile: Sheet drawer sidebar on <768px, data tables collapse to card stack, touch targets min 44px, hide secondary columns
 - Run the skill's Pre-Ship Checklist (28 items) as the per-page self-review for dashboard pages instead of the standard 13-item checklist
 
-**Data table detection — read `/web-table` skill before building:**
-Before writing any page with a list of records (resources, users, transactions, logs, etc.), read `~/.claude/skills/web-table/SKILL.md`. Apply automatically:
+**Data table detection — invoke `Skill('web-table')` before building:**
+Before writing any page with a list of records (resources, users, transactions, logs, etc.), **invoke `Skill('web-table')` via the Skill tool**. Do NOT inline-execute by reading its SKILL.md. Summary of what the skill enforces:
 - Generic `DataTable<TData, TValue>` component with TanStack Table v8
 - Column definitions: selection checkbox, primary identifier, status (dot+text), date, row actions (DropdownMenu)
 - Skeleton rows while loading — never blank table or spinner
 - Bulk action bar: fixed bottom-center, visible on selection only
 - FilterBar above table, export CSV in page header
 
-**Settings page — read `/web-settings` skill before building:**
-Before writing any `/settings` route, read `~/.claude/skills/web-settings/SKILL.md`. Apply automatically:
+**Settings page — invoke `Skill('web-settings')` before building:**
+Before writing any `/settings` route, **invoke `Skill('web-settings')` via the Skill tool**. Do NOT inline-execute by reading its SKILL.md. Summary of what the skill enforces:
 - Tab layout: Profile, Billing, Team, Danger Zone
 - Profile tab: full_name, company_name (read-only email), password change
 - Billing tab: plan status, Stripe Customer Portal redirect (never custom billing UI)
 - Team tab: member list, invite by email + role, remove member dialog
 - Danger Zone: typed confirmation phrase before delete
 
-**Onboarding wizard — read `/web-onboarding` skill before building:**
-Before writing any `/setup` or `/onboarding` route, read `~/.claude/skills/web-onboarding/SKILL.md`. Apply automatically:
+**Onboarding wizard — invoke `Skill('web-onboarding')` before building:**
+Before writing any `/setup` or `/onboarding` route, **invoke `Skill('web-onboarding')` via the Skill tool**. Do NOT inline-execute by reading its SKILL.md. Summary of what the skill enforces:
 - Max 4 steps with AnimatePresence slide transition (220ms)
 - Write to `organizations` table on each step completion — never batch at end
 - Final step activates trial: sets `onboarding_complete = true`, `trial_ends_at`, `subscription_status = 'trial'`
@@ -141,9 +143,9 @@ Pass 2 — fresh eyes: re-read the page component from line 1 as if you are a ne
 
 Fix anything that fails Pass 2. Log: "Page [name] complete — self-review passed (13/13 + fresh eyes)" to BUILD-LOG.md. Only then move to the next page.
 
-## 4c.5 — Impeccable refinement sweep
+## 4c.5 — Impeccable refinement sweep (transcript-verifiable — do not self-grade)
 
-Runs after 4c self-review, before moving to the next page. Not optional — every page goes through this before being marked complete.
+Runs after 4c self-review, before moving to the next page. **Not optional, not summarisable, not self-gradable** — every page goes through real Skill tool invocations before being marked complete. Self-review against a checklist is NOT a substitute for invoking the named skills (see AuditHQ v2 retro 2026-04-24 — that build skipped this entire phase by self-grading and shipped generic output).
 
 ### Landing page and marketing pages
 
@@ -181,7 +183,16 @@ Apply HIGH/CRITICAL findings. Skip the design polish pass for app pages — they
 - Any color contrast failure (WCAG AA minimum)
 - Any empty state that shows blank space instead of a CTA
 
-Log: "Page [name] — impeccable sweep complete — [N] findings applied, [N] logged to GAP-REPORT.md" to BUILD-LOG.md.
+### Per-page 4c.5 completion gate (per page, not per phase)
+
+Each page's 4c.5 sweep cannot be marked complete unless THIS conversation's tool-call log contains, FOR THIS PAGE:
+
+- Landing/marketing pages: `Skill('critique')` + `Skill('audit')` + `Skill('adapt')` + `Skill('layout')` + `Skill('typeset')` + `Skill('colorize')` (6 invocations minimum)
+- App pages (dashboard/settings/auth/onboarding): `Skill('critique')` + `Skill('audit')` + `Skill('adapt')` (3 invocations minimum)
+
+If a sub-agent invocation fails (usage limit, timeout, error): the next move is to invoke the same `Skill('X')` directly in main context — NOT to skip and self-grade. Self-graded "applied N findings" without these tool calls in transcript is a phase failure.
+
+Log: "Page [name] — impeccable sweep complete — Skill('critique')/'audit'/'adapt' (+ design polish for landing) all invoked, [N] findings applied, [N] logged to GAP-REPORT.md" to BUILD-LOG.md.
 
 **4d. Context refresh (every 3 pages)**
 After completing every 3rd page (i.e. pages 3, 6, 9...), re-read DESIGN-BRIEF.md and SCOPE.md in full before starting the next page. Long build sessions compress early context — this prevents late pages drifting from the locked design contract.
@@ -189,7 +200,18 @@ After completing every 3rd page (i.e. pages 3, 6, 9...), re-read DESIGN-BRIEF.md
 **Per-page route registration**
 After each page, add the route with React.lazy + Suspense. Never leave routes unregistered.
 
-Log: "Phase 4 complete — all pages built" to BUILD-LOG.md once every page in the SCOPE.md inventory has been built and self-reviewed.
+### Phase 4 completion gate (transcript-verifiable)
+
+Phase 4 cannot be marked complete unless THIS conversation's tool-call log contains:
+
+- [ ] At least one `Skill('web-page')` invocation per page in SCOPE.md (count must match SCOPE.md page count exactly — no skips)
+- [ ] For any dashboard page: at least one `Skill('dashboard-design')` invocation
+- [ ] For any list-table page: at least one `Skill('web-table')` invocation
+- [ ] For `/settings`: at least one `Skill('web-settings')` invocation
+- [ ] For `/setup` or `/onboarding`: at least one `Skill('web-onboarding')` invocation
+- [ ] Per-page 4c.5 gate satisfied for every page (see above)
+
+Log: "Phase 4 complete — N pages built via Skill('web-page'), refinement sweep invoked per page" to BUILD-LOG.md.
 
 ---
 
