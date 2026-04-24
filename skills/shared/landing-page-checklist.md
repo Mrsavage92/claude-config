@@ -94,7 +94,7 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 
 | # | Check | Verify how | PASS proof format |
 |---|---|---|---|
-| D1 | `motion/react` (or `framer-motion`) imported in ≥ 80% of landing section files | grep imports, count files with motion ÷ total section files | ratio + file list |
+| D1 | `motion/react` imported in ≥ 80% of landing section files — NEVER `framer-motion` (dead package, renamed in v12) | `grep -rl "from 'motion/react'" src/components/landing/ \| wc -l` ÷ total section file count | ratio + file list |
 | D2 | At least 5 components use `whileInView` or staggered entrance | `grep -rE "whileInView\|stagger" src/components/landing/` | match count |
 | D3 | `useReducedMotion()` referenced at least once (a11y respect) | `grep -r "useReducedMotion" src/` | match list |
 | D4 | Hero has entrance animation (motion + initial/animate props) | grep hero file specifically | line + element |
