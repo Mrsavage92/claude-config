@@ -34,7 +34,17 @@ Read `references/context-protocol.md` at session start. Covers two canonical con
 | 8 | Handoff | references/phase-8-handoff.md | Domain, final log, Notion |
 
 ### How to Execute
-For each phase: read the reference file, then execute all instructions in it. The reference contains the full step-by-step details.
+For each phase: read the reference file. Where it names a Skill (e.g. `Skill('web-design-research')`) or an MCP tool (e.g. `mcp__magic__21st_magic_component_inspiration`), **invoke that tool via the actual tool call** — do NOT paraphrase, summarise, or inline-execute its steps. Reading a SKILL.md and writing a plausible output yourself is a phase failure, not phase completion. The reference contains the full step-by-step details.
+
+### Hard rule — no self-synthesis (load-bearing — do not weaken)
+
+If a phase names any of: `web-design-research`, `web-scope`, `web-scaffold`, `web-page`, `web-review`, `web-fix`, `web-deploy`, `impeccable`, `critique`, `audit`, `adapt`, `layout`, `typeset`, `colorize`, `polish`, `animate`, `distill`, `page-cro` — the Skill tool MUST be invoked for it. Likewise any phase that names `mcp__magic__21st_magic_component_inspiration`, `mcp__magic__21st_magic_component_builder`, or any other MCP tool MUST invoke that exact tool.
+
+Synthesising the expected output in main context (e.g. writing DESIGN-BRIEF.md from your own knowledge instead of running the skill, or filling in a Component Lock table without ever firing the 21st.dev MCP query) is a **phase failure**. It looks like progress and produces generic AI-SaaS output indistinguishable from no skills at all.
+
+If a Skill tool is unavailable in this environment, HALT the phase and surface NEEDS_HUMAN with the exact missing skill name. Do NOT "continue without it." Do NOT fall back to subagents that paraphrase the skill — that is the same failure in a different shape.
+
+If a background agent fails (usage limit, timeout, error): the next move is `Skill('X')` directly in main context, NOT main-context self-synthesis.
 
 ### Phase Completion Protocol (applies to every phase)
 1. Write log entry to BUILD-LOG.md

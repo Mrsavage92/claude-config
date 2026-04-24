@@ -22,6 +22,19 @@ Then run `Skill("impeccable")` as a final gate check. It should confirm the prod
 
 Log: "Phase 5a complete — impeccable sweep done, [N] issues applied" to BUILD-LOG.md.
 
+### Phase 5a completion gate (transcript-verifiable — do not self-grade)
+
+Phase 5a cannot be marked complete unless THIS conversation's tool-call log contains tool calls for ALL of:
+
+- [ ] `Skill('polish')`
+- [ ] `Skill('typeset')`
+- [ ] `Skill('colorize')`
+- [ ] `Skill('animate')`
+- [ ] `Skill('distill')`
+- [ ] `Skill('impeccable')` (final gate-check invocation)
+
+If any are missing → re-invoke the missing skills. Self-review against a 13-item checklist is NOT a substitute. Writing "self-assessed 38/40" without these tool calls in the transcript is a phase failure (see AuditHQ v2 retro, April 2026).
+
 ## Stage 5b — web-review loop
 
 **Scoring note:** `/web-review` scores x/40 — visual + a11y + performance. Different from `/review` (x/100) which covers security and correctness. Use web-review here. Optionally run /review separately — its score does not gate deploy.
