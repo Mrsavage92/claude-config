@@ -1,4 +1,6 @@
-### Phase 6 — Deploy (run /web-deploy)
+### Phase 6 — Deploy
+
+**Action: invoke `Skill('web-deploy')` for the deploy itself.** The mechanical Vercel + smoke test steps below are a checklist of what the skill does — they are NOT a substitute for invoking it. Hand-rolled `npx vercel deploy` without `Skill('web-deploy')` skips its env-var validation, post-deploy verification, and DNS handling.
 
 **6a. Pre-deploy gates**
 Run through the pre-deploy checklist in premium-website.md. All items must pass.
@@ -117,7 +119,7 @@ Read each screenshot with the Read tool to visually verify: renders correctly, n
 - Screenshot from playwright-cli serves as visual record even if agent-browser interaction passed
 - Cross-check: if agent-browser reports a route as passing but playwright-cli screenshot shows a blank/broken page, treat as failure
 
-**Step 4 — For each failed check:** use /web-fix with the exact failure description, then re-verify via both tools before marking it passed. Do not mark smoke test done until all 10 checks pass both tools.
+**Step 4 — For each failed check:** invoke `Skill('web-fix')` with the exact failure description, then re-verify via both tools before marking it passed. Do not mark smoke test done until all 10 checks pass both tools. Do NOT inline-fix in main context — `Skill('web-fix')` enforces the regression-test pattern.
 
 If agent-browser is unavailable: run playwright-cli only and log NEEDS_HUMAN "agent-browser unavailable — interactive flow checks (login, onboarding, trial banner) need manual verification. playwright-cli screenshots captured."
 If playwright-cli is unavailable: run agent-browser only and log NEEDS_HUMAN "playwright-cli unavailable — visual screenshot verification skipped."
@@ -127,7 +129,17 @@ If playwright-cli is unavailable: run agent-browser only and log NEEDS_HUMAN "pl
 supabase.auth.admin.deleteUser([saved-user-id])
 ```
 
-Log: "Phase 6d smoke test complete — all checks passed (agent-browser + playwright-cli)" to BUILD-LOG.md.
+### Phase 6d completion gate (transcript-verifiable — do not self-grade)
+
+Phase 6d cannot be marked complete unless THIS conversation's tool-call log contains:
+
+- [ ] At least 4 `mcp__puppeteer__puppeteer_navigate` invocations (one per smoke route: /, /auth, /[core-feature], /settings)
+- [ ] At least 4 `mcp__puppeteer__puppeteer_screenshot` invocations (one per route)
+- [ ] At least one `Skill('agent-browser')` invocation OR a logged NEEDS_HUMAN if the skill is unavailable
+
+`curl` exit codes and HTTP 200 checks alone are NOT sufficient — visual rendering must be verified via screenshot Read or interactive-flow walk. (See `feedback_playwright_cli_smoke_test.md` memory and AuditHQ v2 retro 2026-04-24 — that build deployed with curl-only verification and shipped a broken bento layout to production.)
+
+Log: "Phase 6d smoke test complete — N puppeteer navigations, N screenshots Read, agent-browser invoked, all checks passed" to BUILD-LOG.md.
 
 **6e. Update CORS**
 In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.

@@ -1,6 +1,8 @@
-### Phase 1 — Scope (run /web-scope)
+### Phase 1 — Scope
 
-Execute the full /web-scope process:
+**Action: invoke `Skill('web-scope')` now.** Do NOT execute the steps inline by reading `~/.claude/skills/web-scope/SKILL.md` and paraphrasing — that bypasses the skill's own contract enforcement and produces incomplete page inventories. The Skill tool exists; use it.
+
+The numbered steps below are a **summary of what `Skill('web-scope')` does**, not a substitute for invoking it:
 1. **Read DESIGN-BRIEF.md first** — all color, typography, and marketing structure decisions are already locked. Do NOT re-decide them. Import them directly from the brief.
 2. **Read MARKET-BRIEF.md (if exists)** — extract the "Must-have for v1" list. Every item on that list must map to a page in the inventory. If a must-have has no page, create one before continuing.
 3. Extract brief from user input
@@ -20,7 +22,16 @@ These are never optional. Add them to the build order in Phase 4 after `/setting
 
 **Stop condition:** if the product description is too vague to identify the core feature category, make a documented assumption and log it — do NOT ask. Format: "Brief was vague — assumed [X] based on [Y]. Correct SCOPE.md if wrong." Only ask if the product domain is completely unidentifiable after analysis.
 
-Log: "Phase 1 complete — SCOPE.md written" to BUILD-LOG.md.
+### Phase 1 completion gate (transcript-verifiable — do not self-grade)
+
+Phase 1 cannot be marked complete unless THIS conversation's tool-call log contains:
+
+- [ ] At least one `Skill('web-scope')` invocation
+- [ ] `SCOPE.md` exists at the project root with all 7 fields per page populated and `onboarding_route` set
+
+If `Skill('web-scope')` was not invoked → Phase 1 has NOT completed, even if SCOPE.md exists. Hand-written SCOPE.md from main-context knowledge is a phase failure (see AuditHQ v2 retro 2026-04-24 — same failure mode produced generic page inventories).
+
+Log: "Phase 1 complete — Skill('web-scope') invoked, SCOPE.md written with N pages" to BUILD-LOG.md.
 
 ---
 

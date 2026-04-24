@@ -1,6 +1,8 @@
-### Phase 2 — Scaffold (run /web-scaffold)
+### Phase 2 — Scaffold
 
-Execute the full /web-scaffold process using decisions from SCOPE.md and DESIGN-BRIEF.md:
+**Action: invoke `Skill('web-scaffold')` now.** Do NOT read `~/.claude/skills/web-scaffold/SKILL.md` and execute its steps inline — that bypasses the skill's own bundle-splitting, Sentry, and design-token contracts. The Skill tool exists; use it.
+
+The numbered steps below are a **summary of what `Skill('web-scaffold')` does** (with decisions sourced from SCOPE.md and DESIGN-BRIEF.md), not a substitute for invoking it:
 0. **Read DESIGN-BRIEF.md Component Lock table** — every landing page section has a specific 21st.dev component assigned. Use these during the landing page build. Do NOT re-run MCP queries.
 1. Generate all foundation files (package.json, tsconfig, vite.config, tailwind.config, index.css, main.tsx, App.tsx, CLAUDE.md)
 2. Apply bundle splitting from premium-website performance rules (vendor-react, vendor-motion, vendor-query, vendor-supabase chunks)
@@ -109,6 +111,16 @@ import '@testing-library/jest-dom'
    ```
    Wrap `<App />` with `<Sentry.ErrorBoundary fallback={<p>Something went wrong</p>}>`. Add `VITE_SENTRY_DSN=` (blank, optional) to `.env.example` with comment: `# Get from sentry.io — create project → Client Keys → DSN`.
 
-Log: "Phase 2 complete — scaffold generated" to BUILD-LOG.md.
+### Phase 2 completion gate (transcript-verifiable — do not self-grade)
+
+Phase 2 cannot be marked complete unless THIS conversation's tool-call log contains:
+
+- [ ] At least one `Skill('web-scaffold')` invocation
+- [ ] `npm install` exit 0 AND `npm run build` exit 0 (verified via Bash tool, not assumed)
+- [ ] vitest setup file present at `src/tests/setup.ts`
+
+If `Skill('web-scaffold')` was not invoked → Phase 2 has NOT completed even if foundation files exist. Hand-rolled scaffold from main-context knowledge is a phase failure (see AuditHQ v2 retro 2026-04-24).
+
+Log: "Phase 2 complete — Skill('web-scaffold') invoked, build green" to BUILD-LOG.md.
 
 ---

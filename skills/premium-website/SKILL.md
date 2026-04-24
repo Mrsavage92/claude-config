@@ -4,6 +4,14 @@ The premium website suite is the full set of web-* skills that together replace 
 
 **saas-build reads this file once at Phase 0. All rules here apply to every phase automatically. When the suite is updated, only this file needs changing.**
 
+## Cardinal rule — invoke skills, never paraphrase them
+
+Every `/skill-name` reference in this file (and in any phase reference) is a literal **Skill tool invocation directive**, not a "go read the file" instruction. When you see `/web-page`, fire `Skill('web-page')`. When you see `/critique`, fire `Skill('critique')`. When you see `mcp__magic__21st_magic_component_inspiration`, call that MCP tool — do NOT WebSearch and intuit a result.
+
+Reading a SKILL.md and synthesising its output in main context is a **suite-level failure**, not phase completion. It produces output indistinguishable from no skills at all (see AuditHQ v2 retro 2026-04-24). If a Skill tool is unavailable in this environment → HALT and surface NEEDS_HUMAN with the exact missing skill name. Do NOT continue without it. Do NOT delegate to a generic subagent that paraphrases the skill — same failure, different shape.
+
+If a background agent fails (usage limit, timeout, error): the next move is `Skill('X')` directly in main context, NOT main-context self-synthesis.
+
 ## Maintenance Rule
 
 Whenever a web-* skill is created or meaningfully updated (new non-negotiable, new MCP call, new checklist item, new pattern), the session that made the change MUST:
@@ -132,7 +140,9 @@ The impeccable suite operates as a second pass over work the build skills produc
 | /saas-improve P3 (delight) | No personality/joy | `/delight` |
 | /saas-improve Revenue agent | Generic or weak copy | `/clarify` |
 
-**Run `/impeccable teach` once per project to establish design context.** Without it, impeccable skills produce generic output — they need the target audience, brand personality, and use cases to make good decisions.
+**Invoke `Skill('impeccable')` with `args: 'teach'` once per project to establish design context.** Without it, impeccable skills produce generic output — they need the target audience, brand personality, and use cases to make good decisions. The "teach" mode is mandatory; skipping it is the silent failure mode that wasted weeks of refinement-skill development (AuditHQ v2 retro 2026-04-24).
+
+**Every entry in the table above is a `Skill('X')` tool call when its trigger fires** — not a "consider running" suggestion. If `/web-review` flags Visual Quality < 8/10 with Typography Poor → fire `Skill('typeset')`. If a sub-agent fails → fire the same `Skill()` directly in main context. Self-grading "I would have run typeset but I'll just fix the typography myself" is a phase failure.
 
 ---
 
@@ -195,7 +205,9 @@ Full quality gate loop, page type detection table, dashboard page rules, skill t
 
 - **Inventing sections from scratch instead of 21st.dev** — every landing page section must come from the registry in `references/component-registry.md`. No exceptions.
 - **Skipping per-page self-review** — both passes are required (13-item checklist + 5-question fresh-eyes). Pass 1 alone is not sufficient.
-- **Deploying without 38/40 quality gate** — `web-review` must score 38+ before `/web-deploy` runs. Never skip or lower the bar.
+- **Self-grading instead of invoking the skill** — writing "I assessed this 38/40 against the checklist" without firing `Skill('web-review')` is a phase failure, not phase completion. Same for any refinement skill. The transcript MUST contain the tool call.
+- **Reading a SKILL.md to "execute its steps inline"** — that is the bypass pattern that produced AuditHQ v2's generic landing. Always invoke via the Skill tool.
+- **Deploying without 38/40 quality gate** — `Skill('web-review')` must score 38+ before `Skill('web-deploy')` runs. Never skip or lower the bar.
 - **Hardcoded hex/rgb instead of CSS variables** — every color must use `hsl(var(--token))`. Raw Tailwind color classes (`text-gray-500`) must be replaced with semantic tokens (`text-muted-foreground`).
 - **Duplicating rules in individual skill files instead of here** — if a rule is not in this file (or its references), saas-build will not enforce it. Individual skill files may elaborate; they must not contradict or replace this contract.
 
