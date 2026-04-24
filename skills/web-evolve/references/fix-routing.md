@@ -100,12 +100,11 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 
 ## Cross-cutting rules
 
-1. **Never invoke a skill listed here without first reading its SKILL.md to know what context to pass.**
-2. **Multiple checks routing to the same skill** in one iteration → batch them: one `Skill('typeset')` call passing a list of failures, not 5 separate calls.
-3. **If a fix skill is unavailable** → HALT, log NEEDS_HUMAN with skill name, skip this check, continue with next priority. Do NOT inline-fix in main context.
-4. **`mcp__magic__21st_magic_component_inspiration` is FREE to call** — call it generously. Cost concern doesn't outweigh anti-slop value.
-5. **If a fix skill returns "no improvement available" 3 times in a row for the same check** → mark the check WONTFIX with the reason and continue. Don't loop forever.
-6. **Surgical Edit beats full skill re-run.** For any check that's a one-line markdown or file edit (e.g. A10 missing field, B3 missing header comment, E1 missing skip-nav attribute) — use the `Edit` tool directly. Only invoke the heavier skill (`web-design-research`, `colorize`, `typeset`) when the fix is genuinely structural, not cosmetic.
+1. **Multiple checks routing to the same skill** in one iteration → batch them: one `Skill('typeset')` call passing a list of failures, not 5 separate calls. Pass the specific check-IDs and FAIL proof as context arguments so the skill knows exactly what to target. Do NOT read the skill's SKILL.md and synthesise inline — that is the failure pattern.
+2. **If a fix skill is unavailable** → HALT, log NEEDS_HUMAN with skill name, skip this check, continue with next priority. Do NOT inline-fix in main context.
+3. **`mcp__magic__21st_magic_component_inspiration` is FREE to call** — call it generously. Cost concern doesn't outweigh anti-slop value.
+4. **If a fix skill returns "no improvement available" 3 times in a row for the same check** → mark the check WONTFIX with the reason and continue. Don't loop forever.
+5. **Surgical Edit beats full skill re-run.** For any check that's a one-line markdown or file edit (e.g. A10 missing field, B3 missing header comment, E1 missing skip-nav attribute) — use the `Edit` tool directly. Only invoke the heavier skill (`web-design-research`, `colorize`, `typeset`) when the fix is genuinely structural, not cosmetic.
 
 ---
 
