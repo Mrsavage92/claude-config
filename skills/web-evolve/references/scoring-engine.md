@@ -33,7 +33,8 @@ For each row in the checklist:
 ## Score computation
 
 ```
-raw_score = (passed_count / (total_count - n/a_count)) × 100
+denominator = total_count - n/a_count - wontfix_count
+raw_score = (passed_count / denominator) × 100
 
 # Apply veto caps in order
 if any A-category check is FAIL:
@@ -44,14 +45,18 @@ else:
   score = raw_score
 ```
 
-**Always emit the raw_score AND the final score, with veto reason if applied.**
+**Always emit the raw_score AND the final score AND name the check holding the cap if one is active.**
 
-Example output:
+Example output format:
+
 ```
-Raw: 47/50 = 94.0
-Veto: A4 FAIL → cap 60
-Final: 60/100
+Raw: 47/49 = 95.9% (2 N/A, 0 WONTFIX)
+Cap: B5 FAIL → 80
+Final: 80/100 (raw 95.9% under cap)
+Cap-holder reason: "No mcp__magic__21st_magic_component_builder invocations this session."
 ```
+
+**Transparency rule:** when the cap is active and the raw score is materially higher than the displayed score (delta > 5 points), BOTH numbers MUST appear in the user-facing output for that iteration. This is how iter 2 + iter 3 of AuditHQ v2 retro should have displayed — "80 → 80" hid 8 points of real progress.
 
 ---
 
@@ -93,19 +98,44 @@ After a fix is applied + committed:
 Every iteration MUST emit this block to BUILD-LOG.md:
 
 ```markdown
-### Evolution iteration N — [timestamp]
+### Evolution iteration N — [timestamp] [mode: backfill | greenfield]
 Page: [page]
-Target check: [check-id] — [check name]
-Skill invoked: [Skill name + args]
-Pre-score: [N]/100
-Post-score: [M]/100
-Delta: [+X / -X / 0]
-Decision: [KEPT | REVERTED | SKIPPED]
-Reason (if REVERTED/SKIPPED): [text]
+Target check(s): [check-id] — [check name]  (list all if batch)
+Skill(s) invoked: [Skill name + args]  (list all if batch)
+Pre-score: [capped]/100 (raw [raw]%)
+Post-score: [capped]/100 (raw [raw]%)
+Delta capped: [+X / -X / 0]
+Delta raw: [+X% / -X% / 0]  ← MUST appear, especially when capped hides progress
+Decision: [KEPT | REVERTED | SKIPPED | WONTFIX]
+Reason (if REVERTED/SKIPPED/WONTFIX): [text]
 Commit: [sha or "(reverted)"]
 ```
 
 No iteration may be omitted from this log. The audit trail IS the proof.
+
+---
+
+## Batch-edit pattern (same-skill fixes across N files)
+
+When multiple checks in one category route to the same fix skill (e.g. C5 + C7 + C8 all route to `Skill('polish')` or `Skill('colorize')`), or when one check requires the same edit across many files (e.g. B3 provenance headers across 14 landing components):
+
+1. **Group them into a single iteration**, not N iterations.
+2. **Fire parallel Edit tool calls** in one message where possible — 14 header comments added in one iter-3 batch is cheaper than 14 separate iterations.
+3. **Single commit** summarising all batched fixes — message format: `evolve: iter N — batch fix [check-ids] across [N] files`.
+4. **Single re-score** after all batch edits land — not one per file.
+
+This is how AuditHQ v2 iter 3 covered B3 + B6 across 14 files in one iteration with zero regressions. Document in the iteration entry what was batched so the next session sees the pattern.
+
+---
+
+## Vision-check confidence
+
+Checks F4 / F5 / F6 / A9 use Claude-vision inspection of screenshots. They cannot be programmatically verified pixel-by-pixel. Guidance:
+
+- Mark vision checks with `(vision-confidence)` suffix in the receipt
+- Include the screenshot file path AND a specific named observation ("5 text sizes visible: hero headline ~88px, eyebrow ~11px, sub ~16px, CTA button ~14px, trust micro ~10px")
+- If vision check disagrees with user feedback, user vision wins — re-run the check and update
+- Do NOT escalate vision-check PASS to high confidence — known soft spot, treat as advisory
 
 ---
 
@@ -115,9 +145,10 @@ No iteration may be omitted from this log. The audit trail IS the proof.
 |---|---|
 | Overall score ≥ target | Exit Phase C, proceed to Phase D (visual diff log + deploy) |
 | All failed checks attempted, no further improvement | Log STUCK with remaining failures, exit |
-| Max iterations hit (default 20) | Log TIMEOUT with current state, exit |
-| Same skill failed 3× on same check | Mark check WONTFIX, continue with next priority |
+| Max iterations hit (greenfield 8 / backfill 20) | Log TIMEOUT with current state, exit |
+| Same skill failed 3× on same check | Auto-mark check WONTFIX with "skill exhausted" reason, continue with next priority |
 | Critical regression (build breaks twice in a row) | HALT, log STUCK, surface NEEDS_HUMAN |
+| User marks a check WONTFIX with justification | Log WONTFIX entry, exclude from denominator, continue |
 
 ---
 

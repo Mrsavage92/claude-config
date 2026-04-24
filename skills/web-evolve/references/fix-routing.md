@@ -17,7 +17,7 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 | A7 | Flat hero background | `Skill('overdrive')` first attempt; `Skill('animate')` if overdrive too aggressive | atmospheric background per DESIGN-BRIEF Step 6b.1 |
 | A8 | Raw shadcn Card spam | `mcp__magic__21st_magic_component_inspiration` then `Skill('web-component')` to swap | source bespoke section components |
 | A9 | No product visual in hero | `mcp__magic__21st_magic_component_inspiration` for "hero with product mockup" + `Skill('web-component')` to install + `Skill('animate')` to enliven | data-forward heroes need a real visual |
-| A10 | Aesthetic = "modern SaaS" / unset | HALT — invoke `Skill('web-design-research')` to re-do Step 1b aesthetic lock | this is a design-brief failure, not a code fix |
+| A10 | `aesthetic_direction` field missing from DESIGN-BRIEF.md | **`Edit` tool direct** to add the field (surgical one-line fix) — only escalate to `Skill('web-design-research')` Step 1b if the existing brief is genuinely unset/wrong. A missing field is an Edit, not a full skill re-run. | proven on AuditHQ v2 iter 1 — surgical Edit cleared the hard veto in one iteration |
 
 ---
 
@@ -29,8 +29,8 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 | B2 | Component Lock has placeholder values | `Skill('web-design-research')` step 6 | same |
 | B3 | Section file missing 21st.dev source comment | `mcp__magic__21st_magic_component_inspiration` to confirm the source, then `Skill('web-fix')` to add the header comment | provenance is a one-line file edit |
 | B4 | Transcript missing 11× MCP calls | This means design research was bypassed in the original build. Invoke `Skill('web-design-research')` to redo Phase 0.5 properly. | retroactive research |
-| B5 | No 21st.dev component_builder invocations | `mcp__magic__21st_magic_component_builder` per section that has been customised — codify the builder usage | establishes provenance |
-| B6 | Custom component without "no 21st.dev match" justification | `Skill('web-fix')` to add justification header OR `mcp__magic__21st_magic_component_inspiration` to find a fit and replace | one of two outcomes |
+| B5 | No 21st.dev component_builder invocations | **If backfill mode: mark N/A** per mode-detection rule in `shared/landing-page-checklist.md` (section already exists — builder is for fresh installs). **If greenfield: invoke `mcp__magic__21st_magic_component_builder`** per customised section to codify builder usage. | backfill retrofits should not require builder calls — retro correction from AuditHQ v2 |
+| B6 | (merged into B3 — removed 2026-04-24 retro) | N/A — see B3 | redundant check removed |
 | B7 | Component pattern drifted from Lock | `Skill('web-component')` to re-source from Lock OR update DESIGN-BRIEF if the change was deliberate | reconcile |
 | B8 | New session lost 21st.dev citation | `Skill('web-fix')` to restore the comment from git history | undo accidental wipe |
 
@@ -105,3 +105,19 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 3. **If a fix skill is unavailable** → HALT, log NEEDS_HUMAN with skill name, skip this check, continue with next priority. Do NOT inline-fix in main context.
 4. **`mcp__magic__21st_magic_component_inspiration` is FREE to call** — call it generously. Cost concern doesn't outweigh anti-slop value.
 5. **If a fix skill returns "no improvement available" 3 times in a row for the same check** → mark the check WONTFIX with the reason and continue. Don't loop forever.
+6. **Surgical Edit beats full skill re-run.** For any check that's a one-line markdown or file edit (e.g. A10 missing field, B3 missing header comment, E1 missing skip-nav attribute) — use the `Edit` tool directly. Only invoke the heavier skill (`web-design-research`, `colorize`, `typeset`) when the fix is genuinely structural, not cosmetic.
+
+---
+
+## Batch-fix recipes (same-skill / same-edit patterns)
+
+When the priority queue shows multiple failures routing to one tool, batch them into one iteration:
+
+| Pattern | Example | How to batch |
+|---|---|---|
+| **Same refinement skill across categories** | C5 + C7 + C8 all → `Skill('polish')` / `Skill('colorize')` / `Skill('typeset')` | Fire one skill call per skill type per iteration, passing the full list of failures as context. Not one skill call per file. |
+| **Same edit across N files** | B3 "add 21st.dev header" across 14 landing files | Fire parallel `Edit` calls in one message. Single commit. Single re-score. (AuditHQ v2 iter 3 pattern.) |
+| **Category sweep** | 4 failures in Cat C (theme consistency) | One `Skill('polish')` invocation with all 4 passed as structured input. Not 4 separate invocations. |
+| **MCP lookup batch** | 11 sections needing 21st.dev sourcing | Fire all 11 `mcp__magic__21st_magic_component_inspiration` queries in one message (AuditHQ v2 iter 2 pattern). |
+
+**Golden rule:** if you catch yourself writing "iteration N: fix [file1], iteration N+1: fix [file2]" with the same skill/edit both times — they should be one iteration.
