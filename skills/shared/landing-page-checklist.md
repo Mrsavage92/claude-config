@@ -2,10 +2,40 @@
 
 The single source of truth for `Skill('web-evolve')` and any score claim about a landing page.
 
-**Score = `passed_checks / (total_checks - n/a_checks)` × 100.**
-A score without the full checklist filled in (PASS / FAIL / N/A per row, with proof) is **invalid**. Phase fails. Self-grading is forbidden.
+**Score = `passed_checks / (total_checks - n/a_checks - wontfix_checks)` × 100.**
+A score without the full checklist filled in (PASS / FAIL / N/A / WONTFIX per row, with proof) is **invalid**. Phase fails. Self-grading is forbidden.
 
 Every check is binary. Every check has a verification method. Every PASS must cite the proof (grep result, count, screenshot path, line number).
+
+---
+
+## Mode detection (run FIRST, before Category A)
+
+`/web-evolve` runs in one of two modes. Some checks behave differently per mode.
+
+**Greenfield mode** — the repo is brand-new OR being rebuilt. No pre-existing `DESIGN-BRIEF.md`. All components are being freshly sourced.
+
+**Backfill mode** — an existing repo is being evolved. `DESIGN-BRIEF.md` already exists. Components already live in `src/components/`. No new sections being scaffolded.
+
+**Auto-detection rule:**
+
+```
+if file_exists("DESIGN-BRIEF.md") AND directory_not_empty("src/components/landing/"):
+  mode = "backfill"
+else:
+  mode = "greenfield"
+```
+
+Override with `--mode=greenfield` or `--mode=backfill` flag if auto-detect is wrong.
+
+**Per-mode rules:**
+
+| Check | Greenfield | Backfill |
+|---|---|---|
+| B5 (component_builder invocations) | MUST PASS — new components need builder provenance | **N/A — backfill mode** (existing sections aren't being newly built; the builder is for fresh installs). Mark N/A with reason "backfill mode — section already exists in repo." |
+| Iteration cap (default) | 8 | 20 |
+
+Mode MUST be declared in the iteration 0 baseline receipt. Every iteration must echo mode for the audit trail.
 
 ---
 
@@ -36,12 +66,12 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 |---|---|---|---|
 | B1 | `DESIGN-BRIEF.md` has a Component Lock table with ≥ 11 entries | Read DESIGN-BRIEF.md, count rows in Component Lock | row count |
 | B2 | Every Component Lock row has a non-placeholder 21st.dev component name (not "TBD" / "Default") | Read table, check each value | row-by-row pass |
-| B3 | Each landing section file has a header comment naming its 21st.dev source | `grep -l "21st.dev" src/components/landing/*.tsx` should match section count | file list + count |
+| B3 | Every landing section file has provenance — either a 21st.dev source citation OR a "no match" justification in the header (merged from old B3+B6) | `for f in src/components/landing/*.tsx; do head -5 "$f" \| grep -qE "21st.dev\|no 21st.dev match" \|\| echo "MISSING: $f"; done` returns empty | empty loop output + file count matches |
 | B4 | Build session transcript contains ≥ 11 `mcp__magic__21st_magic_component_inspiration` invocations (one per mandatory section) | Read BUILD-LOG.md tool-call log | invocation count |
-| B5 | Build session transcript contains ≥ 1 `mcp__magic__21st_magic_component_builder` invocation per section that ended up customised | BUILD-LOG.md grep | count |
-| B6 | Custom components that DON'T cite a 21st.dev source must have a written reason in the file header (e.g. "no suitable 21st.dev match found because…") | grep section files for "21st.dev" OR "no 21st.dev match" header | every section file passes |
-| B7 | Each section file's component pattern matches its DESIGN-BRIEF Component Lock entry (not drifted) | Read both, compare per row | row-by-row pass |
-| B8 | New session that modifies a section MUST re-cite its 21st.dev source (no silent edits losing provenance) | git diff check + grep | passes if 21st.dev comment preserved |
+| B5 | Build session transcript contains ≥ 1 `mcp__magic__21st_magic_component_builder` invocation per section that ended up customised | BUILD-LOG.md grep. **N/A in backfill mode** (see Mode detection above) | count OR "N/A — backfill" |
+| B6 | (merged into B3 — removed to eliminate redundancy with B3) | N/A — removed 2026-04-24 retro | skip |
+| B7 | Each section file's component pattern matches its DESIGN-BRIEF Component Lock entry — verify by grep-extracting imported component names from each `.tsx` file and comparing to the Lock row for that section | `grep -hE "^import .+ from" src/components/landing/[Name].tsx` → cross-reference Lock row for [Name] | table of section → expected-component → found-component, all rows match |
+| B8 | New session that modifies a section MUST re-cite its 21st.dev source (no silent edits losing provenance) | git diff HEAD~1 -- src/components/landing/*.tsx \| grep -E "^-.*21st.dev" returns empty | no provenance lines removed |
 
 ---
 
@@ -114,52 +144,73 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 
 ---
 
-## Total: 50 checks
+## Total: 51 checks (after 2026-04-24 retro — B6 merged into B3)
 
-| Category | Count | Weight (rough) |
+| Category | Count | Weight |
 |---|---|---|
-| A. Anti-Slop | 10 | hard veto on FAIL |
-| B. 21st.dev Sourcing | 8 | high (any FAIL caps at 80) |
+| A. Anti-Slop | 10 | hard veto on FAIL (cap 60) |
+| B. 21st.dev Sourcing | 7 (was 8, B6 merged) | soft veto on FAIL (cap 80) |
 | C. Theme Consistency | 8 | medium |
 | D. Animation | 6 | medium |
-| E. Section Completeness | 9 | medium |
-| F. Visual Quality | 6 | medium |
+| E. Section Completeness | 10 (corrected — was 9 in summary, 10 in body) | medium |
+| F. Visual Quality | 6 | medium (4 vision-led, see confidence note below) |
 | G. A11y & Perf | 4 | medium |
 
 **Score formula:**
-- If any A check fails: `score = min(60, raw_score)`
-- If any B check fails: `score = min(80, raw_score)`
-- Otherwise: `score = raw_score = (passed / (total - n/a)) × 100`
+
+```
+passed = count of PASS
+denominator = total_checks - n/a_checks - wontfix_checks
+
+raw_score = (passed / denominator) × 100
+
+if any A check is FAIL:   score = min(60, raw_score)
+elif any B check is FAIL: score = min(80, raw_score)
+else:                     score = raw_score
+```
 
 **Target score:** 90/100 by default. 95+ for "Stripe/Linear quality" mode.
+
+**Vision-check confidence:** F4 / F5 / F6 / A9 rely on Claude-vision inspection of screenshots. Mark these with `(vision-confidence)` suffix in receipts so future reviewers know to re-verify. The skill cannot yet pixel-count or programmatically verify visual hierarchy — known limitation.
 
 ---
 
 ## Output format (mandatory — emitted by `Skill('web-evolve')` every iteration)
 
 ```
-## Landing page score — iteration N — [timestamp]
+## Landing page score — iteration N — [timestamp] [mode: backfill | greenfield]
 
-Raw: 42/47 checks passed (3 N/A) = 89%
-Veto cap applied: A4 FAIL → capped at 60
-Final score: 60/100
+Raw: 45/48 checks passed (2 N/A, 1 WONTFIX) = 93.75%
+Veto cap applied: B5 FAIL → capped at 80
+Final score: 80/100 (raw 93.75% — see why veto is active below)
 
 ### Category breakdown
-- A. Anti-slop: 9/10 (FAIL: A4)
-- B. 21st.dev: 8/8 ✓
+- A. Anti-slop: 10/10 ✓
+- B. 21st.dev: 4/6 (1 N/A, 2 FAIL: B3, B5)
 - C. Theme consistency: 7/8 (FAIL: C4)
 - D. Animation: 6/6 ✓
-- E. Sections: 9/9 ✓
-- F. Visual: 6/6 ✓
+- E. Sections: 10/10 ✓
+- F. Visual: 6/6 ✓ (4 vision-confidence)
 - G. A11y/Perf: 4/4 ✓
 
+### Veto holding the cap
+- B5: FAIL — no mcp__magic__21st_magic_component_builder invocations. (If backfill mode: this should be N/A — check mode detection logic.)
+
 ### Failures (with proof)
-- A4: hsl(213 94% 58%) found in `src/styles/index.css:42` — `--brand: 213 94% 58%`. Need to change.
-- C4: hex color `#0a0a0a` found in 6 files (`src/components/landing/Footer.tsx:14, ...`). Replace with `var(--bg)`.
+- B3: `src/components/landing/NewCard.tsx` has no 21st.dev source header (grep returned MISSING: ...)
+- B5: zero `mcp__magic__21st_magic_component_builder` calls in BUILD-LOG.md
+- C4: hex `#0a0a0a` in `src/components/landing/Footer.tsx:14`. Replace with `var(--bg)`.
+
+### N/A items (with justification)
+- (none this iteration)
+
+### WONTFIX items (with audit trail)
+- (none this iteration — if you mark one, it requires a user-justified BUILD-LOG entry)
 
 ### Next fix queue (priority order)
-1. A4 — hard veto, fix first
-2. C4 — score gain +2.1 points
+1. B3 — provenance header missing (1 file)
+2. B5 — requires component_builder call OR mode switch to backfill
+3. C4 — hex → token refactor
 ```
 
-Without this format in the BUILD-LOG, score claims are invalid.
+Without this format (including raw score, mode, and cap-holder) in the BUILD-LOG, score claims are invalid.

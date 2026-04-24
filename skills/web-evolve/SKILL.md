@@ -20,7 +20,7 @@ Use this when an existing website needs to be made vastly better without a wipe-
 
 ## Cardinal rules (load-bearing — do not weaken)
 
-1. **No score without receipts.** Every score emitted by this skill MUST be accompanied by the full checklist with PASS / FAIL / N/A for every row, plus the proof for each PASS (grep result, count, screenshot path). A score number alone is invalid output. (See AuditHQ v2 retro 2026-04-24 — "98/100 self-graded" was the failure pattern this skill exists to kill.)
+1. **No score without receipts — AND no capped score without showing the raw score underneath.** Every score emitted by this skill MUST show BOTH the capped final score AND the raw score percentage AND the specific check holding the cap. Iterations that do real work but hide progress behind a veto cap are demoralising — the user must see "raw 88%, capped 80 because B5 FAIL" so progress is legible. Every score is also accompanied by the full checklist with PASS / FAIL / N/A / WONTFIX per row, plus the proof for each PASS (grep result, count, screenshot path). A score number alone is invalid output. (See AuditHQ v2 retro 2026-04-24 — "98/100 self-graded" was the failure pattern; "iter 2 + iter 3 showed 80 → 80 and hid real work" was the secondary pattern.)
 
 2. **The checklist is the authority, not Claude.** Read `~/.claude/skills/shared/landing-page-checklist.md` (or `app-page-checklist.md` for app pages) at start. Run every check. Compute score from results. **Do not invent or skip checks.** If a check is genuinely N/A for this product, mark it N/A with a one-line reason — do not silently drop it.
 
@@ -30,7 +30,9 @@ Use this when an existing website needs to be made vastly better without a wipe-
 
 5. **Theme consistency.** If the project uses a themed `<Button>` with variants, every fix MUST use the same Button. Don't introduce a different button. Don't bypass the design tokens. Category C catches this.
 
-6. **Score-anchored regression guard.** If a fix doesn't raise the score, REVERT the commit. Don't "trust the change is qualitatively better." The score is the contract.
+6. **Score-anchored regression guard.** If a fix doesn't raise the score, REVERT the commit. Don't "trust the change is qualitatively better." The score is the contract. **Exception:** if the fix moved the target check from FAIL → PASS (so the raw score climbed under a veto cap, even if the displayed score didn't change), KEEP the commit and log the raw delta — real progress counts even when the cap hides it.
+
+7. **Explicit WONTFIX path.** When a check genuinely doesn't apply to this repo AND N/A is too narrow (e.g. B5 in backfill when mode detection couldn't flip it automatically), the user can mark it WONTFIX with a one-sentence justification. WONTFIX items are excluded from the denominator (like N/A) but produce an audit-trail entry in BUILD-LOG.md: `check-id WONTFIX — [reason] — [user confirmation]`. Cannot be auto-applied; requires user decision.
 
 ---
 
@@ -40,18 +42,20 @@ Use this when an existing website needs to be made vastly better without a wipe-
 - **Live URL** — production deploy URL to capture baseline screenshots from (read from BUILD-LOG.md or passed as arg)
 - **Target score** — default 90, raise to 95 for "Stripe/Linear quality" mode
 - **Scope** — default = all landing/marketing pages auto-detected from `src/pages/`. App pages are off-limits unless explicitly listed.
-- **Max iterations** — default 20
+- **Mode** — auto-detected (`backfill` if DESIGN-BRIEF.md exists AND src/components/landing/ is populated; otherwise `greenfield`). Override with `--mode=backfill` or `--mode=greenfield`.
+- **Max iterations** — default depends on mode: **greenfield = 8, backfill = 20** (backfill requires more iterations because per-file provenance backfill + component swaps add up). Tell the user the mode + cap at the start so expectations match reality.
 
 ---
 
 ## Phase A — Survey & guard rails
 
 1. Read `CLAUDE.md`, `package.json`, `DESIGN-BRIEF.md` (if exists), `SCOPE.md`, `BUILD-LOG.md`.
-2. Auto-classify pages: marketing (in scope) vs app/dashboard (off-limits).
-3. Confirm target page list with user via `Skill('AskUserQuestion')` — one prompt, then autonomous.
-4. Verify the deployed URL is reachable: `curl -s -o /dev/null -w "%{http_code}" [URL]` must return 200.
-5. Create working directory `.evolution/` for screenshots, scores, diffs, baseline backups.
-6. **HALT** if no DESIGN-BRIEF.md exists — `Skill('web-evolve')` requires a design contract to score against. Surface NEEDS_HUMAN: "Run `Skill('web-design-research')` first to produce DESIGN-BRIEF.md."
+2. **Detect mode** per `~/.claude/skills/shared/landing-page-checklist.md` Mode detection section. Backfill = DESIGN-BRIEF.md exists AND src/components/landing/ is populated. Greenfield = otherwise. Echo the detected mode AND the iteration cap to the user as the first output line.
+3. Auto-classify pages: marketing (in scope) vs app/dashboard (off-limits).
+4. Confirm target page list with user via `Skill('AskUserQuestion')` — one prompt, then autonomous. Include mode confirmation: "Detected [mode] mode, iteration cap [N]. Proceed?"
+5. Verify the deployed URL is reachable: `curl -s -o /dev/null -w "%{http_code}" [URL]` must return 200.
+6. Create working directory `.evolution/` for screenshots, scores, diffs, baseline backups.
+7. **HALT** if mode = greenfield AND no DESIGN-BRIEF.md exists — `Skill('web-evolve')` requires a design contract to score against. Surface NEEDS_HUMAN: "Run `Skill('web-design-research')` first to produce DESIGN-BRIEF.md." (In backfill mode this is unreachable because the mode detection requires DESIGN-BRIEF.md to exist.)
 
 ---
 
