@@ -29,17 +29,22 @@ If output is empty (no modified or untracked files in src/): the fix made no cha
 
 If output shows changes outside `src/` only (e.g. only lock files or config): also write FAILED — the fix didn't touch source files.
 
-### 2. Identify modified source files
+### 2. Identify modified files
 
-Extract the list of modified files from `git status --short` output. Filter to only files within `src/`. These are the files to stage.
+Extract the list of modified files from `git status --short` output. Stage files from these locations:
+- `src/` — all modified source files
+- `DESIGN-BRIEF.md` — if modified (some fixes update aesthetic direction, trend pulse, or component lock)
+- `public/` — if modified (fonts, images, icons added by fix skills)
 
-### 3. Stage source files only
+Do NOT stage: `.env`, `node_modules/`, `*.lock`, `BUILD-LOG.md`, `EVOLUTION-LOG.md` (orchestrator owns those), `.evolution/`.
+
+### 3. Stage files
 
 ```bash
-git -C "{project_path}" add {space-separated list of src/ files}
+git -C "{project_path}" add {space-separated list of files from step 2}
 ```
 
-Never use `git add -A`, `git add .`, or `git add src/` — stage only the specific files identified in step 2.
+Never use `git add -A` or `git add .` — stage only the specific files identified in step 2.
 
 ### 4. Commit
 
