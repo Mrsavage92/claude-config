@@ -190,11 +190,15 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
    f) Write DESIGN-BRIEF.md to project_path with: personality, aesthetic_direction,
       colour palette (observed), typography (observed), hero description (from screenshot),
       and a ## Trend Pulse stub with search_date = today and placeholder lists
-   g) Log: "DESIGN-BRIEF.md auto-generated from codebase inspection. Review and refine
-      if personality mapping is incorrect."
+   g) Compute confidence score for the personality mapping:
+      - HIGH (3 signals agree: industry keywords + color temp + typography style) → proceed silently
+      - MEDIUM (2 signals agree) → log: "⚠️ DESIGN-BRIEF auto-generated with MEDIUM confidence. Personality: {X}. If wrong, edit DESIGN-BRIEF.md before continuing."
+      - LOW (only 1 signal or signals conflict) → surface to user: "Personality auto-detected as {X} but signals conflict. Does '{X}' match your product? (or tell me: enterprise/growth/premium/bold/health)" — wait for one-word reply, update DESIGN-BRIEF, then proceed.
+   
+   h) Log: "DESIGN-BRIEF.md auto-generated from codebase inspection. Confidence: {HIGH|MEDIUM|LOW}."
    ```
 
-   This replaces the old HALT with a 30-second auto-detect that unblocks cold starts on any project.
+   This replaces the old HALT with a 30-second auto-detect. HIGH confidence: fully unblocked. LOW confidence: one-question user check before proceeding — still faster than halting entirely.
 
 ---
 
@@ -275,43 +279,50 @@ Wait for all five to complete.
    for each partial file (score-AB, score-CDE, score-FGH, score-IJK):
      merged_checks.update(partial.checks)
 
-   # Visual weight multipliers — visual checks count 3×, code quality 0.5×
+   # Visual weight multipliers — visual checks count 3×, code quality 0.5×, process 0×
+   # NOTE: no duplicate keys — each check_id appears exactly once
    VISUAL_WEIGHT = {
-     "A7":3,"A9":3,"D4":3,"D5":3,"F6":3,"K2":3,"K4":3,  # product visible, hero depth
-     "E3":2,"E4":2,"E5":2,"E6":2,"E9":2,"E10":2,          # section presence
-     "J1":2,"J2":2,"J3":2,"J6":2,                         # copy quality (conversion impact)
-     "A7":3,"A11":0.5,"I4":0.5,"I8":0.5,"I2":0.5,        # docs-only design system
-     "D1":0.5,"I5":0.5,"I6":0.5,"C6":0.5,"C7":0.5,       # code quality / invisible
-     "B1":0,"B2":0,"B3":0,"B4":0,"B7":0,"B8":0,"B9":0,   # 21st.dev process (WONTFIX anyway)
-     "H1":0,"H2":0,                                         # process integrity (WONTFIX anyway)
+     # 3× — hero depth, product visibility, layout quality (directly visible to users)
+     "A7":3, "A9":3, "D4":3, "D5":3, "F6":3, "K2":3, "K4":3,
+     # 2× — section presence and copy quality (visible, conversion impact)
+     "E3":2, "E4":2, "E5":2, "E6":2, "E9":2, "E10":2,
+     "J1":2, "J2":2, "J3":2, "J6":2,
+     # 0.5× — code quality / invisible to users
+     "A11":0.5, "I4":0.5, "I8":0.5, "I2":0.5,
+     "D1":0.5, "I5":0.5, "I6":0.5, "C6":0.5, "C7":0.5,
+     # 0× — process checks and 21st.dev sourcing (WONTFIX for pre-existing projects)
+     "B1":0, "B2":0, "B3":0, "B4":0, "B7":0, "B8":0, "B9":0,
+     "H1":0, "H2":0,
    }
-   default_weight = 1  # all other checks
+   default_weight = 1  # all other checks (A1-A6, A8, A10, C1-C5, C8, D2, D3, D6, E1-E2, E7-E8, F1-F5, G-series, I1, I3, I7, J4-J5, J7-J8, K1, K3)
 
    weighted_passed = sum(VISUAL_WEIGHT.get(k, default_weight)
                          for k,v in merged_checks.items() if v.status=="PASS")
    weighted_total  = sum(VISUAL_WEIGHT.get(k, default_weight)
                          for k,v in merged_checks.items()
-                         if v.status not in ("N/A","WONTFIX","NEEDS_HUMAN"))
-
-   na      = count(v for v in merged_checks.values() if v.status == "N/A")
-   wontfix = count(v for v in merged_checks.values() if v.status == "WONTFIX")
-   nh      = count(v for v in merged_checks.values() if v.status == "NEEDS_HUMAN")
+                         if v.status not in ("N/A","WONTFIX","NEEDS_HUMAN")
+                         and VISUAL_WEIGHT.get(k, default_weight) > 0)
 
    raw_score = (weighted_passed / weighted_total) * 100 if weighted_total > 0 else 0
 
-   # Veto logic — MUST evaluate across ALL merged checks (unchanged)
-   any_A_fail = any(k.startswith("A") and v.status=="FAIL" for k,v in merged_checks.items())
-   any_B_fail = any(k.startswith("B") and v.status=="FAIL"
-                    and merged_checks[k].get("wontfix") != True
+   # Veto logic — evaluated on raw_score BEFORE veto cap is applied
+   # The veto cap applies to the WEIGHTED raw_score, not a simple pass count.
+   # This means: a site with A7 FAIL has already lost 3× score weight from that check
+   # PLUS gets capped at 60. Both penalties apply — they don't cancel each other.
+   any_A_fail = any(k.startswith("A") and v.status=="FAIL"
                     for k,v in merged_checks.items())
-   if any_A_fail:   final_score = min(60, raw_score); veto_check = first A FAIL
-   elif any_B_fail: final_score = min(80, raw_score); veto_check = first B FAIL
-   else:            final_score = raw_score;          veto_check = null
+   any_B_fail = any(k.startswith("B") and v.status=="FAIL"
+                    and VISUAL_WEIGHT.get(k, 1) > 0  # skip zero-weight B checks
+                    for k,v in merged_checks.items())
+   if any_A_fail:   final_score = min(60, raw_score); veto_check = "first A FAIL"
+   elif any_B_fail: final_score = min(80, raw_score); veto_check = "first non-WONTFIX B FAIL"
+   else:            final_score = raw_score;           veto_check = None
 
-   # Log weight breakdown for transparency
+   # Mandatory transparency log (output this every merge):
    # "Weighted score: {weighted_passed:.1f} / {weighted_total:.1f} = {raw_score:.1f}%
-   #  Visual checks (3×): {list of visual check IDs that passed/failed}
-   #  Code quality (0.5×): {list of code quality check IDs that passed/failed}"
+   #  Veto: {veto_check or 'none'}  →  Final: {final_score:.1f}
+   #  3× visual checks: A7={status} A9={status} D5={status} F6={status} K2={status}
+   #  0.5× code checks: D1={status} I5={status} I6={status} (these barely move the score)"
 
    merged_priority_queue = sorted(
      [entry for partial in partials for entry in partial.priority_queue if entry.status=="FAIL"],
@@ -381,6 +392,24 @@ When `current_score >= target_score`:
 - If `visual_checks_flipped == 0` AND `baseline_visual_quality_score < 4.0` → **do NOT exit**. Log: `"Score target met via invisible fixes — forcing visual iteration before exit."` Insert one more VQ-1 iteration (Skill('impeccable') on hero) then exit. This prevents the loop declaring victory when only copy/docs/code-quality checks improved.
 
 Store `visual_checks_flipped` in loop-state.json alongside `current_score`.
+
+---
+
+### Step 0 — Iteration guard (run at start of EVERY iteration before picking a check)
+
+This guard enforces the cardinal rules mechanically. Complete all checks in order. If any FAIL → resolve before proceeding.
+
+```
+[ ] 0.1  fix_type from previous iteration was determined via git diff (not judgment) — or this is iteration 1
+[ ] 0.2  visual_checks_flipped counter is current in loop-state.json
+[ ] 0.3  priority_queue is sorted: visual_bonus applied, no check with visual_bonus < 300 in position 1-3 IF any check with visual_bonus >= 1000 exists
+[ ] 0.4  attempt_counts loaded — no check being picked has attempt_count >= 3
+[ ] 0.5  excluded_skills loaded — if primary fix_skill is excluded, secondary is set
+[ ] 0.6  If current_score >= target_score AND visual_checks_flipped == 0 AND baseline_vq < 4.0 → this must be the forced VQ-1 iteration, not a normal pick
+[ ] 0.7  BUILD-LOG has an entry for every completed iteration (no silent drops)
+```
+
+If any guard check fails → log `"GUARD FAIL: 0.X — {reason}"` and resolve before Step 1.
 
 ---
 
@@ -601,6 +630,7 @@ This is deterministic — no judgment call. The git diff output is ground truth 
 | VISIBLE_DIFF | same + checks still FAIL | **REVERT** — `git -C "{project_path}" revert HEAD --no-edit`. attempt_counts[check_id]++. real_iterations++. |
 | VISIBLE_DIFF | down | **REVERT** — add fix_skill to excluded_skills[check_id]. attempt_counts[check_id]++. real_iterations++. |
 | UNCERTAIN | any | Wait 10s, re-run web-screenshot once. Still UNCERTAIN → VOID. |
+| NULL_DELTA (visual fix) | any | **Pixel-diff fallback before VOIDing:** Run `mcp__puppeteer__puppeteer_evaluate` with this script to count changed pixels between before and after screenshots — if changed_pixels > 500 → override NULL_DELTA to VISIBLE_DIFF and KEEP. If changed_pixels <= 500 → VOID as normal. Script: `const img1 = await fetch('{before_path}').then(r=>r.arrayBuffer()); const img2 = await fetch('{after_path}').then(r=>r.arrayBuffer()); /* compare pixel arrays, count diffs > threshold 10 */`. This catches subtle grain/opacity changes that Sonnet's vision misses but that are real pixel-level changes. Only applies when fix_type == "visual" — docs-only and copy NULL_DELTA never invoke pixel-diff. |
 
 ---
 
