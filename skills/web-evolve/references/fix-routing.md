@@ -106,6 +106,8 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 | G2 | Icon-only without aria-label | `Skill('web-fix')` direct (or `Skill('clarify')` for label wording) |
 | G3 | Build broken / tests failing | `Skill('web-fix')` direct |
 | G4 | Chunk > 250KB | `Skill('optimize')` for bundle splitting |
+| G5 | LCP > 2.5s | `Skill('optimize')` — target: hero image `fetchpriority="high"`, eliminate render-blocking resources, preload critical font. Pass measured LCP value + waterfall as context. |
+| G6 | CLS > 0.1 | `Skill('web-fix')` — target: explicit width/height on all images, no dynamically injected content above fold, font `font-display: swap`. Pass measured CLS value as context. |
 
 ---
 
@@ -125,6 +127,40 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 | I8 | Section wrapper padding inconsistent (mixed py-16/py-24/py-32 without documented reason) | `Skill('polish')` to standardise — pass deviating sections as context | spacing discipline |
 
 **Batch rule for I-category:** All I-failures in one iteration → one `Skill('polish')` call (spacing/variant) + one `Skill('typeset')` call (fonts) + one `Skill('animate')` call (motion). Three skill calls max for the entire category. Never one call per check.
+
+---
+
+## Category J — Copy Quality
+
+**Priority: high — ranked alongside I/K.** Bad copy is the most immediately credibility-destroying failure on a landing page. GitHub earns every claim with specificity. Batch all J-failures into one iteration — they all route to `Skill('clarify')`.
+
+| Check | Failure pattern | Fix skill | Rationale |
+|---|---|---|---|
+| J1 | Hero headline > 12 words OR generic/claim-free | `Skill('clarify')` — pass current headline + product context. Target: ≤12 words, concrete claim. | specificity over length |
+| J2 | Subheadline doesn't name problem or outcome | `Skill('clarify')` — pass current subheadline + top user pain from PRODUCT-CONTEXT.md | user-problem alignment |
+| J3 | Primary CTA is generic ("Get Started", "Learn More") | `Skill('clarify')` — pass current CTA + what the action actually does. Target: names the outcome. | action-specific CTA converts higher |
+| J4 | Unsubstantiated superlatives without stat backup | `Skill('clarify')` — either remove the superlative OR replace with a specific stat from PRODUCT-CONTEXT.md | credibility |
+| J5 | Stats use vague quantifiers instead of numbers with units | `Skill('clarify')` — pass each vague stat + the real underlying data from PRODUCT-CONTEXT.md | specificity |
+| J6 | Testimonials are generic praise without named outcome | `Skill('clarify')` — rewrite testimonials to include before/after metric or named action. If no real testimonials exist, flag NEEDS_HUMAN — do not fabricate. | earned social proof |
+| J7 | AI-slop phrases found (transform/revolutionize/seamlessly/etc.) | `Skill('clarify')` — surgical replacement. Pass the exact phrase + surrounding context. Target: concrete replacement. | credibility + differentiation |
+| J8 | FAQ answers are deflecting or incomplete | `Skill('clarify')` — pass each failing Q+A pair. Rewrite to fully resolve the question. | user trust |
+
+**Batch rule for J-category:** All J-failures → one `Skill('clarify')` invocation passing the complete list of failing copy elements. Single iteration, single commit.
+
+**NEVER fabricate testimonials, stats, or claims.** If real data doesn't exist, mark J5/J6 as NEEDS_HUMAN, not PASS.
+
+---
+
+## Category K — Section Differentiation
+
+**Priority: high — ranked alongside I/J.** Section sameness is the primary reason users stop scrolling. GitHub's sections feel independently designed. Route K-failures to layout and visual skills.
+
+| Check | Failure pattern | Fix skill | Rationale |
+|---|---|---|---|
+| K1 | Two adjacent sections share background + layout pattern | `Skill('layout')` to differentiate — pass the two offending sections. Options: flip layout orientation, change density, add full-bleed image/color break, switch to bento. | scroll depth — sameness = users stop reading |
+| K2 | Fewer than 3 sections have a visual anchor | `mcp__magic__21st_magic_component_inspiration` for section-specific visual (animated code block, data viz, product screenshot, terminal) + `Skill('web-component')` to install. One anchor per failing section. | memorability |
+| K3 | No density contrast — all sections same visual weight | `Skill('layout')` to add one sparse break section (pull quote, single stat, lone CTA) between dense sections | rhythm and breathing room |
+| K4 | Hero background treatment reused in other sections | `Skill('colorize')` or `Skill('overdrive')` to give each reusing section its own distinct treatment | hero must be the unique opening |
 
 ---
 
