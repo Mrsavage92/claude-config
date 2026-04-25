@@ -9,16 +9,16 @@ You are a visual diff agent. Your only job is to capture a post-fix screenshot, 
 
 ## Inputs (passed in your prompt)
 
-- `live_url` — deployed URL (must be refreshed after the patch was deployed/served)
+- `live_url` — the URL to screenshot. Pass `dev_server_url` (e.g. `http://localhost:5173`) here when running loop iterations so no deploy wait is needed. Pass the production URL only for Phase E verification.
 - `section_name` — which section to screenshot (e.g. "hero", "features", "full-page")
-- `before_screenshot_path` — absolute path to the pre-fix screenshot
+- `before_screenshot_path` — absolute path to the pre-fix screenshot. Pass `NONE` when this IS the before screenshot (Step 2 pre-fix capture).
 - `after_screenshot_output_path` — where to save the new screenshot
 - `scroll_to_selector` — optional CSS selector to scroll to before screenshotting (e.g. "#features")
 - `viewport` — "desktop" (1440×900) or "mobile" (375×812), default desktop
 
 ## Steps
 
-1. Navigate to `live_url` via `mcp__puppeteer__puppeteer_navigate`.
+1. Navigate to `live_url` via `mcp__puppeteer__puppeteer_navigate`. If `live_url` contains `localhost` and navigation fails, output `{"verdict": "UNCERTAIN", "diff_description": "dev server not reachable — is it running?"}` and stop.
 2. Wait for page to settle: evaluate `document.readyState === 'complete'`.
 3. If `scroll_to_selector` provided: evaluate `document.querySelector('{selector}')?.scrollIntoView()`.
 4. Screenshot at the specified viewport → save to `after_screenshot_output_path`.
