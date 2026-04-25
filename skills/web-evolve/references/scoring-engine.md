@@ -80,14 +80,24 @@ Sort failed checks by descending priority. Pick top of queue.
 
 After a fix is applied + committed:
 
+### Step 0 — Visual diff gate (mandatory — run BEFORE re-scoring)
+
+1. Load the pre-fix screenshot for the affected section from the previous iteration's `.evolution/` folder.
+2. Load the post-fix screenshot just captured in `.evolution/iter-N/`.
+3. Are they visibly different? (Different layout, new element, colour change, text change — anything a human would notice.)
+   - **No visible difference** → VOID. `git revert HEAD --no-edit`. Log `iter N: VOID — null-delta, no visible change`. Do NOT re-score. The iteration slot is reclaimed (null-delta iterations do NOT count toward max-iter cap).
+   - **Visible difference** → proceed to Step 1.
+
+### Step 1 — Re-score
+
 1. Re-run ONLY the affected category (not the whole checklist) for speed.
 2. If the affected category is A or B (veto-bearing), also re-check the veto status.
 3. Compute new score.
 4. Compare to pre-fix score.
 
 **Decision:**
-- new_score > old_score → keep commit, log delta
-- new_score == old_score AND target check now PASS → keep (other check may have flipped N/A)
+- new_score > old_score → keep commit, log delta AND screenshot paths proving visual diff
+- new_score == old_score AND target check now PASS → keep (other check may have flipped N/A), log raw delta
 - new_score == old_score AND target check still FAIL → revert (the fix didn't actually fix it)
 - new_score < old_score → revert, log REGRESSION, exclude that fix-skill for that check
 
@@ -101,17 +111,20 @@ Every iteration MUST emit this block to BUILD-LOG.md:
 ### Evolution iteration N — [timestamp] [mode: backfill | greenfield]
 Page: [page]
 Target check(s): [check-id] — [check name]  (list all if batch)
-Skill(s) invoked: [Skill name + args]  (list all if batch)
+Skill(s) invoked: [Skill name + args]  (list all if batch)  ← REQUIRED: "none" = process violation
 Pre-score: [capped]/100 (raw [raw]%)
 Post-score: [capped]/100 (raw [raw]%)
 Delta capped: [+X / -X / 0]
 Delta raw: [+X% / -X% / 0]  ← MUST appear, especially when capped hides progress
-Decision: [KEPT | REVERTED | SKIPPED | WONTFIX]
-Reason (if REVERTED/SKIPPED/WONTFIX): [text]
-Commit: [sha or "(reverted)"]
+Visual diff: [before screenshot path] → [after screenshot path] — [visible change description OR "null-delta VOID"]
+H1 check: PASS (Skill invoked: yes) | FAIL (inline fix — process violation)
+H2 check: PASS (visible diff confirmed) | VOID (null-delta — iteration does not count)
+Decision: [KEPT | REVERTED | SKIPPED | WONTFIX | VOID]
+Reason (if REVERTED/SKIPPED/WONTFIX/VOID): [text]
+Commit: [sha or "(reverted)" or "(voided — null-delta)"]
 ```
 
-No iteration may be omitted from this log. The audit trail IS the proof.
+No iteration may be omitted from this log. The audit trail IS the proof. VOID iterations must still appear — they prove the loop didn't just skip work.
 
 ---
 
