@@ -143,6 +143,8 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 | G2 | All interactive icon-only elements have aria-label | grep `<button` and `<a` for icon imports without aria-label | none unguarded |
 | G3 | Build green + tests passing | `npm run build` exit 0 + `npm test` exit 0 | exit codes |
 | G4 | All chunks < 250KB gzipped | `npm run build` output | per-chunk sizes |
+| G5 | **LCP (Largest Contentful Paint) < 2.5s** on the live deployed URL | `mcp__puppeteer__puppeteer_navigate` to live URL, then `mcp__puppeteer__puppeteer_evaluate`: `new Promise(r => new PerformanceObserver(l => r(l.getEntries().at(-1).startTime)).observe({type:'largest-contentful-paint',buffered:true}))` | measured LCP value in ms |
+| G6 | **CLS (Cumulative Layout Shift) < 0.1** on the live deployed URL | `mcp__puppeteer__puppeteer_evaluate`: `new Promise(r => { let v=0; new PerformanceObserver(l => { l.getEntries().forEach(e => { if(!e.hadRecentInput) v+=e.value }); r(v) }).observe({type:'layout-shift',buffered:true}) })` after full page load | measured CLS score |
 
 ---
 
@@ -180,7 +182,41 @@ Consistency is a first-class quality signal. A site that does something in one p
 
 ---
 
-## Total: 63 checks (after 2026-04-25 retro — A11, B9, H1/H2, I1–I8 added)
+## Category J — Copy Quality (8 checks)
+
+Copy is the highest-leverage element on any landing page. GitHub's copy earns every claim with specificity. Generic AI-slop copy ("Transform your workflow with AI-powered insights") destroys credibility faster than any visual failure. These checks are binary and grep-verifiable where possible.
+
+**Scoring weight: high.** J-failures rank alongside I in the fix priority queue — bad copy is as visible as bad design.
+
+| # | Check | Verify how | PASS proof format |
+|---|---|---|---|
+| J1 | Hero headline is **≤ 12 words** AND makes a **specific claim** — not a generic value prop | Read hero component, count words in `<h1>`. Grep for banned generic openers (see J7). | word count + quoted headline |
+| J2 | Hero subheadline **names the user's specific problem or outcome** — not a feature list or restatement of the headline | Read hero component subheadline/description element. Does it name a concrete pain ("3-day audit turnaround") or outcome ("score in 60 seconds")? | quoted subheadline + "names problem: [X]" OR "names outcome: [X]" |
+| J3 | Primary CTA button text is **action-specific** — NOT "Get Started", "Learn More", "Try Now", "Sign Up" without context. Must name what happens. | `grep -rE "Get Started\|Learn More\|Try Now\|Sign Up\|See How" src/components/landing/` should return empty for primary CTAs | empty grep OR quoted CTA text with specific action named |
+| J4 | No unsubstantiated superlatives — "best-in-class", "industry-leading", "world-class", "cutting-edge", "state-of-the-art" must each be backed by a specific stat or citation on the same page | `grep -rEi "best.in.class\|industry.leading\|world.class\|cutting.edge\|state.of.the.art\|#1\|market.leading" src/components/landing/` — each hit must have an adjacent stat | empty grep OR each hit traced to a stat on the same page |
+| J5 | Stats section uses **real numbers with units** — "60 seconds", "94% reduction", "100M+ developers" — NOT vague quantifiers ("faster", "significant", "massive") | Read stats/numbers section component. Every stat has a number + unit + context. | quoted stats list — each has number + unit |
+| J6 | Testimonials quote a **specific outcome**, not generic praise — "reduced audit time from 3 days to 4 hours" not "great product, highly recommend" | Read testimonials component. Each quote names a before/after, a metric, or a specific action taken. | quoted excerpts — each passes specificity test |
+| J7 | **AI-slop copy patterns absent** — none of these phrases appear in landing component files: "transform", "revolutionize", "game-changer", "unlock the power", "streamline your", "leverage", "seamlessly", "robust", "comprehensive solution", "end-to-end" | `grep -rEi "transform\|revolutioni[sz]e\|game.changer\|unlock the power\|streamline your\|leverage\|seamlessly\|robust solution\|comprehensive solution\|end.to.end" src/components/landing/` | empty result |
+| J8 | FAQ answers are **specific and informative** — no deflecting answers ("It depends", "Contact us for details", "We support various formats"). Each answer fully resolves the question. | Read FAQ component data. Each answer is ≥ 1 complete sentence with a concrete answer. | answer count + summary of specificity for each |
+
+---
+
+## Category K — Section Differentiation (4 checks)
+
+GitHub, Stripe, and Linear's pages have one thing in common: each section feels like it was designed independently, then unified. A page where every section is "heading + 3-column card grid + CTA" signals template thinking. Visual differentiation is what makes users keep scrolling.
+
+**Scoring weight: high.** K-failures are immediately visible and directly kill scroll depth.
+
+| # | Check | Verify how | PASS proof format |
+|---|---|---|---|
+| K1 | **No two adjacent sections share both** the same background class AND the same layout pattern (e.g. two consecutive sections that are both `bg-background` with a centered-heading + card-grid are a FAIL) | Read each pair of adjacent landing sections. For each pair: does the background differ OR does the layout structure differ? If both match → FAIL. | pair-by-pair table: Section A / Section B / bg-same? / layout-same? / PASS or FAIL |
+| K2 | **At least 3 sections have a named visual anchor** — a non-text element that makes the section memorable independent of copy (animated code block, data visualisation, product UI screenshot, illustration, interactive demo, scroll-triggered diagram, terminal output, live ticker) | Vision check on per-section screenshots + Read section files for non-text visual elements. | list of sections + named anchor element per section (min 3) |
+| K3 | **Section density varies** — at least one section is sparse/whitespace-dominant (single stat, pull quote, or lone CTA with generous space) AND at least one is information-dense (feature grid, comparison table, or bento layout) | Read/vision check section files. Identify the sparsest and densest sections by element count per viewport. | named sparse section + named dense section + brief description of density contrast |
+| K4 | **Hero section's background treatment is unique** — no other section reuses the hero's exact background technique (grain texture, animated canvas, particle field, gradient mesh). Other sections must have their own or be flat. | Read hero file for bg technique. Grep for same technique in other section files. | hero bg technique + grep showing it doesn't appear in other sections |
+
+---
+
+## Total: 79 checks (2026-04-25 — A11, B9, G5/G6, H1/H2, I1–I8, J1–J8, K1–K4 added)
 
 | Category | Count | Weight |
 |---|---|---|
@@ -190,9 +226,11 @@ Consistency is a first-class quality signal. A site that does something in one p
 | D. Animation | 6 | medium |
 | E. Section Completeness | 10 | medium |
 | F. Visual Quality | 6 | medium (4 vision-advisory — cannot self-PASS) |
-| G. A11y & Perf | 4 | medium |
+| G. A11y & Perf | 6 (G5 = LCP, G6 = CLS added 2026-04-25) | medium |
 | H. Process Integrity | 2 | iteration-voiding (not score-capping) |
 | I. Design Consistency | 8 | **medium-high** — ranked above C/D in fix priority queue |
+| J. Copy Quality | 8 | **high** — ranked alongside I in fix priority queue |
+| K. Section Differentiation | 4 | **high** — ranked alongside I/J in fix priority queue |
 
 **Score formula:**
 
@@ -229,9 +267,11 @@ Final score: 80/100 (raw 93.75% — see why veto is active below)
 - D. Animation: 6/6 ✓
 - E. Sections: 10/10 ✓
 - F. Visual: 3/6 ✓ + 3 ADVISORY-PASS (F4/F5/F6 — vision-advisory, pending user confirmation)
-- G. A11y/Perf: 4/4 ✓
+- G. A11y/Perf: 5/6 (FAIL: G5 LCP 3.1s > 2.5s target)
 - H. Process: 2/2 ✓
 - I. Design Consistency: 6/8 (FAIL: I5 easing inline arrays, I8 mixed section padding)
+- J. Copy Quality: 5/8 (FAIL: J3 CTA "Get Started", J7 "seamlessly" found, J6 generic testimonials)
+- K. Section Differentiation: 3/4 (FAIL: K1 hero + features share bg-background + centered-grid)
 
 ### Veto holding the cap
 - B5: FAIL — no mcp__magic__21st_magic_component_builder invocations. (If backfill mode: this should be N/A — check mode detection logic.)

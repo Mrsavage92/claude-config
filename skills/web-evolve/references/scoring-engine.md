@@ -67,13 +67,20 @@ When picking which failed check to fix next:
 ```
 priority = (
   veto_severity,        # A-category FAIL = 1000, B-category FAIL = 500, others = 0
-  consistency_flag,     # I-category FAIL = 200 (ranked above C/D/E/F/G — user-visible)
+  benchmark_gap_flag,   # Phase B.0 top-5 gaps = 400 (overrides all non-veto for first 5 iters)
+  quality_flag,         # J/K FAIL = 300 (copy + section differentiation — highest user impact)
+  consistency_flag,     # I-category FAIL = 200 (consistency — ranked above C/D)
+  cwv_flag,             # G5/G6 FAIL = 150 (Core Web Vitals — performance is trust)
   potential_score_gain, # 100 / (total - n/a)  i.e. each PASS = same point gain
-  category_order        # A < B < I < C < D < E < F < G (I elevated above C/D)
+  category_order        # A < B < benchmark < J < K < I < G5/G6 < C < D < E < F < G
 )
 ```
 
-**Why I-category ranks above C/D:** Design consistency failures (I1–I8) are immediately visible to any user — a button that animates on one page but not another, or headings at three different sizes, destroys trust faster than a missing token. C and D failures are often invisible at a glance; I failures rarely are.
+**Priority rationale:**
+- **Benchmark gaps (400):** Phase B.0 gap analysis identifies the most impactful visual gaps vs a real reference site (GitHub, Stripe, Linear etc). These lead the loop for the first 5 iterations — there's no point fixing token inconsistencies before closing the gap on "no animated hero depth" or "no product UI visible."
+- **J/K (300):** Copy slop and section sameness are the most immediately visible quality failures. Generic CTAs and repeated section layouts destroy scroll depth and conversion faster than any token violation.
+- **I (200):** Consistency failures are noticeable on a second look — a button that doesn't animate in one section when it does in another erodes trust.
+- **G5/G6 (150):** LCP > 2.5s or high CLS shows up in Lighthouse immediately and is a real user-perceived quality signal.
 
 Sort failed checks by descending priority. Pick top of queue.
 

@@ -63,6 +63,56 @@ Use this when an existing website needs to be made vastly better without a wipe-
 
 ---
 
+## Phase B.0 — Competitor benchmark (runs once, before baseline)
+
+**Purpose:** give the improvement loop a real target, not just an abstract score. The benchmark produces a concrete gap list — what the reference site has that ours doesn't — which feeds directly into Phase C priority ordering.
+
+**Default benchmark references by personality (from DESIGN-BRIEF.md):**
+
+| Personality | Default benchmark |
+|---|---|
+| Enterprise Authority | stripe.com |
+| Data Intelligence | linear.app |
+| Growth Engine | vercel.com |
+| Trusted Productivity | notion.so |
+| Premium Professional | framer.com |
+| Bold Operator | shopify.com |
+| Health & Care | (user must specify — no default) |
+| Civic/Government | (user must specify — no default) |
+
+User may override with `--benchmark=[URL]`. If no personality match and no override, skip Phase B.0 and log "no benchmark — proceeding with checklist only."
+
+**Steps:**
+
+1. `mcp__puppeteer__puppeteer_navigate` to the benchmark URL.
+2. `mcp__puppeteer__puppeteer_screenshot` at 1440×900 → `.evolution/benchmark/[name]-desktop.png`
+3. Scroll through the full page, capturing per-section screenshots → `.evolution/benchmark/[name]-[section].png`
+4. Vision analysis — produce a **Gap Analysis** with this exact structure, saved to `.evolution/benchmark/gap-analysis.md`:
+
+```markdown
+# Benchmark Gap Analysis — [benchmark name] vs [our page]
+Date: [date]
+
+## What the benchmark has that we don't
+- [element/technique] — [section it appears in] — [why it works]
+- [...]
+
+## What we have that they don't (our advantages — keep these)
+- [...]
+
+## Top 5 gaps to close (ranked by visual impact)
+1. [gap] — maps to checklist check [X] — fix via [Skill]
+2. [...]
+```
+
+5. The top 5 gaps are **prepended to the Phase C priority queue** — they take precedence over algorithmic priority ordering for the first 5 iterations. After that, the standard priority queue resumes.
+
+6. Save benchmark screenshots path list to `.evolution/benchmark/manifest.md`.
+
+**Note:** the benchmark is informational, not scored. It doesn't change the pass/fail rubric — it directs where effort goes first.
+
+---
+
 ## Phase B — Baseline capture & score
 
 For each target page:
@@ -105,6 +155,11 @@ Loop while overall score < target AND iterations < max:
    - F-series (visual quality) → vision-led: route by sub-category
    - G1 (key={index}) → `Skill('web-fix')` direct
    - G3 (build broken) → `Skill('web-fix')` direct
+   - G5 (LCP > 2.5s) → `Skill('optimize')` targeting hero image + render-blocking resources
+   - G6 (CLS > 0.1) → `Skill('web-fix')` targeting image dimensions + font-display
+   - I-series (design consistency) → `Skill('polish')` / `Skill('typeset')` / `Skill('animate')` batched
+   - J-series (copy quality) → `Skill('clarify')` with full failing copy list as context
+   - K-series (section differentiation) → `Skill('layout')` / `Skill('overdrive')` / `mcp__magic__21st_magic_component_inspiration`
 
 4. **Apply the fix**, then commit per-iteration: `git commit -m "evolve: [page] iteration N — fix [check-id]"`.
 
