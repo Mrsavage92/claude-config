@@ -21,8 +21,11 @@ Coordinates four specialist agents. Never audits or fixes inline. Calls refineme
 3. **No score without receipt.** Every score cites `score.json` from web-score.
 4. **No kept commit without VISIBLE_DIFF.** Every kept iteration cites web-screenshot verdict.
 5. **Vision checks block until user confirms.** Surface NEEDS_HUMAN, wait, update, continue.
-6. **NULL_DELTA = VOID.** Reclaim the slot. Try different fix strategy.
+6. **NULL_DELTA = VOID for design checks only.** For code-quality/documentation-only checks (B-series, H-series, D1, A11, I4, I8, I2 when fix_context is docs-only), NULL_DELTA does NOT trigger VOID — rescore only, KEEP if checks now PASS.
 7. **Raw transparency.** Veto cap hiding >5 pts: show both numbers always.
+8. **Visual impact is the primary success criterion.** The loop succeeds when a human looking at the site says "this looks dramatically better" — not just when checklist score reaches target. If score hits target but site looks unchanged → continue with visual improvements.
+9. **Invisible checks must never block visible ones.** Code-quality checks (B-series, D1, H-series, C6, C7, I5, I6, A11, I4, I8, I2) must NEVER occupy iteration slots 1-3 if any visual check (A7, A9, D4, D5, F6, K2, K4, E-section checks) exists in the queue.
+10. **Bold execution required.** Every call to overdrive/impeccable/bolder MUST include explicit boldness instructions. "Subtle" is a failure. The before/after screenshots must show obvious visible difference.
 
 ---
 
@@ -107,6 +110,27 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
    mkdir -p "{project_path}/.evolution/scores"
    mkdir -p "{project_path}/.evolution/final"
    ```
+
+7.5 **VISUAL QUALITY GATE** — Take a Puppeteer screenshot of `live_url` at 1440×900. Assess visually:
+
+   ```
+   Rate each 1–5:
+   - Hero impact:        Does the above-fold experience stop a scroll? Flat text on plain bg = 1. Split-pane with visible product, atmospheric depth = 5.
+   - Visual hierarchy:   Is there obvious size/weight contrast between sections? All same = 1.
+   - Distinctiveness:    Does this look like a $10K product or a SaaS template? Template = 1.
+   - Product visibility: Is the actual product UI visible above the fold without scrolling? Not visible = 1.
+   
+   visual_quality_score = average of 4 ratings
+   ```
+   
+   **If visual_quality_score < 3.5 → INSERT these at the VERY START of the Phase C iteration queue (BEFORE checklist-driven checks):**
+   - VQ-1: `Skill('impeccable')` on the hero section with BOLD execution mandate
+   - VQ-2: `Skill('layout')` on the features/main content section
+   - VQ-3: `Skill('bolder')` on overall visual weight
+   
+   **These visual overhaul iterations run FIRST regardless of what the checklist priority queue says.** Only after VQ-1/2/3 are KEPT does the normal checklist queue begin.
+   
+   Log: `visual_quality_score: {score}/5 → {inserted VQ iterations | skipped (score >= 3.5)}`
 
 8. **Discover CSS selectors for scroll targeting** — grep the main landing page file to build a section-to-selector map. Run:
    ```bash
@@ -241,6 +265,16 @@ Wait for all five to complete.
    - Set `fix_skill`, `prereq`, `secondary`, `edit_direct`, `section` on the entry
    - Build `fix_context` from the fail_proof (one sentence: what is wrong + target state)
 
+4.5 **AUTO-WONTFIX invisible checks** — Before building the priority queue, mark these as WONTFIX (they produce no visible change and waste iteration slots):
+   - **B-series (B1–B9):** 21st.dev component sourcing workflow — zero visual impact, never visible to users
+   - **H1, H2:** Process integrity checks — BUILD-LOG citation format, not a visual concern
+   - **D1 (import naming):** `framer-motion` vs `motion/react` — identical visual output
+   - **A11, I4, I8, I2** when `fix_context` contains only DESIGN-BRIEF.md edits with no code changes
+   
+   Rule: **If the fix requires ONLY editing markdown/documentation files with ZERO React/CSS/TS code changes → auto-WONTFIX. Do not put in the queue.**
+   
+   Exception: A11 is allowed in the queue IF the DESIGN-BRIEF aesthetic direction is genuinely saturated/wrong and needs a redesign → only then escalate to web-design-research.
+
 5. **Prepend benchmark gaps:** Read `.evolution/benchmark/gap-analysis.json`. For each in `top_5_priority_queue`: look up `maps_to_check` in SKILL_LOOKUP, set routing fields. Add to front of priority_queue with priority 400. Deduplicate by check_id.
 
 6. **Surface NEEDS_HUMAN blocks** — one message to user listing all vision checks. Wait for replies. Update score.json check entries.
@@ -278,6 +312,29 @@ Loop condition: `current_score < target_score AND real_iterations < max_iteratio
 ---
 
 ### Step 1 — Pick check(s) — with batching
+
+**VISUAL PRIORITY RE-SORT (mandatory before every pick):**
+Before selecting from the queue, apply these visual impact bonuses to the sort key:
+
+```
+visual_bonus = {
+  # Critical visual impact — product visible, hero depth, layout quality
+  "A7": 2000, "A9": 2000, "D4": 2000, "D5": 2000, "F6": 2000, "K2": 1500, "K4": 1500,
+  # Section presence — visible to all users
+  "E5": 1200, "E6": 1200, "E9": 1200, "E10": 1000, "E3": 800, "E4": 800,
+  # Copy quality — affects conversion
+  "J1": 800, "J2": 800, "J3": 800, "J6": 600,
+  # Design system — visible but subtle
+  "C6": 300, "C7": 300, "I1": 300, "I8": 300,
+  # Code quality — invisible to users
+  "D1": 0, "I5": 0, "I6": 0, "G1": 0,
+  # Documentation only — always WONTFIX if fix is docs-only
+  "A11": 0, "I4": 0, "I2": 0, "H1": 0, "H2": 0,
+}
+sorted_queue = sorted(queue, key=lambda x: -(x.priority + visual_bonus.get(x.check_id, 0)))
+```
+
+**Cardinal Rule 9 enforcement:** If any check with visual_bonus >= 1000 exists in the queue, it MUST be selected before any check with visual_bonus < 300.
 
 **Batch detection:** Before picking a single check, scan the top of the priority queue for checks that share the same `fix_skill` AND have no `prereq`. If 2+ such checks exist at the top of the queue — batch them into one iteration.
 
@@ -318,6 +375,13 @@ Wait for completion. This is the `before` reference.
 ### Step 3 — Apply fix
 
 **Determine fix type from SKILL_LOOKUP for the check(s):**
+
+**BOLD EXECUTION MANDATE (applies to ALL design skill calls — overdrive, impeccable, bolder, layout, colorize, animate):**
+
+Append this to every `args` string when calling a design skill:
+```
+EXECUTE BOLDLY. No atmospheric opacity below 0.15. No subtle-only changes. The visual difference must be immediately obvious when comparing before/after screenshots at 1440x900. If a human looking at the screenshots cannot immediately say "yes, that's clearly different and better" — the fix has FAILED and must be redone with more dramatic execution. For hero sections: commit to a direction and execute fully. A half-committed hero (tiny glow, imperceptible grain) is worse than no change.
+```
 
 **Case A — `edit_direct: true`** (A10, B5, E1, G1, G2 etc):
 Use the Edit tool directly. The `fix_context` from the priority_queue entry contains the exact change needed. Log to BUILD-LOG: "H1: PASS (Edit tool — edit_direct fix, too small for skill invocation)".
