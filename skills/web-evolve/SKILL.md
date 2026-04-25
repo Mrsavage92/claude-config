@@ -108,7 +108,17 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
    mkdir -p "{project_path}/.evolution/final"
    ```
 
-8. Echo confirmation to user and wait:
+8. **Discover CSS selectors for scroll targeting** — grep the main landing page file to build a section-to-selector map. Run:
+   ```bash
+   grep -nE 'id="[^"]*"' "{project_path}/src/pages/index.tsx" 2>/dev/null || grep -nE 'id="[^"]*"' "{project_path}/src/app/page.tsx" 2>/dev/null
+   ```
+   Also grep section component files:
+   ```bash
+   grep -rhE 'id="[^"]+"' "{project_path}/src/components/landing/" 2>/dev/null
+   ```
+   Build a `section_selectors` map, e.g.: `{"hero": "#hero", "features": "#features", "pricing": "#pricing"}`. Use `""` (empty — scroll to top) for any section without a discovered id. This map is used in Steps 2 and 4 to pass `scroll_to_selector` to web-screenshot.
+
+9. Echo confirmation to user and wait:
    ```
    web-evolve starting
    Mode: {mode} | Cap: {max_iterations} | Target: {target_score}/100
@@ -193,10 +203,35 @@ Wait for all five to complete.
 1. Read all four partial score files. If any missing → re-run that agent once. Still missing → HALT NEEDS_HUMAN with which categories failed.
 
 2. **Merge partial scores into `.evolution/scores/score.json`:**
-   - Merge `checks` dictionaries from all four files
-   - Recalculate `summary` (passed, failed, na, wontfix, needs_human, raw_score, veto logic, final_score)
-   - Merge `priority_queue` lists and resort by priority
-   - Write merged `score.json`
+
+   ```
+   merged_checks = {}
+   for each partial file (score-AB, score-CDE, score-FGH, score-IJK):
+     merged_checks.update(partial.checks)
+
+   passed  = count(v for v in merged_checks.values() if v.status == "PASS")
+   failed  = count(v for v in merged_checks.values() if v.status == "FAIL")
+   na      = count(v for v in merged_checks.values() if v.status == "N/A")
+   wontfix = count(v for v in merged_checks.values() if v.status == "WONTFIX")
+   nh      = count(v for v in merged_checks.values() if v.status == "NEEDS_HUMAN")
+
+   denominator = len(merged_checks) - na - wontfix - nh
+   raw_score   = (passed / denominator) * 100 if denominator > 0 else 0
+
+   # Veto logic — MUST evaluate across ALL merged checks
+   any_A_fail = any(k.startswith("A") and v.status=="FAIL" for k,v in merged_checks.items())
+   any_B_fail = any(k.startswith("B") and v.status=="FAIL" for k,v in merged_checks.items())
+   if any_A_fail:   final_score = min(60, raw_score); veto_check = first A FAIL
+   elif any_B_fail: final_score = min(80, raw_score); veto_check = first B FAIL
+   else:            final_score = raw_score;          veto_check = null
+
+   merged_priority_queue = sorted(
+     [entry for partial in partials for entry in partial.priority_queue if entry.status=="FAIL"],
+     key=lambda x: -x.priority
+   )
+   ```
+
+   Use the Write tool to write merged `score.json` to `{project_path}/.evolution/scores/score.json`.
 
 3. Read `~/.claude/skills/web-evolve/references/fix-routing.md` — parse the `SKILL_LOOKUP` JSON block at the top of the file.
 
@@ -214,10 +249,8 @@ Wait for all five to complete.
 
 8. If `final_score >= target_score` → log "already at target", skip to Phase D.
 
-9. **Write initial loop state:**
-   ```bash
-   # Write {project_path}/.evolution/loop-state.json
-   ```
+9. **Write initial loop state** using the Write tool (not bash echo):
+   Path: `{project_path}/.evolution/loop-state.json`
    ```json
    {
      "iteration": 0,
@@ -297,10 +330,14 @@ Use the Edit tool directly. The `fix_context` from the priority_queue entry cont
 2. Then call `Skill('{fix_skill}', args='{fix_context} | inspired_by: {MCP result summary} | checks: {current_checks} | fail_proof: {fail_proofs}')`.
 
 **Case C — standard Skill() fix:**
-```
-Skill('{fix_skill}', args='{fix_context} | checks: {current_checks joined} | fail_proof: {fail_proofs joined}')
-```
-For batched checks: pass all check IDs and fail proofs in the args so the skill knows what to target.
+
+Use the `Skill` tool with:
+- `skill`: the fix_skill name (e.g. `"typeset"`, `"clarify"`, `"animate"`)
+- `args`: a structured string in this exact format: `{fix_context} | checks: {current_checks joined with comma} | fail_proof: {fail_proofs joined with semicolon}`
+
+Example args string: `"Hero H1 uses Inter — replace with Geist font | checks: A1, A2 | fail_proof: tailwind.config.ts fontFamily.display is 'Inter'; same in globals.css"`
+
+The refinement skills read the `checks:` and `fail_proof:` markers to enter Targeted Mode (skip impeccable, apply only what args describe).
 
 If Skill() errors or returns "no changes" → log NEEDS_HUMAN for each check_id, increment `attempt_counts`, continue loop (skip 3.5 onwards).
 
@@ -364,9 +401,15 @@ Agent 2 — web-score (affected categories only):
     checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
 ```
 
-Wait for both. Read outputs.
+`affected_categories` = comma-joined unique category letters from `current_checks`. Examples:
+- `current_checks = ["A7"]` → `affected_categories = "A"`
+- `current_checks = ["J3", "J7"]` → `affected_categories = "J"`
+- `current_checks = ["I1", "I3", "I5"]` → `affected_categories = "I"`
+- `current_checks = ["C4", "I3"]` → `affected_categories = "C,I"`
 
-Merge rescore results into current score: update only the checks in the rescored categories. Recalculate summary and final_score.
+Wait for both agents. Read `diff-verdict-{section}.json` and `score-rescore.json`.
+
+Merge rescore into current score: update only the checks whose category letters match `affected_categories`. Recalculate summary and final_score across ALL merged checks (re-apply full veto logic).
 
 ---
 
@@ -375,10 +418,13 @@ Merge rescore results into current score: update only the checks in the rescored
 | Screenshot | Score | Decision |
 |---|---|---|
 | NULL_DELTA | any | **VOID** — `git -C "{project_path}" revert HEAD --no-edit`. void_count++. Do NOT increment real_iterations or attempt_counts. |
-| CAPTURE_ONLY | any | First iteration had no before. Accept screenshot. Re-run Step 4 next iter when before exists. |
-| VISIBLE_DIFF | up | **KEEP** — update current_score, real_iterations++. Mark checked checks as PASS in priority_queue. |
-| VISIBLE_DIFF | same + all checks now PASS | **KEEP** — log raw delta (veto cap). real_iterations++. |
-| VISIBLE_DIFF | same + checks still FAIL | **REVERT** — `git revert HEAD --no-edit`. attempt_counts[check_id]++. real_iterations++. |
+| CAPTURE_ONLY | up | **KEEP** — first iteration, no before to diff. Trust rescore only. Update current_score. real_iterations++. |
+| CAPTURE_ONLY | same + checks now PASS | **KEEP** — log raw delta. real_iterations++. |
+| CAPTURE_ONLY | same + checks still FAIL | **REVERT** — fix didn't resolve the check. attempt_counts[check_id]++. real_iterations++. |
+| CAPTURE_ONLY | down | **REVERT** — regression. excluded_skills. attempt_counts[check_id]++. real_iterations++. |
+| VISIBLE_DIFF | up | **KEEP** — update current_score. real_iterations++. Mark checks as PASS in queue. |
+| VISIBLE_DIFF | same + all checks now PASS | **KEEP** — log raw delta (veto cap hiding progress). real_iterations++. |
+| VISIBLE_DIFF | same + checks still FAIL | **REVERT** — `git -C "{project_path}" revert HEAD --no-edit`. attempt_counts[check_id]++. real_iterations++. |
 | VISIBLE_DIFF | down | **REVERT** — add fix_skill to excluded_skills[check_id]. attempt_counts[check_id]++. real_iterations++. |
 | UNCERTAIN | any | Wait 10s, re-run web-screenshot once. Still UNCERTAIN → VOID. |
 
@@ -407,7 +453,7 @@ Decision: {KEPT | REVERTED | VOID | WONTFIX}
 Commit: {sha | "(reverted)" | "(voided)"}
 ```
 
-**Write loop state** to `{project_path}/.evolution/loop-state.json` after every iteration (including VOID):
+**Write loop state** using the Write tool to `{project_path}/.evolution/loop-state.json` after every iteration (including VOID):
 ```json
 {
   "iteration": {iteration},

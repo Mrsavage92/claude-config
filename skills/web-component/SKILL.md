@@ -2,6 +2,20 @@
 
 Generate a single production-quality UI component with enterprise-level design.
 
+## Web-evolve Targeted Mode
+
+If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
+
+1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is in args.
+2. **Parse args**: leading text = fix_context. `checks:` = check IDs. `fail_proof:` = exact failure evidence.
+3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
+4. **Do not ask questions** — all context is in args.
+5. **Output** one sentence: which file changed and what changed.
+
+Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
+
+---
+
 ## When to Use
 - Adding a new component to an existing project
 - User describes a specific UI element (card, nav, pricing table, testimonial, stat block, etc.)

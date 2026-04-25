@@ -8,6 +8,20 @@ argument-hint: "[target]"
 
 Assess and improve typography that feels generic, inconsistent, or poorly structured — turning default-looking text into intentional, well-crafted type.
 
+## Web-evolve Targeted Mode
+
+If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
+
+1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is already in args.
+2. **Parse args**: leading text before `|` = fix_context. `checks:` = check IDs to resolve. `fail_proof:` = exact failure evidence.
+3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
+4. **Do not ask the user questions** — all context is in args.
+5. **Output** one sentence: which file changed and what changed.
+
+Jump directly to the implementation steps below. Skip MANDATORY PREPARATION.
+
+---
+
 ## MANDATORY PREPARATION
 
 Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first.
