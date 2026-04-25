@@ -9,6 +9,22 @@ Every check is binary. Every check has a verification method. Every PASS must ci
 
 ---
 
+## Tier system — for `web-score` agent tiered execution
+
+The `web-score` agent runs checks in tiers to balance thoroughness against session cost. Tier is passed as an input argument.
+
+| Tier | When used | Checks |
+|---|---|---|
+| **Tier 1** | Every loop iteration (fast rescore) | A1–A11, B3, B9, J3, J7, K1, G3, G5, G6, I1, I3, D1, D3, E2, E9 |
+| **Tier 2** | Baseline + final audit (full) | All 79 checks |
+| **category:X** | Category rescore after a fix | Only checks in the named category |
+
+**Tier 1 rationale:** these ~20 checks cover every veto-bearing failure, the two most common copy failures (J3 CTA, J7 slop phrases), and the most visible consistency/animation failures. They run fast (all grep/read based except G5/G6 Puppeteer). If Tier 1 is all green, the score is unlikely to be below 75 regardless of Tier 2 results.
+
+**Vision checks (A9, F4, F5, F6)** are Tier 2 only AND require NEEDS_HUMAN confirmation — they are never run in loop rescores. Only in baseline and final audits.
+
+---
+
 ## Mode detection (run FIRST, before Category A)
 
 `/web-evolve` runs in one of two modes. Some checks behave differently per mode.
