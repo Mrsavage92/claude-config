@@ -25,18 +25,28 @@ Run:
 git -C "{project_path}" status --short
 ```
 
-If output is empty (no modified or untracked files in src/): the fix made no changes. Write FAILED result and stop — do NOT commit.
+**Parsing `git status --short` output:**
+Each line is `XY filename` where X=index status, Y=worktree status. Status codes:
+- `M` = modified
+- `A` = added (new file staged)
+- `?? ` = untracked new file
+- `D` = deleted
+- `R` = renamed
 
-If output shows changes outside `src/` only (e.g. only lock files or config): also write FAILED — the fix didn't touch source files.
+Extract the filename (everything after the two-character status code and space).
 
-### 2. Identify modified files
+If output is completely empty: the fix made no changes. Write FAILED result and stop — do NOT commit.
 
-Extract the list of modified files from `git status --short` output. Stage files from these locations:
-- `src/` — all modified source files
-- `DESIGN-BRIEF.md` — if modified (some fixes update aesthetic direction, trend pulse, or component lock)
-- `public/` — if modified (fonts, images, icons added by fix skills)
+### 2. Identify files to stage
 
-Do NOT stage: `.env`, `node_modules/`, `*.lock`, `BUILD-LOG.md`, `EVOLUTION-LOG.md` (orchestrator owns those), `.evolution/`.
+From the parsed file list, include only:
+- Files under `src/` — source code changes
+- `DESIGN-BRIEF.md` in the project root — some fixes update aesthetic direction or component lock
+- Files under `public/` — fonts, images, or icons added by fix skills
+
+Exclude everything else: `.env`, `node_modules/`, `*.lock` files, `BUILD-LOG.md`, `EVOLUTION-LOG.md`, `.evolution/` directory, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`.
+
+If the only changes are in excluded files (e.g. only `package-lock.json` changed): write FAILED — the fix didn't touch meaningful files.
 
 ### 3. Stage files
 

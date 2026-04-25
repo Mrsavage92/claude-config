@@ -15,6 +15,20 @@ Start your response with:
 
 Push an interface past conventional limits. This isn't just about visual effects — it's about using the full power of the browser to make any part of an interface feel extraordinary: a table that handles a million rows, a dialog that morphs from its trigger, a form that validates in real-time with streaming feedback, a page transition that feels cinematic.
 
+## Web-evolve Targeted Mode
+
+If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
+
+1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is in args.
+2. **Parse args**: leading text = fix_context. `checks:` = check IDs. `fail_proof:` = exact failure evidence.
+3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
+4. **Do not ask questions** — all context is in args.
+5. **Output** one sentence: which file changed and what changed.
+
+Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
+
+---
+
 ## MANDATORY PREPARATION
 
 Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first.

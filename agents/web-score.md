@@ -25,8 +25,12 @@ A1, A2, A3, A4, A5, A6, A7, A8, A10, A11, B3, B9, D1, D3, E2, E9, G3, G5, G6, I1
 **Tier 2** (run when `tier=2` — baseline and final audits, full):
 All checks. Run Tier 1 first, then remaining in category order: A9, B1, B2, B4, B5, B6, B7, B8, C1–C8, D2, D4, D5, D6, E1, E3–E8, E10, F1–F6, G1, G2, G4, H1, H2, I2, I4–I8, J1, J2, J4–J8, K2, K3, K4.
 
-**category:X** (run when `tier=category:A` etc — rescore one category):
-Only the checks in that category letter.
+**category:X** (single category) or **category:X,Y,Z** (comma-separated, multiple categories):
+Parse by splitting `tier` on `:` then splitting the right side on `,`. Run ONLY checks whose check ID starts with one of the named category letters. Examples:
+- `tier=category:A` → run A1–A11 only
+- `tier=category:A,B` → run A1–A11 + B1–B9
+- `tier=category:C,D,E` → run C1–C8 + D1–D6 + E1–E10
+- `tier=category:I,J,K` → run I1–I8 + J1–J8 + K1–K4
 
 ## Check-to-section mapping (include in priority_queue entries)
 

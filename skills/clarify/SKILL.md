@@ -8,6 +8,20 @@ argument-hint: "[target]"
 
 Identify and improve unclear, confusing, or poorly written interface text to make the product easier to understand and use.
 
+## Web-evolve Targeted Mode
+
+If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
+
+1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is in args.
+2. **Parse args**: leading text = fix_context. `checks:` = check IDs. `fail_proof:` = exact failure evidence.
+3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
+4. **Do not ask questions** — all context is in args.
+5. **Output** one sentence: which file changed and what changed.
+
+Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
+
+---
+
 ## MANDATORY PREPARATION
 
 Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first. Additionally gather: audience technical level and users' mental state in context.
