@@ -157,18 +157,118 @@ For each of the 8 target platforms, record:
 
 ### 1.3 Per-Platform Deep Scrape
 
-For each platform where the brand has a presence, scrape these signals using Puppeteer MCP (preferred) or WebFetch:
+**Scraping method priority:**
+1. **Puppeteer MCP** (preferred, gets content-level data — grid, captions, format mix, story highlights, screenshots)
+2. **curl + facebookexternalhit UA** (fast fallback for follower counts via og:description)
+3. **WebFetch** (last resort — AI summariser strips useful signals, log scope limitation if used)
 
-**Universal signals (all platforms):**
-- Follower/subscriber count
-- Following count (if public)
-- Total post count
-- Bio/tagline text
-- Profile image + banner (note: generic/branded/professional)
-- Verified status
-- Link in bio (single link or stack — Linktree, Beacons, native)
-- Pinned content
-- Last 30 posts: date, format, caption snippet, visible likes, visible comments
+#### Puppeteer Scrape Protocol (for each active platform)
+
+**Step A — Navigate + screenshot profile:**
+```
+mcp__puppeteer__puppeteer_navigate  url: "{profile_url}"
+mcp__puppeteer__puppeteer_screenshot  name: "{brand}_{platform}_profile"  width: 1280  height: 900
+```
+Save screenshot filename for evidence section in the report.
+
+**Step B — Extract profile metadata via JS eval:**
+```js
+// Run via mcp__puppeteer__puppeteer_evaluate
+({
+  og_description: document.querySelector('meta[property="og:description"]')?.content,
+  og_title: document.querySelector('meta[property="og:title"]')?.content,
+  canonical: document.querySelector('link[rel="canonical"]')?.href,
+  schema: [...document.querySelectorAll('script[type="application/ld+json"]')]
+    .map(s => { try { return JSON.parse(s.textContent) } catch(e) { return null } })
+    .filter(Boolean)
+})
+```
+The `og:description` field returns follower/following/post counts for IG, TikTok, and Facebook reliably.
+
+**Step C — Platform-specific extraction (run the JS for each platform):**
+
+*Instagram:*
+```js
+// Run via mcp__puppeteer__puppeteer_evaluate
+({
+  highlights_count: document.querySelectorAll('ul li > div > div > div > div > img').length,
+  grid_items: document.querySelectorAll('article div[style*="padding-bottom"] img, article img[srcset]').length,
+  reel_icons: document.querySelectorAll('[aria-label="Reel"], [aria-label="Clip"], svg[aria-label="Reel"]').length,
+  video_icons: document.querySelectorAll('[aria-label*="Video"], [aria-label*="video"]').length,
+  verified: !!document.querySelector('[aria-label="Verified"], [title="Verified"]'),
+  bio_link_text: document.querySelector('a[href*="linktr.ee"], a[href*="beacons"], a[href*="linktree"]')?.textContent?.trim()
+    || document.querySelector('header a[rel="me nofollow noopener noreferrer"]')?.href
+})
+```
+
+*TikTok:*
+```js
+({
+  video_views: [...document.querySelectorAll('strong[data-e2e="video-views"]')]
+    .slice(0,6).map(el => el.textContent),
+  video_count_visible: document.querySelectorAll('div[data-e2e="user-post-item"]').length,
+  bio_link: document.querySelector('a[data-e2e="user-link"]')?.href,
+  verified: !!document.querySelector('[aria-label="Verified account"]')
+})
+```
+
+*Facebook Page:*
+```js
+({
+  likes: document.querySelector('[aria-label*="people like this"]')?.textContent
+    || document.querySelector('a[href*="followers"] span')?.textContent,
+  category: document.querySelector('[id*="category"]')?.textContent,
+  rating: document.querySelector('span[aria-label*="out of 5"]')?.getAttribute('aria-label'),
+  recent_post_dates: [...document.querySelectorAll('span abbr[data-utime]')]
+    .slice(0,5).map(el => new Date(el.getAttribute('data-utime')*1000).toISOString().split('T')[0])
+})
+```
+
+*Pinterest:*
+```js
+({
+  boards: [...document.querySelectorAll('[data-test-id="board-representation"] h3')]
+    .map(el => el.textContent),
+  monthly_views: document.querySelector('[data-test-id="creator-profile-header-monthly-views"]')?.textContent,
+  pins_count: document.querySelector('span[data-test-id="user-board-count"]')?.textContent
+})
+```
+
+**Step D — Screenshot individual top posts (IG + TikTok):**
+Click into the first 3 visible posts to capture captions + visible engagement:
+```
+mcp__puppeteer__puppeteer_click  selector: "article a:first-child, div[data-e2e='user-post-item']:first-child a"
+mcp__puppeteer__puppeteer_screenshot  name: "{brand}_{platform}_post1"  width: 600  height: 700
+mcp__puppeteer__puppeteer_evaluate  script: "document.querySelector('div[role=dialog] ul li span')?.textContent || document.querySelector('h1, [data-e2e=browse-video-desc]')?.textContent"
+```
+Repeat for posts 2 and 3. This gives 3 real captions per platform for pillar + hashtag analysis.
+
+**Step E — Screenshot competitor profiles (one per competitor):**
+```
+mcp__puppeteer__puppeteer_navigate  url: "{competitor_ig_url}"
+mcp__puppeteer__puppeteer_screenshot  name: "competitor_{name}_profile"  width: 1280  height: 600
+```
+Captures follower/post data visually without needing eval extraction.
+
+#### Fallback: curl + OG meta (when Puppeteer unavailable)
+```bash
+curl -sL -A "facebookexternalhit/1.1" "{profile_url}" \
+  | grep -oiE 'og:(description|title)[^>]{0,400}'
+```
+Returns follower/post counts for IG, TikTok, FB. No content-level data. Log scope limitation.
+
+#### What to record per platform (minimum for scoring)
+| Signal | Puppeteer | curl OG | Scope note if missing |
+|---|---|---|---|
+| Follower count | ✅ | ✅ | Required — cannot score without |
+| Post count | ✅ | ✅ | Required |
+| Bio text | ✅ | Partial | Note if unavailable |
+| Format mix (video/static/carousel) | ✅ | ❌ | Mark Content Quality as "estimated" |
+| Caption samples (3 posts min) | ✅ | ❌ | Mark Content Quality as "estimated" |
+| Hashtag strategy | ✅ | ❌ | Mark as "estimated" |
+| Reply rate | ✅ (click comments) | ❌ | Mark Engagement Depth as "estimated" |
+| Story Highlights | ✅ | ❌ | Note gap |
+| Screenshots | ✅ | ❌ | Enterprise requirement — always capture |
 
 **Per-platform extras** — see `references/platform-checks.md` for the full per-platform checklist (LinkedIn, IG, TikTok, YT, FB, X, Pinterest, Threads/Bluesky).
 
@@ -214,22 +314,63 @@ Flag as finding if brand is e-commerce but social commerce is unused — that's 
 
 ### 1.7 Paid Creative Teardown
 
-Check official ad libraries (no auth required):
+**Method (try in order, note which succeeded):**
 
-- **Meta Ad Library** — `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&view_all_page_id=[page_id]` or search by brand
-  - Record: active ads count, formats (video/image/carousel), messaging themes, CTA patterns
-- **LinkedIn Ads Library** — search brand
-- **TikTok Creative Center** — `https://ads.tiktok.com/business/creativecenter/topads/` — check if brand has top ads
-- **Google Ads Transparency Center** — secondary, for context
+**Path A — Puppeteer (preferred, JS-rendered pages):**
+```
+mcp__puppeteer__puppeteer_navigate  url: "https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=AU&q={brand_name}&search_type=keyword_unordered"
+mcp__puppeteer__puppeteer_screenshot  name: "{brand}_meta_adlibrary"  width: 1280  height: 800
+mcp__puppeteer__puppeteer_evaluate  script: "document.querySelectorAll('[data-testid=\"ad-card\"]').length || document.querySelectorAll('div[class*=\"_7jyg\"]').length"
+```
+If the page shows results, also capture TikTok Creative Center:
+```
+mcp__puppeteer__puppeteer_navigate  url: "https://library.tiktok.com/ads?region=AU&keyword={brand_name}"
+mcp__puppeteer__puppeteer_screenshot  name: "{brand}_tiktok_adlibrary"  width: 1280  height: 800
+```
 
-Compute:
-- **Paid:organic ratio** — are they over-relying on paid to compensate for weak organic
-- **Creative variety** — do they test multiple creative variants (sign of a mature paid programme)
-- **Messaging consistency** — does paid creative align with organic brand voice
+**Path B — curl probe (connection failures expected, log them):**
+```bash
+curl -sIL -A "Mozilla/5.0" "https://www.facebook.com/ads/library/?q={encoded_brand}" | head -3
+```
+If ECONNREFUSED or timeout → log "Meta Ad Library unreachable at audit time" and proceed to Path C.
+
+**Path C — WebSearch fallback:**
+```
+WebSearch: "{brand name}" site:facebook.com/ads/library
+WebSearch: "{brand name}" meta ads OR facebook ads
+```
+This surfaces whether the brand is publicly known to run ads, even if the library itself is unreachable.
+
+**Record (regardless of path used):**
+- Active ads: yes / no / unknown (with path that was tried)
+- Ad formats detected: video / image / carousel
+- Messaging themes: what the ad copy focuses on (price, offer, emotion, social proof)
+- CTA patterns: "Book Now" / "Learn More" / "Shop" / "Contact"
+- Paid:organic balance assessment
+
+**Compute:**
+- **Paid:organic ratio** — are they over-relying on paid to compensate for weak organic?
+- **Creative variety** — do they test multiple creative variants (sign of a mature paid programme)?
+- **Messaging consistency** — does paid creative align with organic brand voice?
+
+**If all paths fail:** Write "Meta Ad Library data unavailable at audit time. Client should manually verify via facebook.com/ads/library searching their own brand name." Do NOT skip this section — absence of paid activity is itself a finding.
 
 ### 1.8 Competitor Benchmark
 
-Identify 3 competitors (user can provide, or derive from industry + the brand's own content referencing competitors, or Google search `[brand] vs`):
+**Competitor discovery (deterministic, in order):**
+1. **Client-provided list** — use this if given.
+2. **Homepage/About page** — scan for "as seen alongside" or explicit competitor mentions via `curl -sL {url} | grep -oiE '(vs|compared to|alternative to)[^<]{0,80}'`
+3. **Google SERP** — WebSearch: `{brand name} vs Sunshine Coast makeup`, `{brand name} competitors`, `best {industry} {location} alternatives`
+4. **Industry directory** — for AU beauty: abia.com.au, easyweddings.com.au, wedding.com.au — search the same category + location and take the top 3 results that aren't the brand being audited.
+5. **IG-suggested** (Puppeteer only) — navigate to the brand's IG profile, evaluate: `document.querySelectorAll('a[href*="/p/"] ~ span, [aria-label*="Similar accounts"]')` for suggested similar accounts.
+
+For each competitor, run Phase 1.3 at reduced depth (OG meta only, no Puppeteer deep-scrape) to get:
+- Instagram followers + post count
+- Facebook presence
+- TikTok presence
+- Posting frequency estimate
+
+Produce competitor × platform matrix (see Phase 4 report template).
 
 For each competitor, run the same per-platform scrape (1.3) at lower depth:
 - Presence per platform
@@ -485,6 +626,31 @@ Quantitative claims with sources:
 - **🔴 Fix immediately** (this week): Dormant accounts, handle squatting risk, broken link-in-bio, missing verification that's easy to claim
 - **🟠 Fix this month**: Profile upgrades, cadence increases, introduce Reels/Shorts, start reply culture
 - **🟡 Plan for next quarter**: Launch new platform (TikTok/Threads), community programme, UGC campaign, paid creative refresh
+
+---
+
+## Phase 3.5: Pre-Output Sanity Check (MANDATORY — run before writing a single word of the report)
+
+**This check exists because the first Gloss Beauty audit (2026-04-20) scored a 4,478-follower IG brand as "0 presence" due to discovery failure. A guardrail would have caught it. This step is non-negotiable.**
+
+Run all 5 checks. If any FAIL → stop, fix the data source, rerun the affected Phase before proceeding.
+
+### Check 1 — Presence-score consistency
+If `Presence Breadth score < 20` AND `homepage curl returned social anchor tags` → **FAIL: re-run Phase 1.2 raw curl extraction**. Absence-of-evidence ≠ evidence-of-absence.
+
+### Check 2 — Follower-count vs score alignment
+If any platform returned a follower count > 1,000 AND that platform's score < 20 → **FAIL: investigate why — likely a discovery error, not genuinely poor performance**.
+
+### Check 3 — Competitor data completeness
+If the competitor benchmark table contains 3+ cells marked "unknown" → **FAIL: re-run Phase 1.8 competitor OG-meta probes** before scoring Category 7.
+
+### Check 4 — Scope-gap audit
+List every score category where data was "estimated" due to logged-out limitations. If `Content Quality`, `Engagement Depth`, AND `Profile Quality` are all estimated (no Puppeteer data) → **add a visible scope banner at the top of the report** stating that these three scores are indirect inferences and recommending a re-audit with Puppeteer + logged-in session for those categories.
+
+### Check 5 — Paid creative result check
+If ALL three ad-library paths (Puppeteer, curl, WebSearch) returned errors or no data → write "Paid data unavailable" in the report and **do not set paid-related scores to 0 by default** — set to "N/A — manual verification required".
+
+After all 5 checks pass, proceed to Phase 4.
 
 ---
 
