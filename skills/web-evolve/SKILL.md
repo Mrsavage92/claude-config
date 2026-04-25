@@ -176,7 +176,25 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
    Proceed?
    ```
 
-9. HALT if no DESIGN-BRIEF.md in greenfield mode → "Run `Skill('web-design-research')` first."
+9. **DESIGN-BRIEF.md missing → auto-generate, do NOT halt:**
+
+   If DESIGN-BRIEF.md does not exist, generate a minimal one from codebase inspection before proceeding. Do NOT halt. Follow these steps:
+
+   ```
+   a) Grep for font imports in layout.tsx / globals.css → identify display + body fonts
+   b) Grep for color tokens (hsl vars, oklch values) in globals.css → identify palette
+   c) Grep src/app/page.tsx for imported section components → identify page structure
+   d) Take a Puppeteer screenshot at 1440×900 → assess visual direction
+   e) Map to nearest personality from Step 4's table based on: industry keywords in
+      page.tsx/metadata, color temperature (warm/cool/neutral), typography style (serif/sans)
+   f) Write DESIGN-BRIEF.md to project_path with: personality, aesthetic_direction,
+      colour palette (observed), typography (observed), hero description (from screenshot),
+      and a ## Trend Pulse stub with search_date = today and placeholder lists
+   g) Log: "DESIGN-BRIEF.md auto-generated from codebase inspection. Review and refine
+      if personality mapping is incorrect."
+   ```
+
+   This replaces the old HALT with a 30-second auto-detect that unblocks cold starts on any project.
 
 ---
 
@@ -257,21 +275,43 @@ Wait for all five to complete.
    for each partial file (score-AB, score-CDE, score-FGH, score-IJK):
      merged_checks.update(partial.checks)
 
-   passed  = count(v for v in merged_checks.values() if v.status == "PASS")
-   failed  = count(v for v in merged_checks.values() if v.status == "FAIL")
+   # Visual weight multipliers — visual checks count 3×, code quality 0.5×
+   VISUAL_WEIGHT = {
+     "A7":3,"A9":3,"D4":3,"D5":3,"F6":3,"K2":3,"K4":3,  # product visible, hero depth
+     "E3":2,"E4":2,"E5":2,"E6":2,"E9":2,"E10":2,          # section presence
+     "J1":2,"J2":2,"J3":2,"J6":2,                         # copy quality (conversion impact)
+     "A7":3,"A11":0.5,"I4":0.5,"I8":0.5,"I2":0.5,        # docs-only design system
+     "D1":0.5,"I5":0.5,"I6":0.5,"C6":0.5,"C7":0.5,       # code quality / invisible
+     "B1":0,"B2":0,"B3":0,"B4":0,"B7":0,"B8":0,"B9":0,   # 21st.dev process (WONTFIX anyway)
+     "H1":0,"H2":0,                                         # process integrity (WONTFIX anyway)
+   }
+   default_weight = 1  # all other checks
+
+   weighted_passed = sum(VISUAL_WEIGHT.get(k, default_weight)
+                         for k,v in merged_checks.items() if v.status=="PASS")
+   weighted_total  = sum(VISUAL_WEIGHT.get(k, default_weight)
+                         for k,v in merged_checks.items()
+                         if v.status not in ("N/A","WONTFIX","NEEDS_HUMAN"))
+
    na      = count(v for v in merged_checks.values() if v.status == "N/A")
    wontfix = count(v for v in merged_checks.values() if v.status == "WONTFIX")
    nh      = count(v for v in merged_checks.values() if v.status == "NEEDS_HUMAN")
 
-   denominator = len(merged_checks) - na - wontfix - nh
-   raw_score   = (passed / denominator) * 100 if denominator > 0 else 0
+   raw_score = (weighted_passed / weighted_total) * 100 if weighted_total > 0 else 0
 
-   # Veto logic — MUST evaluate across ALL merged checks
+   # Veto logic — MUST evaluate across ALL merged checks (unchanged)
    any_A_fail = any(k.startswith("A") and v.status=="FAIL" for k,v in merged_checks.items())
-   any_B_fail = any(k.startswith("B") and v.status=="FAIL" for k,v in merged_checks.items())
+   any_B_fail = any(k.startswith("B") and v.status=="FAIL"
+                    and merged_checks[k].get("wontfix") != True
+                    for k,v in merged_checks.items())
    if any_A_fail:   final_score = min(60, raw_score); veto_check = first A FAIL
    elif any_B_fail: final_score = min(80, raw_score); veto_check = first B FAIL
    else:            final_score = raw_score;          veto_check = null
+
+   # Log weight breakdown for transparency
+   # "Weighted score: {weighted_passed:.1f} / {weighted_total:.1f} = {raw_score:.1f}%
+   #  Visual checks (3×): {list of visual check IDs that passed/failed}
+   #  Code quality (0.5×): {list of code quality check IDs that passed/failed}"
 
    merged_priority_queue = sorted(
      [entry for partial in partials for entry in partial.priority_queue if entry.status=="FAIL"],
@@ -510,17 +550,28 @@ Merge rescore into current score: update only the checks whose category letters 
 
 ---
 
-### Step 4.5 — Determine fix_type before screenshots
+### Step 4.5 — Determine fix_type via git diff (deterministic, no judgment required)
 
-Before spawning the post-fix screenshot agent, classify the iteration's fix_type:
+After the fix is applied and committed (Step 3.5), run:
 
-```
-fix_type = "visual"    if fix_skill in [overdrive, impeccable, bolder, layout, colorize, animate, web-component]
-           "copy"      if fix_skill in [clarify]
-           "docs-only" if fix_context touches ONLY *.md files (DESIGN-BRIEF.md, BUILD-LOG.md, etc.) with no .tsx/.ts/.css changes
+```bash
+git -C "{project_path}" diff --name-only HEAD~1 HEAD
 ```
 
-Pass `fix_type` in the web-screenshot prompt so the agent can include it in its verdict JSON.
+Parse the output:
+
+```
+changed_files = [list of files changed in the commit]
+
+if ALL changed_files match *.md → fix_type = "docs-only"
+elif ANY changed_file matches *.tsx|*.ts|*.css|*.js|*.jsx → fix_type = "visual" or "copy"
+  then: if fix_skill in [clarify] → fix_type = "copy"
+        else → fix_type = "visual"
+```
+
+This is deterministic — no judgment call. The git diff output is ground truth for what actually changed. Pass `fix_type` in the web-screenshot prompt.
+
+**docs-only fast path:** If `fix_type == "docs-only"` → SKIP Steps 2 and 4 (no screenshots needed). Go directly to rescore.
 
 **docs-only fast path:** If `fix_type == "docs-only"` → SKIP Steps 2 and 4 (no screenshots needed). Go directly to rescore. If checks now PASS → KEEP. If still FAIL → REVERT. No screenshot verdict needed, no NULL_DELTA risk.
 
