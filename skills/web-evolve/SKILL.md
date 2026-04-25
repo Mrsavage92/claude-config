@@ -103,6 +103,28 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
    ```
    HALT if not 200.
 
+6.5 **ENVIRONMENT PROBE — sub-agent resolution check:**
+
+   Attempt to spawn a minimal Agent with `subagent_type: "web-score"`. If it errors with "Agent type not found" → set `USE_GENERAL_PURPOSE_FALLBACK = true` and log:
+   ```
+   ⚠️  web-score subagent_type not registered in this environment (Windows VS Code extension or non-standard install).
+   Switching all Phase B/C agent calls to general-purpose mode.
+   Agent spec paths will be injected into each prompt.
+   ```
+
+   **When USE_GENERAL_PURPOSE_FALLBACK = true**, every agent call in Phase B and Phase C that uses `subagent_type: "web-score"` etc. must instead use:
+   ```
+   subagent_type: "general-purpose"
+   prompt: |
+     Read your agent spec first: ~/.claude/agents/{agent_name}.md
+     Then execute it with these inputs:
+     {original prompt body}
+   ```
+   
+   Where `{agent_name}` is `web-score`, `web-benchmark`, `web-screenshot`, or `web-patch` as appropriate.
+   
+   This fallback is transparent — the same JSON output format, the same file paths, the same behaviour. The only difference is the model routing and tool permissions come from `general-purpose` rather than the specialist agent definition.
+
 7. Create `.evolution/` directories (four separate calls):
    ```bash
    mkdir -p "{project_path}/.evolution/baseline"
