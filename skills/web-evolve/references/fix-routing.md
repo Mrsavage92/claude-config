@@ -27,12 +27,22 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 |---|---|---|---|
 | B1 | Component Lock < 11 entries | `Skill('web-design-research')` step 6 to re-run all 11 MCP queries | only the design-research skill can populate the Lock table |
 | B2 | Component Lock has placeholder values | `Skill('web-design-research')` step 6 | same |
-| B3 | Section file missing 21st.dev source comment | `mcp__magic__21st_magic_component_inspiration` to confirm the source, then `Skill('web-fix')` to add the header comment | provenance is a one-line file edit |
+| B3 | Section file missing 21st.dev source comment | `mcp__magic__21st_magic_component_inspiration` to confirm the source, then `Skill('web-fix')` to add the header comment | provenance is a one-line file edit. **If B3 passes (comment exists) but B9 fails (no real import) — escalate to B9 immediately. Comment-only provenance without actual component integration is B3 theatre.** |
 | B4 | Transcript missing 11× MCP calls | This means design research was bypassed in the original build. Invoke `Skill('web-design-research')` to redo Phase 0.5 properly. | retroactive research |
 | B5 | No 21st.dev component_builder invocations | **If backfill mode: mark N/A** per mode-detection rule in `shared/landing-page-checklist.md` (section already exists — builder is for fresh installs). **If greenfield: invoke `mcp__magic__21st_magic_component_builder`** per customised section to codify builder usage. | backfill retrofits should not require builder calls — retro correction from AuditHQ v2 |
 | B6 | (merged into B3 — removed 2026-04-24 retro) | N/A — see B3 | redundant check removed |
 | B7 | Component pattern drifted from Lock | `Skill('web-component')` to re-source from Lock OR update DESIGN-BRIEF if the change was deliberate | reconcile |
 | B8 | New session lost 21st.dev citation | `Skill('web-fix')` to restore the comment from git history | undo accidental wipe |
+| B9 | Section files have provenance comments but no actual 21st.dev component imports (ratio of real imports < 60% of Lock rows) | `mcp__magic__21st_magic_component_inspiration` to find the correct component, then `mcp__magic__21st_magic_component_builder` (greenfield) OR `Skill('web-component')` (backfill retrofit) to actually install the component and replace the hand-built code | Real integration beats comment theatre. Added 2026-04-25 retro — AuditHQ v2 passed B3 on comments with zero actual 21st.dev components installed. |
+
+---
+
+## Category H — Process Integrity
+
+| Check | Failure pattern | Fix skill | Rationale |
+|---|---|---|---|
+| H1 | Fix applied via direct Edit/Bash/Write without a Skill() or MCP tool call | HALT. Mark iteration VOID. Re-run the correct fix via `Skill('X')` per fix-routing table. Do NOT proceed to re-score. | The loop routes through skills. Inline synthesis is the root cause failure this skill exists to prevent. |
+| H2 | Before/after screenshots are pixel-identical (null-delta) | HALT. `git revert HEAD --no-edit`. Mark iteration VOID. The fix didn't visibly change anything — escalate the fix strategy: try a different skill, or mark the check WONTFIX if 3 attempts all null-delta. | Committed code ≠ visible improvement. Score only counts visible progress. |
 
 ---
 

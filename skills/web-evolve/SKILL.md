@@ -34,6 +34,10 @@ Use this when an existing website needs to be made vastly better without a wipe-
 
 7. **Explicit WONTFIX path.** When a check genuinely doesn't apply to this repo AND N/A is too narrow (e.g. B5 in backfill when mode detection couldn't flip it automatically), the user can mark it WONTFIX with a one-sentence justification. WONTFIX items are excluded from the denominator (like N/A) but produce an audit-trail entry in BUILD-LOG.md: `check-id WONTFIX — [reason] — [user confirmation]`. Cannot be auto-applied; requires user decision.
 
+8. **Visual-diff gate — no invisible wins.** After every fix, a Puppeteer screenshot of the affected section MUST be captured and compared to the pre-fix screenshot. If the before/after screenshots are pixel-identical (same layout, same content, no visible change), the iteration is null-delta: revert the commit, mark the iteration VOID in BUILD-LOG.md, do NOT count the score delta. "Committed code" ≠ "visibly improved page." The diff must be human-perceptible. Null-delta iterations do NOT count toward the max-iteration cap.
+
+9. **No Skill call = no iteration credit.** Every fix applied during the loop MUST correspond to a `Skill('X')` tool invocation OR a direct named MCP tool call in this session's transcript. Fixes applied by direct Edit/Bash/Write without a Skill wrapper are process violations — mark iteration VOID under check H1 and re-run via the correct skill. The loop routes through skills; it does not synthesise their logic inline.
+
 ---
 
 ## Inputs
@@ -104,19 +108,21 @@ Loop while overall score < target AND iterations < max:
 
 4. **Apply the fix**, then commit per-iteration: `git commit -m "evolve: [page] iteration N — fix [check-id]"`.
 
-5. **Re-screenshot the affected section + page.** Save to `.evolution/iter-N/`.
+5. **Re-screenshot the affected section + page.** Save to `.evolution/iter-N/[section].png`. Compare against the previous iteration's screenshot for this section.
 
-6. **Re-run the full checklist for this page.** Compute new score.
+6. **Visual-diff check (mandatory before re-scoring).** If the before/after screenshots for the affected section are pixel-identical — same layout, same content, no visible change — mark the iteration VOID: revert the commit, log `iter N: VOID — null-delta, no visible change despite code change`, and do NOT re-score. A null-delta iteration does NOT consume one of the max-iteration slots.
 
-7. **Decision:**
-   - **Score went UP** → keep commit, log to `EVOLUTION-LOG.md` with delta, update priority queue, continue loop.
+7. **Re-run the full checklist for this page.** Compute new score. (Only reached if step 6 confirms a visible diff.)
+
+8. **Decision:**
+   - **Score went UP** → keep commit, log to `EVOLUTION-LOG.md` with delta AND screenshot paths, update priority queue, continue loop.
    - **Score stayed SAME** → keep commit IF the failed check is now PASS (other checks may have shifted N/A), otherwise revert.
    - **Score went DOWN** → `git revert HEAD --no-edit`, log "REGRESSION: tried [skill] for [check], score dropped from X to Y, reverted", remove that skill from candidates for this check, try the next-best skill or skip if exhausted.
 
-8. **Stop conditions:**
+9. **Stop conditions:**
    - Overall score ≥ target → exit loop, proceed to Phase D
    - All failed checks attempted with no improvement → log STUCK, exit loop
-   - Max iterations hit → exit loop, log remaining failures
+   - Max iterations hit (null-delta iterations excluded from count) → exit loop, log remaining failures
 
 ---
 

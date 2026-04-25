@@ -51,7 +51,7 @@ Mode MUST be declared in the iteration 0 baseline receipt. Every iteration must 
 | A6 | No generic indigo `hsl(239 84% 67%)` or violet `hsl(258 90% 66%)` | grep | empty OR justified |
 | A7 | Hero background is NOT a solid flat colour (must have grain / mesh / pattern / spotlight / photo / animated canvas) | Read hero file, check for SVG/canvas/grain class | line + element |
 | A8 | No raw `<Card>` import count > 30% of section components (proxy: not just shadcn defaults) | `grep -r "import.*Card.*from.*ui/card" src/components/landing/ \| wc -l` ÷ section count | ratio < 0.3 |
-| A9 | Hero contains a product visual / data viz / mockup — NOT a floating gradient blob | Vision check on desktop screenshot | name the visual element seen |
+| A9 | Hero contains a product visual / data viz / mockup — NOT a floating gradient blob | Vision check on desktop screenshot **(ADVISORY — vision-only. Cannot self-PASS. Requires user confirmation OR second independent model review. Mark `ADVISORY-PASS` until confirmed.)** | name the visual element seen + screenshot path + "user-confirmed" OR "pending-review" |
 | A10 | Aesthetic direction is locked in DESIGN-BRIEF.md and is NOT "modern SaaS" / "clean minimal" | Read DESIGN-BRIEF.md `aesthetic_direction` field | quoted value |
 
 **Hard veto:** any FAIL in A1–A10 caps the overall score at 60% until fixed. Doesn't matter how many other checks pass.
@@ -72,6 +72,7 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 | B6 | (merged into B3 — removed to eliminate redundancy with B3) | N/A — removed 2026-04-24 retro | skip |
 | B7 | Each section file's component pattern matches its DESIGN-BRIEF Component Lock entry — verify by grep-extracting imported component names from each `.tsx` file and comparing to the Lock row for that section | `grep -hE "^import .+ from" src/components/landing/[Name].tsx` → cross-reference Lock row for [Name] | table of section → expected-component → found-component, all rows match |
 | B8 | New session that modifies a section MUST re-cite its 21st.dev source (no silent edits losing provenance) | git diff HEAD~1 -- src/components/landing/*.tsx \| grep -E "^-.*21st.dev" returns empty | no provenance lines removed |
+| B9 | **At least 60% of Component Lock rows have a section file whose default export actually imports from a 21st.dev-registry path (`@/components/magicui/*`, `@/components/aceternity/*`, or the exact path installed by `mcp__magic__21st_magic_component_builder`). Provenance comments are NOT sufficient.** Per row: grep the section file for the builder-installed import line. | `grep -hE "^import .+ from ['\"]@/components/(magicui\|aceternity\|21st)" src/components/landing/*.tsx \| wc -l` ÷ Lock row count | ratio ≥ 0.6 + row-level pass table. Added 2026-04-24 retro — B3 comment-only provenance was bypassing real integration. |
 
 ---
 
@@ -127,9 +128,9 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 | F1 | Desktop screenshot at 1440×900 captured | Puppeteer screenshot saved | file path |
 | F2 | Mobile screenshot at 375×812 captured | Puppeteer screenshot saved | file path |
 | F3 | No horizontal overflow at 375px | Puppeteer evaluate `document.documentElement.scrollWidth === window.innerWidth` | both values |
-| F4 | ≥ 3 distinct text sizes visible in hero | Vision check on hero crop | name 3 sizes |
-| F5 | ≥ 4 semantic colors visible in viewport (not monochromatic) | Vision check | name 4 colors with usage |
-| F6 | Signature element present in hero (data viz / score ring / mockup / animated background) | Vision check, must NAME the element | element name + screenshot ref |
+| F4 | ≥ 3 distinct text sizes visible in hero | Vision check on hero crop **(ADVISORY — vision-only. Mark `ADVISORY-PASS` until user-confirmed.)** | name 3 sizes with px estimates + "user-confirmed" OR "pending-review" |
+| F5 | ≥ 4 semantic colors visible in viewport (not monochromatic) | Vision check **(ADVISORY — vision-only. Mark `ADVISORY-PASS` until user-confirmed.)** | name 4 colors with usage + "user-confirmed" OR "pending-review" |
+| F6 | Signature element present in hero (data viz / score ring / mockup / animated background) | Vision check, must NAME the element **(ADVISORY — vision-only. Mark `ADVISORY-PASS` until user-confirmed.)** | element name + screenshot path + "user-confirmed" OR "pending-review" |
 
 ---
 
@@ -144,17 +145,31 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 
 ---
 
-## Total: 51 checks (after 2026-04-24 retro — B6 merged into B3)
+## Category H — Process Integrity (2 checks)
+
+These checks exist to prevent the skill from self-reporting without doing the work. They audit the tool-call transcript, not the code.
+
+| # | Check | Verify how | PASS proof format |
+|---|---|---|---|
+| H1 | Every iteration entry in BUILD-LOG.md maps to a `Skill('X')` tool invocation OR a direct MCP tool call in THIS session's transcript — no inline-synthesised fixes allowed | Cross-reference BUILD-LOG iteration log against this conversation's tool-call history. Every "fix applied" entry must cite a `Skill(...)` call or named MCP tool. If a fix was applied via direct Edit/Bash without a Skill call, the iteration is void. | Iteration count in log = Skill/MCP invocation count in transcript. List any gaps as FAIL. |
+| H2 | Every iteration that claims a score improvement has a pre/post puppeteer screenshot pair that visibly differs — pixel-identical before/after means no real change occurred | Compare `.evolution/iter-N/` screenshots to the prior iteration. If screenshots are identical (same dimensions, same content, no visible diff), the iteration doesn't count and the claimed score delta is void. | File paths of before+after screenshots for each kept iteration. If identical: FAIL, mark iteration as null-delta, revert score claim. |
+
+**H-category failures do NOT cap the score** — they invalidate the iteration entirely and require the iteration to be re-run or struck from the log.
+
+---
+
+## Total: 54 checks (after 2026-04-25 retro — B9 + H1 + H2 added)
 
 | Category | Count | Weight |
 |---|---|---|
 | A. Anti-Slop | 10 | hard veto on FAIL (cap 60) |
-| B. 21st.dev Sourcing | 7 (was 8, B6 merged) | soft veto on FAIL (cap 80) |
+| B. 21st.dev Sourcing | 8 (B6 merged into B3; B9 added 2026-04-25) | soft veto on FAIL (cap 80) |
 | C. Theme Consistency | 8 | medium |
 | D. Animation | 6 | medium |
-| E. Section Completeness | 10 (corrected — was 9 in summary, 10 in body) | medium |
-| F. Visual Quality | 6 | medium (4 vision-led, see confidence note below) |
+| E. Section Completeness | 10 | medium |
+| F. Visual Quality | 6 | medium (4 vision-advisory — cannot self-PASS) |
 | G. A11y & Perf | 4 | medium |
+| H. Process Integrity | 2 | iteration-voiding (not score-capping) |
 
 **Score formula:**
 
@@ -171,7 +186,7 @@ else:                     score = raw_score
 
 **Target score:** 90/100 by default. 95+ for "Stripe/Linear quality" mode.
 
-**Vision-check confidence:** F4 / F5 / F6 / A9 rely on Claude-vision inspection of screenshots. Mark these with `(vision-confidence)` suffix in receipts so future reviewers know to re-verify. The skill cannot yet pixel-count or programmatically verify visual hierarchy — known limitation.
+**Vision-check confidence:** F4 / F5 / F6 / A9 rely on Claude-vision inspection of screenshots. These are **ADVISORY** — they cannot self-PASS. Record them as `ADVISORY-PASS` (tentative) until the user explicitly confirms the visual observation OR a second independent model review agrees. Never count an ADVISORY-PASS as a confirmed PASS in the final score without one of those two confirmations. If neither has occurred, treat as FAIL for scoring purposes. Mark receipts with `(vision-advisory — pending user confirmation)` suffix.
 
 ---
 
@@ -185,13 +200,14 @@ Veto cap applied: B5 FAIL → capped at 80
 Final score: 80/100 (raw 93.75% — see why veto is active below)
 
 ### Category breakdown
-- A. Anti-slop: 10/10 ✓
-- B. 21st.dev: 4/6 (1 N/A, 2 FAIL: B3, B5)
+- A. Anti-slop: 10/10 ✓ (A9: ADVISORY-PASS — pending user confirmation)
+- B. 21st.dev: 4/8 (1 N/A, 2 FAIL: B3, B5)
 - C. Theme consistency: 7/8 (FAIL: C4)
 - D. Animation: 6/6 ✓
 - E. Sections: 10/10 ✓
-- F. Visual: 6/6 ✓ (4 vision-confidence)
+- F. Visual: 3/6 ✓ + 3 ADVISORY-PASS (F4/F5/F6 — vision-advisory, pending user confirmation)
 - G. A11y/Perf: 4/4 ✓
+- H. Process: 2/2 ✓
 
 ### Veto holding the cap
 - B5: FAIL — no mcp__magic__21st_magic_component_builder invocations. (If backfill mode: this should be N/A — check mode detection logic.)
