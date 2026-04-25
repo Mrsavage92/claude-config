@@ -39,7 +39,7 @@ Mode MUST be declared in the iteration 0 baseline receipt. Every iteration must 
 
 ---
 
-## Category A — Anti-Slop (10 checks, hard veto on any FAIL ≤ 60% cap until fixed)
+## Category A — Anti-Slop (11 checks, hard veto on any FAIL ≤ 60% cap until fixed)
 
 | # | Check | Verify how | PASS proof format |
 |---|---|---|---|
@@ -53,8 +53,9 @@ Mode MUST be declared in the iteration 0 baseline receipt. Every iteration must 
 | A8 | No raw `<Card>` import count > 30% of section components (proxy: not just shadcn defaults) | `grep -r "import.*Card.*from.*ui/card" src/components/landing/ \| wc -l` ÷ section count | ratio < 0.3 |
 | A9 | Hero contains a product visual / data viz / mockup — NOT a floating gradient blob | Vision check on desktop screenshot **(ADVISORY — vision-only. Cannot self-PASS. Requires user confirmation OR second independent model review. Mark `ADVISORY-PASS` until confirmed.)** | name the visual element seen + screenshot path + "user-confirmed" OR "pending-review" |
 | A10 | Aesthetic direction is locked in DESIGN-BRIEF.md and is NOT "modern SaaS" / "clean minimal" | Read DESIGN-BRIEF.md `aesthetic_direction` field | quoted value |
+| A11 | **Trend Pulse was run this session** — DESIGN-BRIEF.md contains a `## Trend Pulse` section with: search date (≤ 90 days old), fresh aesthetics list, saturated/avoid list, category-specific gap. Aesthetic direction was cross-referenced against these findings. | Read DESIGN-BRIEF.md `## Trend Pulse` section. Check date. Verify `aesthetic_direction` field references the Trend Pulse (e.g. "chosen because X is Fresh in current discourse" or "avoids Y which is Saturated"). | Trend Pulse section present + date ≤ 90 days + aesthetic rationale cites trend data |
 
-**Hard veto:** any FAIL in A1–A10 caps the overall score at 60% until fixed. Doesn't matter how many other checks pass.
+**Hard veto:** any FAIL in A1–A11 caps the overall score at 60% until fixed. Doesn't matter how many other checks pass.
 
 ---
 
@@ -179,11 +180,11 @@ Consistency is a first-class quality signal. A site that does something in one p
 
 ---
 
-## Total: 62 checks (after 2026-04-25 retro — B9, H1/H2, I1–I8 added)
+## Total: 63 checks (after 2026-04-25 retro — A11, B9, H1/H2, I1–I8 added)
 
 | Category | Count | Weight |
 |---|---|---|
-| A. Anti-Slop | 10 | hard veto on FAIL (cap 60) |
+| A. Anti-Slop | 11 (A11 = Trend Pulse validated) | hard veto on FAIL (cap 60) |
 | B. 21st.dev Sourcing | 8 (B6 merged into B3; B9 added 2026-04-25) | soft veto on FAIL (cap 80) |
 | C. Theme Consistency | 8 | medium |
 | D. Animation | 6 | medium |

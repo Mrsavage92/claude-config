@@ -18,6 +18,7 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 | A8 | Raw shadcn Card spam | `mcp__magic__21st_magic_component_inspiration` then `Skill('web-component')` to swap | source bespoke section components |
 | A9 | No product visual in hero | `mcp__magic__21st_magic_component_inspiration` for "hero with product mockup" + `Skill('web-component')` to install + `Skill('animate')` to enliven | data-forward heroes need a real visual |
 | A10 | `aesthetic_direction` field missing from DESIGN-BRIEF.md | **`Edit` tool direct** to add the field (surgical one-line fix) — only escalate to `Skill('web-design-research')` Step 1b if the existing brief is genuinely unset/wrong. A missing field is an Edit, not a full skill re-run. | proven on AuditHQ v2 iter 1 — surgical Edit cleared the hard veto in one iteration |
+| A11 | Trend Pulse missing, stale (>90 days), or aesthetic not cross-referenced against it | Run `Skill('web-design-research')` Step 0 — the five WebSearch queries — then `Edit` DESIGN-BRIEF.md to add/update the `## Trend Pulse` section and update the `aesthetic_direction` rationale field. If the existing aesthetic IS supported by the fresh trend data, only the DESIGN-BRIEF needs updating (not a redesign). If the aesthetic is on the Saturated list, escalate to a full `Skill('web-design-research')` Step 1b re-run. | Trend data decays. A stale Pulse is as bad as no Pulse. |
 
 ---
 
