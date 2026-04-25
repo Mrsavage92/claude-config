@@ -80,7 +80,9 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "K1":  {"fix_skill": "layout",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "K2":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
   "K3":  {"fix_skill": "layout",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
-  "K4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": "overdrive", "edit_direct": false}
+  "K4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": "overdrive", "edit_direct": false},
+  "H1":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — the fix was applied inline rather than via Skill(). No code fix needed; the process was wrong. Re-run the correct fix via the appropriate Skill() entry for the original check."},
+  "H2":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — null-delta means the committed code produced no visible change. git revert HEAD --no-edit. Try a different fix_skill (use secondary if available) or mark WONTFIX after 3 attempts."}
 }
 ```
 
