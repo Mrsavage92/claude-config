@@ -123,14 +123,16 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
    visual_quality_score = average of 4 ratings
    ```
    
-   **If visual_quality_score < 3.5 → INSERT these at the VERY START of the Phase C iteration queue (BEFORE checklist-driven checks):**
+   **If visual_quality_score < 3.0 → INSERT these at the VERY START of the Phase C iteration queue (BEFORE checklist-driven checks):**
    - VQ-1: `Skill('impeccable')` on the hero section with BOLD execution mandate
    - VQ-2: `Skill('layout')` on the features/main content section
    - VQ-3: `Skill('bolder')` on overall visual weight
    
    **These visual overhaul iterations run FIRST regardless of what the checklist priority queue says.** Only after VQ-1/2/3 are KEPT does the normal checklist queue begin.
    
-   Log: `visual_quality_score: {score}/5 → {inserted VQ iterations | skipped (score >= 3.5)}`
+   **Re-evaluation:** After each VQ iteration that targets a visual check (A7, A9, D4, D5, F6, K2, K4), re-run the visual quality assessment. If visual_quality_score rises above 4.0, the forced VQ queue clears and the normal checklist queue resumes. If after all 3 VQ iterations the score is still < 3.0 → surface NEEDS_HUMAN.
+   
+   Log: `visual_quality_score: {score}/5 → {inserted VQ iterations | skipped (score >= 3.0)}`
 
 8. **Discover CSS selectors for scroll targeting** — grep the main landing page file to build a section-to-selector map. Run:
    ```bash
@@ -309,6 +311,15 @@ Read loop state from `loop-state.json` at start of each iteration. Write it afte
 
 Loop condition: `current_score < target_score AND real_iterations < max_iterations`
 
+**Visual progress gate (evaluated alongside loop condition):**
+Track `visual_checks_flipped` = count of checks with `visual_bonus >= 1000` that flipped FAIL→PASS this session.
+
+When `current_score >= target_score`:
+- If `visual_checks_flipped >= 1` OR `baseline_visual_quality_score >= 4.0` → exit normally to Phase D.
+- If `visual_checks_flipped == 0` AND `baseline_visual_quality_score < 4.0` → **do NOT exit**. Log: `"Score target met via invisible fixes — forcing visual iteration before exit."` Insert one more VQ-1 iteration (Skill('impeccable') on hero) then exit. This prevents the loop declaring victory when only copy/docs/code-quality checks improved.
+
+Store `visual_checks_flipped` in loop-state.json alongside `current_score`.
+
 ---
 
 ### Step 1 — Pick check(s) — with batching
@@ -477,7 +488,33 @@ Merge rescore into current score: update only the checks whose category letters 
 
 ---
 
+### Step 4.5 — Determine fix_type before screenshots
+
+Before spawning the post-fix screenshot agent, classify the iteration's fix_type:
+
+```
+fix_type = "visual"    if fix_skill in [overdrive, impeccable, bolder, layout, colorize, animate, web-component]
+           "copy"      if fix_skill in [clarify]
+           "docs-only" if fix_context touches ONLY *.md files (DESIGN-BRIEF.md, BUILD-LOG.md, etc.) with no .tsx/.ts/.css changes
+```
+
+Pass `fix_type` in the web-screenshot prompt so the agent can include it in its verdict JSON.
+
+**docs-only fast path:** If `fix_type == "docs-only"` → SKIP Steps 2 and 4 (no screenshots needed). Go directly to rescore. If checks now PASS → KEEP. If still FAIL → REVERT. No screenshot verdict needed, no NULL_DELTA risk.
+
+---
+
 ### Step 5 — Decision
+
+**If `fix_type == "docs-only"` → use this table (no screenshot verdict):**
+
+| Rescore result | Decision |
+|---|---|
+| Checks now PASS | **KEEP** — update current_score. real_iterations++. |
+| Checks still FAIL | **REVERT** — `git -C "{project_path}" revert HEAD --no-edit`. attempt_counts[check_id]++. real_iterations++. |
+| Score down | **REVERT** — regression. excluded_skills. real_iterations++. |
+
+**If `fix_type == "visual"` or `"copy"` → use the standard screenshot decision table:**
 
 | Screenshot | Score | Decision |
 |---|---|---|
@@ -486,7 +523,7 @@ Merge rescore into current score: update only the checks whose category letters 
 | CAPTURE_ONLY | same + checks now PASS | **KEEP** — log raw delta. real_iterations++. |
 | CAPTURE_ONLY | same + checks still FAIL | **REVERT** — fix didn't resolve the check. attempt_counts[check_id]++. real_iterations++. |
 | CAPTURE_ONLY | down | **REVERT** — regression. excluded_skills. attempt_counts[check_id]++. real_iterations++. |
-| VISIBLE_DIFF | up | **KEEP** — update current_score. real_iterations++. Mark checks as PASS in queue. |
+| VISIBLE_DIFF | up | **KEEP** — update current_score. real_iterations++. Mark checks as PASS in queue. If visual_bonus[check_id] >= 1000 → increment visual_checks_flipped. |
 | VISIBLE_DIFF | same + all checks now PASS | **KEEP** — log raw delta (veto cap hiding progress). real_iterations++. |
 | VISIBLE_DIFF | same + checks still FAIL | **REVERT** — `git -C "{project_path}" revert HEAD --no-edit`. attempt_counts[check_id]++. real_iterations++. |
 | VISIBLE_DIFF | down | **REVERT** — add fix_skill to excluded_skills[check_id]. attempt_counts[check_id]++. real_iterations++. |
@@ -540,7 +577,8 @@ Commit: {sha | "(reverted)" | "(voided)"}
 
 | Condition | Action |
 |---|---|
-| `current_score >= target_score` | Exit → Phase D |
+| `current_score >= target_score` AND `(visual_checks_flipped >= 1 OR baseline_visual_quality_score >= 4.0)` | Exit → Phase D |
+| `current_score >= target_score` AND `visual_checks_flipped == 0` AND `baseline_visual_quality_score < 4.0` | Force one VQ-1 iteration (Skill('impeccable') on hero, BOLD), then exit → Phase D |
 | `real_iterations >= max_iterations` | Log TIMEOUT → Phase D |
 | Queue empty | Log STUCK → Phase D |
 | Check attempted 3× | Auto-WONTFIX, continue |
