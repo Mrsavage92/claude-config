@@ -67,10 +67,13 @@ When picking which failed check to fix next:
 ```
 priority = (
   veto_severity,        # A-category FAIL = 1000, B-category FAIL = 500, others = 0
+  consistency_flag,     # I-category FAIL = 200 (ranked above C/D/E/F/G — user-visible)
   potential_score_gain, # 100 / (total - n/a)  i.e. each PASS = same point gain
-  category_alphabetical # A < B < C ... so A breaks ties first
+  category_order        # A < B < I < C < D < E < F < G (I elevated above C/D)
 )
 ```
+
+**Why I-category ranks above C/D:** Design consistency failures (I1–I8) are immediately visible to any user — a button that animates on one page but not another, or headings at three different sizes, destroys trust faster than a missing token. C and D failures are often invisible at a glance; I failures rarely are.
 
 Sort failed checks by descending priority. Pick top of queue.
 

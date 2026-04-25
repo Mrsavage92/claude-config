@@ -158,7 +158,28 @@ These checks exist to prevent the skill from self-reporting without doing the wo
 
 ---
 
-## Total: 54 checks (after 2026-04-25 retro — B9 + H1 + H2 added)
+## Category I — Design Consistency (8 checks)
+
+Consistency is a first-class quality signal. A site that does something in one place must do it the same way everywhere. These checks catch the most common drift patterns: typography that changes semantic role between sections, animations that only apply to some instances of a component, spacing that's eyeballed per section rather than token-driven.
+
+**Scoring weight: medium-high.** I-failures rank above C and D in the fix priority queue — inconsistency is more visible to users than most token violations.
+
+| # | Check | Verify how | PASS proof format |
+|---|---|---|---|
+| I1 | All section-level H2 headings use the **same Tailwind text-size class** (no mixing `text-3xl` in one section and `text-4xl` in another for the same semantic role) | `grep -rh "<h2" src/components/landing/ \| grep -oE "text-[a-z0-9]+" \| sort -u` — should return one size class | single class OR documented two-tier scale (e.g. section heading vs sub-heading) with zero ad-hoc exceptions |
+| I2 | Display font applied **only** to headings (h1/h2/h3) — body font used for all body copy. No crossover (display font in `<p>` tags, body font on headings) | `grep -rE "font-display" src/components/landing/ \| grep -v "h[1-6]"` returns empty AND `grep -rE "font-body" src/components/landing/ \| grep "h[1-6]"` returns empty | both greps empty |
+| I3 | All primary CTA `<Button>` components use the **same `variant=` value** for the same semantic role (e.g. every primary CTA is `variant="default"` — not a mix of `default`, `primary`, and unstyled) | `grep -rh "variant=" src/components/landing/ \| grep -oE 'variant="[^"]+"' \| sort \| uniq -c` | list of variant usages — each semantic role maps to exactly one variant, zero exceptions |
+| I4 | Section background alternation follows the pattern declared in DESIGN-BRIEF.md (e.g. odd sections = `bg-background`, even = `bg-muted`) — no ad-hoc per-section deviations | Read DESIGN-BRIEF.md for declared alternation pattern. `grep -rh "bg-" src/components/landing/ \| grep -oE "bg-[a-zA-Z]+" \| sort \| uniq -c` — check against declared pattern | pattern name from DESIGN-BRIEF + grep showing compliance |
+| I5 | All `whileInView` entrance animations reference the **same easing constant** (e.g. `EASE_OUT_EXPO` imported from `lib/motion.ts`) — no inline `[0.16, 1, 0.3, 1]` arrays OR `ease-out` strings mixed with the constant | `grep -rE "ease:\s*[\[\"']" src/components/landing/` — should return only references to the constant, not inline values | constant name + file path, zero inline values |
+| I6 | Hover animation on interactive elements of the same type is **identical** — if one `<Button>` scales on hover, all `<Button>` instances of that variant scale with the same values | `grep -rh "whileHover\|hover:scale\|hover:shadow" src/components/landing/ \| sort -u` — same element type produces same hover class/prop | list of hover patterns — each component type has exactly one pattern |
+| I7 | All entrance animation durations for the same element type fall within a **consistent band** (headings: 400–600ms, cards: 300–500ms, body copy: 200–400ms — no hero card at 100ms and another at 900ms) | `grep -rh "duration:" src/components/landing/ \| grep -oE "[0-9]+" \| sort -n` — check for outliers beyond the declared band | min/max duration per element type, all within band |
+| I8 | Section wrapper top/bottom padding uses the **same `py-X` class** throughout — no section at `py-16`, next at `py-24`, next at `py-32` without a documented reason | `grep -rh "section\|<div" src/components/landing/ \| grep -oE "py-[0-9]+" \| sort \| uniq -c` | dominant py class + count, list any deviations with DESIGN-BRIEF justification |
+
+**Consistency golden rule:** if you do it in one place, do it everywhere of the same type. If you deliberately break the pattern, document the exception in DESIGN-BRIEF.md — undocumented exceptions are FAIL.
+
+---
+
+## Total: 62 checks (after 2026-04-25 retro — B9, H1/H2, I1–I8 added)
 
 | Category | Count | Weight |
 |---|---|---|
@@ -170,6 +191,7 @@ These checks exist to prevent the skill from self-reporting without doing the wo
 | F. Visual Quality | 6 | medium (4 vision-advisory — cannot self-PASS) |
 | G. A11y & Perf | 4 | medium |
 | H. Process Integrity | 2 | iteration-voiding (not score-capping) |
+| I. Design Consistency | 8 | **medium-high** — ranked above C/D in fix priority queue |
 
 **Score formula:**
 
@@ -208,6 +230,7 @@ Final score: 80/100 (raw 93.75% — see why veto is active below)
 - F. Visual: 3/6 ✓ + 3 ADVISORY-PASS (F4/F5/F6 — vision-advisory, pending user confirmation)
 - G. A11y/Perf: 4/4 ✓
 - H. Process: 2/2 ✓
+- I. Design Consistency: 6/8 (FAIL: I5 easing inline arrays, I8 mixed section padding)
 
 ### Veto holding the cap
 - B5: FAIL — no mcp__magic__21st_magic_component_builder invocations. (If backfill mode: this should be N/A — check mode detection logic.)
