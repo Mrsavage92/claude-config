@@ -432,7 +432,9 @@ class SeverityCard(Flowable):
         self.confidence = confidence
         # Smart word-boundary split: never break mid-word
         raw_title = title or ""
-        raw_body  = body[:700] if body else ""
+        # Strip markdown bold markers (**text**) — SeverityCard uses canvas drawing,
+        # not Paragraph flowables, so ** renders literally rather than as bold.
+        raw_body  = re.sub(r'\*\*([^*]+)\*\*', r'\1', body[:2500]) if body else ""
         if len(raw_title) > 100:
             cut = raw_title[:100].rfind(' ')
             if cut < 40: cut = 100
@@ -446,9 +448,9 @@ class SeverityCard(Flowable):
         # Layout: top-bar(18) + title-zone(16) + body-lines + bottom-pad(10)
         body_lines = 0
         if self.body:
-            cpl = max(1, int((self.width - 30) / 4.7))
-            body_lines = min(max(1, math.ceil(len(self.body) / cpl)), 7)
-        self.height = 18 + 18 + body_lines * 12 + 12
+            cpl = max(1, int((self.width - 30) / 4.8))
+            body_lines = max(1, math.ceil(len(self.body) / cpl))
+        self.height = 18 + 18 + body_lines * 12 + 14
 
     def draw(self):
         c   = self.canv
@@ -516,7 +518,8 @@ class SeverityCard(Flowable):
                     line = [word]
             if line: lines_out.append(' '.join(line))
             y = title_y - 14
-            for ln in lines_out[:7]:
+            for ln in lines_out:
+                if y < 4: break
                 c.drawString(lpad, y, esc(ln))
                 y -= 12
 
@@ -677,12 +680,23 @@ def tcell(text, fn=None, fs=8.5, color=None, align=TA_LEFT, bold=False):
 
 def extract_meta(content):
     brand, url, date_str = "", "", datetime.now().strftime("%B %Y")
+    # Match "# Full Digital Audit Report: Brand" (full-audit format)
     m = re.search(r'^#\s+Full Digital Audit Report:\s+(.+)$', content, re.MULTILINE)
-    if m: brand = m.group(1).strip()
+    if m:
+        brand = m.group(1).strip()
+    else:
+        # Match "# X Audit: Brand" or "# X Footprint Audit: Brand" (per-suite format)
+        m = re.search(r'^#\s+[\w\s]+Audit[:\-]\s+(.+)$', content, re.MULTILINE)
+        if m:
+            brand = m.group(1).strip()
     m = re.search(r'\*\*URL:\*\*\s*(\S+)', content)
     if m: url = re.sub(r'[*_]', '', m.group(1)).strip().rstrip('/')
     m = re.search(r'\*\*Date:\*\*\s*(.+?)$', content, re.MULTILINE)
-    if m: date_str = re.sub(r'\*', '', m.group(1)).strip()
+    if m:
+        # Strip markdown bold markers and any parenthetical notes (e.g. "*(Enterprise audit...)*")
+        date_str = re.sub(r'\*[^*]*\*', '', m.group(1))
+        date_str = re.sub(r'\([^)]*\)', '', date_str)
+        date_str = re.sub(r'\*', '', date_str).strip()
     return brand, url, date_str
 
 def extract_score(content):
@@ -902,7 +916,23 @@ def render_md_body(text, st, use_severity_cards=False, current_section=""):
                     body_parts = []
                     while i < len(lines):
                         cl = lines[i].strip()
-                        if not cl: break
+                        if not cl:
+                            # In severity sections, blank lines may be paragraph breaks within a finding.
+                            # Continue collecting if the next non-blank line is a bold-label continuation
+                            # (Evidence:/Impact:/Fix: etc.) rather than a new numbered item or heading.
+                            if use_severity_cards:
+                                j = i + 1
+                                while j < len(lines) and not lines[j].strip():
+                                    j += 1
+                                if j < len(lines):
+                                    ns = lines[j].strip()
+                                    if (re.match(r'^\*\*[A-Z][^*]*?:\*\*', ns) and
+                                            not ns.startswith('#') and not ns.startswith('|') and
+                                            not re.match(r'^\s*\d+\.\s', lines[j])):
+                                        body_parts.append(' ')
+                                        i = j
+                                        continue
+                            i += 1; break
                         if re.match(r'^\s*\d+\.\s+', lines[i]): break
                         if cl.startswith('#') or cl.startswith('|'): break
                         # Consume bullet lines that are bold-label details (Evidence/Impact/Fix etc.)
