@@ -171,77 +171,99 @@ mcp__puppeteer__puppeteer_screenshot  name: "{brand}_{platform}_profile"  width:
 ```
 Save screenshot filename for evidence section in the report.
 
-**Step B — Extract profile metadata via JS eval:**
+**Step B — Extract profile metadata via JS eval (LIVE-VERIFIED 2026-04-25):**
 ```js
 // Run via mcp__puppeteer__puppeteer_evaluate
+// Confirmed working logged-out on IG, TikTok, Facebook
 ({
   og_description: document.querySelector('meta[property="og:description"]')?.content,
   og_title: document.querySelector('meta[property="og:title"]')?.content,
-  canonical: document.querySelector('link[rel="canonical"]')?.href,
-  schema: [...document.querySelectorAll('script[type="application/ld+json"]')]
-    .map(s => { try { return JSON.parse(s.textContent) } catch(e) { return null } })
-    .filter(Boolean)
+  body_stats: document.body.innerText.slice(0, 400)
 })
 ```
-The `og:description` field returns follower/following/post counts for IG, TikTok, and Facebook reliably.
+The `og:description` field returns:
+- Instagram: `"X followers, Y following, Z posts – see Instagram photos and videos from Brand (@handle)"`
+- TikTok: `"@handle X Followers, Y Following, Z Likes - Watch awesome short videos created by..."`
+- Facebook: `"Brand Name, Location. X likes · Y talking about this. Bio text"`
 
-**Step C — Platform-specific extraction (run the JS for each platform):**
+**Step C — Platform-specific extraction (LIVE-VERIFIED selectors only):**
 
-*Instagram:*
+*Instagram (verified against @evoquemakeup, @frank_bod, @glossbeauty.bylouise):*
 ```js
-// Run via mcp__puppeteer__puppeteer_evaluate
+// Dismiss login modal first:
+// mcp__puppeteer__puppeteer_click selector: "svg[aria-label='Close'], button[aria-label='Close'], div[role='dialog'] button:last-child"
+// Then evaluate:
 ({
-  highlights_count: document.querySelectorAll('ul li > div > div > div > div > img').length,
-  grid_items: document.querySelectorAll('article div[style*="padding-bottom"] img, article img[srcset]').length,
-  reel_icons: document.querySelectorAll('[aria-label="Reel"], [aria-label="Clip"], svg[aria-label="Reel"]').length,
-  video_icons: document.querySelectorAll('[aria-label*="Video"], [aria-label*="video"]').length,
-  verified: !!document.querySelector('[aria-label="Verified"], [title="Verified"]'),
-  bio_link_text: document.querySelector('a[href*="linktr.ee"], a[href*="beacons"], a[href*="linktree"]')?.textContent?.trim()
-    || document.querySelector('header a[rel="me nofollow noopener noreferrer"]')?.href
+  grid_total: document.querySelectorAll('article a[href*="/p/"], article a[href*="/reel/"]').length,
+  reel_count: document.querySelectorAll('article a[href*="/reel/"]').length,
+  post_count: document.querySelectorAll('article a[href*="/p/"]').length,
+  reels_pct: Math.round(
+    document.querySelectorAll('article a[href*="/reel/"]').length /
+    Math.max(document.querySelectorAll('article a[href*="/p/"], article a[href*="/reel/"]').length, 1) * 100
+  ) + '%',
+  profile_stats: document.body.innerText.match(/[\d,K]+\s*posts[\s\S]{0,80}[\d,K]+\s*following/)?.[0],
+  bio_lines: document.body.innerText.split('\n').slice(3,8).join(' | '),
+  has_reels_tab: !!document.querySelector('svg[aria-label="Reels"]'),
+  pinned_count: [...document.querySelectorAll('article a')].filter(a =>
+    a.closest('li')?.querySelector('[aria-label*="Pinned"]')).length
 })
 ```
+Note: Story Highlights require logged-in session — NOT accessible logged-out.
+Note: `svg[aria-label="Reel"]` on grid items does NOT work reliably — use `/reel/` URL pattern instead.
 
-*TikTok:*
-```js
-({
-  video_views: [...document.querySelectorAll('strong[data-e2e="video-views"]')]
-    .slice(0,6).map(el => el.textContent),
-  video_count_visible: document.querySelectorAll('div[data-e2e="user-post-item"]').length,
-  bio_link: document.querySelector('a[data-e2e="user-link"]')?.href,
-  verified: !!document.querySelector('[aria-label="Verified account"]')
-})
-```
-
-*Facebook Page:*
+*TikTok (verified against @glossbeautybylouise):*
 ```js
 ({
-  likes: document.querySelector('[aria-label*="people like this"]')?.textContent
-    || document.querySelector('a[href*="followers"] span')?.textContent,
-  category: document.querySelector('[id*="category"]')?.textContent,
-  rating: document.querySelector('span[aria-label*="out of 5"]')?.getAttribute('aria-label'),
-  recent_post_dates: [...document.querySelectorAll('span abbr[data-utime]')]
-    .slice(0,5).map(el => new Date(el.getAttribute('data-utime')*1000).toISOString().split('T')[0])
+  followers: document.querySelector('[data-e2e="followers-count"]')?.innerText,
+  following: document.querySelector('[data-e2e="following-count"]')?.innerText,
+  likes: document.querySelector('[data-e2e="likes-count"]')?.innerText,
+  bio: document.querySelector('[data-e2e="user-bio"]')?.innerText,
+  username: document.querySelector('[data-e2e="user-page"]')?.innerText?.split('\n')[0]
 })
 ```
+⚠️ **TikTok CAPTCHA:** `[data-e2e="user-post-item"]` and `[data-e2e="video-views"]` return 0 when
+CAPTCHA is active (common logged-out). Profile stats STILL work via the above selectors.
+Fall back to `og:description` which bypasses CAPTCHA.
+
+*Facebook Page (verified against /glossbeauty.bylouise1/):*
+```js
+// body.innerText is very rich for Facebook — use this primary approach:
+({
+  full_body: document.body.innerText.slice(0, 800),
+  og_desc: document.querySelector('meta[property="og:description"]')?.content,
+  // Body contains: followers, bio, category, email, linked socials,
+  // recent post text + reactions/comments, review rating — all in one scrape
+  followers: document.body.innerText.match(/[\d,]+ follower/i)?.[0],
+  reviews: document.body.innerText.match(/Not yet rated \([\d]+ review|[\d.]+ out of 5/i)?.[0],
+  email: document.body.innerText.match(/[a-zA-Z0-9.]+@[a-zA-Z0-9.]+\.[a-z]{2,}/)?.[0],
+  linked_ig: document.body.innerText.match(/instagram\.com\/[\w.]+/)?.[0]
+})
+```
+⚠️ Facebook shows a login modal — profile data IS accessible in DOM behind it. Do not dismiss
+modal (it may reload the page). Extract from og:description and body.innerText directly.
 
 *Pinterest:*
 ```js
 ({
-  boards: [...document.querySelectorAll('[data-test-id="board-representation"] h3')]
-    .map(el => el.textContent),
-  monthly_views: document.querySelector('[data-test-id="creator-profile-header-monthly-views"]')?.textContent,
-  pins_count: document.querySelector('span[data-test-id="user-board-count"]')?.textContent
+  monthly_views: document.querySelector('[data-test-id="creator-profile-header-monthly-views"]')?.textContent
+    || document.body.innerText.match(/[\d,K]+ monthly views?/i)?.[0],
+  boards: [...document.querySelectorAll('[data-test-id="board-representation"] h3, [data-test-id*="board"] h3')]
+    .slice(0,10).map(el => el.textContent.trim()),
+  total_pins: document.body.innerText.match(/[\d,]+ pin/i)?.[0]
 })
 ```
 
-**Step D — Screenshot individual top posts (IG + TikTok):**
-Click into the first 3 visible posts to capture captions + visible engagement:
+**Step D — IG individual post caption extraction (LIVE-VERIFIED method):**
+Navigate to individual post URLs (extract from grid links), then use og:description:
+```js
+// Navigate to: "https://www.instagram.com/{handle}/p/{postid}/"
+// or: "https://www.instagram.com/{handle}/reel/{reelid}/"
+// Then evaluate:
+document.querySelector('meta[property="og:description"]')?.content
+// Returns: "X likes, Y comments - @tagged_handle on DATE: 'caption text'"
+// Example: "35 likes, 4 comments - whenfreddiemetlilly on March 15, 2026: 'The perfect mix...'"
 ```
-mcp__puppeteer__puppeteer_click  selector: "article a:first-child, div[data-e2e='user-post-item']:first-child a"
-mcp__puppeteer__puppeteer_screenshot  name: "{brand}_{platform}_post1"  width: 600  height: 700
-mcp__puppeteer__puppeteer_evaluate  script: "document.querySelector('div[role=dialog] ul li span')?.textContent || document.querySelector('h1, [data-e2e=browse-video-desc]')?.textContent"
-```
-Repeat for posts 2 and 3. This gives 3 real captions per platform for pillar + hashtag analysis.
+This is MORE reliable than DOM scraping for captions. Use for first 3 posts per platform.
 
 **Step E — Screenshot competitor profiles (one per competitor):**
 ```
@@ -832,6 +854,20 @@ Full report saved to: SOCIAL-AUDIT.md
 - **Single-platform brand:** Adjust benchmarks. Don't over-penalise a B2B SaaS for not being on Pinterest if ICP is clearly elsewhere. But DO flag if the brand is missing LinkedIn entirely.
 - **Very large brand (enterprise):** Use enterprise benchmarks — cadence, follower, and paid creative expectations scale up.
 - **Regulated industry (health, legal, finance):** Note platform limitations on claims/ads where relevant; adjust platform-fit scoring.
+
+---
+
+## Phase 4.5: Post-Output Validation (MANDATORY)
+
+After writing SOCIAL-AUDIT.md, before calling social-report-pdf:
+
+```bash
+python3 ~/.claude/skills/social-audit/scripts/validate_social_audit.py "{output_path}/SOCIAL-AUDIT.md"
+```
+
+- **Exit 0:** Proceed to PDF.
+- **Exit 1 (warnings):** Fix the WARN items if quick (< 5 min), then proceed. Add scope note to PDF.
+- **Exit 2 (failures):** Return to the failing phase and fix. Do NOT generate PDF until exit 0 or 1.
 
 ---
 
