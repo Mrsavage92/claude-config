@@ -28,6 +28,49 @@ This skill front-loads all component decisions in one dedicated research session
 
 ---
 
+## Step 0 — Trend Pulse (MANDATORY — runs before Step 1, every time)
+
+**The static aesthetic table in Step 1b is a vocabulary, not a verdict.** Design trends move faster than skill files get updated. What was "bold and fresh" in 2024 may be "everyone did that" in 2026. Step 0 gets a live signal before any aesthetic decision is locked.
+
+Run ALL FIVE of these WebSearch queries. Do not skip or batch — each targets a different signal:
+
+```
+WebSearch: "best SaaS landing page design [current year]"
+WebSearch: "web design trends [current year] what's overdone"
+WebSearch: "Awwwards site of the month [current month year]"
+WebSearch: "[product category] website design [current year] award winning"
+WebSearch: "typography trends [current year] web design"
+```
+
+From the results, produce a **Trend Pulse summary** — this is written into DESIGN-BRIEF.md under a `## Trend Pulse` section:
+
+```markdown
+## Trend Pulse — [date searched]
+
+### Fresh / gaining momentum
+- [aesthetic or pattern appearing on award-winning sites this cycle]
+- [font pairing or type style being praised]
+- [color territory appearing on new high-quality launches]
+
+### Saturated / avoid
+- [aesthetic being called "overdone", "tired", or mocked in design discourse]
+- [font / color combination appearing in "every SaaS site" discourse]
+- [pattern that dominated 12–18 months ago and now signals "lazy AI build"]
+
+### Category-specific signal
+- [what the top 2-3 sites in this product's category are doing visually right now]
+- [what none of them are doing — the gap]
+```
+
+**How the Trend Pulse feeds Step 1b:**
+- Any aesthetic in the **Saturated** list gets deprioritised — require a strong justification to use it.
+- Any aesthetic in the **Fresh** list gets elevated — prefer it if it fits the personality.
+- The **Category-specific gap** is the single most powerful differentiator: if every competitor uses dark mode with blue accents, go light with a warm hue. If every competitor uses geometric patterns, go organic. The gap is the opportunity.
+
+**Rule:** if the Trend Pulse search returns nothing useful (paywalled, no results), try alternate queries substituting "UI design" or "product design" for "web design". If still empty, note "trend data unavailable — proceeding with static table only" in DESIGN-BRIEF.md and proceed. Do not skip Step 0 silently.
+
+---
+
 ## Step 1 — Product Personality Classification
 
 Map this product to ONE of 8 personalities. This drives every downstream decision.
@@ -72,10 +115,16 @@ Personality (Step 1) tells you **what the product feels like emotionally**. Aest
 
 **Lock the aesthetic and write WHY this aesthetic differentiates from the dominant category look (from Step 2 competitor research).** This is the single biggest lever against AI convergence — without it, every product gets the same "modern SaaS" treatment.
 
+**Before locking — cross-reference against the Step 0 Trend Pulse:**
+- Is this aesthetic on the **Saturated** list? → Deprioritise. Pick the next-best fit from the table, or find a fresh variant (e.g. "Brutally minimal" can be made fresh with a distinctive typographic choice that's currently trending).
+- Is this aesthetic on the **Fresh** list? → Elevate it if it fits the personality — current momentum + personality fit is the strongest combination.
+- Does this aesthetic address the **Category-specific gap** from the Trend Pulse? → Prioritise it — being the only one doing something in a crowded category is worth more than being the best at what everyone else does.
+
 **Rules:**
 - "Modern SaaS" / "clean and minimal" / "professional" are NOT valid aesthetic directions. They are the convergence trap.
 - The aesthetic must be visible from the first frame. A user closing their eyes after 1 second should be able to describe it in one word.
 - Implementation complexity must MATCH the aesthetic. Maximalist needs elaborate code with extensive animations. Minimalist needs restraint, precision, careful spacing. Don't half-commit.
+- **The table above is a starting vocabulary, not a closed list.** If the Trend Pulse surfaces an emerging aesthetic not in the table (e.g. "glassmorphism revival", "kinetic typography", "anti-grid organic layout"), you may adopt it — name it, describe it, and lock it. Do not feel constrained to the 10 rows above.
 
 ---
 
@@ -83,13 +132,13 @@ Personality (Step 1) tells you **what the product feels like emotionally**. Aest
 
 **First: check if MARKET-BRIEF.md exists in the project root.** If it does, read the "Top 3 competitors" and "Features users consistently request" sections — these contain pre-fetched competitor data from Phase 0.25. Skip the WebSearch queries below and proceed directly to the analysis step. Do not duplicate research.
 
-If MARKET-BRIEF.md does not exist, run these 4 WebSearch queries:
+If MARKET-BRIEF.md does not exist, run these 4 WebSearch queries (substitute `[current year]` with the actual current year):
 
 ```
-WebSearch: "[product category] SaaS website design 2025"
+WebSearch: "[product category] SaaS website design [current year]"
 WebSearch: "[closest competitor] landing page hero"
 WebSearch: "[closest competitor 2] landing page hero"
-WebSearch: "best [industry] software landing page design"
+WebSearch: "best [industry] software landing page design [current year]"
 ```
 
 From results, identify and document both angles:
@@ -130,11 +179,13 @@ Read `references/typography-library.md` for font pairings by personality type an
 **Hard typography bans (cannot be display/heading font):**
 - **Inter** — most overused AI-SaaS heading font on the planet. Banned as display.
 - **Roboto, Arial, Helvetica, system-ui** — generic system stacks. Banned as display.
-- **Space Grotesk** — flagged by Anthropic's frontend-design plugin as a convergence trap. Banned as display unless paired with deliberately contrarian aesthetic.
+- **Space Grotesk** — convergence trap. Banned as display unless paired with deliberately contrarian aesthetic.
+
+**Trend Pulse cross-reference for typography:** Before locking the font pair, check what the Step 0 Trend Pulse surfaced under "typography trends". If a specific font is appearing on award-winning sites this cycle, consider it. If a font you were planning to use appears in "everywhere right now" discourse, deprioritise it — even if it's not on the hard-ban list. The bans are a floor; trend-awareness is the ceiling.
 
 **Body font allowance:** Inter is acceptable as a BODY font (not display) for Enterprise Authority and Civic personalities where reading volume justifies it. Every other personality must pick a body font with character (Plus Jakarta Sans, Geist, Manrope, IBM Plex Sans, Söhne alternatives, etc.).
 
-**The pairing rule (from frontend-design):** Pair a distinctive display font with a refined body font. Both fonts should be visible from a 1-second glance — if you can't tell two products apart by their type, you've failed.
+**The pairing rule:** Pair a distinctive display font with a refined body font. Both fonts should be visible from a 1-second glance — if you can't tell two products apart by their type, you've failed.
 
 ---
 
@@ -312,8 +363,10 @@ This file is the single source of truth. Build skills read it — they do not re
 
 ## Anti-Patterns
 
+- **Skipping Step 0 (Trend Pulse)** — picking an aesthetic from the static table without first running the 5 WebSearch queries is the single easiest way to produce dated, on-trend-for-last-year work. Step 0 is not optional. No Trend Pulse = A11 hard veto.
+- **Treating the aesthetic table as a closed list** — the table is vocabulary, not verdict. If the Trend Pulse surfaces something fresher that fits the personality, use it and name it. Don't force a square product into a round aesthetic category just because it's in the table.
 - **Generic MCP calls** — never use vague queries like "features section". Always use personality-specific queries from `references/component-selection.md`.
-- **Re-running design research** — if DESIGN-BRIEF.md already exists in the project root, do not run this skill again. Read the existing brief and continue.
+- **Re-running design research** — if DESIGN-BRIEF.md already exists in the project root, do not run this skill again. Read the existing brief and continue. **Exception:** if the existing brief's Trend Pulse is >90 days old, re-run Step 0 only and update the DESIGN-BRIEF — do not redo the full skill.
 - **Electric blue `hsl(213 94% 58%)`** — banned for all non-developer-infrastructure products. No exceptions.
 - **Purple-to-pink gradient on white** — most overused AI-SaaS background. Banned without exception.
 - **"Modern SaaS" / "clean & minimal" as aesthetic direction** — not a direction, it's the convergence trap. Pick a real flavor (Step 1b).
@@ -330,13 +383,15 @@ This file is the single source of truth. Build skills read it — they do not re
 
 Before handoff to `/web-scope`:
 
+- [ ] **Step 0 Trend Pulse run** — 5 WebSearch queries completed, Fresh/Saturated/Gap lists written into DESIGN-BRIEF.md `## Trend Pulse` section with today's date
 - [ ] Personality type identified and justified
 - [ ] **Memorability hook stated** (the one thing user remembers 24h later)
-- [ ] **Aesthetic direction locked** from Step 1b (NOT "modern SaaS" / "clean minimal")
+- [ ] **Aesthetic direction locked** from Step 1b — cross-referenced against Trend Pulse (NOT "modern SaaS" / "clean minimal", NOT on Saturated list)
+- [ ] Aesthetic rationale cites trend data ("chosen because X is Fresh / avoids Y which is Saturated")
 - [ ] 4 WebSearch competitor queries run — findings documented (color, mode, clichés)
 - [ ] Color palette selected with explicit rejection of defaults + reasons
 - [ ] **Banned colors confirmed avoided** (electric blue, purple-pink-on-white, generic indigo/violet)
-- [ ] Typography pair locked — display font is NOT Inter/Roboto/Arial/Space Grotesk
+- [ ] Typography pair locked — display font is NOT Inter/Roboto/Arial/Space Grotesk, cross-referenced against Trend Pulse typography findings
 - [ ] Hero architecture pattern chosen (Centered / Split-pane / Full-screen / Minimal)
 - [ ] All 11 MCP queries run — one per mandatory section
 - [ ] Each component choice recorded with query used + product-specific reason
