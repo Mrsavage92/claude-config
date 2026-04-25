@@ -4,6 +4,94 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 
 ---
 
+## SKILL_LOOKUP (machine-readable — orchestrator reads this block, not the tables below)
+
+```json
+{
+  "A1":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "A2":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "A3":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "A4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "A5":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "A6":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "A7":  {"fix_skill": "overdrive",  "prereq": null,                                        "secondary": "animate", "edit_direct": false},
+  "A8":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
+  "A9":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
+  "A10": {"fix_skill": null,          "prereq": null,                                        "secondary": "web-design-research", "edit_direct": true},
+  "A11": {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
+  "B1":  {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
+  "B2":  {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
+  "B3":  {"fix_skill": "web-fix",    "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null,  "edit_direct": false},
+  "B4":  {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
+  "B5":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
+  "B7":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "B8":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "B9":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
+  "C1":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C2":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C3":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C5":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C6":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C7":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "C8":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "D1":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "D2":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "D3":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "D4":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "D5":  {"fix_skill": "overdrive",  "prereq": null,                                        "secondary": "animate", "edit_direct": false},
+  "D6":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "E1":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
+  "E2":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "E3":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
+  "E4":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "E5":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "E6":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "E7":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "E8":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "E9":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "E10": {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
+  "F3":  {"fix_skill": "adapt",      "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "F4":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "F5":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "F6":  {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "web-component", "edit_direct": false},
+  "G1":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
+  "G2":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
+  "G3":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "G4":  {"fix_skill": "optimize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "G5":  {"fix_skill": "optimize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "G6":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I1":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I2":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I3":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I5":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I6":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I7":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "I8":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J1":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J2":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J3":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J4":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J5":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J6":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J7":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "J8":  {"fix_skill": "clarify",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "K1":  {"fix_skill": "layout",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "K2":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
+  "K3":  {"fix_skill": "layout",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "K4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": "overdrive", "edit_direct": false}
+}
+```
+
+**How to read this lookup:**
+- `fix_skill`: the primary Skill() to invoke. null means edit_direct=true (use Edit tool directly).
+- `prereq`: MCP tool to call BEFORE the fix_skill (component sourcing). null means no prereq.
+- `secondary`: fallback skill if primary causes regression or VOID (in excluded_skills).
+- `edit_direct`: true means use Edit tool directly — too small for a full skill invocation.
+
+---
+
 ## Category A — Anti-Slop fixes (hard veto, fix first)
 
 | Check | Failure pattern | Fix skill | Rationale |

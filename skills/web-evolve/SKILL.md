@@ -4,28 +4,25 @@ description: >
   Score-driven continuous improvement loop for existing websites. Orchestrates
   a swarm of specialist agents — web-score (audit), web-benchmark (competitor gap),
   web-patch (commit-only), web-screenshot (visual diff) — to iteratively improve
-  a landing page until it hits the target score. The orchestrator calls Skill()
-  refinement skills directly (in main context), then delegates commit to web-patch.
-  Every score comes from web-score. Every diff comes from web-screenshot.
+  a landing page until it hits the target score. Skill() refinement skills are
+  called directly in orchestrator context. Agents only audit, screenshot, or commit.
 ---
 
 # Skill: /web-evolve
 
-**Agent-swarm orchestrator for landing page quality improvement.**
-
-Coordinates four specialist agents. Never audits or fixes inline. Calls refinement skills (`Skill('typeset')` etc.) directly in its own context — the only place Skill() reliably works — then hands the commit off to web-patch.
+Coordinates four specialist agents. Never audits or fixes inline. Calls refinement skills directly in its own context. Delegates commit-only work to web-patch.
 
 ---
 
 ## Cardinal rules
 
-1. **Never audit inline.** All scoring comes from `web-score` agent JSON output.
-2. **Never fix inline.** All code changes happen via `Skill('X')` calls in this context, then committed by `web-patch`.
-3. **No score without a receipt.** Every score claim cites `score.json` from web-score.
+1. **Never audit inline.** All scoring from web-score agent JSON output only.
+2. **Never fix inline.** Code changes via `Skill('X')` or MCP tools in this context only.
+3. **No score without receipt.** Every score cites `score.json` from web-score.
 4. **No kept commit without VISIBLE_DIFF.** Every kept iteration cites web-screenshot verdict.
-5. **Vision checks block until user confirms.** Surface every `NEEDS_HUMAN` block. Wait. Update score.json. Continue.
-6. **NULL_DELTA = VOID.** Reclaim the iteration slot. Try a different fix strategy.
-7. **Raw score transparency.** Veto cap hiding >5 pts: always show both numbers.
+5. **Vision checks block until user confirms.** Surface NEEDS_HUMAN, wait, update, continue.
+6. **NULL_DELTA = VOID.** Reclaim the slot. Try different fix strategy.
+7. **Raw transparency.** Veto cap hiding >5 pts: show both numbers always.
 
 ---
 
@@ -34,72 +31,76 @@ Coordinates four specialist agents. Never audits or fixes inline. Calls refineme
 | Input | Default | Notes |
 |---|---|---|
 | `project_path` | current directory | auto-detect |
-| `live_url` | from BUILD-LOG.md | production URL for Phase E only |
-| `dev_server_url` | none | if set, loop screenshots use localhost — no deploy wait |
-| `target_score` | 90 | use 95 for Stripe/Linear quality mode |
+| `live_url` | from BUILD-LOG.md | production URL — Phase E only |
+| `dev_server_url` | none | if set, loop uses localhost — no deploy wait per iteration |
+| `target_score` | 90 | 95 = Stripe/Linear quality mode |
 | `benchmark_url` | auto by personality | override with `--benchmark=URL` |
-| `mode` | auto-detect | backfill = DESIGN-BRIEF.md exists + src/components/landing/ populated |
-| `max_iterations` | 8 (greenfield) / 20 (backfill) | VOID iterations excluded from cap |
+| `mode` | auto-detect | backfill = DESIGN-BRIEF.md + src/components/landing/ populated |
+| `max_iterations` | 8 (greenfield) / 20 (backfill) | VOID iters excluded from cap |
 
 ---
 
-## Reference file paths (always use these — never hardcode machine paths)
+## Reference paths (always use tilde paths — never hardcode machine paths)
 
-- Checklist: `~/.claude/skills/shared/landing-page-checklist.md`
-- Fix routing: `~/.claude/skills/web-evolve/references/fix-routing.md`
-- Scoring engine: `~/.claude/skills/web-evolve/references/scoring-engine.md`
+```
+checklist:     ~/.claude/skills/shared/landing-page-checklist.md
+fix-routing:   ~/.claude/skills/web-evolve/references/fix-routing.md
+scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
+```
 
 ---
 
-## Check → section mapping (used to tell web-screenshot where to scroll)
+## Check → section map (for web-screenshot scroll targeting)
 
 | Checks | Section |
 |---|---|
-| A7, A9, D4, D5, J1, J2, K4 | `hero` |
-| A1–A6, A8, A10, A11, B3, B9 | `global` |
-| C1–C8, I1–I8 | `global` |
-| D1–D3, D6 | `global` |
-| E3 | `trust-bar` |
-| E4 | `stats` |
-| E5 | `features` |
-| E6 | `testimonials` |
-| E7 | `pricing` |
-| E8 | `faq` |
-| E9 | `final-cta` |
-| E10 | `footer` |
-| F1–F6, H1–H2, G1–G6 | `full-page` |
-| J3–J8 | `global` |
-| K1 | `features` |
-| K2–K3 | `full-page` |
+| A7, A9, D4, D5, J1, J2, K4, E2 | hero |
+| A1–A6, A8, A10, A11, B3, B9, C1–C8, D1–D3, D6, G1–G6, I1–I8, J3–J8 | global |
+| E3 | trust-bar |
+| E4 | stats |
+| E5 | features |
+| E6 | testimonials |
+| E7 | pricing |
+| E8 | faq |
+| E9 | final-cta |
+| E10 | footer |
+| F1–F6, H1–H2, K1–K4 | full-page |
 
 ---
 
 ## Phase A — Setup
 
-**Run all file reads in parallel (single message, multiple Read tool calls):**
+**Run all reads in parallel (single message):**
 
 1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`
 
-2. Detect mode: DESIGN-BRIEF.md exists AND `src/components/landing/` is non-empty → `backfill`. Otherwise → `greenfield`.
+2. **Check for existing loop state** — if `.evolution/loop-state.json` exists, read it. Offer to resume:
+   > "Existing loop state found at iteration {N}, score {S}. Resume? (yes/no)"
+   If yes — skip Phases A-B, restore loop state, continue from Phase C. If no — proceed fresh (loop-state.json will be overwritten).
 
-3. Extract personality from DESIGN-BRIEF.md by grepping for the line starting with `personality:` (added to template 2026-04-25). If not found, search for `Personality type:` in the Product Personality section. If still not found → default to `Enterprise Authority` and log assumption.
+3. Detect mode: DESIGN-BRIEF.md exists AND `src/components/landing/` non-empty → `backfill`. Else → `greenfield`.
 
-4. Determine benchmark URL:
+4. Extract personality — try in order:
+   - `grep "^personality:" {project_path}/DESIGN-BRIEF.md` (top-level field)
+   - `grep "Personality type:" {project_path}/DESIGN-BRIEF.md` (section heading)
+   - Default: `Enterprise Authority` — log assumption to BUILD-LOG.md
+
+5. Determine benchmark URL from personality:
    - Enterprise Authority → `https://stripe.com`
    - Data Intelligence → `https://linear.app`
    - Growth Engine → `https://vercel.com`
    - Trusted Productivity → `https://notion.so`
    - Premium Professional → `https://framer.com`
    - Bold Operator → `https://shopify.com`
-   - Health & Care / Civic → user must specify `--benchmark=URL` (HALT if not provided)
+   - Health & Care / Civic → user must specify `--benchmark=URL`
 
-5. Verify `live_url` returns 200:
+6. Verify `live_url` returns 200:
    ```bash
-   curl -s -o /dev/null -w "%{http_code}" {live_url}
+   curl -s -o /dev/null -w "%{http_code}" "{live_url}"
    ```
    HALT if not 200.
 
-6. Create directory structure (four separate calls — no brace expansion):
+7. Create `.evolution/` directories (four separate calls):
    ```bash
    mkdir -p "{project_path}/.evolution/baseline"
    mkdir -p "{project_path}/.evolution/benchmark"
@@ -107,100 +108,158 @@ Coordinates four specialist agents. Never audits or fixes inline. Calls refineme
    mkdir -p "{project_path}/.evolution/final"
    ```
 
-7. Echo to user and wait for confirmation:
+8. Echo confirmation to user and wait:
    ```
    web-evolve starting
-   Mode: {mode} | Cap: {max_iterations} iterations | Target: {target_score}/100
+   Mode: {mode} | Cap: {max_iterations} | Target: {target_score}/100
    Benchmark: {benchmark_url}
-   Loop screenshots: {dev_server_url if set, else "live URL — 30s wait after each commit"}
+   Loop screenshots: {dev_server_url if set, else "live URL — 45s wait per commit"}
    Pages in scope: {from SCOPE.md}
    Proceed?
    ```
 
-8. HALT if no DESIGN-BRIEF.md in greenfield mode → "Run `Skill('web-design-research')` first."
+9. HALT if no DESIGN-BRIEF.md in greenfield mode → "Run `Skill('web-design-research')` first."
 
 ---
 
-## Phase B — Parallel baseline + benchmark
+## Phase B — Parallel baseline audit (4 agents + benchmark)
 
-Spawn both in a **single message** with `run_in_background: true`:
+For Tier 2 baseline, spawn **five** agents in a single message (all `run_in_background: true`) to prevent 79-check drift in one context:
 
 ```
-Agent tool call 1:
-  description: "Baseline audit — Tier 2 full checklist"
+Agent 1 — web-score (A+B categories, ~19 checks):
   subagent_type: "web-score"
   run_in_background: true
   prompt: |
     project_path: {project_path}
     live_url: {live_url}
     output_path: {project_path}/.evolution/scores
-    tier: 2
+    tier: category:A,B
     mode: {mode}
+    output_filename: score-AB.json
     checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
 
-Agent tool call 2:
-  description: "Competitor benchmark — gap analysis vs {benchmark_name}"
+Agent 2 — web-score (C+D+E categories, ~24 checks):
+  subagent_type: "web-score"
+  run_in_background: true
+  prompt: |
+    project_path: {project_path}
+    live_url: {live_url}
+    output_path: {project_path}/.evolution/scores
+    tier: category:C,D,E
+    mode: {mode}
+    output_filename: score-CDE.json
+    checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
+
+Agent 3 — web-score (F+G+H categories, ~12 checks):
+  subagent_type: "web-score"
+  run_in_background: true
+  prompt: |
+    project_path: {project_path}
+    live_url: {live_url}
+    output_path: {project_path}/.evolution/scores
+    tier: category:F,G,H
+    mode: {mode}
+    output_filename: score-FGH.json
+    checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
+
+Agent 4 — web-score (I+J+K categories, ~20 checks):
+  subagent_type: "web-score"
+  run_in_background: true
+  prompt: |
+    project_path: {project_path}
+    live_url: {live_url}
+    output_path: {project_path}/.evolution/scores
+    tier: category:I,J,K
+    mode: {mode}
+    output_filename: score-IJK.json
+    checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
+
+Agent 5 — web-benchmark:
   subagent_type: "web-benchmark"
   run_in_background: true
   prompt: |
     benchmark_url: {benchmark_url}
     benchmark_name: {benchmark_name}
-    target_page_description: {aesthetic_direction + hero description from DESIGN-BRIEF.md, 1-2 sentences}
+    target_page_description: {aesthetic_direction + hero description from DESIGN-BRIEF.md}
     target_personality: {personality}
     output_path: {project_path}/.evolution/benchmark
 ```
 
-Wait for both to complete.
+Wait for all five to complete.
 
-### After both complete — fix-routing enrichment (critical step)
+### After all complete — merge + enrich
 
-1. `Read {project_path}/.evolution/scores/score.json`
-2. `Read {project_path}/.evolution/benchmark/gap-analysis.json`
-3. `Read ~/.claude/skills/web-evolve/references/fix-routing.md`
+1. Read all four partial score files. If any missing → re-run that agent once. Still missing → HALT NEEDS_HUMAN with which categories failed.
 
-If score.json missing → re-run web-score once. Still missing → HALT NEEDS_HUMAN.
-If gap-analysis.json missing → log "benchmark failed — continuing without gap priority" and proceed (non-fatal).
+2. **Merge partial scores into `.evolution/scores/score.json`:**
+   - Merge `checks` dictionaries from all four files
+   - Recalculate `summary` (passed, failed, na, wontfix, needs_human, raw_score, veto logic, final_score)
+   - Merge `priority_queue` lists and resort by priority
+   - Write merged `score.json`
 
-4. **Enrich priority_queue with fix_skill:** For each FAIL entry in score.json's priority_queue, look up the check ID in fix-routing.md and extract the fix skill name (e.g. "typeset", "colorize", "overdrive"). Add:
-   - `fix_skill`: skill name (e.g. `"overdrive"`)
-   - `fix_context`: a one-sentence description of exactly what is wrong and what the target state is (synthesised from fail_proof + fix-routing rationale)
-   - `section`: from the check→section mapping table above
+3. Read `~/.claude/skills/web-evolve/references/fix-routing.md` — parse the `SKILL_LOOKUP` JSON block at the top of the file.
 
-5. **Prepend benchmark gaps:** Take `top_5_priority_queue` from gap-analysis.json. For each, map `maps_to_check` through fix-routing.md to get `fix_skill`. Prepend to priority_queue with `priority: 400`.
+4. **Enrich priority_queue with fix routing:**
+   For each FAIL entry in merged priority_queue:
+   - Look up `check_id` in SKILL_LOOKUP
+   - Set `fix_skill`, `prereq`, `secondary`, `edit_direct`, `section` on the entry
+   - Build `fix_context` from the fail_proof (one sentence: what is wrong + target state)
 
-6. Sort full priority_queue descending by priority. Deduplicate by check_id (keep highest priority entry).
+5. **Prepend benchmark gaps:** Read `.evolution/benchmark/gap-analysis.json`. For each in `top_5_priority_queue`: look up `maps_to_check` in SKILL_LOOKUP, set routing fields. Add to front of priority_queue with priority 400. Deduplicate by check_id.
 
-7. **Surface NEEDS_HUMAN blocks** from score.json `needs_human_blocks` to user in one message. Wait for replies. Update score.json check entries accordingly.
+6. **Surface NEEDS_HUMAN blocks** — one message to user listing all vision checks. Wait for replies. Update score.json check entries.
 
-8. Write baseline score block to BUILD-LOG.md (mandatory format from checklist output format section).
+7. Write baseline score to BUILD-LOG.md (mandatory output format from checklist).
 
-9. If `score.final_score >= target_score` → log "already at target", skip to Phase D.
+8. If `final_score >= target_score` → log "already at target", skip to Phase D.
+
+9. **Write initial loop state:**
+   ```bash
+   # Write {project_path}/.evolution/loop-state.json
+   ```
+   ```json
+   {
+     "iteration": 0,
+     "void_count": 0,
+     "real_iterations": 0,
+     "current_score": {final_score},
+     "baseline_score": {final_score},
+     "mode": "{mode}",
+     "max_iterations": {max_iterations},
+     "target_score": {target_score},
+     "priority_queue": [{enriched queue}],
+     "attempt_counts": {},
+     "excluded_skills": {}
+   }
+   ```
 
 ---
 
 ## Phase C — Improvement loop
 
-Maintain loop state in memory:
-```
-iteration = 0
-void_count = 0
-real_iterations = 0
-current_score = score.summary.final_score
-priority_queue = [enriched queue from Phase B]
-attempt_counts = {}   # check_id → number of attempts
-excluded_skills = {}  # check_id → [skill_names that caused regression]
-```
+Read loop state from `loop-state.json` at start of each iteration. Write it after each decision.
 
 Loop condition: `current_score < target_score AND real_iterations < max_iterations`
 
 ---
 
-### Step 1 — Pick check
+### Step 1 — Pick check(s) — with batching
 
-Highest-priority entry where `status == "FAIL"` AND `attempt_counts.get(check_id, 0) < 3`.
+**Batch detection:** Before picking a single check, scan the top of the priority queue for checks that share the same `fix_skill` AND have no `prereq`. If 2+ such checks exist at the top of the queue — batch them into one iteration.
 
-If `attempt_counts[check_id] == 3` → mark WONTFIX in BUILD-LOG.md, remove, pick next.
-If `fix_skill` is in `excluded_skills[check_id]` → skip to next best fix_skill from fix-routing.md.
+**Batching rules:**
+- J-series: all J-failures with `fix_skill: "clarify"` → always batch into one Skill('clarify') call
+- I-series: group by fix_skill → one Skill('typeset') + one Skill('polish') + one Skill('animate') max per iter
+- C-series: group by fix_skill → batch same-skill C failures
+- All others: single check per iteration (changes are more structural, harder to batch safely)
+
+Set `current_checks = [check_id]` (single) or `[check_id_1, check_id_2, ...]` (batched).
+
+**Exhaustion check:** For each check in `current_checks`, verify `attempt_counts.get(check_id, 0) < 3`. If 3 → mark WONTFIX, remove, repick.
+
+If secondary skill needed (primary in excluded_skills): set `fix_skill = secondary` from SKILL_LOOKUP.
+
 If queue empty → log STUCK, exit loop.
 
 ---
@@ -208,142 +267,161 @@ If queue empty → log STUCK, exit loop.
 ### Step 2 — Pre-fix screenshot
 
 ```
-Agent tool call:
-  description: "Pre-fix screenshot — {section} — iter {iteration}"
+Agent:
   subagent_type: "web-screenshot"
   prompt: |
     live_url: {dev_server_url if set, else live_url}
-    section_name: {section from priority_queue entry}
-    before_screenshot_path: NONE
-    after_screenshot_output_path: {project_path}/.evolution/iter-{iteration}/before-{section}.png
+    section_name: {section from first check in current_checks}
+    mode: capture-only
+    output_path: {project_path}/.evolution/iter-{iteration}/before-{section}.png
     scroll_to_selector: {CSS selector if known, else empty}
     viewport: desktop
 ```
 
-This becomes the `before` reference.
+Wait for completion. This is the `before` reference.
 
 ---
 
-### Step 3 — Apply fix (Skill call in main context)
+### Step 3 — Apply fix
 
-**This is the only place Skill() is called — in this orchestrator context, not inside an agent.**
+**Determine fix type from SKILL_LOOKUP for the check(s):**
 
-Create the iter directory:
-```bash
-mkdir -p "{project_path}/.evolution/iter-{iteration}"
+**Case A — `edit_direct: true`** (A10, B5, E1, G1, G2 etc):
+Use the Edit tool directly. The `fix_context` from the priority_queue entry contains the exact change needed. Log to BUILD-LOG: "H1: PASS (Edit tool — edit_direct fix, too small for skill invocation)".
+
+**Case B — `prereq` is not null** (A8, A9, B3, B9, E3, F6, K2 etc):
+1. Call the prereq MCP tool first:
+   ```
+   mcp__magic__21st_magic_component_inspiration(query="{fix_context}")
+   ```
+2. Then call `Skill('{fix_skill}', args='{fix_context} | inspired_by: {MCP result summary} | checks: {current_checks} | fail_proof: {fail_proofs}')`.
+
+**Case C — standard Skill() fix:**
 ```
-
-Call the fix skill directly:
+Skill('{fix_skill}', args='{fix_context} | checks: {current_checks joined} | fail_proof: {fail_proofs joined}')
 ```
-Skill('{fix_skill}', args='{fix_context} | check_id: {check_id} | fail_proof: {fail_proof}')
-```
+For batched checks: pass all check IDs and fail proofs in the args so the skill knows what to target.
 
-Wait for the skill to complete. If it errors or returns "no changes made" → log NEEDS_HUMAN, increment `attempt_counts[check_id]`, continue loop (skip steps 3.5–6 for this iteration).
+If Skill() errors or returns "no changes" → log NEEDS_HUMAN for each check_id, increment `attempt_counts`, continue loop (skip 3.5 onwards).
 
 ---
 
-### Step 3.5 — Commit via web-patch
+### Step 3.5 — Commit
 
 ```
-Agent tool call:
-  description: "Commit fix for {check_id} — iter {iteration}"
+Agent:
   subagent_type: "web-patch"
   prompt: |
     mode: commit-only
-    check_id: {check_id}
+    check_id: {current_checks joined with +}
     fix_skill: {fix_skill}
     project_path: {project_path}
     iteration_number: {iteration}
     output_path: {project_path}/.evolution/iter-{iteration}
 ```
 
-Read `{project_path}/.evolution/iter-{iteration}/patch-{check_id}-iter{iteration}.json`.
-
-If `status == "FAILED"` (nothing to commit — no files changed):
-- The Skill() call made no changes. Log VOID, increment `attempt_counts[check_id]`, continue loop.
+Read patch JSON. If `status: "FAILED"` → no files changed, log VOID, increment `attempt_counts` for each check, continue.
 
 ---
 
 ### Step 3.6 — Deploy (conditional)
 
-**If `dev_server_url` NOT set (live URL mode):**
+If `dev_server_url` not set:
 ```bash
 git -C "{project_path}" push origin main
 ```
-Then sleep 45 seconds for Vercel deploy.
+Then sleep 45 seconds.
 
-**If `dev_server_url` IS set:**
-Skip. Dev server serves current file state immediately.
+If `dev_server_url` is set: skip — dev server serves changes immediately.
 
 ---
 
-### Step 4 — Post-fix screenshot + category rescore (parallel)
+### Step 4 — Post-fix screenshot + rescore (parallel)
 
 ```
-Agent tool call 1:
-  description: "Post-fix screenshot — {section} — iter {iteration}"
+Agent 1 — web-screenshot:
   subagent_type: "web-screenshot"
   run_in_background: true
   prompt: |
     live_url: {dev_server_url if set, else live_url}
     section_name: {section}
-    before_screenshot_path: {project_path}/.evolution/iter-{iteration}/before-{section}.png
-    after_screenshot_output_path: {project_path}/.evolution/iter-{iteration}/after-{section}.png
+    mode: diff
+    before_path: {project_path}/.evolution/iter-{iteration}/before-{section}.png
+    output_path: {project_path}/.evolution/iter-{iteration}/after-{section}.png
     scroll_to_selector: {CSS selector if known}
     viewport: desktop
 
-Agent tool call 2:
-  description: "Category rescore — {category} — iter {iteration}"
+Agent 2 — web-score (affected categories only):
   subagent_type: "web-score"
   run_in_background: true
   prompt: |
     project_path: {project_path}
     live_url: {dev_server_url if set, else live_url}
     output_path: {project_path}/.evolution/iter-{iteration}
-    tier: category:{affected_category_letter}
+    tier: category:{affected_categories}
     mode: {mode}
+    output_filename: score-rescore.json
     checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
 ```
 
-Wait for both. Read output files.
+Wait for both. Read outputs.
+
+Merge rescore results into current score: update only the checks in the rescored categories. Recalculate summary and final_score.
 
 ---
 
 ### Step 5 — Decision
 
-Read `diff-verdict-{section}.json` and `score.json` from `.evolution/iter-{iteration}/`.
-
-| Screenshot verdict | Score delta | Decision |
+| Screenshot | Score | Decision |
 |---|---|---|
-| `NULL_DELTA` | any | **VOID** — `git -C "{project_path}" revert HEAD --no-edit`. `void_count++`. Do NOT increment `real_iterations` or `attempt_counts`. Try different approach next loop. |
-| `VISIBLE_DIFF` | up | **KEEP** — update `current_score`. `real_iterations++`. |
-| `VISIBLE_DIFF` | same + check now PASS | **KEEP** — log raw delta (veto cap). `real_iterations++`. |
-| `VISIBLE_DIFF` | same + check still FAIL | **REVERT** — `git -C "{project_path}" revert HEAD --no-edit`. `attempt_counts[check_id]++`. `real_iterations++`. |
-| `VISIBLE_DIFF` | down | **REVERT** + add fix_skill to `excluded_skills[check_id]`. `attempt_counts[check_id]++`. `real_iterations++`. |
-| `UNCERTAIN` | any | Re-run web-screenshot once after 10s. Still UNCERTAIN → treat as NULL_DELTA. |
+| NULL_DELTA | any | **VOID** — `git -C "{project_path}" revert HEAD --no-edit`. void_count++. Do NOT increment real_iterations or attempt_counts. |
+| CAPTURE_ONLY | any | First iteration had no before. Accept screenshot. Re-run Step 4 next iter when before exists. |
+| VISIBLE_DIFF | up | **KEEP** — update current_score, real_iterations++. Mark checked checks as PASS in priority_queue. |
+| VISIBLE_DIFF | same + all checks now PASS | **KEEP** — log raw delta (veto cap). real_iterations++. |
+| VISIBLE_DIFF | same + checks still FAIL | **REVERT** — `git revert HEAD --no-edit`. attempt_counts[check_id]++. real_iterations++. |
+| VISIBLE_DIFF | down | **REVERT** — add fix_skill to excluded_skills[check_id]. attempt_counts[check_id]++. real_iterations++. |
+| UNCERTAIN | any | Wait 10s, re-run web-screenshot once. Still UNCERTAIN → VOID. |
 
 ---
 
-### Step 6 — BUILD-LOG entry (every iteration, including VOID)
+### Step 6 — BUILD-LOG entry + loop state persist
 
-Append to `{project_path}/BUILD-LOG.md`:
+**BUILD-LOG entry** (append to `{project_path}/BUILD-LOG.md`):
 
 ```markdown
 ### Evolution iteration {iteration} — {timestamp} [mode: {mode}]
 Page: {page}
-Target check: {check_id} — {check_name}
-Fix skill: {fix_skill} (called directly in orchestrator context)
-Attempt #{attempt_counts[check_id]} for this check
+Target check(s): {current_checks joined} — {check names}
+Fix type: {edit_direct | prereq+skill | skill}
+Fix skill: {fix_skill} (called in orchestrator context)
+Attempt: #{attempt_counts per check}
 Pre-score: {capped}/100 (raw {raw}%)
 Post-score: {capped}/100 (raw {raw}%)
 Delta capped: {+X / -X / 0}
 Delta raw: {+X% / -X% / 0}
 Screenshots: {before_path} → {after_path}
-Diff verdict: {VISIBLE_DIFF | NULL_DELTA | UNCERTAIN} — {diff_description}
-H1: PASS (Skill('{fix_skill}') called in orchestrator context — transcript-verifiable)
-H2: {PASS (VISIBLE_DIFF confirmed) | VOID (NULL_DELTA) | UNCERTAIN}
+Diff verdict: {verdict} — {diff_description}
+H1: {PASS — Skill('{fix_skill}') in orchestrator | PASS — Edit tool (edit_direct) | PASS — MCP prereq + Skill()}
+H2: {PASS (VISIBLE_DIFF) | VOID (NULL_DELTA) | UNCERTAIN}
 Decision: {KEPT | REVERTED | VOID | WONTFIX}
-Commit: {sha from patch JSON | "(reverted)" | "(voided — null-delta)"}
+Commit: {sha | "(reverted)" | "(voided)"}
+```
+
+**Write loop state** to `{project_path}/.evolution/loop-state.json` after every iteration (including VOID):
+```json
+{
+  "iteration": {iteration},
+  "void_count": {void_count},
+  "real_iterations": {real_iterations},
+  "current_score": {current_score},
+  "baseline_score": {baseline_score},
+  "mode": "{mode}",
+  "max_iterations": {max_iterations},
+  "target_score": {target_score},
+  "priority_queue": [{current queue with updated statuses}],
+  "attempt_counts": {current},
+  "excluded_skills": {current}
+}
 ```
 
 ---
@@ -352,9 +430,9 @@ Commit: {sha from patch JSON | "(reverted)" | "(voided — null-delta)"}
 
 | Condition | Action |
 |---|---|
-| `current_score >= target_score` | Exit loop → Phase D |
+| `current_score >= target_score` | Exit → Phase D |
 | `real_iterations >= max_iterations` | Log TIMEOUT → Phase D |
-| Priority queue empty | Log STUCK with remaining failures → Phase D |
+| Queue empty | Log STUCK → Phase D |
 | Check attempted 3× | Auto-WONTFIX, continue |
 | Build breaks twice | HALT → NEEDS_HUMAN |
 
@@ -362,33 +440,33 @@ Commit: {sha from patch JSON | "(reverted)" | "(voided — null-delta)"}
 
 ## Phase D — Final report + push
 
-1. Spawn web-score tier 2 → `.evolution/scores/final-score.json`
-2. Spawn web-screenshot full-page desktop + mobile → `.evolution/final/`
+1. Spawn 4 parallel web-score agents (same category split as Phase B) against current state → merge into `.evolution/scores/final-score.json`
+2. Spawn web-screenshot for full-page desktop + mobile → `.evolution/final/`
 3. Write `EVOLUTION-LOG.md`:
-   - Baseline → Final score, category delta table
+   - Baseline → Final score + category delta table
    - Per-section before/after screenshot pairs
-   - Full iteration log (KEPT / REVERTED / VOID / WONTFIX)
-4. Commit and push:
+   - Full iteration log from BUILD-LOG entries
+4. Commit + push:
    ```bash
    git -C "{project_path}" add EVOLUTION-LOG.md BUILD-LOG.md
    git -C "{project_path}" commit -m "evolve: {page} final — score {baseline} → {final}"
    git -C "{project_path}" push origin main
    ```
-5. Wait 45s for Vercel deploy.
+5. Wait 45s for Vercel.
 
 ---
 
 ## Phase E — Post-deploy verification
 
-Spawn web-score tier 1 against `live_url` → confirm deployed page matches local final. Append result to EVOLUTION-LOG.md.
+Spawn web-score (tier: category:A,G) against `live_url` — the two most likely categories to have deploy-specific regressions (fonts not loading, Puppeteer CWV values). Append result to EVOLUTION-LOG.md.
 
 ---
 
-## Hard stops — this skill must NEVER do
+## Hard stops — this skill MUST NOT
 
-- Run grep/Read/Bash to audit — always via web-score agent
-- Call `Skill('X')` from inside a spawned agent — only in this orchestrator context
-- Edit source files directly — Skill() handles edits, web-patch handles commit
-- Self-grade vision checks — always surface NEEDS_HUMAN
-- Skip BUILD-LOG entry (including VOID)
+- Run grep/Read/Bash for auditing — always via web-score
+- Edit source files directly — Skill() does that, web-patch commits it
+- Call `Skill('mcp__...')` — MCP tools are called directly, not via Skill wrapper
+- Self-grade vision checks — always NEEDS_HUMAN
+- Skip BUILD-LOG entry for any iteration (including VOID)
 - Count VOID toward max_iterations

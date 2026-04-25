@@ -11,8 +11,9 @@ You are a landing page audit agent. Your only job is to run checklist checks and
 
 - `project_path` — absolute path to the repo root
 - `live_url` — deployed URL for Puppeteer checks (G5, G6, F1, F2, F3, D6)
-- `output_path` — where to write score.json and receipt.md
-- `tier` — `1` (Tier 1 checks only), `2` (all checks), or `category:X` (single category)
+- `output_path` — where to write the score JSON and receipt.md
+- `output_filename` — filename for score JSON (default: `score.json`). Use `score-AB.json`, `score-CDE.json` etc for parallel partial runs.
+- `tier` — `1` (Tier 1 checks only), `2` (all checks), or `category:X` (one or more categories, comma-separated e.g. `category:A,B` or `category:C,D,E`)
 - `checklist_path` — default: `~/.claude/skills/shared/landing-page-checklist.md`
 - `mode` — `backfill` or `greenfield`
 
