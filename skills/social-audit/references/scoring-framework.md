@@ -1,6 +1,7 @@
 # Social Footprint Scoring Framework
 
 Detailed scoring rubrics for the 8 categories that compose the Social Footprint Score.
+Includes calibrated anchors from real brand data collected 2026-04-20.
 
 ---
 
@@ -19,10 +20,25 @@ Social Footprint Score = (
 )
 ```
 
-Weights rationale:
-- First 5 categories (15% each) are the hard data — what the brand IS doing on social
-- Platform_Fit + Competitive_Position (10% each) are the strategic analytical layer
-- Brand_Consistency (5%) is the tie-breaker / polish layer
+---
+
+## Calibrated Scoring Anchors (Real Brand Data)
+
+Use these as reference points when scoring. They are live-scrape validated.
+
+| Brand | IG Followers | Posts/Year | FB Likes | TikTok | Pinterest | Composite Score | Grade |
+|---|---|---|---|---|---|---|---|
+| Evoque Makeup Artistry (@evoquemakeup) | 4,631 | ~21 | Active | None found | Unknown | ~52 | D |
+| Sunshine Brides (@sunshinebrides) | 3,759 | ~83 | Active | None found | Unknown | ~60 | C |
+| Tasleema Nigh (@tasleemanighmakeup) | 1,467 | ~98 | Active | None found | Unknown | ~55 | C |
+| Gloss Beauty by Louise (@glossbeauty.bylouise) | 4,478 | ~20 | 36 likes (weak) | 16 followers (dormant) | Absent | 49 | D |
+
+**Benchmarking notes:**
+- Sunshine Coast bridal makeup: "solid C" = 1,500–4,000 IG followers + 60–100 posts/year + active FB + no TikTok
+- "Strong B" for this segment would require: 5,000+ IG, 150+ posts/year, active TikTok (any presence), Pinterest boards
+- "A" for this segment: 10,000+ IG, daily posting cadence, TikTok 1,000+ followers, Pinterest Rich Pins, press features
+
+For sectors with higher social intensity (DTC fashion, SaaS, creator economy), multiply all benchmarks by 5–10x.
 
 ---
 
@@ -30,236 +46,176 @@ Weights rationale:
 
 **What it measures:** Is the brand on the right platforms for their ICP and industry?
 
-**Inputs:**
-- Count of platforms brand is active on (posting in last 30 days)
-- Count of high-fit platforms per `platform-fit-matrix.md`
-- Gap between the two
-- Handle consistency across platforms
-- Defensive handle claims on emerging platforms
-
 **Scoring anchors:**
 
-| Score | Criteria |
-|---|---|
-| 90-100 | Active on all ★★★ platforms + most ★★ platforms for industry. Handles consistent. Defensive claims on emerging platforms. |
-| 75-89 | Active on all ★★★ platforms, most ★★. 1 gap max. |
-| 60-74 | Active on most ★★★ platforms. Missing 1 obvious ★★. |
-| 45-59 | On 2-3 platforms, missing 2+ high-fit. |
-| 30-44 | On 1-2 platforms, inactive on most. |
-| 10-29 | Minimal presence, 1 platform only. |
-| 0-9 | No meaningful social presence. |
-
-**Worked example:** A DTC beauty brand active on Instagram (★★★), TikTok (★★★), Pinterest (★★★), Facebook (★★) with consistent @brandname handle and defensive Threads claim = **85** (on all must-haves + most high-fit + defensive plays).
+| Score | Criteria | Real example |
+|---|---|---|
+| 90-100 | On all ★★★ platforms + most ★★, handles consistent, emerging claimed | Gymshark-tier |
+| 75-89 | On all ★★★, most ★★, 1 gap max | Strong DTC brand |
+| 60-74 | On most ★★★, missing 1 obvious ★★ | Evoque Makeup (~65) |
+| 45-59 | On 3-4 platforms, missing 1 high-fit | Gloss Beauty by Louise (55 — IG+FB+TikTok claimed, missing Pinterest) |
+| 30-44 | On 1-2 platforms only | Most solo local service businesses |
+| 10-29 | 1 platform only or semi-present | Very early stage |
+| 0-9 | No findable presence | Pre-launch |
 
 ---
 
 ## Category 2: Profile Quality (15%)
 
-**What it measures:** Are the profiles themselves optimised on each platform?
-
-**Inputs:** Per-platform profile checks — bio, link, imagery, verified, pinned, platform-specific setup (Highlights, Featured, Playlists, Collections, Rich Pins).
-
 **Scoring method:** Score each active platform's profile out of 100, then average.
 
 **Per-platform anchors (100 points each):**
+- Bio complete + keyword-optimised + CTA: 25 pts
+- Link strategy working: 15 pts
+- Profile/banner imagery on-brand: 15 pts
+- Verified status (where platform offers): 10 pts
+- Pinned content strategic: 10 pts
+- Platform-specific setup (Highlights/Featured/Playlists): 15 pts
+- Correct account type (Business/Creator): 10 pts
 
-- Bio complete + keyword-optimised + CTA: 25
-- Link strategy working (stack or single + valid): 15
-- Profile/banner imagery on-brand: 15
-- Verified status (where platform offers): 10
-- Pinned content strategic: 10
-- Platform-specific setup complete (Highlights/Featured/Playlists/etc): 15
-- Business/Creator account type correct: 10
-
-**Composite:** Average across active platforms.
-
-**Worked example:** Brand active on IG (profile score 75), LinkedIn (90), TikTok (50), YouTube (not active) → composite = (75+90+50)/3 = **72**.
+| Score | Criteria |
+|---|---|
+| 80-100 | All profiles complete, on-brand, strategic pins, verified, link stack working |
+| 60-79 | Most profiles solid, 1-2 platforms underinvested |
+| 40-59 | Bios generic/missing, no pins, bare bio link | ← Gloss Beauty FB ~20 (36 likes, minimal setup) |
+| 0-39 | Profiles empty or default |
 
 ---
 
 ## Category 3: Activity & Cadence (15%)
 
-**What it measures:** Is the brand posting consistently at platform-appropriate frequency?
-
-**Inputs:** Posts/week per platform over 90 days, variance, days since last post, platform cadence benchmark.
-
-**Per-platform benchmark recap:**
-| Platform | Min weekly | Growth weekly |
+**Platform cadence benchmarks:**
+| Platform | Minimum | Growth target |
 |---|---|---|
-| LinkedIn | 3 | 5 |
-| Instagram | 4 | 7 |
-| TikTok | 5 | 14-21 (1-3/day) |
-| YouTube long-form | 0.5 | 1-2 |
-| YouTube Shorts | 2 | 7 |
-| Facebook | 3 | 5 |
-| X / Twitter | 5 | 21+ (3/day) |
-| Pinterest | 5 | 15 |
-| Threads | 3 | 7 |
+| Instagram | 3/week | 5-7/week |
+| TikTok | 5/week | 14/week |
+| Facebook | 3/week | 5/week |
+| Pinterest | 5/week | 15/week |
+| LinkedIn | 3/week | 5/week |
+| YouTube | 0.5/week | 1-2/week |
 
 **Scoring anchors:**
 
-| Score | Criteria |
-|---|---|
-| 90-100 | Meets growth cadence on all active platforms, consistent, zero dormant |
-| 75-89 | Meets min cadence everywhere, meets growth on 2+ platforms |
-| 60-74 | Meets min cadence on most, slight gaps |
-| 45-59 | Below min on 1+ platform, 1 platform dormant (14+ days) |
-| 30-44 | Below min on most, 2+ platforms dormant |
-| 10-29 | Sporadic, most dormant |
-| 0-9 | All platforms dormant or no posts last 90 days |
+| Score | Criteria | Real example |
+|---|---|---|
+| 80-100 | Meets growth cadence on all active platforms | Gymshark-tier |
+| 60-79 | Meets minimum on most, growth on 2+ | Tasleema Nigh (~65 — 98 posts/yr ≈ 2/week IG) |
+| 40-59 | Below minimum on 1+ platform, inconsistent | Sunshine Brides (~50 — 83 posts/yr) |
+| 20-39 | Sporadic, 1+ platform dormant | Gloss Beauty by Louise (25 — 20 posts/yr IG, TikTok dormant, FB dead) |
+| 0-19 | All platforms dormant | |
 
 ---
 
 ## Category 4: Content Quality (15%)
 
-**What it measures:** Is the content platform-native, well-crafted, and strategically pillared?
-
-**Sub-factors (each weighted):**
-1. Format mix aligned to platform (25%)
-2. Content pillars present + identifiable (20%)
-3. Hook/opening strength in video content (15%)
-4. Caption quality + CTA presence (15%)
-5. Hashtag strategy targeted (10%)
-6. Audio strategy (TikTok/Reels) (10%)
-7. Cross-posting adaptation vs lazy copy-paste (5%)
+**Sub-factors (weighted):**
+1. Format mix aligned to platform (25%) — Reels-first on IG, video on TikTok
+2. Content pillars identifiable (20%)
+3. Hook/opening strength (15%)
+4. Caption quality + CTA (15%)
+5. Hashtag strategy (10%)
+6. Audio strategy — TikTok/Reels (10%)
+7. No lazy cross-posting (5%)
 
 **Scoring anchors:**
 
 | Score | Criteria |
 |---|---|
-| 90-100 | Platform-native content throughout. Reels-first on IG, trending audio on TikTok, threads on LinkedIn, playlists on YT. Strong hooks. Clear 3-5 pillars. Platform-adapted captions. |
-| 75-89 | Good content on 2-3 platforms, clear pillars, hooks decent. Cross-posting exists but with adaptation. |
-| 60-74 | Mixed quality. Content pillars fuzzy. Hooks inconsistent. |
-| 45-59 | Lazy cross-posting. Same caption everywhere. Spray-and-pray hashtags. |
-| 30-44 | Low-effort content. Product shots only. No pillars. |
-| 10-29 | Dead-on-arrival posts, auto-generated captions. |
-| 0-9 | No meaningful content. |
+| 80-100 | Platform-native content, Reels-first on IG, trending audio on TikTok, clear pillars, adapted captions |
+| 60-79 | Good on 1-2 platforms, pillars identifiable, some cross-posting OK |
+| 40-59 | Generic cross-posted content, no pillars, static-heavy on IG | ← Estimated range for most Sunshine Coast MUAs |
+| 0-39 | Low-effort posts, no pillars, dead-on-arrival content |
+
+**Scope note:** Content Quality requires Puppeteer scraping of individual posts (captions, format icons, hashtags). If only OG-meta was available, mark as "estimated" and note in report scope banner. Range: assume 40-60 unless evidence is higher/lower.
 
 ---
 
 ## Category 5: Engagement Depth (15%)
 
-**What it measures:** Does the brand have a living community or is it broadcasting into the void?
-
-**Sub-factors:**
-1. Engagement rate vs platform benchmark (30%)
-2. Reply rate to comments (25%)
-3. Community sentiment in comments (20%)
-4. UGC volume (tagged posts + branded hashtag) (15%)
-5. Conversation vs broadcast balance (10%)
-
-**Engagement rate benchmarks:**
-| Platform | Weak | Benchmark | Strong |
+**Engagement rate benchmarks (by platform):**
+| Platform | Weak | Good | Strong |
 |---|---|---|---|
 | Instagram | <0.5% | 1-3% | >3% |
 | TikTok | <2% | 5-9% | >9% |
 | LinkedIn | <1% | 2-3% | >3% |
-| YouTube | <2% | 4-5% | >5% |
 | Facebook | <0.3% | 0.5-2% | >2% |
-| X / Twitter | <0.2% | 0.5-1% | >1% |
-| Pinterest | save-based | >1% save rate | >3% save rate |
+| Pinterest | <1% save rate | 1-3% | >3% |
+| YouTube | <2% | 4-5% | >5% |
 
 **Scoring anchors:**
 
 | Score | Criteria |
 |---|---|
-| 90-100 | Above-benchmark ER on most platforms. Replies to most comments within 24h. Positive community in comments. Active UGC. |
-| 75-89 | Benchmark ER. Responds sometimes. Community alive. |
-| 60-74 | Below-benchmark ER on 1+ platform. Rare replies. Mixed community. |
-| 45-59 | Weak ER. Ignores comments. Dead threads. |
-| 30-44 | Very weak engagement. No replies. |
-| 10-29 | Posts get 0-1 comments. Zero community. |
-| 0-9 | No engagement, no community. |
+| 80-100 | Above-benchmark ER on most platforms, replies within 24hr, positive community, strong UGC |
+| 60-79 | Benchmark ER, occasional replies, alive community |
+| 40-59 | Below-benchmark ER, rare replies, sparse community | ← Typical SMB solo artist |
+| 0-39 | Near-zero engagement, no replies |
+
+**Scope note:** True ER requires post-level data (Puppeteer). OG-meta gives follower+post count only. If post-level data is unavailable, mark Engagement Depth as estimated; use follower-retention proxy (followers ÷ years active = retention signal).
 
 ---
 
 ## Category 6: Platform-Fit (10%)
 
-**What it measures:** Strategic alignment between platforms used and ICP/industry.
-
-See full logic in `platform-fit-matrix.md`.
-
-**Scoring anchors:**
+See `platform-fit-matrix.md` for industry × platform logic.
 
 | Score | Criteria |
 |---|---|
-| 90-100 | Platform selection perfectly matches ICP + industry. No wasted effort on wrong-fit platforms, no gaps on high-fit. |
-| 75-89 | Mostly matched. 1 small gap or 1 minor wasted effort. |
-| 60-74 | Matched on core, 1 obvious gap or 1 obvious wrong-fit investment. |
-| 45-59 | Multiple gaps or multiple wrong-fit investments. |
-| 30-44 | Platform selection feels random or default. |
-| 10-29 | On platforms ICP doesn't use, missing platforms ICP lives on. |
-| 0-9 | Complete mismatch. |
+| 80-100 | On all ★★★ platforms for ICP, absent from irrelevant ones |
+| 60-79 | 1 obvious gap or 1 wasted effort |
+| 40-59 | Missing Pinterest (for DTC beauty) OR on platforms ICP doesn't use | ← Gloss Beauty (55 — missing Pinterest) |
+| 0-39 | Wrong platforms entirely |
 
 ---
 
 ## Category 7: Competitive Position (10%)
 
-**What it measures:** How the brand ranks against 3 competitors across key social signals.
+**Scoring anchors (Sunshine Coast bridal makeup segment — calibrated 2026-04-20):**
 
-**Sub-factors:**
-1. Follower count share vs competitor avg (30%)
-2. Posting cadence share (25%)
-3. Format innovation (using newer formats first) (20%)
-4. Paid creative presence (15%)
-5. Engagement rate vs competitors (10%)
-
-**Scoring anchors:**
+| Competitor | IG Followers | Rough score |
+|---|---|---|
+| Evoque Makeup | 4,631 | Mid-pack leader |
+| Gloss Beauty by Louise | 4,478 | Mid-pack |
+| Sunshine Brides | 3,759 | Mid-pack |
+| Tasleema Nigh | 1,467 | Trailing |
 
 | Score | Criteria |
 |---|---|
-| 90-100 | Leading competitor set on 3+ signals. Innovating formats before competitors. |
-| 75-89 | Top quartile of competitor set. |
-| 60-74 | Matching competitor avg. |
-| 45-59 | Behind competitor avg on 2+ signals. |
-| 30-44 | Clearly behind competitors. |
-| 10-29 | Not visible in competitive set. |
-| 0-9 | Outclassed across the board. |
-
-**Note:** In small competitor sets (3), treat "leading" as clearly ahead of all 3, "matching" as middle of pack, "behind" as worst of 3.
+| 80-100 | Leading competitor set on 3+ signals (followers, cadence, format innovation) |
+| 60-79 | Top quartile of competitive set |
+| 55-65 | Mid-pack — matching competitors on followers, behind on cadence | ← Gloss Beauty Louise vs competitors |
+| 40-54 | Behind on 2+ signals |
+| 0-39 | Clearly outclassed |
 
 ---
 
 ## Category 8: Brand Consistency (5%)
 
-**What it measures:** Visual + voice + identity consistency across platforms.
-
-**Sub-factors:**
-1. Handle consistency (same @ everywhere) (30%)
-2. Visual identity consistency (logo, colours, imagery style) (30%)
-3. Voice consistency (caption tone across platforms) (25%)
-4. Bio/CTA consistency (15%)
-
-**Scoring anchors:**
-
-| Score | Criteria |
-|---|---|
-| 90-100 | Identical handle, tight visual system, consistent voice + CTA across every platform. |
-| 75-89 | Minor inconsistencies. Mostly aligned. |
-| 60-74 | 1 handle mismatch or noticeable voice drift. |
-| 45-59 | 2+ inconsistencies. Looks like a portfolio not a brand. |
-| 30-44 | Fragmented. Different handles, different voices, different visual systems. |
-| 10-29 | Unrecognisable as the same brand. |
-| 0-9 | No brand system at all. |
+| Score | Criteria | Real example |
+|---|---|---|
+| 80-100 | Same handle, tight visual, consistent voice + CTA | |
+| 60-79 | Minor inconsistencies, mostly aligned | |
+| 40-59 | Handle suffix mismatch OR different voice on platforms | ← Gloss Beauty (45 — `bylouise` vs `bylouise1`) |
+| 0-39 | Fragmented, different brand on each platform | |
 
 ---
 
 ## Grade Bands (Composite)
 
-| Composite Score | Grade | Meaning |
-|---|---|---|
-| 85-100 | A | Sector-leading. Minor refinements. |
-| 70-84 | B | Strong. Clear high-ROI gaps. |
-| 55-69 | C | Average. Losing share of voice to competitors. |
-| 40-54 | D | Below average. Social is a liability. |
-| 0-39 | F | Critical. No meaningful presence. |
+| Composite | Grade | Meaning | Real example |
+|---|---|---|---|
+| 85-100 | A | Sector-leading | Gymshark, Duolingo, Canva |
+| 70-84 | B | Strong | Mid-size DTC with consistent cadence |
+| 55-69 | C | Average | Sunshine Brides (~60), Tasleema Nigh (~55) |
+| 40-54 | D | Below average | Gloss Beauty by Louise (49), Evoque Makeup (~52) |
+| 0-39 | F | Critical | Pre-launch or fully dormant |
 
 ---
 
 ## Scoring Integrity Rules
 
-1. **No score without evidence.** Every category score must be backed by quoted/screenshot/scraped evidence in the detailed section.
-2. **Don't inflate for effort.** Posting daily on the wrong platform doesn't earn high Activity score — it may earn high Activity but low Platform-Fit, which is the correct signal.
-3. **Be honest about dormancy.** A platform with 500k followers but no post in 6 months scores badly on Activity — reach the brand could have is not reach they have.
-4. **Don't double-penalise.** A brand missing TikTok gets hit in Presence Breadth AND Platform-Fit. That's correct — it's two different problems (coverage gap + strategic gap) and both are real.
-5. **Score per-platform profiles honestly.** A brand with one great LinkedIn and five empty shells gets ~40 on Profile Quality, not 85 for the LinkedIn alone.
+1. **No score without evidence.** Every category score must have a quoted/scraped/Puppeteer-evidenced basis.
+2. **Never inflate for effort.** Posting daily on TikTok = high cadence there; if wrong platform for ICP, Platform-Fit is still low.
+3. **Scope tags mandatory.** Any score based on indirect inference (no Puppeteer, OG-meta only) must include `<!-- Estimated — OG-meta only -->` HTML comment. In the client report, add scope banner if 3+ categories are estimated.
+4. **Competitor comparisons use the same method.** Don't compare Puppeteer-scraped brand data to OG-meta competitor data without noting the methodology difference.
+5. **Re-run check before scoring.** Run Phase 3.5 sanity checks before committing any final score.
