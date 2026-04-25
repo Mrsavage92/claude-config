@@ -83,6 +83,19 @@ SUITE_CONFIG = {
 }
 ```
 
+### Step 3.5: Pre-PDF Validation (MANDATORY)
+
+Before generating the PDF, run the social-audit-specific validator:
+```bash
+python3 ~/.claude/skills/social-audit/scripts/validate_social_audit.py "{report_path}/SOCIAL-AUDIT.md"
+```
+
+- **Exit 0 (PASS):** Proceed to PDF generation.
+- **Exit 1 (WARN):** Note the warnings, proceed, and add a footer note to the PDF: "See warnings in validator output — some fields are estimated."
+- **Exit 2 (FAIL):** **STOP.** Do not generate PDF. Return to the audit engineer with the failing checks. Common failures: missing required sections, score below 10/100 (possible discovery error), no follower counts in report.
+
+**Scope banner rendering:** If the SOCIAL-AUDIT.md contains the text "Audit scope:" or `<!-- Estimated -->`, add a light-grey banner box as the FIRST element after the cover page in the PDF, quoting the scope note verbatim. This ensures clients understand data limitations before reading findings.
+
 ### Step 4: Required PDF sections (in order)
 
 1. **Cover page**

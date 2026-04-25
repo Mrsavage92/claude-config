@@ -22,23 +22,57 @@ Social Footprint Score = (
 
 ---
 
-## Calibrated Scoring Anchors (Real Brand Data)
+## Calibrated Scoring Anchors (Real Brand Data — Live-Verified)
 
-Use these as reference points when scoring. They are live-scrape validated.
+All data scraped via Puppeteer or curl/og-meta on **2026-04-25**.
 
-| Brand | IG Followers | Posts/Year | FB Likes | TikTok | Pinterest | Composite Score | Grade |
-|---|---|---|---|---|---|---|---|
-| Evoque Makeup Artistry (@evoquemakeup) | 4,631 | ~21 | Active | None found | Unknown | ~52 | D |
-| Sunshine Brides (@sunshinebrides) | 3,759 | ~83 | Active | None found | Unknown | ~60 | C |
-| Tasleema Nigh (@tasleemanighmakeup) | 1,467 | ~98 | Active | None found | Unknown | ~55 | C |
-| Gloss Beauty by Louise (@glossbeauty.bylouise) | 4,478 | ~20 | 36 likes (weak) | 16 followers (dormant) | Absent | 49 | D |
+### A-Grade Reference Brands (verified)
 
-**Benchmarking notes:**
-- Sunshine Coast bridal makeup: "solid C" = 1,500–4,000 IG followers + 60–100 posts/year + active FB + no TikTok
-- "Strong B" for this segment would require: 5,000+ IG, 150+ posts/year, active TikTok (any presence), Pinterest boards
-- "A" for this segment: 10,000+ IG, daily posting cadence, TikTok 1,000+ followers, Pinterest Rich Pins, press features
+| Brand | Handle | IG Followers | IG Posts | Reels% | TikTok | Verified | Score est. | Grade |
+|---|---|---|---|---|---|---|---|---|
+| frank body (AU DTC beauty) | @frank_bod | 697K | 12,038 | **92%** | Active | Yes (blue) | ~88 | A |
+| Canva (SaaS design) | @canva | 3M | 2,747 | unknown | Active | Yes | ~92 | A |
+| Buffer (SaaS social) | @buffer | 110K | 2,166 | unknown | Active | Unknown | ~80 | A-/B+ |
 
-For sectors with higher social intensity (DTC fashion, SaaS, creator economy), multiply all benchmarks by 5–10x.
+**What "A" looks like on IG:** 92% Reels ratio (frank body — 11 of 12 visible grid items are Reels), consistent aesthetic grid, bio with stockist tags, active Reels tab, no login modal blocking grid.
+
+### B-Grade Reference (estimated)
+*No live B-grade brand audited yet — needs addition from future runs.*
+Target signals: 5,000–50,000 followers, 3–5 posts/week cadence, 50-70% Reels, active on 3+ platforms.
+
+### C–D Grade Reference Brands (verified)
+
+| Brand | Handle | IG Followers | IG Posts | Reels% | FB | TikTok | Score | Grade |
+|---|---|---|---|---|---|---|---|---|
+| Sunshine Brides (AU bridal MUA) | @sunshinebrides | 3,759 | 747 | unknown | Active | None | ~60 | C |
+| Tasleema Nigh (AU bridal MUA) | @tasleemanighmakeup | 1,467 | 883 | unknown | Active | None | ~55 | C |
+| Evoque Makeup (AU bridal MUA) | @evoquemakeup | 4,633 | 189 | **8%** | Active | None | ~52 | D |
+| Gloss Beauty by Louise (AU bridal MUA) | @glossbeauty.bylouise | 4,478 | ~180 | unknown | 37 likes (weak) | 17 followers (dormant) | **49** | D |
+
+**Key D-grade signals:** Evoque has 4,633 followers but only 8% Reels ratio and ~21 posts/year → Algorithm is starving their reach. Gloss Beauty has the audience but dormant cross-platforms and low cadence.
+
+### F-Grade (no brand audited live — theoretical)
+Signals: No findable IG OR followers < 200 with no posts in 90 days, no FB, no TikTok, no Pinterest.
+
+### Benchmarking notes by segment
+
+**Sunshine Coast bridal makeup:**
+- D: 1,000–5,000 IG, <25 posts/year, weak FB, no TikTok
+- C: 1,500–4,000 IG, 60-100 posts/year, active FB, no TikTok
+- B: 5,000+ IG, 150+ posts/year, active TikTok, Pinterest boards
+- A: 10,000+ IG, daily cadence, TikTok 1,000+ followers, Pinterest Rich Pins, press features
+
+**AU DTC beauty (scale-up tier):**
+- D: <10K followers, static-heavy content, missing TikTok/Pinterest
+- C: 10–50K followers, mixed format, 2-3 active platforms
+- B: 50–200K followers, Reels-first, 4+ platforms, verified
+- A: 200K+ followers, 90%+ Reels, TikTok + Pinterest + IG + FB all active, brand-level content strategy (frank body tier = A+)
+
+**B2B SaaS:**
+- D: LinkedIn only, <1K followers, <1 post/week
+- C: LinkedIn 2K–10K followers, occasional IG/X presence
+- B: LinkedIn 10K+, Buffer-tier (110K IG + active content + Twitter presence)
+- A: Multi-platform incl. TikTok thought leadership, 100K+ IG, Canva-tier (3M IG)
 
 ---
 
