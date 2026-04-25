@@ -108,6 +108,25 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 
 ---
 
+## Category I — Design Consistency
+
+**Priority: medium-high — ranked above C/D in the fix queue.** I-failures are user-visible immediately. Batch all I-failures in one iteration since they almost always route to the same skill.
+
+| Check | Failure pattern | Fix skill | Rationale |
+|---|---|---|---|
+| I1 | Section H2s use mixed text-size classes for same semantic role | `Skill('typeset')` to standardise heading scale — pass all variant classes found as context | typography discipline + visible inconsistency |
+| I2 | Display font bleeding into body copy OR body font on headings | `Skill('typeset')` to enforce font role boundaries | font role discipline |
+| I3 | Primary CTA Buttons use mixed variant values for same semantic role | `Skill('polish')` to standardise variant — one variant per semantic role | component variant discipline |
+| I4 | Section backgrounds deviate from declared alternation pattern in DESIGN-BRIEF | `Skill('colorize')` to realign — pass declared pattern + deviating files as context | color system discipline |
+| I5 | whileInView animations use inline easing arrays instead of the shared constant | `Skill('animate')` to extract inline values into the motion constants file | animation consistency — AuditHQ v2 had `EASE_OUT_EXPO` constant but inline arrays coexisted |
+| I6 | Hover animations inconsistent across same component type (some scale, some don't) | `Skill('animate')` to apply uniform hover pattern — pass the canonical pattern and all deviating files | hover consistency |
+| I7 | Entrance animation durations scattered (outliers beyond declared band) | `Skill('animate')` to normalise durations — pass min/max outliers as context | duration consistency |
+| I8 | Section wrapper padding inconsistent (mixed py-16/py-24/py-32 without documented reason) | `Skill('polish')` to standardise — pass deviating sections as context | spacing discipline |
+
+**Batch rule for I-category:** All I-failures in one iteration → one `Skill('polish')` call (spacing/variant) + one `Skill('typeset')` call (fonts) + one `Skill('animate')` call (motion). Three skill calls max for the entire category. Never one call per check.
+
+---
+
 ## Cross-cutting rules
 
 1. **Multiple checks routing to the same skill** in one iteration → batch them: one `Skill('typeset')` call passing a list of failures, not 5 separate calls. Pass the specific check-IDs and FAIL proof as context arguments so the skill knows exactly what to target. Do NOT read the skill's SKILL.md and synthesise inline — that is the failure pattern.
