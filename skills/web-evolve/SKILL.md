@@ -1,277 +1,257 @@
 ---
 name: web-evolve
 description: >
-  Score-driven continuous improvement loop for existing websites. Captures
-  screenshots, runs an auditable binary checklist (no self-grading), then
-  iteratively fixes the lowest-scoring failed check via the right premium-website
-  refinement skill. Each iteration must improve the score or the change is
-  reverted. Stops when target score is reached or max iterations hit. Built to
-  vastly improve generic-AI-slop landings without wiping what works. Score
-  always comes with receipts — never a number alone.
+  Score-driven continuous improvement loop for existing websites. Orchestrates
+  a swarm of specialist agents — web-score (audit), web-benchmark (competitor gap),
+  web-patch (single-check fix), web-screenshot (visual diff) — to iteratively
+  improve a landing page until it hits the target score. Each iteration is
+  agent-verified: score comes from web-score, diff comes from web-screenshot,
+  fix comes from web-patch. The orchestrator never audits or fixes inline.
 ---
 
 # Skill: /web-evolve
 
-**The closed-loop visual optimizer for the premium-website suite.**
+**Agent-swarm orchestrator for landing page quality improvement.**
 
-Use this when an existing website needs to be made vastly better without a wipe-and-rebuild. Preserves anything already scoring well; targets effort at what's broken.
+This skill coordinates four specialist agents. It does not audit, fix, or score anything itself. Its only jobs are: spawn agents, read their structured outputs, make keep/revert/void decisions, and log every iteration to BUILD-LOG.md.
 
 ---
 
-## Cardinal rules (load-bearing — do not weaken)
+## Cardinal rules
 
-1. **No score without receipts — AND no capped score without showing the raw score underneath.** Every score emitted by this skill MUST show BOTH the capped final score AND the raw score percentage AND the specific check holding the cap. Iterations that do real work but hide progress behind a veto cap are demoralising — the user must see "raw 88%, capped 80 because B5 FAIL" so progress is legible. Every score is also accompanied by the full checklist with PASS / FAIL / N/A / WONTFIX per row, plus the proof for each PASS (grep result, count, screenshot path). A score number alone is invalid output. (See AuditHQ v2 retro 2026-04-24 — "98/100 self-graded" was the failure pattern; "iter 2 + iter 3 showed 80 → 80 and hid real work" was the secondary pattern.)
-
-2. **The checklist is the authority, not Claude.** Read `~/.claude/skills/shared/landing-page-checklist.md` (or `app-page-checklist.md` for app pages) at start. Run every check. Compute score from results. **Do not invent or skip checks.** If a check is genuinely N/A for this product, mark it N/A with a one-line reason — do not silently drop it.
-
-3. **Every fix invokes a real Skill tool.** When a check fails, route to the named refinement skill via `Skill('X')`. Do NOT paraphrase the skill's logic in main context. Do NOT use a generic subagent. (See `feedback_invoke_skills_never_synthesise.md` memory.)
-
-4. **21st.dev maximalism.** When a section needs rebuilding, the FIRST move is `mcp__magic__21st_magic_component_inspiration` to find a real component. Building from scratch when 21st.dev has a fit is a Category B failure. Use as much from 21st.dev as possible — that's why we pay for it.
-
-5. **Theme consistency.** If the project uses a themed `<Button>` with variants, every fix MUST use the same Button. Don't introduce a different button. Don't bypass the design tokens. Category C catches this.
-
-6. **Score-anchored regression guard.** If a fix doesn't raise the score, REVERT the commit. Don't "trust the change is qualitatively better." The score is the contract. **Exception:** if the fix moved the target check from FAIL → PASS (so the raw score climbed under a veto cap, even if the displayed score didn't change), KEEP the commit and log the raw delta — real progress counts even when the cap hides it.
-
-7. **Explicit WONTFIX path.** When a check genuinely doesn't apply to this repo AND N/A is too narrow (e.g. B5 in backfill when mode detection couldn't flip it automatically), the user can mark it WONTFIX with a one-sentence justification. WONTFIX items are excluded from the denominator (like N/A) but produce an audit-trail entry in BUILD-LOG.md: `check-id WONTFIX — [reason] — [user confirmation]`. Cannot be auto-applied; requires user decision.
-
-8. **Visual-diff gate — no invisible wins.** After every fix, a Puppeteer screenshot of the affected section MUST be captured and compared to the pre-fix screenshot. If the before/after screenshots are pixel-identical (same layout, same content, no visible change), the iteration is null-delta: revert the commit, mark the iteration VOID in BUILD-LOG.md, do NOT count the score delta. "Committed code" ≠ "visibly improved page." The diff must be human-perceptible. Null-delta iterations do NOT count toward the max-iteration cap.
-
-9. **No Skill call = no iteration credit.** Every fix applied during the loop MUST correspond to a `Skill('X')` tool invocation OR a direct named MCP tool call in this session's transcript. Fixes applied by direct Edit/Bash/Write without a Skill wrapper are process violations — mark iteration VOID under check H1 and re-run via the correct skill. The loop routes through skills; it does not synthesise their logic inline.
+1. **Never audit inline.** All scoring comes from `web-score` agent output. Never run grep checks or evaluate checks yourself.
+2. **Never fix inline.** All fixes come from `web-patch` agent. Never edit source files directly.
+3. **No score without a receipt.** Every score claim cites the `score.json` written by `web-score`.
+4. **No kept commit without a visible diff.** Every kept iteration cites the `VISIBLE_DIFF` verdict from `web-screenshot`.
+5. **Vision checks block until user confirms.** Surface every `NEEDS_HUMAN` block from `web-score` to the user. Do not proceed with those checks until the user replies. Update `score.json` with the reply before continuing.
+6. **VOID beats revert for null-delta.** If `web-screenshot` returns `NULL_DELTA`, void the iteration (reclaim the slot), revert the commit, try a different fix approach.
+7. **Raw score transparency.** When a veto cap is active and raw > final by >5 points, always show both: "raw 88% → capped 80 (B3 FAIL)".
 
 ---
 
 ## Inputs
 
-- **Working directory** — existing repo (auto-detected from current dir, or passed as arg)
-- **Live URL** — production deploy URL to capture baseline screenshots from (read from BUILD-LOG.md or passed as arg)
-- **Target score** — default 90, raise to 95 for "Stripe/Linear quality" mode
-- **Scope** — default = all landing/marketing pages auto-detected from `src/pages/`. App pages are off-limits unless explicitly listed.
-- **Mode** — auto-detected (`backfill` if DESIGN-BRIEF.md exists AND src/components/landing/ is populated; otherwise `greenfield`). Override with `--mode=backfill` or `--mode=greenfield`.
-- **Max iterations** — default depends on mode: **greenfield = 8, backfill = 20** (backfill requires more iterations because per-file provenance backfill + component swaps add up). Tell the user the mode + cap at the start so expectations match reality.
+- `project_path` — repo root (auto-detect from current directory)
+- `live_url` — deployed URL (read from BUILD-LOG.md or passed as arg)
+- `target_score` — default 90. Use 95 for "Stripe/Linear quality" mode.
+- `benchmark_url` — override the auto-selected reference site (optional)
+- `mode` — `backfill` | `greenfield` (auto-detect: DESIGN-BRIEF.md exists + src/components/landing/ populated = backfill)
+- `max_iterations` — default: greenfield=8, backfill=20
+- `--tier` — `1` (fast audit) or `2` (full audit). Default: 1 for loop iterations, 2 for baseline.
 
 ---
 
-## Phase A — Survey & guard rails
+## Phase A — Setup (orchestrator only, no agents yet)
 
-1. Read `CLAUDE.md`, `package.json`, `DESIGN-BRIEF.md` (if exists), `SCOPE.md`, `BUILD-LOG.md`.
-2. **Detect mode** per `~/.claude/skills/shared/landing-page-checklist.md` Mode detection section. Backfill = DESIGN-BRIEF.md exists AND src/components/landing/ is populated. Greenfield = otherwise. Echo the detected mode AND the iteration cap to the user as the first output line.
-3. Auto-classify pages: marketing (in scope) vs app/dashboard (off-limits).
-4. Confirm target page list with user via `Skill('AskUserQuestion')` — one prompt, then autonomous. Include mode confirmation: "Detected [mode] mode, iteration cap [N]. Proceed?"
-5. Verify the deployed URL is reachable: `curl -s -o /dev/null -w "%{http_code}" [URL]` must return 200.
-6. Create working directory `.evolution/` for screenshots, scores, diffs, baseline backups.
-7. **HALT** if mode = greenfield AND no DESIGN-BRIEF.md exists — `Skill('web-evolve')` requires a design contract to score against. Surface NEEDS_HUMAN: "Run `Skill('web-design-research')` first to produce DESIGN-BRIEF.md." (In backfill mode this is unreachable because the mode detection requires DESIGN-BRIEF.md to exist.)
+1. Read `CLAUDE.md`, `DESIGN-BRIEF.md`, `SCOPE.md`, `BUILD-LOG.md` from `project_path`.
+2. Detect mode. Echo to user: "Mode: [backfill|greenfield] | Cap: [N] iterations | Target: [score]"
+3. Auto-classify pages. Confirm target list with user — one message, then autonomous.
+4. Verify `live_url` returns HTTP 200: `curl -s -o /dev/null -w "%{http_code}" [live_url]`
+5. Create `.evolution/` directory structure:
+   ```
+   .evolution/
+   ├── baseline/
+   ├── benchmark/
+   ├── scores/
+   ├── iter-N/     (created per iteration)
+   └── final/
+   ```
+6. Determine benchmark URL from DESIGN-BRIEF.md personality (see references/fix-routing.md Phase B.0 table) or user `--benchmark` arg.
 
 ---
 
-## Phase B.0 — Competitor benchmark (runs once, before baseline)
+## Phase B — Parallel baseline + benchmark (spawn two agents simultaneously)
 
-**Purpose:** give the improvement loop a real target, not just an abstract score. The benchmark produces a concrete gap list — what the reference site has that ours doesn't — which feeds directly into Phase C priority ordering.
+Spawn both agents in a **single message** (parallel execution):
 
-**Default benchmark references by personality (from DESIGN-BRIEF.md):**
+```
+Agent(
+  subagent_type='web-score',
+  prompt="""
+    project_path: {project_path}
+    live_url: {live_url}
+    output_path: {project_path}/.evolution/scores/
+    tier: 2
+    mode: {mode}
+    checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
+  """
+)
 
-| Personality | Default benchmark |
-|---|---|
-| Enterprise Authority | stripe.com |
-| Data Intelligence | linear.app |
-| Growth Engine | vercel.com |
-| Trusted Productivity | notion.so |
-| Premium Professional | framer.com |
-| Bold Operator | shopify.com |
-| Health & Care | (user must specify — no default) |
-| Civic/Government | (user must specify — no default) |
-
-User may override with `--benchmark=[URL]`. If no personality match and no override, skip Phase B.0 and log "no benchmark — proceeding with checklist only."
-
-**Steps:**
-
-1. `mcp__puppeteer__puppeteer_navigate` to the benchmark URL.
-2. `mcp__puppeteer__puppeteer_screenshot` at 1440×900 → `.evolution/benchmark/[name]-desktop.png`
-3. Scroll through the full page, capturing per-section screenshots → `.evolution/benchmark/[name]-[section].png`
-4. Vision analysis — produce a **Gap Analysis** with this exact structure, saved to `.evolution/benchmark/gap-analysis.md`:
-
-```markdown
-# Benchmark Gap Analysis — [benchmark name] vs [our page]
-Date: [date]
-
-## What the benchmark has that we don't
-- [element/technique] — [section it appears in] — [why it works]
-- [...]
-
-## What we have that they don't (our advantages — keep these)
-- [...]
-
-## Top 5 gaps to close (ranked by visual impact)
-1. [gap] — maps to checklist check [X] — fix via [Skill]
-2. [...]
+Agent(
+  subagent_type='web-benchmark',
+  prompt="""
+    benchmark_url: {benchmark_url}
+    benchmark_name: {benchmark_name}
+    target_page_description: {one-paragraph description from DESIGN-BRIEF.md}
+    target_personality: {personality from DESIGN-BRIEF.md}
+    output_path: {project_path}/.evolution/benchmark/
+  """
+)
 ```
 
-5. The top 5 gaps are **prepended to the Phase C priority queue** — they take precedence over algorithmic priority ordering for the first 5 iterations. After that, the standard priority queue resumes.
+Wait for both to complete.
 
-6. Save benchmark screenshots path list to `.evolution/benchmark/manifest.md`.
-
-**Note:** the benchmark is informational, not scored. It doesn't change the pass/fail rubric — it directs where effort goes first.
-
----
-
-## Phase B — Baseline capture & score
-
-For each target page:
-
-1. **Puppeteer baseline screenshots:**
-   - `mcp__puppeteer__puppeteer_navigate` to the live URL
-   - `mcp__puppeteer__puppeteer_screenshot` at 1440×900 (desktop) → `.evolution/baseline/[page]-desktop.png`
-   - Resize to 375×812, screenshot again → `.evolution/baseline/[page]-mobile.png`
-   - For each section: scroll to it, capture cropped screenshot → `.evolution/baseline/[page]-[section].png`
-
-2. **Run the checklist** from `~/.claude/skills/shared/landing-page-checklist.md`:
-   - Execute each check via its named verification method (Bash grep, file Read, puppeteer evaluate, vision inspect)
-   - Record PASS / FAIL / N/A with proof for every row
-   - Compute score using the formula in the checklist (with veto caps)
-   - Save to `.evolution/scores/baseline-[page].json` AND emit the full output to BUILD-LOG.md
-
-3. **Build the priority queue:** sort failed checks by potential score gain (hard-veto failures first, then by category weight, then alphabetical).
-
-4. **Self-check:** if the baseline score is already ≥ target, log "[page] already at target ([score]) — no evolution needed" and skip to Phase D for that page.
+**After both complete:**
+1. Read `.evolution/scores/score.json` → extract `priority_queue` and `needs_human_blocks`
+2. Read `.evolution/benchmark/gap-analysis.json` → extract `top_5_priority_queue`
+3. **Surface all NEEDS_HUMAN blocks to the user** — one message listing all vision checks needing confirmation. Wait for replies. Update `score.json` accordingly.
+4. **Build final priority queue:** prepend benchmark `top_5_priority_queue` (priority 400) to score `priority_queue`. Sort descending by priority.
+5. Write baseline score to BUILD-LOG.md in the mandatory format.
+6. If `score.final_score >= target_score`: log "already at target — no evolution needed", skip to Phase D.
 
 ---
 
-## Phase C — Improvement loop (per page, per failed check)
+## Phase C — Improvement loop
 
-Loop while overall score < target AND iterations < max:
+```
+while final_score < target_score AND iteration <= max_iterations:
+  iteration += 1
+```
 
-1. **Pick the highest-priority failed check** from the queue.
+### Step 1 — Pick top priority failure
 
-2. **Diagnose**: read the check's category and FAIL detail. Match to a fix path.
+Read the priority queue. Pick the highest-priority check that:
+- Status is FAIL (not N/A, WONTFIX, or NEEDS_HUMAN-unconfirmed)
+- Has not been attempted 3 times already (auto-WONTFIX if exhausted)
 
-3. **Route to the correct fix skill** (see `references/fix-routing.md` for the full table). Examples:
-   - A1 (Inter as display) → `Skill('typeset')` to swap font pairing
-   - A4 (banned hsl found) → `Skill('colorize')` to replace token
-   - A7 (flat hero bg) → `Skill('overdrive')` or `Skill('animate')` to add atmosphere
-   - A9 (no product visual) → `mcp__magic__21st_magic_component_inspiration` for hero pattern + `Skill('web-component')` to install
-   - B-series (21st.dev sourcing missing) → `mcp__magic__21st_magic_component_inspiration` for the section + `Skill('web-component')` swap
-   - C-series (theme drift) → `Skill('polish')` for token consolidation
-   - D-series (motion missing) → `Skill('animate')`
-   - E-series (section incomplete) → `Skill('web-component')` to add missing item
-   - F-series (visual quality) → vision-led: route by sub-category
-   - G1 (key={index}) → `Skill('web-fix')` direct
-   - G3 (build broken) → `Skill('web-fix')` direct
-   - G5 (LCP > 2.5s) → `Skill('optimize')` targeting hero image + render-blocking resources
-   - G6 (CLS > 0.1) → `Skill('web-fix')` targeting image dimensions + font-display
-   - I-series (design consistency) → `Skill('polish')` / `Skill('typeset')` / `Skill('animate')` batched
-   - J-series (copy quality) → `Skill('clarify')` with full failing copy list as context
-   - K-series (section differentiation) → `Skill('layout')` / `Skill('overdrive')` / `mcp__magic__21st_magic_component_inspiration`
+Look up `fix_skill` and `fix_context` from the check's priority_queue entry.
 
-4. **Apply the fix**, then commit per-iteration: `git commit -m "evolve: [page] iteration N — fix [check-id]"`.
+### Step 2 — Capture pre-fix screenshot
 
-5. **Re-screenshot the affected section + page.** Save to `.evolution/iter-N/[section].png`. Compare against the previous iteration's screenshot for this section.
+```
+Agent(
+  subagent_type='web-screenshot',
+  prompt="""
+    live_url: {live_url}
+    section_name: {affected_section}
+    before_screenshot_path: {project_path}/.evolution/iter-{N-1}/{affected_section}.png
+      (or baseline path if iteration 1)
+    after_screenshot_output_path: {project_path}/.evolution/iter-{iteration}/pre-fix-{affected_section}.png
+    viewport: desktop
+  """
+)
+```
 
-6. **Visual-diff check (mandatory before re-scoring).** If the before/after screenshots for the affected section are pixel-identical — same layout, same content, no visible change — mark the iteration VOID: revert the commit, log `iter N: VOID — null-delta, no visible change despite code change`, and do NOT re-score. A null-delta iteration does NOT consume one of the max-iteration slots.
+Save this as the `before` reference for the post-fix diff.
 
-7. **Re-run the full checklist for this page.** Compute new score. (Only reached if step 6 confirms a visible diff.)
+### Step 3 — Apply fix
 
-8. **Decision:**
-   - **Score went UP** → keep commit, log to `EVOLUTION-LOG.md` with delta AND screenshot paths, update priority queue, continue loop.
-   - **Score stayed SAME** → keep commit IF the failed check is now PASS (other checks may have shifted N/A), otherwise revert.
-   - **Score went DOWN** → `git revert HEAD --no-edit`, log "REGRESSION: tried [skill] for [check], score dropped from X to Y, reverted", remove that skill from candidates for this check, try the next-best skill or skip if exhausted.
+```
+Agent(
+  subagent_type='web-patch',
+  prompt="""
+    check_id: {check_id}
+    fail_proof: {fail_proof from score.json}
+    fix_skill: {fix_skill}
+    fix_context: {fix_context}
+    project_path: {project_path}
+    iteration_number: {iteration}
+    output_path: {project_path}/.evolution/iter-{iteration}/
+  """
+)
+```
 
-9. **Stop conditions:**
-   - Overall score ≥ target → exit loop, proceed to Phase D
-   - All failed checks attempted with no improvement → log STUCK, exit loop
-   - Max iterations hit (null-delta iterations excluded from count) → exit loop, log remaining failures
+Read `patch-{check_id}-iter{iteration}.json`. If `status == FAILED` or `status == VOID`: log NEEDS_HUMAN, skip this check, continue loop.
+
+### Step 4 — Verify visual diff + rescore (parallel)
+
+```
+Agent(
+  subagent_type='web-screenshot',
+  prompt="""
+    live_url: {live_url}
+    section_name: {affected_section}
+    before_screenshot_path: {project_path}/.evolution/iter-{iteration}/pre-fix-{affected_section}.png
+    after_screenshot_output_path: {project_path}/.evolution/iter-{iteration}/post-fix-{affected_section}.png
+    viewport: desktop
+  """
+)
+
+Agent(
+  subagent_type='web-score',
+  prompt="""
+    project_path: {project_path}
+    live_url: {live_url}
+    output_path: {project_path}/.evolution/iter-{iteration}/
+    tier: category:{affected_category}
+    mode: {mode}
+    checklist_path: ~/.claude/skills/shared/landing-page-checklist.md
+  """
+)
+```
+
+### Step 5 — Decision
+
+Read `diff-verdict-{section}.json` and `score.json` from the iteration output:
+
+| Screenshot verdict | Score delta | Decision |
+|---|---|---|
+| NULL_DELTA | any | **VOID** — `git revert HEAD --no-edit`, mark iter VOID (doesn't count toward cap), try different approach |
+| VISIBLE_DIFF | score up | **KEEP** — log delta to BUILD-LOG.md |
+| VISIBLE_DIFF | score same + target check now PASS | **KEEP** — log raw delta (veto cap hiding progress) |
+| VISIBLE_DIFF | score same + target check still FAIL | **REVERT** — fix didn't resolve the check |
+| VISIBLE_DIFF | score down | **REVERT** — regression, exclude this skill for this check |
+| UNCERTAIN | any | Wait 10s, re-run web-screenshot once. If still UNCERTAIN → treat as NULL_DELTA. |
+
+### Step 6 — Log iteration to BUILD-LOG.md
+
+```markdown
+### Evolution iteration N — [timestamp] [mode]
+Page: [page]
+Target check(s): [check_id] — [check name]
+Skill(s) invoked: [fix_skill] (via web-patch agent)
+Pre-score: [capped]/100 (raw [raw]%)
+Post-score: [capped]/100 (raw [raw]%)
+Delta capped: [+X / -X / 0]
+Delta raw: [+X% / -X% / 0]
+Visual diff: [before_path] → [after_path] — [diff_description]
+H1 check: PASS (web-patch agent used — Skill invocation confirmed in patch JSON)
+H2 check: [PASS (VISIBLE_DIFF) | VOID (NULL_DELTA) | UNCERTAIN]
+Decision: [KEPT | REVERTED | VOID | WONTFIX]
+Commit: [sha or "(reverted)" or "(voided)"]
+```
 
 ---
 
-## Phase D — Visual diff log + final score report
+## Phase D — Final report
 
-1. Capture **post-evolution screenshots** at the same viewports as baseline.
-2. Generate `EVOLUTION-LOG.md`:
-   ```markdown
-   # Evolution Log — [page]
-   Baseline score: 42/100
-   Final score: 91/100
-   Iterations: 14
-   Commits: 12 (2 reverted)
-
-   ## Score delta by category
-   - A. Anti-slop: 6/10 → 10/10
-   - B. 21st.dev: 3/8 → 8/8
-   - C. Theme: 5/8 → 8/8
-   - D. Animation: 2/6 → 6/6
-   - ...
-
-   ## Per-section before/after
-   ### Hero
-   ![baseline](.evolution/baseline/landing-hero.png) → ![final](.evolution/final/landing-hero.png)
-   Score: 38 → 92
-
-   [...]
-
-   ## Iteration log
-   - N=1: A4 (hsl banned) → Skill('colorize') → +6 → kept
-   - N=2: A7 (flat hero bg) → Skill('overdrive') → +4 → kept
-   - N=3: D5 (no animated bg) → Skill('animate') → -2 → REVERTED, tried Skill('overdrive') → +5 → kept
-   - [...]
-   ```
-3. Final commit: `git commit -m "evolve: [page] final — score [baseline] → [final]"`
-4. Push to GitHub. The deploy is triggered by the existing GitHub→Vercel auto-deploy if connected; otherwise invoke `Skill('web-deploy')`.
+1. Spawn `web-score` with `tier=2` against final state → `.evolution/scores/final-score.json`
+2. Spawn `web-screenshot` for full desktop + mobile → `.evolution/final/`
+3. Write `EVOLUTION-LOG.md`:
+   - Baseline score → Final score
+   - Score delta by category
+   - Per-section before (`.evolution/baseline/`) → after (`.evolution/final/`) screenshots
+   - Full iteration log (all kept + reverted + voided)
+4. Final commit: `git commit -m "evolve: [page] final — score [baseline] → [final]"`
+5. Push. Vercel auto-deploy if connected.
 
 ---
 
 ## Phase E — Post-deploy verification
 
-1. Wait 30s for Vercel.
-2. `mcp__puppeteer__puppeteer_navigate` to live URL.
-3. `mcp__puppeteer__puppeteer_screenshot` at 1440 + 375.
-4. Re-run a **trimmed checklist** (just the visual + a11y categories F + G) against the live URL — no source-code grep needed for the live verify, just confirm the deployed page matches the local final.
-5. Append "deployed verified — live score [N]/100" to EVOLUTION-LOG.md.
+1. Wait 30s.
+2. Spawn `web-score` with `tier=1` against live URL → confirm deployed state matches local final.
+3. Append "deployed verified — live score [N]/100" to EVOLUTION-LOG.md.
 
 ---
 
-## Phase F — Completion gate (transcript-verifiable)
+## Stop conditions
 
-`/web-evolve` cannot be marked complete unless THIS conversation's tool-call log contains:
-
-- [ ] `Skill('AskUserQuestion')` invocation confirming target page list
-- [ ] `mcp__puppeteer__puppeteer_navigate` + `mcp__puppeteer__puppeteer_screenshot` baseline captures
-- [ ] `EVOLUTION-LOG.md` written with full per-iteration record
-- [ ] `.evolution/scores/baseline-*.json` and `.evolution/scores/final-*.json` exist
-- [ ] At least one fix-skill invocation per failed check that the loop attempted (no skips)
-- [ ] Final score report emitted in the format defined in `landing-page-checklist.md`
-- [ ] If target score not reached: STUCK log entry with remaining failures listed
-
-If any of the above are missing → phase has NOT completed. Do NOT claim "evolved" status. Do NOT push to main with a misleading commit.
-
----
-
-## Anti-patterns
-
-- **Score without receipts** — emitting a number without the full checklist + proof is the exact failure this skill exists to prevent. Phase fails.
-- **Self-vision-rating** — "I think this looks better" is not a score. Re-run the puppeteer checks.
-- **Skipping checks because they're hard to verify** — every check has a method. If a method is unworkable in this environment, log NEEDS_HUMAN, don't silently drop it.
-- **Trusting the fix without re-scoring** — every commit must be followed by a re-score. No score-up = revert.
-- **Building generic instead of using 21st.dev** — Category B will catch this. Don't even try.
-- **Drifting from the existing theme** — Category C will catch this. Use the existing Button. Use the existing tokens.
-
----
-
-## Related skills
-
-- `Skill('web-design-research')` — required to exist before web-evolve runs (DESIGN-BRIEF.md is the design contract)
-- `Skill('web-page')`, `Skill('web-component')`, `Skill('web-fix')` — the fix skills
-- `Skill('typeset')`, `Skill('layout')`, `Skill('colorize')`, `Skill('animate')`, `Skill('bolder')`, `Skill('quieter')`, `Skill('distill')`, `Skill('polish')`, `Skill('overdrive')`, `Skill('delight')`, `Skill('clarify')` — the refinement skills the loop routes to
-- `mcp__magic__21st_magic_component_inspiration` + `mcp__magic__21st_magic_component_builder` — sourced when components need replacing
-- `mcp__puppeteer__*` — screenshot capture
-- `Skill('web-deploy')` — final deploy
-
----
-
-## When to use this vs other skills
-
-| Goal | Skill |
+| Condition | Action |
 |---|---|
-| Build new product from zero | `Skill('saas-build')` |
-| Find and fix issues across whole product (security/perf/UX/SEO/code health) | `Skill('saas-improve')` |
-| **Vastly improve a generic landing without wiping** | **`Skill('web-evolve')`** |
-| Add one new page | `Skill('web-page')` |
-| Fix one specific bug | `Skill('web-fix')` |
-| Pre-build design research | `Skill('web-design-research')` |
+| `final_score >= target_score` | Exit loop → Phase D |
+| All failed checks attempted, no improvement | Log STUCK with remaining failures → Phase D |
+| `iteration >= max_iterations` (VOID iters excluded) | Log TIMEOUT → Phase D |
+| Same check failed 3× (all REVERT or VOID) | Auto-WONTFIX with "skill exhausted", continue |
+| Build breaks twice in a row | HALT → NEEDS_HUMAN |
+| User marks check WONTFIX | Log to BUILD-LOG, exclude from denominator |
+
+---
+
+## What this skill must NOT do
+
+- Audit or score anything inline — always via `web-score` agent
+- Fix or edit source files directly — always via `web-patch` agent
+- Self-grade vision checks — always surface NEEDS_HUMAN to user
+- Claim score improvement without `web-screenshot` VISIBLE_DIFF verdict
+- Skip the BUILD-LOG entry for any iteration (including VOID)
