@@ -9,8 +9,10 @@ Written to project root in Step 10. This file is the single source of truth. Bui
 
 > This file is locked at research time. web-scaffold and web-page read it and execute — they do not re-run MCP queries or change component choices.
 
+personality: [Enterprise Authority | Data Intelligence | Trusted Productivity | Premium Professional | Bold Operator | Health & Care | Growth Engine | Civic/Government]
+
 ## Product Personality
-- **Personality type:** [one of 8]
+- **Personality type:** [one of 8 — must match the `personality:` field above]
 - **User emotion on open:** [what they feel]
 - **3-second message:** [what design communicates instantly]
 - **Memorability hook:** [the ONE thing user remembers 24h later]
