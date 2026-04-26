@@ -83,7 +83,61 @@ Looking at the screenshot, answer each question precisely:
 - Body font: same family as heading or different?
 - Any decorative or italic moments?
 
-### 2B — CSS inspection via Puppeteer
+### 2B — Fetch actual CSS source files
+
+Before running computed style inspection, fetch the actual CSS bundles loaded by the page:
+
+```python
+# During page load, capture all CSS file URLs
+css_urls = []
+page.on('response', lambda r: css_urls.append(r.url) if 'css' in r.url and r.status == 200 else None)
+page.goto(reference_url)
+page.wait_for_timeout(3000)
+# css_urls now contains all stylesheet URLs
+```
+
+Fetch the main theme CSS (look for files named `dark`, `main`, `app`, or similar):
+```python
+import urllib.request
+for url in css_urls[:8]:
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req) as r:
+        css = r.read().decode('utf-8')
+    # Search for colour tokens, gradient definitions, typography
+    # Focus on: background, gradient, color, font-family, font-weight
+```
+
+Also extract all active gradient elements in the hero viewport:
+```js
+(() => {
+  const els = document.querySelectorAll("*");
+  const results = [];
+  for (const el of els) {
+    const cs = getComputedStyle(el);
+    const bg = cs.backgroundImage;
+    if (bg && bg !== "none" && (bg.includes("gradient") || bg.includes("rgba"))) {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < 900 && rect.height > 50) {
+        results.push({
+          tag: el.tagName,
+          className: el.className.toString().slice(0, 80),
+          backgroundImage: bg,
+          backgroundColor: cs.backgroundColor,
+          top: Math.round(rect.top),
+          height: Math.round(rect.height),
+        });
+      }
+    }
+  }
+  return results;
+})()
+```
+
+**This step is mandatory.** Estimated gradients are always wrong. Extracted gradients are exact.
+The distinction matters: a purple radial added from visual guessing vs the actual
+`linear-gradient(rgb(0,2,64), rgba(0,0,0,0))` extracted from GitHub's DOM are completely different.
+
+### 2C — CSS inspection via Puppeteer (computed values)
 
 Run this evaluation and record every value:
 
