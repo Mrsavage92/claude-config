@@ -15,6 +15,9 @@ Score what a real user experiences, not just what the code does. A page that tec
 ## Process
 
 ### Step 1 — Read Context
+
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root, replication mode is active. The review must measure the project against the lock file, NOT against `web-system-prompt.md` defaults. Flag any drift from the lock (font swap, radius change, signature-element injection) as a CRITICAL finding. Do not suggest "add a gradient mesh" or "wrap in fadeUp" if the lock does not contain those tokens.
+
 Read `~/.claude/web-system-prompt.md`.
 Read `SCOPE.md` if it exists — use page definitions to verify every page was built as planned.
 Read `CLAUDE.md` for the color job definition.
@@ -164,11 +167,31 @@ Fix everything that doesn't require a new design decision.
 
 ### Step 6 — Visual Quality Upgrades (if Visual Quality < 8/10)
 
-For each page scoring below 0.75 average:
-1. Identify the specific gap (no empty state CTA, cramped spacing, missing skeleton, no signature element)
-2. Fix it — do not just recommend it
-3. Use `mcp__magic__21st_magic_component_refiner` on components scoring Poor
-4. For landing page hero: if no product visual exists, generate a dashboard mockup using shadcn Card components arranged to look like the actual app UI
+For each page scoring below 0.75 average, route to the correct impeccable skill based on the failure type. Do not just recommend — invoke the skill and execute the fix.
+
+**Refinement routing table:**
+
+| Failure | Impeccable skill to invoke |
+|---|---|
+| Typography scores Poor (size, hierarchy, weight, line-height) | `/typeset` |
+| Layout/spacing scores Poor (cramped, monotonous grid, no rhythm) | `/layout` |
+| Color is flat, monochromatic, or overused | `/colorize` |
+| Design feels safe, generic, or template-like | `/bolder` |
+| Design is too busy, cluttered, or high-contrast | `/quieter` |
+| Motion absent or wrong (janky, too much, wrong trigger) | `/animate` |
+| Microcopy, labels, or error messages are unclear | `/clarify` |
+| Mobile breakpoints fail or layout breaks below 768px | `/adapt` |
+| UX hierarchy or information architecture is confusing | `/critique` |
+| Multiple categories fail | Run `/critique` first to diagnose, then route findings to specific skills |
+
+**Additional fixes (not routing to impeccable):**
+- Empty state without CTA → build EmptyState component (Icon in muted circle + heading + description + button)
+- No signature element → add one distinctive visual (animated counter, timeline, data viz, contextual illustration)
+- Landing page has no product visual → generate dashboard mockup from shadcn Card primitives arranged as real app UI
+
+**After impeccable skills run:** re-read the affected components, verify the specific gap is resolved, then re-score that page criterion.
+
+**Final pass before closing Step 6:** invoke `/polish` on every page that was touched. This catches pixel-level inconsistencies the targeted skills may leave behind.
 
 ### Step 7 — Re-score After Fixes
 After all fixes: re-run the scoring. Report the final score.

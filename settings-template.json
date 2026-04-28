@@ -1,8 +1,7 @@
 {
   "env": {
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE",
-    "CLOUDFLARE_ACCOUNT_ID": "YOUR_CLOUDFLARE_ACCOUNT_ID",
-    "CLOUDFLARE_EMAIL": "YOUR_CLOUDFLARE_EMAIL"
+    "CLOUDFLARE_ACCOUNT_ID": "e15a9c89ed8482988bd304bef49ceb07",
+    "CLOUDFLARE_EMAIL": "adamsavage6@hotmail.co.uk"
   },
   "permissions": {
     "allow": [
@@ -15,16 +14,88 @@
       "Skill",
       "mcp__*",
       "Read(//c/Users/Adam/Documents/Projects/audit-genius/src/pages/**)",
-      "Edit(~/.claude/skills/shared/**)"
+      "Edit(~/.claude/skills/shared/**)",
+      "Edit(~/.claude/skills/saas-build/**)",
+      "Edit(~/.claude/skills/saas-improve/**)",
+      "Edit(~/.claude/skills/web-design-research/**)",
+      "Edit(~/.claude/skills/dashboard-design/**)",
+      "Edit(~/.claude/skills/premium-website/**)",
+      "Edit(~/.claude/skills/web-scaffold/**)",
+      "mcp__claude_ai_Supabase__deploy_edge_function",
+      "Edit(~/.claude/skills/product-validator/**)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "mcp__puppeteer__puppeteer_screenshot",
+      "Edit(~/.claude/skills/outbound/**)",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "mcp__claude_ai_Supabase__list_edge_functions",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash([ -d \"$d/.vercel\" ])",
+      "Bash(rm -rf __TRACKED_VAR__/.vercel)",
+      "Edit(~/.claude/skills/mulesoft-bdr/**)",
+      "Edit(~/.claude/skills/mulesoft-connector/**)",
+      "Edit(~/.claude/skills/mulesoft-flow/**)",
+      "Edit(~/.claude/skills/mulesoft-dataweave/**)",
+      "Edit(~/.claude/skills/mulesoft-platform/**)",
+      "Edit(~/.claude/skills/mulesoft/**)",
+      "Edit(~/.claude/skills/web-scope/**)",
+      "Edit(~/.claude/skills/scaffold/**)",
+      "Edit(~/.claude/skills/handoff/**)",
+      "Edit(~/.claude/skills/saas-discover/**)",
+      "Edit(~/.claude/skills/techaudit/**)",
+      "Edit(~/.claude/skills/saas-validator/**)",
+      "Edit(~/.claude/skills/employer-audit/**)",
+      "Edit(~/.claude/skills/geo-audit/**)",
+      "Edit(~/.claude/skills/reputation-audit/**)",
+      "Edit(~/.claude/skills/market-audit/**)",
+      "Edit(~/.claude/skills/techaudit-audit/**)",
+      "Edit(~/.claude/skills/security-audit/**)",
+      "Edit(~/.claude/skills/privacy-audit/**)",
+      "Edit(~/.claude/skills/ai-ready-audit/**)",
+      "Edit(~/.claude/skills/social-audit/**)",
+      "Edit(~/.claude/skills/social-report-pdf/**)",
+      "Edit(~/.claude/skills/full-audit/**)",
+      "Edit(~/.claude/skills/web-page/**)",
+      "Edit(~/.claude/skills/sync-knowledge-base/**)",
+      "Edit(~/.claude/skills/stitch-design/**)",
+      "Edit(~/.claude/skills/enhance-prompt/**)",
+      "Edit(~/.claude/skills/stitch-loop/**)",
+      "Edit(~/.claude/skills/web-review/**)",
+      "Edit(~/.claude/skills/remotion/**)",
+      "Edit(~/.claude/skills/web-animations/**)",
+      "Edit(~/.claude/skills/web-supabase/**)",
+      "Edit(~/.claude/skills/web-email/**)",
+      "Edit(~/.claude/skills/web-settings/**)",
+      "Edit(~/.claude/skills/web-onboarding/**)",
+      "Edit(~/.claude/skills/web-stripe/**)",
+      "Edit(~/.claude/skills/web-component/**)",
+      "Edit(~/.claude/skills/web-table/**)",
+      "Edit(~/.claude/skills/web-deploy/**)",
+      "Edit(~/.claude/skills/web-ai/**)",
+      "Edit(~/.claude/skills/web-analytics/**)",
+      "Edit(~/.claude/skills/web-storage/**)",
+      "Edit(~/.claude/skills/web-realtime/**)",
+      "Edit(~/.claude/skills/web-rbac/**)",
+      "Edit(~/.claude/skills/web-search/**)",
+      "Edit(~/.claude/skills/web-legal/**)",
+      "Edit(~/.claude/skills/web-oauth/**)",
+      "Edit(~/.claude/skills/web-supabase-local/**)",
+      "Edit(~/.claude/skills/web-pdf/**)",
+      "Read(~/.claude/**)",
+      "Edit(~/.claude/skills/web-evolve/**)",
+      "Bash(cp \"C:/Users/Adam/.claude/skills/web-evolve/SKILL.md\" \"C:/Users/Adam/Documents/Git/claude-config/skills/web-evolve/SKILL.md\")",
+      "Bash(cp \"C:/Users/Adam/.claude/skills/web-evolve/references/fix-routing.md\" \"C:/Users/Adam/Documents/Git/claude-config/skills/web-evolve/references/fix-routing.md\")",
+      "Bash(cp \"C:/Users/Adam/.claude/skills/web-evolve/references/scoring-engine.md\" \"C:/Users/Adam/Documents/Git/claude-config/skills/web-evolve/references/scoring-engine.md\")",
+      "Bash(cp \"C:/Users/Adam/.claude/skills/shared/landing-page-checklist.md\" \"C:/Users/Adam/Documents/Git/claude-config/skills/shared/landing-page-checklist.md\")",
+      "Edit(~/.claude/skills/project-doc/**)",
+      "Edit(~/.claude/skills/style-mirror/**)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
-      "C:\\Users\\Adam\\.claude\\skills\\market-report-pdf",
-      "C:\\Users\\Adam\\Documents\\Claude",
+      "C:\\Users\\Adam",
+      "C:\\Users\\Adam\\Documents\\Git\\claude-config",
       "C:\\Users\\Adam\\.claude\\skills",
-      "C:\\Users\\Adam\\.claude\\commands",
-      "C:\\Users\\Adam\\.claude",
-      "C:\\Users\\Adam\\.claude\\skills\\shared"
+      "C:\\Users\\Adam\\.claude\\projects",
+      "\\\\wsl.localhost\\Ubuntu\\home\\adam"
     ]
   },
   "enabledMcpjsonServers": [
@@ -55,6 +126,16 @@
             "timeout": 5000
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\tokens-lock-enforce.ps1\"",
+            "timeout": 5000
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -76,16 +157,18 @@
           {
             "type": "command",
             "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\log-tools.ps1\"",
+            "timeout": 3000,
             "async": true
           }
         ]
       },
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
             "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\start-dev-server.ps1\"",
+            "timeout": 5000,
             "async": true
           }
         ]
@@ -118,7 +201,7 @@
   },
   "enabledPlugins": {
     "github@claude-plugins-official": false,
-    "stripe@claude-plugins-official": false,
+    "stripe@claude-plugins-official": true,
     "adspirer-ads-agent@claude-plugins-official": false,
     "autofix-bot@claude-plugins-official": false,
     "supabase@claude-plugins-official": true
@@ -131,7 +214,6 @@
       }
     }
   },
-  "effortLevel": "medium",
-  "skipDangerousModePermissionPrompt": true,
-  "skipAutoPermissionPrompt": true
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": false
 }

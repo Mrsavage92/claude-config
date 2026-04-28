@@ -35,6 +35,7 @@ mcp__github__create_repository({ name: "[product-slug]", description: "[product 
 ```bash
 TOKEN=$(git credential fill <<< 'protocol=https
 host=github.com' 2>/dev/null | grep password | cut -d= -f2)
+# Windows/PowerShell: use the GitHub MCP (mcp__github__create_repository) instead — this curl method is Unix-only
 curl -s -X POST -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
   https://api.github.com/user/repos \
   -d '{"name":"[product-slug]","private":true,"description":"[product name]"}'

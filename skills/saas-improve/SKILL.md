@@ -40,6 +40,9 @@ Determine the product's revenue status. Answer ONE of:
 This check exists because Tender Writer consumed ~40% of a token budget going from 23→37/40 while having zero buyers. Polish before proof is waste.
 
 ### 0a. Read state
+
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active. The improvement stack must measure against the lock, not against `web-system-prompt.md` defaults. Findings like "missing gradient mesh" or "needs hover scale" are INVALID under replication mode — the lock decides what is missing. Pass lock awareness to every downstream skill in the stack.
+
 Read these files before doing anything else:
 1. `BUILD-LOG.md` — last completed phase, STUCK items, deployed URL
 2. `IMPROVEMENT-STACK.md` — previous stack (if exists and was generated in the last 24 hours: skip Phase 1 and Phase 2, jump directly to Phase 3 execution with the existing stack. If older than 24 hours: re-run Phase 1 and Phase 2 to refresh findings)
@@ -152,10 +155,8 @@ Log: "Phase 4 regression guard — [before] → [after]" to BUILD-LOG.md.
 
 If any fixes were made since the last deploy, redeploy. If Phase 3 produced zero DONE items (all BLOCKED or STUCK): skip Phase 5 entirely, log "Phase 5 skipped — no fixes to deploy", proceed to Phase 6.
 
-**Railway products** (if `railway.toml` exists or `package.json` references railway):
-```bash
-npx railway up --detach 2>&1
-```
+**FastAPI backend products** (if a separate backend service exists — not the default Supabase-only stack):
+Deploy the backend separately via your chosen platform, then proceed to Vercel frontend deploy.
 
 **Vercel SPA products** (default) — git push is the primary deploy method:
 
@@ -287,6 +288,29 @@ Run `/project-refresh` PUSH mode with the above summary.
 - IMPROVEMENT-STACK.md is always the source of truth — never work from memory.
 - Sentry errors and Railway 5xx patterns are P0/P1 by definition — live production outranks static analysis.
 - The swarm finds what the checklist misses. Both inputs matter.
+
+---
+
+## Design Skill Router (for Phase 3 P2/P3 visual findings)
+
+When the UX/Friction or Revenue agent returns design-related findings, route execution through the correct impeccable skill rather than writing raw fix code.
+
+| Finding type | Impeccable skill |
+|---|---|
+| Typography inconsistent, poor sizing, wrong hierarchy | `/typeset` |
+| Layout cramped, monotonous grid, bad rhythm | `/layout` |
+| Color flat, monochromatic, or primary overused | `/colorize` |
+| Interface feels generic, safe, or template-like | `/bolder` |
+| Overcrowded, too many elements, cognitive overload | `/distill` |
+| Contrast excessive, visually aggressive | `/quieter` |
+| Missing animations or wrong motion timing | `/animate` |
+| No micro-interactions, personality, or memorable moments | `/delight` |
+| Mobile breakpoints broken or inconsistent | `/adapt` |
+| UX copy weak, labels unclear, error messages confusing | `/clarify` |
+| Multiple visual category failures (can't isolate) | `/critique` first, then route findings |
+| P3 final polish before closing the session | `/polish` |
+
+Run `/impeccable teach` at the start of any design-heavy improve session if no design context has been established. Without it these skills produce generic output.
 
 ---
 

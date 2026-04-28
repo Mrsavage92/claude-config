@@ -15,12 +15,17 @@ The old pattern (build all pages, review at the end) produced thin, empty-feelin
 ## Process
 
 ### Step 1 — Read Context
+
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active. Read it FIRST and treat it as the authoritative source for colors, typography, spacing, radius, shadows, motion. It overrides `web-system-prompt.md` Design DNA defaults, the Visual Signature Elements list, and the shadcn/Lucide/Framer-Motion mandates. Do NOT add gradient mesh, grain, border glow, glassmorphism, grid lines, animated gradient text, fadeUp/stagger, or hover scale unless the lock proves the reference uses them. After the page is built, screenshot it and diff against `.evolution/style-mirror/reference.png` before reporting done.
+
 Read `~/.claude/web-system-prompt.md`. If missing: continue — use sensible dark SaaS defaults (HSL color variables, Inter/Geist font, 4px grid spacing) and flag NEEDS_HUMAN "Install web-system-prompt.md — Design DNA is missing."
 Read `SCOPE.md` for the page definition (purpose, data, empty state, loading state, error state, signature element).
 Read `CLAUDE.md` for color job, design decisions. If missing: continue — read SCOPE.md and DESIGN-BRIEF.md for color decisions.
 Read `src/styles/index.css` and Glob `src/components/**/*.tsx` for existing component inventory. If `src/styles/index.css` missing: continue.
 
 If SCOPE.md does not have a definition for the requested page: define it now (all 5 fields) and add it to SCOPE.md before building.
+
+**Design context check:** Look for `.agents/context.json` or `DESIGN-CONTEXT.md` in the project root. If neither exists, run `/impeccable teach` before building. This one-time setup is required for `/typeset`, `/layout`, `/colorize`, and other refinement skills to produce targeted output when they fire during `/web-review`.
 
 ### Step 2 — Enforce Page Order
 

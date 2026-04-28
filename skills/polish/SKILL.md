@@ -32,6 +32,7 @@ Perform a meticulous final pass to catch all the small details that separate goo
 
 Before polishing, understand the system you are polishing toward:
 
+0. **Tokens lock gate (PRIORITY)**: If `tokens.lock.json` exists at the project root, the lock IS the design system for this polish pass. Polish aligns the feature to the lock — not to `.impeccable.md`, not to `.agents/context.json`, not to "what looks good." Drift from the lock is the bug; eliminating it is the polish. Do NOT add Visual Signature Elements, hover scale, or motion unless the lock proves the reference uses them.
 1. **Find the design system**: Search for design system documentation, component libraries, style guides, or token definitions. Study the core patterns: color tokens, spacing scale, typography styles, component API.
 2. **Note the conventions**: How are shared components imported? What spacing scale is used? Which colors come from tokens vs hard-coded values? What motion and interaction patterns are established?
 3. **Identify drift**: Where does the target feature deviate from the system? Hard-coded values that should be tokens, custom components that duplicate shared ones, spacing that doesn't match the scale.

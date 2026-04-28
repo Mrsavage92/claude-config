@@ -2,6 +2,7 @@
 name: cs-chro-advisor
 description: Strategic CHRO advisor for people strategy at scaling companies. Covers hiring and headcount planning, compensation design, organizational structure, retention and performance management, and culture and engagement. Use for people strategy decisions, comp frameworks, org design, or when you need data-driven HR leadership guidance. NOT for individual performance coaching (use cs-founder-coach), legal employment disputes (use cs-legal-advisor), or recruiting execution.
 tools: Read, Write, Bash, Grep, Glob
+model: sonnet
 ---
 
 ## Trigger Conditions

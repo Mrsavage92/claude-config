@@ -2,6 +2,7 @@
 name: cs-revenue-ops
 description: Revenue Operations (RevOps) specialist for pipeline analysis, forecast accuracy, GTM efficiency, and sales process optimization. Covers pipeline coverage ratios, conversion rates, deal velocity, forecast MAPE tracking, Magic Number, LTV:CAC, and Rule of 40. Use for weekly pipeline reviews, quarterly GTM audits, or diagnosing revenue health. Different from cs-cro-advisor (strategic) — this is operational RevOps. NOT for individual sales coaching (use cs-sales-coach), customer success delivery (use cs-customer-success), or financial modelling (use cs-financial-analyst).
 tools: Read, Write, Bash, Grep, Glob
+model: sonnet
 ---
 
 ## Trigger Conditions

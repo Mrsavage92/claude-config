@@ -31,7 +31,7 @@ This skill prevents that failure by making the process systematic and verifiable
 4. **Produce a diff table first.** Never touch code until the diff is written and confirmed.
 5. **Verify with screenshots.** After applying changes, screenshot both sites and compare element by element. If anything doesn't match, fix it before reporting done.
 6. **Brand content stays.** Mirror the design language, not the content. Logos, product names, copy, and CTAs stay as the project's own.
-7. **Tokens lock is mandatory.** The extracted spec MUST be written to `.style-mirror/tokens.lock.json` at the project root. Build skills (web-page, web-scaffold, polish) re-read this file before each section. Without the lock file, replication mode is not active and Design DNA defaults will override the mirror.
+7. **Tokens lock is mandatory.** The extracted spec MUST be written to `{project_path}/tokens.lock.json` (canonical, project root) AND `{project_path}/.style-mirror/tokens.lock.json` (archival). Build skills (web-page, web-scaffold, polish, web-component, web-review, web-fix), the impeccable Context Gathering Step 0, and the `tokens-lock-enforce.ps1` PreToolUse hook all check the project-root path. Without it, replication mode is not active and Design DNA defaults will override the mirror.
 8. **Section-by-section, not page-at-once.** After applying changes for one section (hero, features, footer, etc.), screenshot just that section and diff against the reference's same section before moving on. Drift compounds — catch it at section boundaries, not at the end.
 
 ---
@@ -210,7 +210,11 @@ Also inspect the hero background for gradient/glow:
 
 ### 2D — Write tokens.lock.json (MANDATORY)
 
-After Step 2C produces the spec, write it to `{project_path}/.style-mirror/tokens.lock.json` as structured JSON. This is the single source of truth that all build skills re-read before each section.
+After Step 2C produces the spec, write it to **both** locations:
+- `{project_path}/tokens.lock.json` — the canonical project-root copy that all build skills, the impeccable Context Gathering Protocol, and the `tokens-lock-enforce.ps1` PreToolUse hook check for.
+- `{project_path}/.style-mirror/tokens.lock.json` — the archival copy alongside the reference screenshot and extraction artifacts.
+
+Both files must contain identical JSON. If you only write to `.style-mirror/`, downstream skills will not see the lock and replication mode will silently fail.
 
 ```json
 {

@@ -39,6 +39,7 @@ Individual skills may require additional context. Check the skill's preparation 
 **CRITICAL**: You cannot infer this context by reading the codebase. Code tells you what was built, not who it's for or what it should feel like. Only the creator can provide this context.
 
 **Gathering order:**
+0. **Check tokens.lock.json (PRIORITY — replication mode)**: If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active. Read it and treat it as the authoritative source for colors, typography, spacing, radius, shadows, motion. Skip Steps 1–3 and skip `/impeccable teach`. Design Direction below is also SUSPENDED — do not commit to a "BOLD aesthetic direction" that conflicts with the lock. The point of replication is to look like the reference, not to impose a new direction.
 1. **Check current instructions (instant)**: If your loaded instructions already contain a **Design Context** section, proceed immediately.
 2. **Check .impeccable.md (fast)**: If not in instructions, read `.impeccable.md` from the project root. If it exists and contains the required context, proceed.
 3. **Run impeccable teach (REQUIRED)**: If neither source has context, you MUST run /impeccable teach NOW before doing anything else. Do NOT skip this step. Do NOT attempt to infer context from the codebase instead.

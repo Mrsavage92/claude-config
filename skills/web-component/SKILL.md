@@ -25,6 +25,9 @@ Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 ## Process
 
 ### Step 1 — Read Context
+
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root, replication mode is active. Build the component using values from the lock (colors, typography, spacing, radius, motion). Do NOT swap to shadcn primitives if the lock shows the reference uses bespoke components. Do NOT apply hover scale, fadeUp entrances, or Visual Signature Elements unless the lock proves the reference uses them. The component must be visually consistent with `.evolution/style-mirror/reference.png` before reporting done.
+
 Read `~/.claude/web-system-prompt.md`. Then read the project's:
 - `src/styles/index.css` — active color tokens and fonts
 - `tailwind.config.ts` — type scale, custom values

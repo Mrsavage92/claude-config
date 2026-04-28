@@ -38,6 +38,8 @@ This gate exists because Tender Writer was scaffolded 6 days before validator ca
 ---
 
 ### Step 1 — Read Design DNA + Scope
+
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root, replication mode is active. Generate `index.css`, `tailwind.config.ts`, font @imports, and the design-token system from the lock — not from `web-system-prompt.md` defaults. Do NOT scaffold the standard shadcn HSL variable set if the lock specifies different colors/space/radius. Do NOT install Framer Motion or add Visual Signature Elements unless the lock proves the reference uses them. After scaffolding, the generated `index.css` must round-trip back to the lock.
 Read `~/.claude/web-system-prompt.md` in full.
 If `SCOPE.md` exists in project root: read it and use its design decisions. Skip Step 2.
 If no SCOPE.md: run /web-scope first, then return here.

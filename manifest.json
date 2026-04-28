@@ -9,7 +9,7 @@
     "api-docs.md": "4cd6a7bd9b30383c6251d9400392e5f4",
     "architecture.md": "6cb8b2ce59fe7d078d602ccf33bbfa59",
     "audit-pdf-design-lock.md": "8c9fe447ead8860099537b1cdc714e56",
-    "audit.md": "285ab41d19d9823d7c5c47b6c3d228cb",
+    "audit.md": "313126c82fa26cca9bbfeb1439afc2d6",
     "brand-dna.md": "3175d64215fe9ecddcc14794ef45e115",
     "changelog.md": "b1810e99e7843e795cb8c4ea477ba321",
     "code-to-prd.md": "445637ac9ddaa12034aa1d56b804ba05",
@@ -242,6 +242,7 @@
     "project-review",
     "quieter",
     "ra-qm-team",
+    "refine",
     "remotion",
     "reputation",
     "reputation-audit",
@@ -260,6 +261,7 @@
     "security-email",
     "security-headers",
     "security-report-pdf",
+    "self-audit",
     "senior-backend",
     "senior-devops",
     "senior-frontend",
@@ -313,6 +315,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 171
+    "skills": 173
   }
 }

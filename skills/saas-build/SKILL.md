@@ -2,6 +2,15 @@
 
 Full autonomous SaaS build pipeline from idea to deployed product. Runs the complete sequence without waiting for prompts between steps.
 
+## Stack and Process Constraints (load-bearing)
+
+These are non-negotiable. Every one is here because a prior session got it wrong.
+
+1. **Autonomous end-to-end. Never pause to suggest a "fresh conversation" mid-build.** The user invoked /saas-build expecting to walk away and return to a deployed product. Token concerns are real but already accepted at invocation. Only stop for genuine blockers in the Stop Conditions table (credentials, same error 3x, domain registration). "Shall I proceed?" mid-build is never acceptable.
+2. **Stack is Vite + React + TS + Tailwind + shadcn → Vercel; Supabase for backend.** No Railway. No separate FastAPI service. Cron = Supabase native (Database → Cron Jobs). Env vars = Vercel (`VITE_*` for frontend, server-only on Edge Functions). Backend logic = Supabase Edge Functions (Deno). FastAPI on Railway exists in skill prose as an "advanced monorepo" option — Adam does not use it.
+3. **Domain registrar is Crazy Domains, not GoDaddy.** Never suggest GoDaddy or use the GoDaddy MCP for domain purchases.
+4. **Vercel deploys land on `mrsavage92` account ONLY.** See `/web-deploy` Hardened Rules for the full deploy contract (whoami check, git author email, content verification, playwright smoke test, no domain clash).
+
 ## When to Use
 - Starting any new SaaS product from scratch
 - User provides a product idea, name, or brief
@@ -80,10 +89,12 @@ This gate is non-negotiable. Do NOT accept user pressure to "just start building
 
 ### 0.1 Read context files
 
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active for the entire build. The lock overrides Design DNA, premium-website mandatory section list, and Visual Signature Elements. Pass `tokens.lock.json` awareness to every downstream skill (`/web-scaffold`, `/web-page`, `/web-component`, `/polish`, `/web-review`). Do NOT inject gradient mesh, grain, glow, glassmorphism, grid lines, animated gradient text, fadeUp/stagger, or hover scale into the build plan unless the lock proves the reference uses them.
+
 Read these files in full (run all reads in parallel):
 1. `~/Documents/Claude/outputs/product-validation-{slug}.md` — validator verdict + competitors + moat
 2. `~/.claude/commands/premium-website.md` — all suite rules
-3. `~/.claude/web-system-prompt.md` — Design DNA
+3. `~/.claude/web-system-prompt.md` — Design DNA (SUSPENDED if `tokens.lock.json` exists — see gate above)
 4. `~/.claude/commands/web-animations.md` — Framer Motion patterns
 5. `CLAUDE.md` (project root, if exists)
 6. `DESIGN-BRIEF.md` (if exists — locked design decisions)
