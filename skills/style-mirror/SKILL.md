@@ -31,6 +31,29 @@ This skill prevents that failure by making the process systematic and verifiable
 4. **Produce a diff table first.** Never touch code until the diff is written and confirmed.
 5. **Verify with screenshots.** After applying changes, screenshot both sites and compare element by element. If anything doesn't match, fix it before reporting done.
 6. **Brand content stays.** Mirror the design language, not the content. Logos, product names, copy, and CTAs stay as the project's own.
+7. **Tokens lock is mandatory.** The extracted spec MUST be written to `.style-mirror/tokens.lock.json` at the project root. Build skills (web-page, web-scaffold, polish) re-read this file before each section. Without the lock file, replication mode is not active and Design DNA defaults will override the mirror.
+8. **Section-by-section, not page-at-once.** After applying changes for one section (hero, features, footer, etc.), screenshot just that section and diff against the reference's same section before moving on. Drift compounds — catch it at section boundaries, not at the end.
+
+---
+
+## Forbidden additions during mirror
+
+When this skill is active (and whenever `tokens.lock.json` exists), the following Design DNA defaults are SUSPENDED. Do NOT add them unless the extracted tokens prove the reference uses them:
+
+- **Gradient mesh backgrounds** — only if reference's hero has a multi-radial-gradient
+- **Grain / noise textures** — only if reference applies SVG turbulence or noise overlay
+- **Border glow / box-shadow ring** — only if reference uses it on cards/buttons
+- **Glassmorphism / backdrop-blur** — only if reference's nav or modals use it
+- **Grid-line backgrounds** — only if reference shows visible grid pattern
+- **Animated gradient text / `background-clip: text`** — banned by impeccable, only if reference explicitly does it
+- **Lucide icons** — if reference uses custom icon set or different family (Octicons, Heroicons, Phosphor, custom SVG), match it
+- **Framer Motion entrance animations (fadeUp, stagger, scroll-triggered reveals)** — only if reference's IntersectionObserver / scroll listeners show them in computed JS
+- **Hover scale `whileHover={{ scale: 1.02 }}`** — only if reference's `:hover` computed transform shows scale
+- **Rounded corners larger than reference** — read `border-radius` from extracted tokens, do not "improve" it to a larger Tailwind default
+- **shadcn/ui component substitution** — if reference uses bespoke buttons/cards/inputs, do NOT swap to shadcn primitives
+- **Premium-website mandatory section list** — if reference does not have a "Logo Cloud → Stats → Testimonials → Pricing → FAQ" structure, do NOT add those sections
+- **21st.dev component lock** — disabled during mirror. Use the reference's actual layout structure.
+- **Awwwards-style "signature visual moments"** — restraint. The point is to look like the reference, not to look like a 2025 Awwwards finalist.
 
 ---
 
@@ -185,7 +208,57 @@ Also inspect the hero background for gradient/glow:
 })()
 ```
 
-### 2C — Build the reference design spec
+### 2D — Write tokens.lock.json (MANDATORY)
+
+After Step 2C produces the spec, write it to `{project_path}/.style-mirror/tokens.lock.json` as structured JSON. This is the single source of truth that all build skills re-read before each section.
+
+```json
+{
+  "reference_url": "https://github.com",
+  "captured_at": "2026-04-28T...",
+  "layout": {
+    "hero": "centered",
+    "above_fold_order": ["nav", "headline", "subline", "cta_pair", "product_visual"],
+    "product_visual": "below-text",
+    "density": "sparse"
+  },
+  "colors": {
+    "body_bg": "#0d1117",
+    "card_bg": "#161b22",
+    "nav_bg": "rgba(13,17,23,0.7)",
+    "border": "#30363d",
+    "text_primary": "#e6edf3",
+    "text_secondary": "#7d8590",
+    "cta_bg": "#238636",
+    "cta_text": "#ffffff",
+    "hero_gradient": "linear-gradient(rgb(0,2,64), rgba(0,0,0,0))"
+  },
+  "typography": {
+    "heading_family": "\"Mona Sans\", system-ui, sans-serif",
+    "heading_weight": 600,
+    "heading_letter_spacing": "-0.025em",
+    "heading_h1_size": "clamp(40px, 6vw, 72px)",
+    "body_family": "\"Mona Sans\", system-ui, sans-serif",
+    "body_weight": 400
+  },
+  "spacing": {
+    "section_padding_top": "96px",
+    "cta_border_radius": "6px"
+  },
+  "icons": {
+    "family": "octicons",
+    "stroke_width": null
+  },
+  "forbidden_additions": [
+    "gradient_mesh", "grain_texture", "border_glow", "glassmorphism",
+    "grid_lines", "gradient_text", "lucide_icons", "framer_motion_entrances"
+  ]
+}
+```
+
+The `forbidden_additions` array is computed by inspecting the reference's computed styles — if reference does NOT use a pattern, mark it forbidden. Build skills (web-page, web-scaffold, polish, impeccable) MUST refuse to add anything in this list.
+
+### 2C — Build the reference design spec (human-readable companion)
 
 Produce a structured spec in this format:
 
@@ -284,6 +357,21 @@ Work through every HIGH item first, then MED. Apply in this order:
 For each change, use Edit tool directly. Run `npx tsc --noEmit` after all changes.
 
 ---
+
+## Step 6b — Section-by-section mirror loop (NEW)
+
+Replace the single-pass apply-then-verify with a per-section loop. Drift compounds across long builds — catch it at section boundaries, not at the end.
+
+For each section in the reference (in order: nav → hero → next-section → next → footer):
+
+1. **Re-fetch** the reference's section: `mcp__puppeteer__puppeteer_evaluate` returning the section's bounding box, computed styles, and inner HTML structure.
+2. **Re-read** `tokens.lock.json` from the project root. Confirm the section's tokens have not drifted.
+3. **Build** the project's equivalent section using ONLY values from `tokens.lock.json` and the freshly-extracted section structure.
+4. **Screenshot** just that section: `mcp__puppeteer__puppeteer_screenshot` with `clip: { x, y, width, height }` matching the section bounds.
+5. **Diff** computed styles between project's section and reference's section. Mismatches must be fixed before moving on.
+6. **Confirm** in BUILD-LOG.md or `.style-mirror/section-log.md`: section name, tokens used, mismatches found, mismatches fixed.
+
+Section-by-section is non-negotiable when the page has more than 3 sections. The hero-good-everything-else-drifts failure mode is exactly this skipped loop.
 
 ## Step 7 — Screenshot and verify
 
