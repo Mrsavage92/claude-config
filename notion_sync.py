@@ -141,7 +141,7 @@ cats_cmd = [
 
 blocks = [
     h1(f'Slash Commands ({len(data["commands"])} total)'),
-    para('Last updated: 2026-03-25  |  Source: github.com/Mrsavage92/claude-config'),
+    para('Last updated: 2026-04-28  |  Source: github.com/Mrsavage92/claude-config'),
     divider(),
 ]
 
@@ -185,7 +185,7 @@ cats_agent = [
 
 ablocks = [
     h1(f'Agents ({len(data["agents"])} total)'),
-    para('Last updated: 2026-03-25  |  Source: github.com/Mrsavage92/claude-config'),
+    para('Last updated: 2026-04-28  |  Source: github.com/Mrsavage92/claude-config'),
     divider(),
 ]
 
@@ -234,12 +234,13 @@ cats_skill = [
     ('Project Management', ['project-doc','project-manager','project-refresh','project-review','notion']),
     ('Business Growth', ['business-growth','customer-success-manager','client-onboard','client-golive']),
     ('Power Platform', ['dynamics365-crm-architect','dataverse-data-model','power-automate-engineer','power-platform-alm','power-platform-integration']),
+    ('n8n Workflows', ['n8n-code-javascript','n8n-code-python','n8n-expression-syntax','n8n-mcp-tools-expert','n8n-node-configuration','n8n-validation-expert','n8n-workflow-patterns']),
     ('Utility', ['autopilot','brainstorming','stock-photos','ai-image-generation','agent-browser','find-skills','agent-brief','google-workspace','handoff','standup','sync-knowledge-base','usage-report','plugin-audit','code-to-prd','job-description']),
 ]
 
 sblocks = [
     h1(f'Skills Library ({len(data["skills"])} total)'),
-    para('Last updated: 2026-03-25  |  Source: github.com/Mrsavage92/skills-library'),
+    para('Last updated: 2026-04-28  |  Source: github.com/Mrsavage92/skills-library'),
     divider(),
 ]
 
