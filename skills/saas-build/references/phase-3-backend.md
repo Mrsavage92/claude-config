@@ -26,7 +26,7 @@ If the product needs Supabase:
 7. Write `AuthRoute` component (session-only check, no onboarding_complete guard) — wraps `/setup` and `/reset-password`
 8. Register `/reset-password` route in App.tsx as a lazy-loaded stub pointing to a placeholder component — full `ResetPasswordPage.tsx` is built in Phase 4 (so it gets the per-page self-review pass). Mark it in SCOPE.md as a required auth page if not already present.
 
-If FastAPI backend: note the Railway service URL needed in BUILD-LOG.md as a blocker item for the user. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one.
+If using a FastAPI backend (advanced monorepo only — not the default): note the backend service URL needed in BUILD-LOG.md as a blocker. The FastAPI service itself is pre-existing in `services/api/` — do not scaffold a new one. Default stack uses Supabase Edge Functions instead.
 
 Log: "Phase 3a complete — Supabase configured" to BUILD-LOG.md.
 
@@ -69,6 +69,7 @@ If the product has any paid plan or trial-to-paid flow:
    curl -s https://api.stripe.com/v1/account \
      -u "$STRIPE_SECRET_KEY:" \
      | grep -o '"pk_test_[^"]*"' | tr -d '"'
+   # Windows/PowerShell: (Invoke-WebRequest -Uri "https://api.stripe.com/v1/account" -Headers @{Authorization="Basic $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$env:STRIPE_SECRET_KEY:")))"}).Content | Select-String '"pk_test_[^"]*"'
    ```
    Write both values to `.env.local` and Vercel env vars (Phase 6c).
    If the curl returns empty: the secret key is live mode (`sk_live_`) — get the live publishable key from stripe.com/apikeys and log as NEEDS_HUMAN.
@@ -100,7 +101,7 @@ Skip only if the product is a pure landing page with no auth.
 2. Set up Resend integration in `services/api/email_service.py` (or equivalent)
 3. Write React Email templates: welcome, trial-ending (if free-trial), team-invite (if team features), password-reset, invoice (if paid)
 4. Wire welcome email to auth signup trigger
-5. If trial model is `free-trial`: write `services/api/trial_reminders.py` — cron job that queries orgs where `trial_ends_at` is 7, 3, or 1 day away and sends the trial-ending template. Deploy as Railway cron (`0 9 * * *`).
+5. If trial model is `free-trial`: set up a cron job to query orgs where `trial_ends_at` is 7, 3, or 1 day away and send trial-ending emails. **Default: use Supabase native cron** (Dashboard → Database → Cron Jobs, call an Edge Function). FastAPI alternative: `services/api/trial_reminders.py` scheduled via your backend platform.
 6. Add `RESEND_API_KEY` to `.env.example`
 
 Log NEEDS_HUMAN: "Add RESEND_API_KEY — verify sending domain at resend.com/domains before emails will deliver"

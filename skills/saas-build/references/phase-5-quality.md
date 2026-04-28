@@ -35,6 +35,67 @@ Phase 5a cannot be marked complete unless THIS conversation's tool-call log cont
 
 If any are missing → re-invoke the missing skills. Self-review against a 13-item checklist is NOT a substitute. Writing "self-assessed 38/40" without these tool calls in the transcript is a phase failure (see AuditHQ v2 retro, April 2026).
 
+## Stage 5a.5 — Lock Conformance Sweep (only if replication mode)
+
+Run ONLY if `tokens.lock.json` exists at the project root. Otherwise skip directly to Stage 5b.
+
+The lock-conformance sweep catches drift between the hero (built first, lock fresh in context) and later sections / pages (built last, lock recall stale). Visual self-diff at section boundaries can miss whole-product drift; this sweep makes it measurable at render-time.
+
+### Procedure
+
+1. Read `tokens.lock.json` and capture the full token set.
+2. Use `mcp__puppeteer__puppeteer_navigate` to load the running dev server.
+3. For every route in `SCOPE.md`, run `mcp__puppeteer__puppeteer_evaluate` to extract computed styles for these selectors and properties:
+
+   | Selector | Properties to capture |
+   |---|---|
+   | `body` | `font-family`, `background-color`, `color` |
+   | `h1` | `font-family`, `font-weight`, `font-size`, `letter-spacing` |
+   | `h2` | `font-family`, `font-weight`, `font-size` |
+   | `[data-cta="primary"]`, `button.primary`, first `<button>` | `background-color`, `color`, `border-radius`, `font-family` |
+   | `nav`, `header > nav` | `background-color`, `backdrop-filter` |
+   | `a` | `color` |
+
+4. For every signature element in `lock.signature_elements` set to `false`, scan the rendered DOM for proof of injection:
+   - `gradient_mesh: false` → no element should have `background-image` containing `radial-gradient(at ...)` with multiple stops
+   - `glassmorphism: false` → no element should have `backdrop-filter` set to anything but `none`
+   - `grid_lines: false` → no element should have a 1px linear-gradient repeating pattern
+   - `gradient_text: false` → no element should have `-webkit-background-clip: text`
+
+5. Compute a per-page conformance score:
+   - +1 point per matching token (color, font, radius)
+   - −1 point per signature-element violation
+   - Express as percentage of the maximum possible
+
+6. Aggregate across all pages. Output to `LOCK-CONFORMANCE.md`:
+
+   ```markdown
+   # Lock Conformance Report — {project}
+   Lock: {tokens.lock.json captured_at}
+   Pages tested: {N}
+
+   | Page       | Score | Violations |
+   | ---------- | ----- | ---------- |
+   | /          | 100%  | none |
+   | /dashboard | 67%   | h1 font-family is "Inter" (lock: "Mona Sans"); .stat-card has backdrop-filter (lock: false) |
+
+   Overall: 84% conformant
+   ```
+
+7. **Halt rule:** if overall conformance < 90%, HALT Phase 5 and do NOT proceed to Stage 5b. Output the violations and require they be fixed (likely via `/web-fix` per failing page) before re-running the sweep.
+
+### Why this exists
+
+Style-mirror writes the lock; downstream skills now read it (per 2026-04-28 audits). The `tokens-lock-enforce.ps1` PreToolUse hook catches violations at write-time. This sweep catches violations at render-time, which catches:
+- A correct token written but later overridden by a more specific selector
+- A font-family set in CSS but the @import is missing, so the browser falls back
+- A child component's inline style overriding the token system
+- Drift compounding across pages built late in the session
+
+This is the difference between "the code says X" and "the user sees X." All three layers (writer / hook / sweep) together turn replication from self-discipline into self-enforcement.
+
+---
+
 ## Stage 5b — web-review loop
 
 **Scoring note:** `/web-review` scores x/40 — visual + a11y + performance. Different from `/review` (x/100) which covers security and correctness. Use web-review here. Optionally run /review separately — its score does not gate deploy.

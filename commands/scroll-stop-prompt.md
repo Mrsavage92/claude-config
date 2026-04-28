@@ -3,7 +3,7 @@ name: scroll-stop-prompt
 description: Generate three coordinated AI prompts (hero shot, exploded view, video transition) for scroll-stopping product content — delivered as a styled HTML page with copy buttons and confetti.
 ---
 
-Generate scroll-stopping AI prompts for a product using the scroll-stop-prompter skill at ~/.claude/skills/claude-skills/marketing-skill/scroll-stop-prompter/SKILL.md.
+Generate scroll-stopping AI prompts for a product using the scroll-stop-prompter skill at ~/.claude/skills/marketing-skill/scroll-stop-prompter/SKILL.md.
 
 Ask the user 3 questions:
 1. What is the product? (name + brief description)

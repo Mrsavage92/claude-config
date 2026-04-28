@@ -159,7 +159,7 @@ BrowserRouter with route for `/` (Landing), `/auth` (Auth), and protected app ro
 
 ## Stack
 React 18 + Vite + TypeScript + Tailwind CSS v3 + shadcn/ui + Framer Motion
-Backend: [Supabase / FastAPI on Railway / none]
+Backend: [Supabase / Supabase Edge Functions / none]
 
 ## Design System
 - Design DNA: read ~/.claude/web-system-prompt.md before any UI work
@@ -206,7 +206,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
 VITE_STRIPE_PRO_PRICE_ID=price_...   # Replace with real price ID before go-live
-VITE_API_URL=https://your-railway-service.up.railway.app
+VITE_API_URL=https://[your-supabase-project].supabase.co/functions/v1
 ```
 
 ---

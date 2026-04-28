@@ -28,6 +28,10 @@ Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 
 ## Process
 
+### Step 0 — Tokens Lock Gate
+
+If `tokens.lock.json` exists at the project root, replication mode is active. The fix must use values from the lock (colors, fonts, spacing, radius), not Design DNA defaults. Do not "improve" by switching to shadcn primitives, adding hover scale, or applying Visual Signature Elements unless the lock contains them.
+
 ### Step 1 — Diagnose Before Touching Code
 
 Ask or infer:
