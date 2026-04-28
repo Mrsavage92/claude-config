@@ -234,7 +234,7 @@ cats_skill = [
     ('Project Management', ['project-doc','project-manager','project-refresh','project-review','notion']),
     ('Business Growth', ['business-growth','customer-success-manager','client-onboard','client-golive']),
     ('Power Platform', ['dynamics365-crm-architect','dataverse-data-model','power-automate-engineer','power-platform-alm','power-platform-integration']),
-    ('n8n Workflows', ['n8n-code-javascript','n8n-code-python','n8n-expression-syntax','n8n-mcp-tools-expert','n8n-node-configuration','n8n-validation-expert','n8n-workflow-patterns']),
+    ('n8n Workflows', ['n8n-code-javascript','n8n-code-python','n8n-expression-syntax','n8n-node-configuration','n8n-validation-expert','n8n-workflow-patterns']),
     ('Utility', ['autopilot','brainstorming','stock-photos','ai-image-generation','agent-browser','find-skills','agent-brief','google-workspace','handoff','standup','sync-knowledge-base','usage-report','plugin-audit','code-to-prd','job-description']),
 ]
 
