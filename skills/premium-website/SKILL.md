@@ -1,5 +1,21 @@
 # Premium Website Suite
 
+## Replication Mode Override (read FIRST)
+
+If `tokens.lock.json` exists at the project root, OR the user has invoked `/style-mirror`, OR the user message contains "mirror"/"look like"/"match this site"/"replicate"/"copy the style of" with a target URL — this entire suite operates in **replication mode**:
+
+- The "Mandatory sections" list (Banner→Nav→Hero→Logos→Stats→Features→Testimonials→Pricing→FAQ→CTA→Footer) is **SUSPENDED**. Use only the section structure the reference actually has. Do NOT invent missing sections to satisfy the suite.
+- The "every section sourced from 21st.dev" rule is **SUSPENDED**. Do NOT call `mcp__magic__21st_magic_component_inspiration` or `mcp__magic__21st_magic_component_builder` during build. Build to match the reference's actual layout.
+- The Component Lock in DESIGN-BRIEF.md is **SUSPENDED** (or never produced). The lock file `tokens.lock.json` is the contract.
+- Animated background, product mockup, STAGGER hero entrance, InfiniteSlider logo cloud, CountUp stats, BentoGrid features, TestimonialSlider, FAQ minimum count — all suspended unless the reference has the equivalent.
+- Color discipline (2 brand uses per page max), enterprise restraint, "every page has a CTA" — suspended in favor of the reference's actual choices.
+- The 38/40 quality gate is suspended. The new gate is **per-section computed-style match against the reference** (see style-mirror Step 6b).
+- Phase 0.5 / `/web-design-research` does not run. Replication has no "research" phase — extraction is the research.
+
+If you find yourself reaching for any rule below to override what the reference does, **stop**. The reference is the ground truth. The suite's opinions exist to defeat AI convergence on net-new builds; in replication mode they ARE the convergence.
+
+---
+
 The premium website suite is the full set of web-* skills that together replace Lovable. It produces Awwwards/Linear/Stripe quality output — not generic AI UI.
 
 **saas-build reads this file once at Phase 0. All rules here apply to every phase automatically. When the suite is updated, only this file needs changing.**

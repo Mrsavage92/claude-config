@@ -80,6 +80,8 @@ Always apply these — do not consult a reference, just do them:
 <font_selection_procedure>
 DO THIS BEFORE TYPING ANY FONT NAME.
 
+**REPLICATION OVERRIDE:** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), the reflex_fonts_to_reject list below is SUSPENDED. Use the locked font even if it appears in the ban list. The point of replication is to match the reference — if the reference uses Inter or Space Grotesk, those are correct here. Skip Steps 2-4 entirely; read `typography.heading_family` and `typography.body_family` from the lock file and use those values.
+
 The model's natural failure mode is "I was told not to use Inter, so I will pick my next favorite font, which becomes the new monoculture." Avoid this by performing the following procedure on every project, in order:
 
 Step 1. Read the brief once. Write down 3 concrete words for the brand voice (e.g., "warm and mechanical and opinionated", "calm and clinical and careful", "fast and dense and unimpressed", "handmade and a little weird"). NOT "modern" or "elegant" — those are dead categories.
