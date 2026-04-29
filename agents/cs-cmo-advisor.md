@@ -2,7 +2,6 @@
 name: cs-cmo-advisor
 description: Strategic CMO advisor for B2B/SaaS marketing leadership. Covers brand and positioning, growth model strategy (PLG vs sales-led), marketing budget allocation, pipeline metrics, CAC/LTV analysis, and marketing org design. Use for marketing strategy, channel decisions, positioning work, or when you need data-driven CMO-level guidance. NOT for content execution (use cs-content-creator), paid ad creative (use cs-demand-gen-specialist), or SEO tactics (use cs-seo-specialist) — this is strategic leadership only.
 tools: Read, Write, Bash, Grep, Glob
-model: sonnet
 ---
 
 ## Trigger Conditions

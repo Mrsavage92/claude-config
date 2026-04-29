@@ -19,7 +19,7 @@ Full audit pipeline for any skill, plugin, agent, or command in this repository.
 ## Quick Start
 
 ```
-/plugin-audit ~/.claude/skills/engineering/agenthub
+/plugin-audit ~/.claude/skills/claude-skills/engineering/agenthub
 /plugin-audit ~/.claude/commands/prd.md
 /plugin-audit ~/.claude/agents/cs-senior-engineer.md
 ```

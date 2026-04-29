@@ -3,7 +3,7 @@ name: customer-success
 description: Monitor customer health, predict churn risk, and identify expansion opportunities. Builds onboarding playbooks, NPS programmes, health scoring models, and QBR frameworks.
 ---
 
-Run the customer-success advisor agent at ~/.claude/agents/cs-customer-success.md.
+Run the customer-success skill at ~/.claude/skills/claude-skills/business-growth/customer-success-manager/SKILL.md.
 
 Follow the full workflow in that file.
 

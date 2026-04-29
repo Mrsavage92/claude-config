@@ -2,7 +2,6 @@
 name: cs-founder-coach
 description: Founder and first-time CEO development coach. Covers leadership evolution across company stages, delegation frameworks, energy management, blind spot identification, board/investor relationships, and founder mental health. Use when navigating the personal challenges of building a company, not just the business challenges. NOT for business strategy decisions (use cs-ceo-advisor), people/HR policy (use cs-chro-advisor), or fundraising mechanics (use cs-ceo-advisor).
 tools: Read, Write, Grep, Glob
-model: sonnet
 ---
 
 ## Trigger Conditions

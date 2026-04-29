@@ -7,11 +7,6 @@ description: "Run audit suites against a website URL. Presents a numbered menu t
 
 Main entrypoint for the audit product.
 
-## Hardened Rules (load-bearing)
-
-1. **Agent output paths MUST be absolute.** When spawning audit agents, pass the FULL path like `C:/Users/Adam/Documents/Claude/outputs/{domain}/MARKETING-AUDIT.md`. Never use `./outputs/` — the cwd resolves to `~/.claude/projects/` (the VS Code extension's working directory) which blocks writes. The orchestrator creates the directory first, then passes absolute paths.
-2. **For external-page discovery, read `~/.claude/skills/shared/discovery-rules.md` first.** Raw curl beats WebFetch for any link/social/contact extraction — WebFetch strips anchor tags.
-
 ## Usage
 
 ```
