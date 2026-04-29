@@ -2,7 +2,6 @@
 name: cs-board-advisor
 description: Board deck builder and investor presentation specialist. Structures quarterly board decks, monthly updates, and fundraising narratives with the right balance of story and data. Each section follows Headline → Data → Narrative → Ask. Use when preparing board meetings, investor updates, or fundraising presentations. NOT for financial modelling (use cs-cfo-advisor), product strategy (use cs-product-strategist), or day-to-day investor relations emails.
 tools: Read, Write, Grep, Glob
-model: sonnet
 ---
 
 ## Trigger Conditions

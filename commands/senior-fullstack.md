@@ -3,7 +3,7 @@ name: senior-fullstack
 description: Full-stack development toolkit with project scaffolding for Next.js, FastAPI, MERN, and Django stacks. Includes code quality analysis, security review, and architecture guidance.
 ---
 
-Run the engineering toolkit skill at ~/.claude/skills/engineering/SKILL.md.
+Run the senior-fullstack skill at ~/.claude/skills/claude-skills/engineering-team/senior-fullstack/SKILL.md.
 
 Follow the full workflow in that file.
 

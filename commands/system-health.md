@@ -33,10 +33,10 @@ Check `~/.claude/sync-errors.log` — report the last 10 lines if non-empty.
 
 ## Step 3 — Skill Inventory
 
-Count files across skill directories:
-- `~/.claude/skills/` top-level category folders
-- Any nested skill folders containing `SKILL.md`
-- Any non-standard skill directories
+Count files in each skill directory:
+- `~/.claude/skills/claude-skills/`
+- `~/.claude/skills/alirezarezvani-claude-skills/`
+- Any other directories
 
 Flag if total exceeds 5,000 (bloat warning).
 
