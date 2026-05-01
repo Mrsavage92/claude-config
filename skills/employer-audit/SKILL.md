@@ -50,9 +50,85 @@ These rules apply to the final markdown report only. Internal analysis (Phases 1
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+This audit analyses **publicly observable signals** only. Be honest with the client about limits.
+
+**We CAN check from public HTML + headers (2026 capability):**
+
+*Careers page fundamentals:*
+- Careers page presence (/careers, /jobs, /work-with-us, /join-us)
+- EVP clarity (employee value proposition headline + supporting copy)
+- Benefits specificity (4-day week, async/remote-first, parental leave duration, mental health benefits)
+- Team/About page with named leadership + personal LinkedIn links
+- DEI commitment language with measurable specifics (vs generic "we value diversity")
+
+*Pay transparency (2024-2026 legal landscape):*
+- Salary range visible in job postings (legally required: NYC 2022, CA 2023, CO 2021,
+  WA 2023, EU Pay Transparency Directive 2026 enforcement, Hawaii, Illinois, MD)
+- Equity/options mention for tech roles
+- Bonus structure disclosure
+- Total compensation framing vs base-only
+
+*Job posting quality:*
+- Inclusive language (gender-neutral pronouns, no "rockstar/ninja/guru")
+- Requirements vs nice-to-haves separation
+- Location flexibility (remote/hybrid/in-office)
+- Visa sponsorship signal
+- Apply process simplicity (no "apply via this 30-step form")
+
+*AI in hiring disclosure (2026 legal):*
+- AEDT (NYC Automated Employment Decision Tools) bias audit reference
+- EU AI Act 2024 high-risk AI hiring tool disclosure
+- ATS / hiring platform signals (Greenhouse, Lever, Workday, Ashby)
+
+*Modern work signals (2026 candidate priorities):*
+- 4-day work week mention
+- Async-first / remote-first language
+- "We meet less" / "low meetings" signals
+- Mental health / wellbeing program mention
+- Learning & development budget mention
+- Sabbatical policy (1+ years tenure)
+- Parental leave specificity (weeks, equal for all parents)
+
+*External presence (via search):*
+- LinkedIn company page link
+- Glassdoor link (or absence — many companies hide it now if rating is low)
+- Indeed company page
+- Seek (AU) employer page
+- Built In profile (US tech)
+- Comparably profile (US compensation focus)
+- The Org / Crunchbase team listings
+
+*Employee advocacy signals:*
+- Employee LinkedIn featured posts on the site
+- "Life at [Company]" content (blog series, video diary)
+- Conference talk / speaking videos from team
+- Open-source contributions (engineering brand)
+
+*Review platform signals:*
+- Embedded Glassdoor / Indeed widgets
+- "We're Hiring" badges
+- Best Places to Work badges (Built In, Great Place to Work, Comparably)
+- Award badges (Inc. Best Workplaces, Forbes America's Best Employers)
+
+**We CANNOT directly fetch (requires human/WebSearch or paid APIs):**
+- Glassdoor / Indeed / Seek review content and ratings (no public API)
+- LinkedIn follower counts, post engagement, employee advocacy signals
+- Google review results for "working at [company]"
+- Competitor review comparisons
+
+**How to handle limits in the audit:**
+- If a review platform widget or badge is visible on the careers page, audit what's visible.
+- If it isn't, record the gap as a **finding** ("No visible review platform integration on the careers page") rather than inventing review data.
+- If the runtime has WebSearch access, use it for review ratings — and cite the source URL. If it doesn't, write: "Review platform data requires manual lookup — client to provide Glassdoor/Indeed ratings for a deeper analysis."
+- Never fabricate a rating, review count, or sentiment theme. Every quantitative claim must have a source URL or be marked `<!-- Manual input required -->`.
+
+---
+
 ## Phase 1: Data Gathering
 
-The quality of the audit depends entirely on the data collected. Do NOT skip steps.
+The quality of the audit depends entirely on the data collected. Do NOT skip steps. **If a data source is unavailable at runtime, note the gap as a finding rather than fabricating data.**
 
 ### 1.1 Identify the Company
 
@@ -65,39 +141,29 @@ From the company name, establish:
 
 Search: `[company name] careers` and `[company name] Glassdoor` to find key URLs.
 
-### 1.2 Audit Review Platforms
+### 1.2 Review Platform Signals (NOT Review Scraping)
 
-**This is the most critical data source.** Search for and extract data from:
+**No public API exists for Glassdoor/Indeed/Seek review content.** We audit what's *detectable* from the careers page and (if WebSearch is available) what surfaces in a branded search.
 
-**Glassdoor:**
-- Overall rating (X.X/5)
-- Total review count
-- "Recommend to a friend" percentage
-- CEO approval rating (if available)
-- Rating breakdown: Culture, Work-Life Balance, Compensation, Management, Career Opportunities
-- 3-5 recent reviews: note positive and negative themes
-- Does the company respond to reviews? How? Tone?
-- "Pros" and "Cons" themes from recent reviews
-- Interview experience ratings if visible
+**Step 1 — Check the careers page HTML for review-platform signals:**
+- Glassdoor badge, widget, or "Best Places to Work" award linkage
+- Indeed "Top Rated Workplaces" badge or rating display
+- Seek company profile link (AU)
+- Comparably / Built In / Great Place to Work badges
+- Links to `glassdoor.com/Overview/...`, `indeed.com/cmp/...`, `linkedin.com/company/...`
 
-**Indeed:**
-- Overall rating (X.X/5)
-- Total review count
-- Rating breakdown categories
-- Recent review themes
-- Job posting count (indicates hiring velocity)
+Record what's present/absent. Absence is itself a finding ("The company is not signalling review reputation on the careers page — candidates who do their own research won't find ratings reinforced here").
 
-**Seek (Australia) / LinkedIn:**
-- Any ratings or employee reviews visible
-- Job posting volume and quality
+**Step 2 — If WebSearch is available at runtime:**
+Query `[company] Glassdoor rating` and `[company] Indeed reviews`. Extract overall rating, review count, and response rate *only if the source URL is visible in search results*. Cite the URL for every stat.
 
-**Google:**
-- Search `[company name] reviews employees` or `[company name] working at`
-- What appears on page 1 when someone searches "working at [company]"?
+**Step 3 — If WebSearch is not available (typical for AuditHQ Edge Function):**
+Do NOT fabricate ratings or sentiment themes. Output:
+> "Review platform ratings require manual lookup. Provide Glassdoor / Indeed URLs for a deeper analysis, or book a review-platform deep-dive add-on."
 
-**For each platform, record:**
-| Platform | Rating | Count | Responds? | Key Positive Theme | Key Negative Theme |
-|---|---|---|---|---|---|
+**For each detected signal, record:**
+| Platform | Signal (badge/widget/link) | Source URL | Verifiable Rating? |
+|---|---|---|---|
 
 ### 1.3 Audit the Careers Page
 
@@ -334,10 +400,14 @@ Employer Brand Score = (
 Frame every finding in terms of talent loss:
 
 **Cost of a poor employer brand (use in exec summary):**
-- Every 1-star drop on Glassdoor = ~30% fewer applicants
-- Companies with poor brands pay ~10% more per hire (LinkedIn)
-- Average cost of a bad hire: 30% of first-year salary
-- Time to fill with weak brand: 2x longer than strong brand peers
+
+Use only sourced framings. If you can't cite a source at the time of writing, delete the claim.
+
+- Companies with poor employer brand pay ~10% more per hire — source: LinkedIn Global Talent Trends, link in report
+- Cost of a bad hire is commonly cited as 30% of first-year salary — source: U.S. Department of Labor / SHRM, link in report
+- Candidates read Glassdoor/Indeed/Google before applying — 75%+ per LinkedIn/CareerArc — cite the study when used
+
+Do NOT cite unsourced figures like "every 1-star drop = 30% fewer applicants" or "2x time-to-fill". If you don't have a source URL in the report, remove the claim. Lead with qualitative impact instead: "A poor employer brand extends hiring cycles and raises cost per hire — both of which are recoverable with the actions below."
 
 **Revenue impact estimates:**
 | Impact Level | Talent Impact | Confidence |
