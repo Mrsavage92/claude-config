@@ -51,6 +51,84 @@ Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested pa
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+**We CAN check from HTTPS fetch + headers + DNS (2026 capability):**
+
+*Transport security:*
+- SSL/TLS presence (HTTPS served? redirects from HTTP? upgrade-insecure-requests?)
+- HSTS header parsing (max-age, includeSubDomains, preload — preload list eligibility)
+- HTTP/2 + HTTP/3 advertised via Alt-Svc
+- TLS protocol version hints (from Alt-Svc, Server header)
+
+*Modern security headers (HTTP standards 2024-2026):*
+- Content-Security-Policy (CSP) — including modern directives: `strict-dynamic`, nonce/hash sources, `upgrade-insecure-requests`, `frame-ancestors` (replaces X-Frame-Options), `report-to`
+- Cross-Origin-Opener-Policy (COOP) — protects against cross-origin attacks (Spectre)
+- Cross-Origin-Embedder-Policy (COEP) — required for SharedArrayBuffer
+- Cross-Origin-Resource-Policy (CORP) — controls resource embedding
+- Origin-Agent-Cluster — stronger isolation
+- X-Frame-Options / X-Content-Type-Options / Referrer-Policy / Permissions-Policy
+- Server-Timing exposure (debug info leakage check)
+
+*Cookie security (modern flags):*
+- Set-Cookie attributes: Secure, HttpOnly, SameSite (Strict/Lax/None)
+- Cookie name prefixes: `__Host-`, `__Secure-`
+- `Partitioned` attribute (CHIPS — Cookies Having Independent Partitioned State)
+- Cookie scope (Domain, Path correctness)
+
+*Email authentication (RFC 9091 + DMARC enforcement era):*
+- SPF (with lookup count check — RFC 7208 max 10)
+- DMARC (p=none/quarantine/reject + rua/ruf/sp/pct)
+- DKIM (verified via public selector probes if accessible)
+- BIMI — Brand Indicators for Message Identification (requires DMARC enforcement)
+- MTA-STS (`/.well-known/mta-sts.txt` + `_mta-sts.<domain>` TXT) — enforces SMTP TLS
+- TLS-RPT (`_smtp._tls.<domain>` TXT) — TLS reporting for email
+
+*DNS security:*
+- DNSSEC enabled (DS records published)
+- CAA records (Certificate Authority Authorization — limits which CAs can issue)
+- MX record presence + targets
+- DMARC alignment with Organization domain
+
+*Application surface:*
+- CMS detection and visible version strings (then NVD CVE lookup — see audit-from-n8n crawler)
+- Server / X-Powered-By exposure
+- security.txt at `/.well-known/security.txt` — RFC 9116 compliance check (Contact, Expires future date, Encryption, Acknowledgments)
+- robots.txt revealing paths (/admin, /staging, /test, /wp-admin)
+- HTML source code comments for sensitive info
+- JS source maps publicly accessible (.map files)
+- Third-party script inventory + Subresource Integrity (SRI) attribute count
+- Risky/deprecated library detection (jQuery <3.5, AngularJS, old Bootstrap)
+- Mixed-content references in HTML source
+
+*WAF/CDN detection (header fingerprinting):*
+- Cloudflare (cf-ray, cf-cache-status, cf-bm)
+- Akamai (akamai-, x-akamai-*)
+- AWS WAF (x-amzn-, x-amz-cf-*)
+- Sucuri (x-sucuri-*)
+- Imperva (x-iinfo)
+- Fastly (x-served-by, x-cache)
+
+*CORS / API exposure:*
+- Access-Control-Allow-Origin wildcard with Allow-Credentials: true (CRITICAL misconfig)
+- Public GraphQL endpoint exposure (/graphql, /api/graphql)
+- Common API path exposure (/api/v1, /admin/api)
+
+**We CANNOT directly check (requires external tools/APIs):**
+- TLS cipher grade / detailed protocol negotiation (requires SSL Labs API or openssl handshake)
+- Certificate chain depth, issuer details beyond Cloudflare/Let's Encrypt fingerprinting
+- Actual exploitability — this is NOT a pen test
+- Rate-limiting, auth mechanisms, admin surface (authenticated testing)
+- DKIM signature validity (only presence of selector if probed)
+
+**How to handle limits:**
+- Do NOT claim "no known vulnerabilities" or "version is current" without actually looking them up. Either integrate NVD/security.io lookups or omit that claim.
+- For TLS grade, explicitly say "For a full TLS cipher-suite grade, we recommend running an SSL Labs scan separately — link: https://www.ssllabs.com/ssltest/"
+- The report MUST include this disclaimer: "This audit uses publicly observable signals only. It is NOT a penetration test or authenticated security assessment. A professional security review is recommended before handling regulated customer data."
+- Every finding must be grounded in a specific header, DNS record, or HTML attribute. No speculation like "their auth seems weak".
+
+---
+
 ## Phase 1: Data Gathering
 
 ### 1.1 Fetch the Homepage
