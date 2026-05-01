@@ -52,6 +52,66 @@ These rules apply to the final markdown report only. Internal analysis (Phases 1
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+**We CAN check from HTML + headers (2026 capability):**
+
+*Policy infrastructure:*
+- Privacy Policy presence, last-updated date, linked from footer
+- Terms of Service presence
+- Required policy elements (data types, retention, legal basis, DSAR mechanism, regulator path)
+- Children's privacy disclosure (COPPA / Age-Appropriate Design Code UK / India DPDP rule)
+- Multi-jurisdiction disclosures (GDPR + CCPA + DPDP + LGPD + Quebec Law 25 + Australia Privacy Act + UK GDPR + POPIA)
+- DPF (Data Privacy Framework) certification reference for US-based companies serving EU
+- Standard Contractual Clauses (SCC 2021) reference for international transfers
+
+*Cookie consent + tracking governance:*
+- Cookie banner *markup* — does a CMP script load? (Cookiebot, OneTrust, Osano, Iubenda, Termly, Cookieyes, Klaro, Didomi, Sourcepoint, etc.)
+- IAB TCF v2.2 string presence (industry standard CMP framework)
+- Google Consent Mode v2 detection (mandatory in EEA + UK + CH since March 2024)
+- Global Privacy Control (GPC) acknowledgement in policy (legally binding in California)
+- Dark pattern detection in cookie banner markup (asymmetric reject/accept button styling, pre-checked boxes, "essential cookies only" hidden in submenu)
+- Granular consent categories (necessary/functional/analytics/marketing)
+- Consent withdrawal mechanism (persistent footer link)
+
+*Tracker inventory (2026 vendor landscape):*
+- Analytics: GA4, Google Tag Manager, Mixpanel, Amplitude, PostHog, Plausible, Fathom, Tinybird/Flock, Microsoft Clarity, Heap
+- Advertising: Meta Pixel, TikTok Pixel, LinkedIn Insight Tag, Reddit Pixel, Pinterest Tag, Twitter Pixel, Snap Pixel, Microsoft UET
+- Session replay (high-risk): Hotjar, FullStory, LogRocket, Microsoft Clarity, Mouseflow
+- Marketing automation: HubSpot, Marketo, Pardot, ActiveCampaign, Klaviyo, Drip
+- Helpdesk/chat: Intercom, Drift, Zendesk Widget, Tidio, Crisp
+- Privacy Sandbox / Topics API opt-in (Chrome — replaces 3rd-party cookies)
+
+*Form privacy compliance:*
+- Privacy link near every form
+- Consent checkbox for marketing (GDPR explicit consent rule)
+- Lawful basis disclosure ("we collect this because...")
+- Apple App Tracking Transparency reference (if mobile app linked)
+
+*Modern signals:*
+- Apple ATT prompt language (if iOS app linked)
+- Cookie banner GDPR vs CCPA differential framing
+- Right-to-deletion (DSAR) mechanism URL or email
+- Data Protection Officer (DPO) / Privacy Officer contact
+- Regulator complaint paths (ICO/UK, OAIC/AU, IDPC/Ireland, CNIL/France, FTC/US)
+
+**We CANNOT directly check (requires JavaScript execution / browser automation):**
+- Whether trackers actually fire BEFORE cookie consent (pre-consent tracking is the biggest PECR/GDPR risk — detecting it requires running the page and watching network traffic)
+- Whether "Reject All" actually blocks tracker firing
+- Whether trackers set cookies in the correct SameSite/Secure attributes
+- Whether data subject rights (DSAR, deletion, portability) are actually honoured
+- Cross-site tracking via fingerprinting
+
+**Legal disclaimer — MANDATORY in every report:**
+This audit is observational, not legal advice. Compliance depends on jurisdiction, data flows, and processing purposes that only the business + its legal counsel can confirm. A full compliance programme requires a Data Protection Officer (DPO) or privacy lawyer. This audit identifies **signals** of possible non-compliance — not violations.
+
+**How to handle limits:**
+- When describing pre-consent tracking risk, write: "Markup suggests tracker XYZ is in the page. We cannot confirm whether it fires before consent without browser-level testing — a Cookie Deep-Dive add-on is recommended to verify."
+- Do NOT cite GDPR/PECR articles authoritatively ("You are in violation of Article 6..."). Instead: "Under UK GDPR, processing personal data typically requires a lawful basis. We recommend reviewing with legal counsel."
+- Do NOT claim "equivalent to Apple.com privacy" or similar rhetorical anchors — they're unverifiable.
+
+---
+
 ## Phase 1: Data Gathering
 
 ### Evidence Standard
