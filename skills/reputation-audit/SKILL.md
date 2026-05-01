@@ -49,6 +49,53 @@ Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested pa
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+**We CAN check from public HTML + Brave/Google CSE search (2026 capability):**
+
+*On-site review signals:*
+- Embedded review widgets, badges, stars (TrustBox, G2 widgets, Senja, EmbedSocial, ReviewsIO)
+- AggregateRating JSON-LD schema (ratingValue, reviewCount) — flag low volume (<20)
+- Embedded testimonials with named quotes + photos + verifiable companies
+- Video testimonials (Vidyard, Wistia, Loom embeds — 2-3x trust vs text)
+- Google Business Profile link (g.page, maps.google.com/maps?cid=, business.google.com)
+- Trustpilot / G2 / Capterra / Yelp / Glassdoor / TripAdvisor widget and badge presence
+- ProductReview.com.au (Australian-specific)
+- Review response indicators on testimonials/reviews shown ("we replied")
+- Review acquisition signals ("Leave us a review" CTAs, post-purchase email mention)
+
+*External presence (via Brave/Google CSE search):*
+- GBP existence verification through search results
+- Directory listings: Easy Weddings, ABIA, The Bride's Tree (AU bridal),
+  Hitched, Oneflare, Yelp.com.au, Trustpilot, ProductReview, Glassdoor
+- Industry-specific awards mentions (ABIA, Webby, etc.)
+- Press / media coverage (mentions in editorial outlets)
+
+*Modern reputation signals (2026):*
+- AI-generated review detection patterns (overly polished language, identical phrasing across reviews)
+- Video review embed presence (TikTok, Instagram Reels customer mentions)
+- Trustpilot Verified Reviews badge (vs unverified)
+- Google Q&A engagement signals (pages link to / mention Q&A)
+- Customer story / case study schema (CaseStudy markup, emerging in 2026)
+- Founder visibility on social (LinkedIn, X — buyers research founders)
+- Review velocity expectations (2026 baseline: 4+ new reviews/month for active local biz)
+
+**We CANNOT directly fetch (requires paid APIs or manual lookup):**
+- Full Google reviews corpus (Google Places API is billed per request, not integrated here)
+- Trustpilot / G2 / Capterra raw review text (public HTML is rendered client-side and rate-limited)
+- Sentiment analysis at scale — requires a review corpus we don't have
+- Review velocity over time — requires longitudinal data
+- Competitor review comparison — requires pulling competitor reviews
+
+**How to handle limits:**
+- If review widgets are on the page, audit what's visible (rating, count if shown, response examples if shown).
+- If only links exist to external platforms, audit the **presence** of those links and the response culture in any embedded reviews.
+- If WebSearch is available, pull top-line GBP ratings — cite URLs.
+- If none of the above is possible, frame the audit around **review surface strategy** (what platforms to prioritise, response playbook, signal placement) rather than sentiment analysis. Explicitly offer a paid add-on for deep review corpus analysis.
+- Never fabricate a rating, review count, or sentiment theme. Mark manual-input gaps as `<!-- Manual input required -->`.
+
+---
+
 ## Phase 1: Data Gathering
 
 ### 1.1 Identify the Business
@@ -277,11 +324,14 @@ Reputation Score = (
 
 ### 3.2 Revenue Impact
 
-Frame findings in revenue terms:
-- Businesses with 4.0+ stars earn 28% more revenue
-- A half-star increase = 5-9% revenue lift
-- 35% more revenue for businesses that respond to reviews
-- Every unanswered negative review costs approximately 30 potential customers
+Frame findings in revenue terms — but only cite stats you can source. Every quantitative claim in the report must have an inline source URL. If you can't cite it, convert to qualitative.
+
+**Commonly cited sources (use ONLY with URL citation, not as bare claims):**
+- Harvard Business School / Michael Luca — half-star Yelp rating increase linked to 5–9% revenue uplift (cite paper URL)
+- BrightLocal Local Consumer Review Survey — yearly data on review influence on purchase decisions (cite year + URL)
+- Google / Bazaarvoice studies on response-rate impact on ratings
+
+**Do NOT include:** "Every unanswered review costs ~30 customers", "4.0+ stars = 28% more revenue", or any figure that cannot be traced to a named, linkable source at the time of writing. Convert to qualitative framing instead: "Unanswered negative reviews compound — they tell future customers the business doesn't engage, and they push the headline rating down each time."
 
 ### 3.3 Prioritise Recommendations
 
