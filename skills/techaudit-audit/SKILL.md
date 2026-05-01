@@ -49,6 +49,80 @@ Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested pa
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+**We CAN check (2026 capability — multi-page crawl + PSI integration):**
+
+*Core Web Vitals via Google PageSpeed Insights API:*
+- LCP (Largest Contentful Paint) — Google 2026 thresholds: ≤2.5s good, 2.5-4s needs improvement, >4s poor
+- INP (Interaction to Next Paint) — replaced FID March 2024: ≤200ms good, 200-500ms needs improvement, >500ms poor
+- CLS (Cumulative Layout Shift) — ≤0.1 good, 0.1-0.25 needs improvement, >0.25 poor
+- TTFB (Time to First Byte) — ≤800ms good, 800-1800ms needs improvement, >1800ms poor
+- FCP (First Contentful Paint) — ≤1.8s good, 1.8-3s needs improvement, >3s poor
+- Field data (real user metrics) preferred over Lab data (Lighthouse simulation)
+
+*Multi-page crawl (8 pages from sitemap):*
+- Page-by-page checks for title, meta, canonical, alt text, h1, schema
+- Aggregate findings tagged with which page(s) they came from
+- Sitemap.xml parsing with index file support
+- robots.txt with AI crawler rules + Crawl-delay
+
+*Static HTML signals (per-page):*
+- Title, meta description, Open Graph, Twitter Card, canonical, hreflang, JSON-LD schema
+- Heading hierarchy (H1 uniqueness, h2-h6 sequence — no skipped levels)
+- Image alt-text coverage + quality (descriptiveness >5 words, no placeholder "image"/"photo")
+- Viewport meta, lang attribute, charset declaration
+- `loading="lazy"` + `fetchpriority="high"` on hero
+- Modern image formats: WebP, AVIF, JPEG XL (next-gen), proportion vs JPG/PNG
+- Responsive image: `<picture>`, `srcset`, `sizes`
+
+*Resource loading:*
+- Render-blocking scripts (no async/defer/module on non-critical)
+- Resource hints: dns-prefetch, preconnect, prefetch, preload, modulepreload
+- Speculation Rules API (Chrome 121+, prerender-friendly)
+- Font loading: font-display: swap, preloaded woff2, fallback fonts
+- Critical CSS inlined (vs render-blocking external stylesheet)
+
+*Accessibility (WCAG 2.2 — current standard since Oct 2023):*
+- 9 new WCAG 2.2 success criteria covered: Focus Not Obscured (2.4.11), Focus Appearance (2.4.13), Dragging Movements (2.5.7), Target Size Minimum 24×24 CSS px (2.5.8), Consistent Help (3.2.6), Redundant Entry (3.3.7), Accessible Authentication Minimum (3.3.8)
+- Form `<label>` association, ARIA landmarks, skip-to-content link
+- prefers-reduced-motion respect
+- Colour contrast hint (CSS variables — full check requires render)
+- Video transcript / caption availability
+
+*Modern HTML semantics:*
+- HTML5 semantic elements: `<main>`, `<article>`, `<section>`, `<nav>`, `<header>`, `<footer>`, `<aside>`
+- Document outline integrity
+
+*SEO Technical:*
+- Soft 404 detection (200 response with "page not found" content)
+- Dead/broken internal links sample
+- hreflang + x-default for international
+- BreadcrumbList schema
+- Sitemap freshness (lastmod accuracy)
+
+*Code Quality:*
+- Mixed-content references (HTTP on HTTPS)
+- HTML validity hints (unclosed tags, deprecated attributes)
+- `<script>` type="module" usage (modern JS)
+- HTML payload size (post-minification)
+
+**We CANNOT directly measure (requires a real browser or paid tooling):**
+- JavaScript runtime errors / dynamic content behaviour
+- Real touch-target sizing on real devices (we check CSS, not interaction)
+- Whether `loading="lazy"` actually lazy-loads (varies by viewport)
+- Full colour contrast ratio (requires rendered DOM)
+- Real user RUM data beyond PSI's CrUX dataset
+- Lighthouse Performance Score breakdown (we get the score from PSI but not the audit-by-audit detail)
+
+**How to handle limits:**
+- Do NOT claim "equivalent to Lighthouse/web.dev scoring". Static HTML analysis is a distinct, narrower check.
+- Do NOT estimate page weight as if it's a real measurement — either omit it or mark it explicitly as "estimated from HTML tag count, not a real page weight measurement".
+- Recommend PageSpeed Insights / WebPageTest / Lighthouse as add-on deliverables for CWV, not as things this audit produces.
+- If the client needs real CWV data, offer it as a paid add-on with an external tool integration.
+
+---
+
 ## Phase 1: Data Gathering
 
 ### 1.1 Fetch the Homepage
@@ -299,7 +373,7 @@ Technical Health Score = (
 | 0-39 | F | Critical - fundamental issues breaking user experience |
 
 **Scoring Anchors:**
-- 80-100: Equivalent to web.dev, github.com — fast, accessible, all security headers, perfect Lighthouse
+- 80-100: Strong static-analysis profile — fast-loading HTML, all security headers present, full schema, responsive meta + media queries, clean heading hierarchy, alt-text coverage >95%. (NOTE: Lighthouse Core Web Vitals require a real-browser test — this score is a static-HTML proxy, not a Lighthouse score.)
 - 60-79: Modern WordPress/Next.js site with good basics — HTTPS, responsive, some optimization gaps
 - 40-59: Functional but slow — render-blocking scripts, missing headers, accessibility gaps
 - 20-39: Visibly broken — slow load, mobile issues, no HTTPS or mixed content
