@@ -18,7 +18,40 @@ This skill performs a comprehensive Generative Engine Optimization (GEO) audit o
 
 ## Key Insight
 
-Traditional SEO optimizes for search engine rankings. GEO optimizes for AI citation and recommendation. Sites that score high on GEO metrics see 30-115% more visibility in AI-generated responses (Georgia Tech / Princeton / IIT Delhi 2024 study). The two disciplines overlap but have distinct requirements.
+Traditional SEO optimises for search engine rankings. GEO optimises for AI citation and recommendation. The two disciplines overlap (both care about clean HTML, structured data, fast crawlable pages) but have distinct requirements — GEO also cares about AI crawler access, quotable passages, llms.txt, and entity clarity.
+
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+GEO is an emerging practice. This audit measures **proxy signals** that predict AI citation likelihood.
+
+**We CAN check from public HTML + headers + robots.txt + llms.txt:**
+- AI crawler access — full 2026 crawler list (parsed from robots.txt + meta robots):
+  - **Training crawlers:** GPTBot (OpenAI training), ClaudeBot (Anthropic training), Google-Extended (Gemini training), Applebot-Extended (Apple Intelligence training, iOS 18+), Meta-ExternalAgent (Meta AI/Llama training), Bytespider (ByteDance/TikTok AI), Amazonbot (Amazon/Alexa AI), cohere-ai (Cohere training), mistralai-User-Agent (Mistral training)
+  - **Live search crawlers:** OAI-SearchBot (ChatGPT search — separate from GPTBot), PerplexityBot (Perplexity search index), Bingbot (powers Microsoft Copilot + Bing Chat + several AI partners), DuckAssistBot (DuckDuckGo's AI assistant)
+  - **Multi-purpose:** Diffbot (used by major AI training pipelines), CCBot (Common Crawl, feeds many open-source LLMs)
+- AI-specific meta directives — `<meta name="robots" content="noai, noimageai">`, `<meta name="claude-bot" content="noindex">`, etc.
+- Schema.org structured data (JSON-LD types, completeness, validity)
+- **2026 GEO-critical schema types:** Speakable (voice AI queries), Product+GTIN+Brand+Offer (AI Shopping), ClaimReview (fact-checked content), VerifiedNewsPublisher annotation, LearningResource (educational), HowTo, FAQPage, ImageObject with creator
+- llms.txt + **llms-full.txt** presence, structure, and content quality
+- **Knowledge graph entity verification:** sameAs links pointing to Wikipedia, Wikidata, Crunchbase, LinkedIn — these are the #1 signals AI uses to confirm entity identity
+- Quotable passage structure (clear Q&A blocks, FAQ sections, definitive factual statements, statistical density)
+- **Inline citation density** — links to primary sources (gov, edu, peer-reviewed, established media). AI engines weight content with verifiable sourcing higher.
+- E-E-A-T markers (author bios with credentials, ORCID IDs, sameAs to LinkedIn/Wikipedia/Mastodon, publication dates, dateModified > dateCreated freshness)
+- Entity clarity (About page, unambiguous name + category, schema Organization with logo + sameAs)
+- Technical GEO (SSR vs CSR rendering hints, canonical URLs, sitemap, **HTTP/2 or HTTP/3 support, accurate Last-Modified headers**)
+- **Multi-modal signals:** image alt text quality (depth, not just presence), video transcript availability, audio descriptions/podcast show-notes
+
+**We CANNOT directly measure (requires live AI platform queries):**
+- Whether ChatGPT / Claude / Perplexity / Gemini actually cite the site right now
+- Which specific passages get quoted in AI responses
+- Relative citation share vs competitors
+- Actual traffic referrals from AI systems (needs server logs + GA4)
+
+**What this means for the report:**
+- GEO scores are **predictive**, not causal. A high score means the site is *structurally likely* to be cited; it does not prove citation has occurred.
+- Never claim "you're cited 30% more than competitors" without actual live-query evidence.
+- Never invent research citations. If you reference an academic study, the URL must be in the report.
+- If a section requires capability the runtime doesn't have (e.g. live AI query testing), say so: "Live citation testing requires a separate add-on that queries each AI platform directly."
 
 ---
 
@@ -162,21 +195,24 @@ Delegate analysis to 5 specialized subagents. Each subagent operates on the coll
 
 #### Composite GEO Score Calculation
 
-The overall GEO Score (0-100) is a weighted average of six category scores:
+The overall GEO Score (0-100) is a weighted average of seven category scores (added AI Mode/Shopping in 2026 spec):
 
 | Category | Weight | What It Measures |
 |---|---|---|
-| **AI Citability** | 25% | How quotable/extractable content is for AI systems |
-| **Brand Authority** | 20% | Third-party mentions, entity recognition signals |
-| **Content E-E-A-T** | 20% | Experience, Expertise, Authoritativeness, Trustworthiness |
-| **Technical GEO** | 15% | AI crawler access, llms.txt, rendering, speed |
-| **Schema & Structured Data** | 10% | Schema.org markup quality and completeness |
-| **Platform Optimization** | 10% | Presence on platforms AI models train on and cite |
+| **AI Citability** | 22% | How quotable/extractable content is for AI systems |
+| **Brand Authority** | 18% | Third-party mentions, entity recognition signals (sameAs to Wikipedia/Wikidata) |
+| **Content E-E-A-T** | 18% | Experience (first-hand evidence), Expertise (verified credentials), Authoritativeness (citations), Trustworthiness (transparency) |
+| **Technical GEO** | 14% | AI crawler access (full 2026 list), llms.txt + llms-full.txt, SSR/rendering, HTTP/2-3, Last-Modified accuracy |
+| **Schema & Structured Data** | 10% | Schema.org markup quality + 2026 types (Speakable, ClaimReview, Product+GTIN, LearningResource) |
+| **AI Shopping & Commerce** | 8% | ChatGPT Shopping, Perplexity Shopping, Bing Shopping AI signals (Product schema + GTIN + Offer + AggregateRating) — only weighted for ecommerce/SaaS |
+| **Multi-Modal & Platform** | 10% | Image/video/audio AI signals + presence on platforms AI models cite (YouTube transcripts, podcast show-notes, Wikipedia) |
 
 **Formula:**
 ```
-GEO_Score = (Citability * 0.25) + (Brand * 0.20) + (EEAT * 0.20) + (Technical * 0.15) + (Schema * 0.10) + (Platform * 0.10)
+GEO_Score = (Citability * 0.22) + (Brand * 0.18) + (EEAT * 0.18) + (Technical * 0.14) + (Schema * 0.10) + (Shopping * 0.08) + (MultiModal * 0.10)
 ```
+
+**Note:** For non-ecommerce/SaaS sites, redistribute the 8% Shopping weight proportionally across the other 6 categories (most goes to Multi-Modal & Platform).
 
 #### Score Interpretation
 
@@ -197,41 +233,72 @@ GEO_Score = (Citability * 0.25) + (Brand * 0.20) + (EEAT * 0.20) + (Technical * 
 
 ---
 
+## 2026 AI Search Landscape — Platforms To Optimise For
+
+| Platform | Source of citation data | Key signals it weights |
+|---|---|---|
+| **Google AI Overviews** (formerly SGE) | Google index + knowledge graph | Featured-snippet-eligible content, FAQPage schema, knowledge panel entities, Wikipedia presence, recent dateModified |
+| **Google AI Mode** (full AI search, 2025+) | Google index + AI ranking | Query fan-out coverage, passage indexing depth, E-E-A-T credentials, multi-modal content |
+| **ChatGPT Search** | OAI-SearchBot crawl + Bing index partnership | Schema.org + clear authorship, definitive factual answers, recency, sameAs to Wikipedia |
+| **ChatGPT Shopping** (late 2024+) | Product schema feeds + merchant ratings | Product schema with GTIN, brand, Offer (price/availability/currency), AggregateRating |
+| **Perplexity** | PerplexityBot crawl + own index + web in real-time | Inline citations to primary sources, recency (dateModified), quotable passages with stats |
+| **Perplexity Shopping** (2025+) | Product feeds + reviews | Product schema, AggregateRating with reviewCount, comparison-friendly content |
+| **Apple Intelligence** (iOS 18+) | Applebot-Extended crawl + on-device | Speakable schema, voice-friendly Q&A, structured FAQs, local LocalBusiness schema |
+| **Microsoft Copilot / Bing Chat** | Bingbot index | Bing Webmaster verification, BreadcrumbList, sitemap completeness, E-E-A-T |
+| **Meta AI** (WhatsApp/Instagram AI) | Meta-ExternalAgent crawl | Open Graph + structured product data, public content access |
+| **Google Gemini** | Google-Extended crawl + Google index | Same as Google AI Overviews + multi-modal (image/video) |
+| **Grok (X)** | X timeline + open web | Fresh content, definitive statements, social proof signals |
+| **Claude.ai search/citations** | ClaudeBot crawl + Brave Search partnership | Clean HTML, JSON-LD validity, author authority, citation density |
+
+**Audit implication:** A 2026 GEO audit must measure access for each crawler family AND verify the platform-specific schema/signal each uses.
+
+---
+
 ## Issue Severity Classification
 
 Every issue found during the audit is classified by severity:
 
 ### Critical (Fix Immediately)
-- All AI crawlers blocked in robots.txt
-- No indexable content (JavaScript-rendered only with no SSR)
-- Domain-level noindex directive
-- Site returns 5xx errors on key pages
+- Any of the 5 major AI crawlers blocked: GPTBot, ClaudeBot, PerplexityBot, Google-Extended, OAI-SearchBot
+- Site returns 5xx on homepage or key landing pages
 - Complete absence of any structured data
-- Brand not recognized as an entity by any AI system
+- JavaScript-rendered content with no SSR/pre-rendering (AI crawlers see empty shell)
+- Domain-level `noindex` or `<meta name="robots" content="noai">` directive
+- Brand has zero entity verification — no Wikipedia/Wikidata/Crunchbase sameAs link AND no Google Knowledge Panel
+- For ecommerce: Product pages with no Product schema (zero ChatGPT/Perplexity Shopping eligibility)
 
 ### High (Fix Within 1 Week)
-- Key AI crawlers (GPTBot, ClaudeBot, PerplexityBot) blocked
+- 2026-era AI crawlers blocked: Applebot-Extended, Meta-ExternalAgent, Bytespider, Amazonbot
 - No llms.txt file present
 - Zero question-answering content blocks on key pages
 - Missing Organization or LocalBusiness schema
 - No author attribution on content pages
 - All content behind login/paywall with no preview
+- For local business: No Speakable schema (voice AI invisible)
+- For ecommerce: Product schema present but missing GTIN, brand, or Offer (Shopping AI eligibility blocked)
+- HTTP/1.1 only (no HTTP/2 or HTTP/3 — AI crawlers prefer modern protocols)
+- Last-Modified headers missing or stuck at HTTP server start time (AI uses this for recency)
 
 ### Medium (Fix Within 1 Month)
 - Partial AI crawler blocking (some allowed, some blocked)
-- llms.txt exists but is incomplete or malformed
+- llms.txt exists but missing llms-full.txt counterpart
+- llms.txt incomplete or malformed
 - Content blocks average under 50 citability score
 - Missing FAQ schema on pages with FAQ content
-- Thin author bios without credentials
+- Thin author bios without credentials, no ORCID/sameAs to LinkedIn
 - No Wikipedia or Reddit brand presence
+- No Speakable annotations on FAQ pages
+- Inline citation density under 1 per 500 words
+- Most content >365 days since dateModified (stale content signal)
 
 ### Low (Optimize When Possible)
 - Minor schema validation errors
-- Some images missing alt text
-- Content freshness issues on non-critical pages
+- Some images missing alt text or alt text shorter than 5 words (low quality)
+- Video pages without transcript or captions
 - Missing Open Graph tags
 - Suboptimal heading hierarchy on some pages
 - LinkedIn company page exists but is incomplete
+- No `noai` opt-out documented (decision should be intentional, not absent)
 
 ---
 
