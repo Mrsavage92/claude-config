@@ -47,6 +47,83 @@ These rules apply to the final markdown report only. Internal analysis (Phases 1
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do
+
+**We CAN check from public HTML + headers (2026 capability):**
+
+*Content & messaging:*
+- Hero copy, value-prop clarity, H1/H2 hierarchy, headline length
+- CTA clarity, count, placement (above/below fold), text quality (action verbs)
+- Social proof: testimonials, client logos, case studies, named quotes
+- Trust signals: trust badges, security certifications, money-back guarantees
+- AI-generated content disclosure (consumer transparency expectation 2026)
+
+*Conversion optimization (2026 patterns):*
+- Form friction: field count, required vs optional, multi-step, progress indicators
+- Soft-ask vs hard-ask CTA pattern (e.g. "see pricing" vs "book a demo")
+- Exit-intent capture, scroll-trigger reveals
+- Pricing transparency: visible vs "contact us" (hidden = high-friction)
+- "Get started free" / freemium signals
+- Live chat / chatbot presence (Intercom, Drift, Crisp, Tidio, custom)
+- Booking widgets (Calendly, SavvyCal, Cal.com — measure 24-hour-bookable signal)
+
+*SEO & discoverability (overlap with GEO):*
+- Title/meta/OG tags, canonical URLs, JSON-LD schema
+- Internal linking depth, anchor text quality
+- Content depth (word count proxy)
+- Date freshness signals (datePublished, dateModified)
+- AI search visibility signals (overlap with GEO suite)
+
+*Tracking & analytics (2026 vendor landscape):*
+- GA4 (legacy UA deprecated July 2023)
+- Google Tag Manager
+- Meta Pixel + Conversions API (CAPI for iOS 14+ ATT)
+- TikTok Pixel + Events API
+- LinkedIn Insight Tag, Microsoft UET (B2B)
+- Snap, Pinterest, Reddit, Twitter pixels
+- Modern alternatives: Plausible, Fathom, Pirsch, PostHog, Mixpanel, Amplitude
+- Server-side tag manager signals (subdomain pattern detection)
+
+*Competitive positioning:*
+- Comparison/alternatives page presence (vs-competitor pages = high-intent SEO)
+- Feature matrix vs competitors
+- Pricing positioning vs alternatives (premium vs value)
+
+*Brand & trust:*
+- Review platform links (Trustpilot, G2, Capterra, Google)
+- Real customer photos vs stock photography
+- Founder/team visibility (About page, leadership bios)
+- Press mentions / media logos
+
+*Growth & strategy:*
+- Email capture: newsletter signup form, lead magnet, gated content
+- Email platform integration (Mailchimp, Klaviyo, ConvertKit, ActiveCampaign, Brevo, Flodesk)
+- Marketing automation signals (HubSpot, Marketo, Pardot)
+- Affiliate/referral program signals
+- Content marketing: blog frequency, series/topic clusters
+
+*Modern engagement signals (2026):*
+- Video on landing page (autoplay-muted, scroll-triggered, user-initiated)
+- Loom/Vidyard embed for personalised demos
+- Substack/newsletter-as-product signals
+- Community signals (Discord, Slack, Circle, Mighty Networks links)
+- Podcast presence (Apple Podcasts, Spotify links)
+
+**We CANNOT directly measure (requires tools the runtime lacks):**
+- Actual marketing analytics (GA4 data, CRO funnels, bounce rate, conversion rate)
+- Whether pixels actually fire (dynamically injected pixels won't show in static HTML)
+- Competitor revenue, traffic, or conversion performance
+- Historic content performance / keyword rankings
+- Paid campaign performance
+
+**How to handle limits:**
+- If a tracker doesn't appear in the static HTML, say "No [pixel] detected in page source" rather than "no remarketing pixel configured" — it may be injected via a tag manager we can't fully inspect.
+- Competitor comparisons must be qualitative or limited to publicly observable things on competitor sites. Never invent competitor revenue or traffic numbers.
+- For revenue-impact framing, use "industry research suggests..." with a cited source, or convert to qualitative: "Missing above-fold social proof extends the consideration cycle and reduces trust at first glance."
+- Every 1–10 sub-score must be anchored to a visible piece of evidence in the HTML. No storytelling scores.
+
+---
+
 ## Phase 1: Data Gathering
 
 This is the most important phase. The quality of the audit depends entirely on the data collected. Do NOT skip steps or rush to analysis.
