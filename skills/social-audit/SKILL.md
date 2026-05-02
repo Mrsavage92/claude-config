@@ -77,16 +77,67 @@ If a finding overlaps with another suite's lane, either skip it or note "See {su
 
 This audit analyses **publicly observable social signals** only. Be honest with the client about limits.
 
-**We CAN check from public social pages + official ad libraries:**
-- Profile presence, bio, link, verified, follower count, post count
-- Last 30 public posts: date, format, caption, hashtags, visible engagement
+**We CAN check from public social pages + official ad libraries (2026 capability):**
+
+*Platform presence (full 2026 platform list):*
+- LinkedIn (B2B), Facebook, Instagram (consumer), YouTube (long-form video)
+- TikTok (consumer + emerging B2B + AI-driven discovery)
+- X / Twitter (declining but still relevant for tech/news)
+- Threads (Meta's Twitter alternative — text-first)
+- Bluesky (open protocol, growing tech audience)
+- Pinterest (women 25-54, e-commerce visual search)
+- Snapchat (Gen Z + AR commerce)
+- Reddit (community-driven, expensive ads but high-trust)
+- Mastodon (technical/privacy-conscious audience)
+
+*Profile signals:*
+- Bio, link-in-bio (Linktree, Beacons, Bento, native), verified status
+- Follower count, post count, account age
+- Last 30 posts: date, format, caption, hashtags, visible engagement
 - Story highlights (IG), Featured (LinkedIn), Playlists (YT), Collections (TikTok)
-- Pinned posts and pinned videos
+- Pinned posts, pinned videos
 - Public engagement ratios (likes/followers, comments/posts)
-- Reply presence (are they responding in comments — yes/no/sometimes)
-- Shop/commerce setup (visible product tags)
-- Paid ads via Meta Ad Library / LinkedIn Ads Library / TikTok Creative Center
-- Competitor profiles (same public data)
+- Reply presence in comments (signal of community management)
+
+*2026 social commerce signals:*
+- Instagram Shop product tags
+- TikTok Shop (US/UK/SE Asia) product links
+- YouTube Shopping
+- Facebook Marketplace integration
+- Pinterest Rich Pins (Product, Recipe, Article)
+- Native checkout vs link-out
+
+*Modern engagement features (2026):*
+- Instagram Broadcast Channels (one-to-many subscriber list)
+- Substack Notes integration
+- LinkedIn Newsletter
+- YouTube Community posts
+- TikTok Stitch / Duet engagement
+
+*Discoverability signals:*
+- Branded hashtag adoption
+- TikTok-as-search-engine optimisation (descriptive captions, on-screen text, keywords)
+- YouTube SEO (titles, descriptions, end screens, chapters)
+- LinkedIn SEO (headline keywords, About section search optimisation)
+
+*Cross-promotion / ecosystem:*
+- Cross-platform branding consistency (handle, logo, bio)
+- sameAs schema linking domain to all social profiles
+- Social share buttons on website
+- Embed code use (IG embeds on blog posts)
+
+*Modern signals to flag:*
+- AI-generated content disclosure on profiles (consumer expectation 2026)
+- Deinfluencing / authentic content trend signals
+- Creator collaborations / UGC signals
+- Live streaming activity (Instagram Live, TikTok Live, YouTube Live)
+- Podcast cross-promotion (audio content reach)
+
+*Paid:*
+- Meta Ad Library (active ads)
+- LinkedIn Ads Library
+- TikTok Creative Center
+- Pinterest Ad Library
 
 **We CANNOT directly fetch without auth (note as gap, don't fabricate):**
 - Private analytics (impressions, reach, saves, shares — these require Creator/Business API auth)
