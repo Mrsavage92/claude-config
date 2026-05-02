@@ -50,6 +50,59 @@ These rules apply to the final markdown report only. Internal analysis (Phases 1
 
 ---
 
+## Capability Declaration — What This Audit CAN and CANNOT Do (2026)
+
+**We CAN check from HTML + public signals:**
+
+*Customer-facing AI surface:*
+- Chatbot platform detection (Intercom Fin, Drift GPT, Zendesk Answer Bot, Crisp, Tawk.to, Freshchat, HubSpot Chat, Tidio AI, custom widgets)
+- LLM-powered chat signals (Intercom Fin, Zendesk AI, Drift Bot, OpenAI/Anthropic API references in product copy)
+- Voice AI / AI receptionist platforms (ElevenLabs, Vapi.ai, Bland.ai, Retell.ai, Synthflow, Air.ai, Hume, Deepgram)
+- AI search / semantic search widgets (Algolia AI, Typesense AI, Mendable, Markprompt, Inkeep)
+- Personalisation engines (Dynamic Yield, Optimizely, Mutiny, Intellimize, Builder.io Personalization, Adobe Target, Reflektion)
+
+*AI tech stack signals:*
+- LLM API references (OpenAI, Anthropic, Claude, Gemini, Cohere, Mistral, Groq, Together AI)
+- Agent frameworks (LangChain, LangGraph, LlamaIndex, CrewAI, AutoGen, Haystack, smolagents, Claude Agent SDK)
+- Vector databases (Pinecone, Weaviate, Qdrant, Chroma, Milvus, pgvector, Supabase Vector, Turbopuffer, LanceDB)
+- LLM observability (LangSmith, Langfuse, Helicone, Braintrust, W&B Weave, Arize, Phoenix, Portkey)
+- MCP (Model Context Protocol) server signals — agent-callable tooling exposure
+
+*Automation & integration:*
+- Workflow platforms (Zapier, Make.com, n8n, HubSpot Workflows, Pipedream, Workato, Tray.io)
+- CRM signals (Salesforce, HubSpot, Pipedrive, Close, Attio)
+- Scheduling (Calendly, SavvyCal, Cal.com, Acuity, HubSpot Meetings)
+- Form/lead routing (HubSpot, Typeform routing, Pipedrive forms)
+
+*Data & analytics maturity:*
+- Analytics (GA4, Mixpanel, Amplitude, Heap, PostHog)
+- CDP (Segment, RudderStack, Hightouch, Census)
+- Data warehouse mentions (BigQuery, Snowflake, Databricks, Redshift, Looker, Metabase, Mode)
+- Event tracking depth (single tool vs CDP-routed)
+
+*2026 emerging signals:*
+- llms.txt / llms-full.txt (Answer.AI standard adopted by Anthropic, Cursor, Perplexity)
+- Agent-shoppable schema (complete Product+Offer+GTIN+Brand+availability for ChatGPT/Perplexity/Google Shopping AI)
+- AI governance / AI policy / AI use disclosure pages (EU AI Act Article 50, ICO, FTC)
+- AI training opt-out / AI processing consent (GDPR Article 22, distinct from cookie consent)
+- AI agent-claim vs reality gap (marketing says "agentic" but no LangGraph/CrewAI/MCP signals)
+
+**We CANNOT directly check (requires WebSearch, APIs, or internal access):**
+- Job postings on Seek / Indeed / LinkedIn (no public API, scraping is brittle + ToS-restricted)
+- CEO/leadership AI posts on LinkedIn
+- Internal CRM, helpdesk, project tool adoption (not visible from outside)
+- Actual model usage, prompt quality, hallucination rate — only API references visible
+- Team size, AI literacy, internal training programmes — speculative without survey data
+- Competitor AI adoption at depth — only surface signals from competitor websites
+
+**How to handle limits:**
+- If WebSearch is unavailable, skip job-posting analysis and flag it as "Requires a deeper discovery call — data not available via website alone."
+- Competitor comparisons must be qualitative ("competitor X has a visible chatbot; target does not"), not quantitative unless WebSearch backs it up.
+- The 30/60/90 roadmap and tool recommendations are legitimate outputs — we recommend tools based on visible stack and 2026 adoption norms.
+- The "Standard ROI benchmarks" table in Phase 3 is **illustrative ranges**, not measured facts — cite sources inline (Gartner, McKinsey, a16z State of AI, HubSpot State of AI Report 2026).
+
+---
+
 ## Phase 1: Data Gathering
 
 All analysis uses publicly observable signals. No internal access needed.
