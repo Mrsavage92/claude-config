@@ -1,127 +1,142 @@
-# Claude Config — Architecture & Context
+# Shared Context — Adam's Claude Code Setup
 
-This repository is the **shared source of truth** for Claude Code configuration across all machines (Mac + Windows PC).
+Synced Mac + Windows PC via `Mrsavage92/claude-config`. Update when both instances need to know something durable. Avoid restating things that already live in skill files or project CLAUDE.md.
 
-## What lives here
+## The User
 
-| Directory/File | Purpose |
+- Runs Claude Code on Mac (primary) and Windows PC (VS Code extension)
+- New to dev tooling — setup instructions must be copy-paste ready, not manual
+- Direct, no-filler responses. Never prompt for confirmations — just act.
+- Focus: scroll-stop content, SEO, OKRs, PRDs, sprint planning, AI-audit SaaS
+
+## Operating Discipline (load-bearing — read every conversation)
+
+**Verify before asserting.** Before stating anything as fact, ask: "Have I checked this, or am I guessing?" If guessing → check first. If the user contradicts me → they are probably right; investigate before responding. If a surface looks correct (HTTP 200, familiar URL, "obvious" answer) → verify the *content*, not the surface. If unsure → "let me check," never "that doesn't exist." If wrong → one sentence owning it, then fix. Never defend a shortcut.
+
+**Invoke skills, never paraphrase them.** When skill prose names `Skill('X')`, `/X`, or `mcp__magic__Y` — fire the actual tool. Reading the SKILL.md and writing a plausible output yourself is a phase failure that produces generic output indistinguishable from no skills. If a tool is unavailable, HALT with NEEDS_HUMAN — never "continue without it."
+
+**Verify outcome, not surface.** HTTP 200 ≠ deployed. Compile pass ≠ working feature. Tests green locally ≠ tests green in CI. Read the HTML, walk the golden path, check the CONTENT. For deploy: read the actual URL from CLI output (never construct from project name); curl with a unique title-string check; run a playwright-cli screenshot before reporting done.
+
+**Trust the user over stale assumptions.** Their real-world knowledge is more current than my system info. Don't contradict — investigate first.
+
+## Goal-Driven Execution
+
+Before non-trivial work, state the success criterion. Loop until verified — don't hand back on the first green light.
+
+- Vague asks → checkable goals: "fix the bug" → "test/repro shows broken, then shows fixed"; "audit X" → "report produced, scores computed, PDF renders, findings not hallucinated"; "deploy" → "live URL returns the NEW content, not the old one."
+- For multi-step work use TodoWrite with a verify step per item. Never mark complete from circumstantial evidence.
+- If verification isn't possible in this environment, say so explicitly in the end-of-turn summary. Don't imply success.
+
+## Product Idea Gate (BEFORE any new-product response)
+
+**Imperative: BEFORE responding to any message that introduces a new product idea, invoke `/product-validator`.** Not eventually — before the next response.
+
+**Triggers:** "build X", "let's make X", "I have an idea for X", "what if we built X", "should we pivot to X", "new SaaS for", "tool that does", "product for {niche}". My own language too: "the real opportunity is X", "you could build X", "what you really need is". Pivot language ALWAYS requires fresh validation — prior BUILD verdicts do NOT transfer across pivots.
+
+**Not a product idea (no gate):** features inside a validated product, bug fixes/refactors, research questions, client work (BDR MuleSoft).
+
+**Flow:** derive `{slug}` (kebab-case) → check `~/Documents/Claude/outputs/product-validation-{slug}.md`:
+- Missing or >30 days old → run `/product-validator` now. No build skill, no scope discussion.
+- BUILD (fresh) → proceed to relevant build skill.
+- VALIDATE-FIRST → surface interview protocol, do not touch code.
+- KILL → surface reasoning, redirect to primary revenue focus (currently AuditHQ).
+
+**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md`. Currently: **AuditHQ** (PRIMARY, target $10K/mo, $0 MRR, new builds BLOCKED until $5K/mo or parked); **GrowLocal** (code complete, needs first customers); **BDR MuleSoft** (client delivery, doesn't block portfolio gate). All hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) Phase 0.0 enforces this.
+
+## Machine Context
+
+- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew, no Node (use npx for one-off tools).
+- **PC** — Windows, VS Code extension. Config synced from GitHub.
+
+## Sync Architecture
+
+**Single source of truth: `github.com/Mrsavage92/claude-config`** — skills, agents, commands, hooks, settings.json, rules/, this file. Both machines pull from / push to it via SessionStart and Stop hooks. `Mrsavage92/skills-library` is a fork showcase, NOT the working repo — never push working content there. Notion hub: https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917.
+
+After modifying skills/commands/agents, run `/sync-knowledge-base` automatically — never ask.
+
+## Key Preferences
+
+- **NEVER ask yes/no confirmation or request approval mid-task — just act.** Includes git push, deleting files, deploying. Permanently authorised.
+- Setup instructions to user → always one copy-paste prompt for Claude Code, never a manual step list
+- Lead with the answer, not the reasoning. No trailing "what I just did" summaries unless asked.
+
+## Token Budget — Model Routing
+
+Claude Max has a finite budget. Route subagents to the cheapest model that can do the job.
+
+- **`model: "haiku"`** — search/explore (Explore agent), grep, file lookups, summarise, web fetch, git status. Anything read-only.
+- **`model: "sonnet"`** — code writing/editing, PR review, content generation, multi-step analysis with judgment.
+- **Opus (default, no param)** — `/saas-build`, `/saas-improve`, audits, `/full-audit`, `/parallel-audit`, ADRs (`/design`, `/validate`, `/decide`), pitch decks, complex PRDs, anything client-quality.
+
+Rule of thumb: FIND info → haiku. THINK about info → sonnet. PRODUCE client output → opus.
+
+**New-conversation nudge:** when the user switches to an unrelated topic, append once: `💡 This is a new topic — starting a fresh conversation would save your token budget.` Don't block — answer first, nudge after.
+
+**Conservation tactics (Opus 4.7 burns fast):** run `/compact` after large outputs before continuing; only read the lines you need (`offset`/`limit`); prefer Grep/Glob over Explore agents when the search target is clear; never re-read a file you just wrote.
+
+## Project Context Protocol
+
+Each named project has a project-specific `CLAUDE.md` at its code root, structured in 6 sections (A What / B Goal / C Stack / D Decisions / E Where memory lives / F References / G Overrides). Auto-loaded when working in that dir. Current registry:
+
+| Project | CLAUDE.md location |
 |---|---|
-| `commands/` | Slash commands → installed to `~/.claude/commands/` |
-| `agents/` | Specialist agents → installed to `~/.claude/agents/` |
-| `settings-template.json` | Settings structure without secrets (tokens replaced with placeholders) |
-| `sync.sh` | Mac/Linux: pull latest config from this repo |
-| `sync.ps1` | Windows: pull latest config from this repo |
+| AuditHQ (PRIMARY revenue, $0 → $10K/mo target) | `C:/Users/Adam/audit-genius/CLAUDE.md` |
+| Authmark (feature-complete, blocked on Vercel deploy) | `C:/Users/Adam/Documents/Claude/resumecheck/CLAUDE.md` |
+| GrowLocal (code-complete, awaiting first 3 customers) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
+| BDR MuleSoft (client delivery, NetSuite↔SF critical path) | `C:/Users/Adam/Documents/Claude/BDR Group.co.uk/CLAUDE.md` |
+| Gloss Beauty (client site, Lovable-hosted) | `C:/Users/Adam/Documents/Claude/glossbeauty.com.au/repo/CLAUDE.md` |
+| Automation Agency (live marketing site) | `C:/Users/Adam/automation-agency/CLAUDE.md` |
 
-Skills live in a separate repo: `Mrsavage92/skills-library`, installed at `~/.claude/skills/` (flat structure — skill directories directly under skills/, no subdirectory).
+**Memory architecture — write target rule (load-bearing):**
 
-## How sync works
+When a decision is made or scope locks during a conversation, write it to **Section D of the relevant project's CLAUDE.md** before ending the turn. Use the Edit tool — it's reliable and auto-loads next session. This is the running ledger.
 
-Both machines have identical hooks in `~/.claude/settings.json`:
+- **Project CLAUDE.md → running ledger** (decisions, locked choices, "do not re-litigate"). I write here.
+- **Notion master doc → polished long-form strategy** (vision, business model, narrative). User curates here; I update via `/project-doc` only when explicitly invoked.
+- **Auto-memory (`~/.claude/projects/.../memory/`) → cross-conversation facts** (user preferences, environment, surprising rules). I write here automatically.
+- **Live state (`~/.claude/notion-context.md`) → session-start snapshot.** Auto-regenerates. Read-only.
 
-**On session start (SessionStart hook):** pulls latest from this repo and skills-library → installs to `~/.claude/`. This ensures each session begins with whatever the other machine pushed last.
+If a decision matters across sessions and isn't already in CLAUDE.md Section D, write it there immediately. Don't rely on auto-memory for project-specific decisions — it's for cross-cutting facts.
 
-**On session end (Stop hook):** copies current `commands/` and `agents/` into this repo, commits with machine name + date (e.g. `auto-sync: mac-2026-03-21`), pushes to GitHub. Also pushes any new/changed skills to skills-library.
+When a conversation involves a project without a project CLAUDE.md, run `/project-doc` (creates Notion master doc) AND scaffold a 6-section CLAUDE.md at the project root.
 
-Errors are logged to `~/.claude/sync-errors.log` on each machine.
+**Smartsheet:** Eloquent or BDR work ONLY. Never use Smartsheet MCP tools for personal projects. Always confirm explicit approval before calling any Smartsheet tool.
 
-## Machines
+## Web Build Loop
 
-- **Mac** — `Savagess-MacBook-Air.local` — primary development machine
-- **PC** — Windows, VS Code extension — secondary machine
+`/premium-website` is the suite reference. Pipeline: `/saas-build` (orchestrator) → `/saas-improve` (post-launch). All web-* skills read `~/.claude/web-system-prompt.md` (Design DNA) before generating. Landing page rules are in `premium-website.md` — the contract `/saas-build` reads.
 
-## Repos
+## Language & Domain Rules
 
-- Config: `https://github.com/Mrsavage92/claude-config`
-- Skills: `https://github.com/Mrsavage92/skills-library`
+Load only when relevant — these aren't auto-loaded by this file:
 
-## Notion documentation hub
+- **TS / React / Vite** → `~/.claude/rules/common/` + `typescript/` + `web/`
+- **Python / FastAPI / Supabase** → `~/.claude/rules/common/` + `python/`
+- **Design-heavy frontend** → add `~/.claude/rules/web/design-quality.md`
+- **Code review or PR prep** → `~/.claude/rules/common/code-review.md`
 
-Human-readable docs: `https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917`
+Index: `~/.claude/rules/README.md`. Language rules override common where they conflict.
 
-Use `/sync-knowledge-base` inside Claude Code to update Notion after adding new skills, commands, or agents.
+## Visual Mirroring Protocol (MANDATORY)
 
-## Adding new commands or agents
+When any instruction contains "match this site visually", "look the same", "mirror the design", "copy the style", "make it look like X", or similar — **STOP. Do not write a single line of code until steps 1–3 are complete.**
 
-1. Create the `.md` file in `~/.claude/commands/` or `~/.claude/agents/`
-2. It will be pushed to this repo automatically when the session ends
-3. The other machine will pull it automatically at the start of its next session
+1. `mcp__puppeteer__puppeteer_navigate` → load the target URL
+2. `mcp__puppeteer__puppeteer_screenshot` → 1440×900
+3. `mcp__puppeteer__puppeteer_evaluate` → extract computed styles:
+   - CSS custom properties from `:root` (colors, spacing, typography, radius, animation)
+   - `getComputedStyle` on: `body`, `nav/header`, `h1`, `h2`, `p`, primary button, secondary button, input, first link
+   - `backgroundImage`/`backgroundColor` on `html`, `body`, hero section
+4. Present extracted tokens to confirm before building
+5. Build using **only the extracted values** — no approximations
 
-No manual steps required.
+Skipping = phase failure. `/style-mirror` alone is not sufficient — it does not extract computed styles.
 
-## First-time setup on a new machine
+## Power User Shortcuts
 
-### Mac / Linux
-```bash
-git clone https://github.com/Mrsavage92/claude-config.git ~/Documents/Git/claude-config
-cd ~/Documents/Git/claude-config
-bash sync.sh
-```
-
-### Windows (PowerShell)
-```powershell
-git clone https://github.com/Mrsavage92/claude-config.git "$env:USERPROFILE\Documents\Git\claude-config"
-cd "$env:USERPROFILE\Documents\Git\claude-config"
-.\sync.ps1
-```
-
-Then add the hooks below to `~/.claude/settings.json` (Mac) or `%USERPROFILE%\.claude\settings.json` (Windows).
-
-## Hook config for settings.json
-
-### Mac / Linux
-```json
-"hooks": {
-  "SessionStart": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "LOG=~/.claude/sync-errors.log; REPO=~/Documents/Git/claude-config; (cd $REPO && git fetch origin main && git pull origin main --rebase && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md) 2>>$LOG; (cd ~/.claude/skills && git fetch origin master && git pull origin master --rebase) 2>>$LOG || true",
-          "async": true
-        }
-      ]
-    }
-  ],
-  "Stop": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "MACHINE=$(hostname -s); LOG=~/.claude/sync-errors.log; MSG=\"auto-sync: $MACHINE $(date +%Y-%m-%d)\"; REPO=~/Documents/Git/claude-config; MANIFEST=$REPO/manifest.json; (cd $REPO && git fetch origin main && git pull origin main --rebase && python3 -c \"import json,hashlib,os,shutil; m=json.load(open('$MANIFEST')) if os.path.exists('$MANIFEST') else {'agents':{},'commands':{}}; [shutil.copy(os.path.expanduser('~/.claude/agents/')+f, 'agents/'+f) for f in os.listdir(os.path.expanduser('~/.claude/agents/')) if f.endswith('.md') and hashlib.md5(open(os.path.expanduser('~/.claude/agents/')+f,'rb').read()).hexdigest()[:8] != m.get('agents',{}).get(f,'')]; [shutil.copy(os.path.expanduser('~/.claude/commands/')+f, 'commands/'+f) for f in os.listdir(os.path.expanduser('~/.claude/commands/')) if f.endswith('.md') and hashlib.md5(open(os.path.expanduser('~/.claude/commands/')+f,'rb').read()).hexdigest()[:8] != m.get('commands',{}).get(f,'')]\" && cp ~/.claude/CLAUDE.md global-context.md && git add agents/ commands/ global-context.md && git diff --cached --quiet || git commit -m \"$MSG\" && git fetch origin main && git rebase origin/main && git push origin main) 2>>$LOG; (cd ~/.claude/skills && git fetch origin master && git rebase origin/master && git add -A && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin master) 2>>$LOG || true",
-          "async": true
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Windows (PowerShell)
-```json
-"hooks": {
-  "SessionStart": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "$LOG=\"$env:USERPROFILE\\.claude\\sync-errors.log\"; try { cd \"$env:USERPROFILE\\Documents\\Git\\claude-config\"; git pull origin main --rebase; cp commands\\*.md \"$env:USERPROFILE\\.claude\\commands\\\"; cp agents\\*.md \"$env:USERPROFILE\\.claude\\agents\\\" } catch { $_ >> $LOG }; try { cd \"$env:USERPROFILE\\.claude\\skills\\claude-skills\"; git pull origin main } catch { $_ >> $LOG }",
-          "shell": "powershell",
-          "async": true
-        }
-      ]
-    }
-  ],
-  "Stop": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "$MACHINE=$env:COMPUTERNAME; $LOG=\"$env:USERPROFILE\\.claude\\sync-errors.log\"; $MSG=\"auto-sync: $MACHINE $(Get-Date -Format yyyy-MM-dd)\"; try { cd \"$env:USERPROFILE\\Documents\\Git\\claude-config\"; git pull origin main --rebase; cp \"$env:USERPROFILE\\.claude\\commands\\*.md\" commands\\; cp \"$env:USERPROFILE\\.claude\\agents\\*.md\" agents\\; git add commands/ agents/; $diff = git diff --cached --quiet; if ($LASTEXITCODE -ne 0) { git commit -m $MSG }; git push origin main } catch { $_ >> $LOG }; try { cd \"$env:USERPROFILE\\.claude\\skills\\claude-skills\"; git add -A; $diff = git diff --cached --quiet; if ($LASTEXITCODE -ne 0) { git commit -m $MSG }; git push origin main } catch { $_ >> $LOG }",
-          "shell": "powershell",
-          "async": true
-        }
-      ]
-    }
-  ]
-}
-```
+- **`@filename`** — reference files inline. `Review @src/index.ts` works in chat input.
+- **`# fact`** — add to memory mid-conversation.
+- **Project CLAUDE.md** — drop in a project root for project-specific context. Auto-loads.
+- **`isolation: "worktree"`** — pass in Agent calls that write files. Sandboxed git branch, reviewable.
+- **Tool use log** — `~/.claude/tool-use.log`. Audit what changed.
+- **Scheduled logs** — daily review, news brief, weekly audit at `~/.claude/logs/YYYY-MM-DD-{type}.md`.
