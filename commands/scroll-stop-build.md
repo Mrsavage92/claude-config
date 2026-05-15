@@ -3,7 +3,7 @@ name: scroll-stop-build
 description: Takes a product video and builds a production-quality Apple-style scroll-driven website where video playback is controlled by scroll position, with lerp smoothing, annotations, starscape, and full mobile responsiveness.
 ---
 
-Build a scroll-driven product website using the scroll-stop-builder skill at ~/.claude/skills/claude-skills/marketing-skill/scroll-stop-builder/SKILL.md.
+Build a scroll-driven product website using the scroll-stop-builder skill at ~/.claude/skills/marketing-skill/scroll-stop-builder/SKILL.md.
 
 Ask the user 3 questions:
 1. What is the video file path?

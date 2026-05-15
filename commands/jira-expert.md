@@ -3,7 +3,7 @@ name: jira-expert
 description: Atlassian Jira expert for creating projects, planning sprints, writing JQL queries, configuring workflows, custom fields, automation rules, and reporting dashboards.
 ---
 
-Run the jira-expert skill at ~/.claude/skills/claude-skills/project-management/jira-expert/SKILL.md.
+Run the jira-expert skill at ~/.claude/skills/project-management/jira-expert/SKILL.md.
 
 Follow the full workflow in that file.
 
