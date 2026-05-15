@@ -15,6 +15,8 @@ Operate Anypoint Platform like a platform admin — deploy apps, manage credenti
 - Managing user access and environment permissions
 - Downloading or publishing Exchange assets
 - Setting up Maven deploy in CI/CD
+- **API Manager policies (Client ID Enforcement, rate limiting) — see `references/api-manager-policies.md`**
+- **CH1 vs CH2 deploy distinction (CH2 has NO Runtime Manager Promote) — see `references/deployment.md`**
 
 ## When NOT to Use
 - Writing connector configs — use `/mulesoft-connector`
