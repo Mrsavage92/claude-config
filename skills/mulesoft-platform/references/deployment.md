@@ -161,20 +161,42 @@ Before deploying to any environment:
 
 If production deploy goes wrong:
 
-1. Runtime Manager → select app → **History** tab
+1. Runtime Manager → select app → **History** tab (CH1) or **Settings → Application File → previous version** (CH2)
 2. Find previous working version
-3. Click **Promote** or **Redeploy**
+3. CH1: Click **Promote** or **Redeploy**. CH2: download the older JAR from the History/Versions tab, re-upload via Deploy Application UI.
 4. Verify app status = Running
 5. Smoke test
-6. Investigate failure offline, fix in Design env, re-promote
+6. Investigate failure offline, fix in source, rebuild, re-deploy
 
 ## Zero-Downtime Deploys
 
 For production apps that can't tolerate downtime:
 
-- Deploy with **2+ workers** — rolling update replaces one at a time
-- Use **Promote** instead of Redeploy for config-only changes (no code)
+- Deploy with **2+ replicas** (CH2) or **2+ workers** (CH1) — rolling update replaces one at a time
+- Use **Promote** for config-only changes — **CH1 only** (CH2 doesn't have it)
 - For major changes: blue/green — deploy v2 alongside v1, switch traffic, retire v1
+
+## CloudHub 1.0 vs 2.0 Promote distinction (CRITICAL — do not conflate)
+
+**Runtime Manager Promote between environments:**
+- ✅ Exists in CloudHub 1.0
+- ❌ DOES NOT EXIST in CloudHub 2.0 — that feature was dropped. For CH2 cross-env app deployment, the path is:
+  1. Sandbox app → Settings → Application File → **Download Application File** (saves the JAR locally)
+  2. Switch env in top-left pill to Production
+  3. Runtime Manager → **Deploy Application**
+  4. **Choose file** → upload local JAR OR pick "Import file from Exchange" if the app's been published there
+  5. Configure Runtime + Properties tabs per-env
+  6. Click Deploy
+- Alternative for CH2: Mule Maven Plugin (`mvn deploy -DmuleDeploy`) or Anypoint CLI.
+- Source: [docs.mulesoft.com/cloudhub-2/ch2-update-apps](https://docs.mulesoft.com/cloudhub-2/ch2-update-apps).
+
+**API Manager Promote API from environment:**
+- ✅ Exists in BOTH CH1 and CH2
+- This is a SEPARATE feature from Runtime Manager Promote — it copies the **API instance + policies + SLAs + alerts** from one env to another, NOT the JAR.
+- Use case: you've configured Client ID Enforcement + rate limiting + custom policies in sandbox API Manager, and you want the same config in prod API Manager. Promote copies the policy layer (NOT the underlying app — that's still Runtime Manager's job).
+- Path: API Manager → Production env → Add → "Promote API from environment" → pick source env + source API.
+
+**Trap:** if you say "I'll promote my CH2 app to prod" without specifying which Promote you mean, you'll get confused. The two are different layers. Runtime Manager Promote (CH1 only) moves the binary. API Manager Promote (both) moves the governance config.
 
 ## Deploy Failure Troubleshooting
 
