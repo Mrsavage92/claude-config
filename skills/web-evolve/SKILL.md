@@ -155,7 +155,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
     |---|---|---|
     | chrome-devtools-mcp missing at target≥98 (Phase G.5 / Cardinal Rule 24) | HALT for install | Auto-downgrade `deliverable_target_score = 95`, log `chrome-devtools-mcp unavailable, downgraded to deliverable_target=95 for this run`, continue |
     | Mandated agents (a11y/seo/critique) skipped or errored (Phase A.1.5 / Gate D) | HALT | Continue with `gate_d.failed=true, missing_artifacts: [list]`, Gate B (VQ delta) marks `confidence: low` |
-    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | **HARD HALT (updated 2026-05-17 by Rule 32) — critique unavailability now blocks ALL runs, supervised or not. Cannot fly blind on the primary VQ signal. If critique skill is missing/errored, the run dies before iter 1 with `HALT NEEDS_HUMAN: Install or fix Skill(critique) before re-running`.** |
+    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | **HARD HALT (updated 2026-05-17 by Rule 34) — critique unavailability now blocks ALL runs, supervised or not. Cannot fly blind on the primary VQ signal. If critique skill is missing/errored, the run dies before iter 1 with `HALT NEEDS_HUMAN: Install or fix Skill(critique) before re-running`.** |
     | `Skill('critique')` JSON schema invalid (Cardinal Rule 8 / P6) | retry once + HALT | retry once + loose-parse what came back + log warning + continue |
     | Critique screenshot hash mismatch (Cardinal Rule 8 / P10) | retry + HALT | log warning + continue (it's a verification, not a contract) |
     | CONTEXT anti-goal vs Phase R signature conflict (Phase R.3.6 / P14) | Surface to user, 30s soft-pause | Default to "respect anti-goal" (re-pick signature OR if no fallback, lock signature with `anti_goal_overridden: true` flag) |
@@ -176,7 +176,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
     3. **>5 consecutive iteration VOIDs** — the run is stuck; continuing wastes the rest of the night burning Opus tokens on no-ops.
     4. **Vercel prod deploy returns BUILD FAILURE on main push** — Phase D Step 9 polls for prod deploy; if Vercel reports `failed` status, HALT immediately (don't keep iterating against a broken main).
     5. **`Skill()` invocation infrastructure errors** (skill not found, MCP server down, network error preventing any tool calls) — run can't proceed at all.
-    6. **`Skill('critique')` unavailable** (added 2026-05-17 by Rule 32) — primary VQ signal; orchestrator cannot self-rate per Rules 8 + 27. Without critique the run is gate-blind.
+    6. **`Skill('critique')` unavailable** (added 2026-05-17 by Rule 34) — primary VQ signal; orchestrator cannot self-rate per Rules 8 + 27. Without critique the run is gate-blind.
     7. **Phase A.1.5 page enumeration produces zero routes** (added 2026-05-17 by Rule 29) — sitemap unreadable + homepage crawl returned no internal links. Cannot establish per-route baselines. Without baselines Phase R-IA mode (Rule 31) cannot run.
 
     **Morning review pattern:** when user wakes up to an unsupervised run, the first thing they read is `trajectory.runs[-1].failed_gates` (P8 fix array). Each soft-degrade logs there with structured detail. Decision tree:
@@ -186,18 +186,27 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
     **Why this rule exists:** Adam called out 2026-05-17 that the gate-tightening series turned every uncertainty into a HALT path, making overnight runs unviable. Architecturally the gates should DOWNGRADE outcomes, not BLOCK execution. **Added 2026-05-17 (CL-5).**
 
-29. **Phase A enumerates EVERY public route — not just the homepage. NO EXCEPTIONS, including --unsupervised.** Hero-only baseline is the route to "you didn't evolve anything" failure.
+29. **Phase A enumerates EVERY public route — not just the homepage. NO EXCEPTIONS, including --unsupervised. Default verdict per route is REBUILD, not REFINE.** Hero-only baseline is the route to "you didn't evolve anything" failure. Polish-as-evolution is the failure mode that follows.
 
     **Phase A.1.5 NEW spec (replaces "baseline screenshot homepage only"):**
 
     1. **Read the sitemap.** Prefer (in order): `public/sitemap.xml`, `app/sitemap.ts`, `.next/server/app/sitemap.xml`, OR crawl internal `<a href>` links from the homepage. Build `route_list: string[]`. Cap at 20 routes; if more, take the 20 most-linked-from-homepage.
-    2. **For each route, screenshot + critique.** Use chrome-devtools (preferred) or puppeteer. Save to `.evolution/baseline/{route-slug}.png`. Fire `Skill('critique', args='per-route VQ baseline | screenshots: [...] | dimensions: hierarchy, content-density, hero-impact, layout, distinctiveness | tier: {target}')` and capture the per-route aggregate VQ + blocking_issues list.
-    3. **Write `.evolution/page-baselines.json`** with one entry per route: `{ route, screenshot_path, vq_aggregate, vq_by_dimension, blocking_issues: [], priority_rank }`. Routes are ranked by `(blocking_issues.length × 100) + (3.0 - vq_aggregate) × 10 + traffic_proxy`.
-    4. **Any route with `vq_aggregate < 2.0` OR `blocking_issues.length > 0` becomes a P0 iter.** P0 iters take priority over hero-only refinements. The orchestrator builds `focus_list` from `page-baselines.json.routes WHERE priority_rank <= 5`, not from hero gap analysis alone.
+    2. **For each route, screenshot + critique.** Use chrome-devtools (preferred) or puppeteer. Save to `.evolution/baseline/{route-slug}.png`. Fire `Skill('critique', args='per-route VQ baseline | screenshots: [...] | dimensions: hierarchy, content-density, hero-impact, layout, distinctiveness, content-clarity, structural-integrity | tier: {target} | output: {vq_aggregate, vq_by_dimension, blocking_issues, content_problems, verdict: REBUILD_OR_REFINE_OR_KEEP}')`.
+    3. **Critique MUST return a per-route verdict in `{REBUILD, REFINE, KEEP}`** — not just a score:
+        - **REBUILD** = page needs to be rewritten from scratch. Use this for: structural failures (renders blank, broken layout), content failures (tile-soup with no service-by-service clarity, vague headlines, no value prop), or vq_aggregate below the tier floor (see table below).
+        - **REFINE** = page structure + content are sound; polish would improve it. Use ONLY when vq_aggregate is at-or-above tier floor AND no blocking_issues AND no content_problems.
+        - **KEEP** = page is already at-or-above tier; no work needed.
+    4. **Tier floor table (per-route vq must clear this to AVOID a REBUILD verdict):**
+        - target 90 → floor 3.0
+        - target 95 → floor 3.5
+        - target 98 → floor 4.0
+        - target 100 → floor 4.5
+    5. **Write `.evolution/page-baselines.json`** with one entry per route: `{ route, screenshot_path, vq_aggregate, vq_by_dimension, blocking_issues: [], content_problems: [], verdict: REBUILD|REFINE|KEEP, priority_rank }`. Routes are ranked by `(verdict === 'REBUILD' ? 1000 : 0) + (blocking_issues.length × 100) + (floor - vq_aggregate) × 10 + traffic_proxy`.
+    6. **Default-to-rebuild discipline:** if critique is ambiguous between REFINE and REBUILD for a given route, default to REBUILD. "Polish a turd" is the failure mode this rule exists to prevent. The bar is "would a Linear/Stripe designer leave this page as-is?" — if the honest answer is no, the verdict is REBUILD.
 
-    **--unsupervised does NOT skip this rule.** Without per-route baselines the run is flying blind. The route-crawl + screenshot batch costs ~30s and ~5 critique calls — cheap.
+    **--unsupervised does NOT skip this rule.** Without per-route baselines + verdicts the run is flying blind. The route-crawl + screenshot batch costs ~30s and ~5 critique calls — cheap.
 
-    **Why:** Run #3 on Orbit Digital (2026-05-17) shipped 8 iters all touching the homepage hero + global CSS. User opened `/services` (tile-soup, zero service-by-service clarity) and `/services/digital-ecosystem-audit` (page rendered fully BLACK). Verdict: "you didn't evolve anything." Phase A had only screenshotted the homepage hero — neither broken page was visible to the orchestrator at any point in the run. **Added 2026-05-17.**
+    **Why:** Run #3 on Orbit Digital (2026-05-17) shipped 8 iters all touching the homepage hero + global CSS. User opened `/services` (tile-soup, zero service-by-service clarity) and `/services/digital-ecosystem-audit` (page rendered fully BLACK). Verdict: "you didn't evolve anything. We are fixing you first as you're being a spaz. This is evolve. not polish a turd skill." Phase A had only screenshotted the homepage hero — neither broken page was visible to the orchestrator at any point in the run, and even if it had been, the prior version of Rule 29's vq < 2.0 threshold would have only caught the fully-broken page, not the tile-soup. **Added 2026-05-17, tightened 2026-05-17 same day after first version still allowed polish-as-evolution.**
 
 30. **Visible-delta floor per iter — invisible iters are VOIDED, not committed.** Cardinal Rule 11.7's refinement-skill floor was being gamed by iters that produced zero visible change. Rule 30 closes that loophole.
 
@@ -214,20 +223,44 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
     **Why:** Run #3 (2026-05-17) gamed the 6-iter refinement floor with three iters that produced SSIM ≥ 0.99: iter 5 (border-white/8 → border-gl-border, same visual color), iter 6 (alpha 0.85 → 0.72, near-imperceptible), iter 7 (hex literal → token of same value, by-construction zero delta). The floor was met by counting, not by producing visible improvement. User verdict: "you literally add a few words, a shitty animation or two — nothing has evolved." **Added 2026-05-17.**
 
-31. **Phase R defers to IA fixes when secondary pages are broken.** A SOTD hero on top of broken services pages is still a broken site. Phase R Step R.0 (NEW — runs BEFORE Step R.1) is the IA bottleneck gate.
+31. **Phase R defers to REBUILD work when ANY route has a REBUILD verdict. Rebuilds route through `Skill('web-page')` or `Skill('web-scaffold')`, NEVER through refinement skills.**
+
+    A SOTD hero on top of broken services pages is still a broken site. Phase R Step R.0 (NEW — runs BEFORE Step R.1) is the rebuild gate.
 
     **Phase R Step R.0 spec:**
 
     1. Read `.evolution/page-baselines.json` (produced by Rule 29 Phase A.1.5).
-    2. Build `ia_bottlenecks: route[]` — every entry where `vq_aggregate < 3.0` OR `blocking_issues.length > 0`.
-    3. **If `ia_bottlenecks.length >= 2`:** activate **Phase R-IA mode**. SKIP Steps R.1-R.4 (signature pick). Build `focus_list` from `ia_bottlenecks` instead. Each becomes a P0 iter — rebuild the route entirely, not patch it. Trajectory records `phase_r_mode: "IA"`. Hero signature pick is DEFERRED to Run #N+1.
-    4. **If `ia_bottlenecks.length <= 1`:** proceed with normal Phase R Steps R.1-R.4 signature pick.
+    2. Build `rebuild_queue: route[]` — every entry where `verdict === "REBUILD"`. Sort by `priority_rank` descending.
+    3. **If `rebuild_queue.length >= 1`:** activate **Phase R-REBUILD mode**. SKIP Steps R.1-R.4 (hero signature pick — no hero polish until rebuilds are done). Build `focus_list` from `rebuild_queue`. Each becomes a P0 REBUILD iter — see rule below for how rebuild iters work. Trajectory records `phase_r_mode: "REBUILD"`. Hero signature pick is DEFERRED to Run #N+1.
+    4. **If `rebuild_queue.length === 0`:** proceed with normal Phase R Steps R.1-R.4 hero signature pick. Only routes in `verdict === "REFINE"` or `verdict === "KEEP"` exist; the site has earned the right to hero polish.
 
-    **At target ≥ 98 in Phase R-IA mode:** before iter 1, fire `Skill('critique', args='for each bottleneck route, propose structural rebuild approach (which existing component to reuse, which new component to build), content rewrite (what each section should say at minimum), 3 reference URLs from competitors who solve this same IA problem well')`. The output is appended to each iter's args as `ia_rebuild_brief`.
+    **REBUILD iter contract (Phase C-REBUILD):**
 
-    **Why:** Run #3 (2026-05-17) locked Phase R to "singular B signature" and shipped 8 hero-focused iters. User then opened `/services` (tile-soup) and `/services/digital-ecosystem-audit` (fully blank page). The IA bottleneck was on routes the orchestrator never looked at because Phase R framing forced "pick a hero signature" instead of "rebuild what's broken." **Added 2026-05-17.**
+    - **Skill routing:** REBUILD iters MUST invoke `Skill('web-page', args='rebuild | route: {route} | current_problems: {blocking_issues + content_problems from page-baselines} | tier: {target} | references: {3 competitor URLs} | content_brief: {what each section should say at minimum, sourced from CLAUDE.md + project doc} | preserve: {URL slug, any locked decisions}')` OR `Skill('web-scaffold', args='...')` for full new-section work. **Refinement skills (impeccable / polish / typeset / colorize / animate / overdrive) are BANNED inside a REBUILD iter** — they polish, they don't rebuild. The orchestrator records `route_around_rebuild_to_refine` failure in trajectory if it tries to route a REBUILD iter through a refinement skill.
+    - **Acceptance:** after the rebuild ships, re-screenshot the route and re-fire `Skill('critique')` against the new screenshot. The route must clear the tier floor (Rule 29 tier-floor table) OR the iter is VOIDED and the orchestrator re-attempts with a different reference set / different brief, up to 2 retries.
+    - **No partial rebuilds.** A REBUILD iter that ships only a banner + new headline (not the full page) is a polish iter wearing a rebuild costume — VOID it.
 
-32. **`Skill('critique')` fires at three points, not just exit. Missing any of them is a Phase failure.**
+    **At target ≥ 98 in Phase R-REBUILD mode:** before iter 1, fire `Skill('critique', args='for each rebuild route, propose: (a) full content rewrite — what each section should say at minimum, sourced from CLAUDE.md project doc + services-data.ts + any internal docs in the repo; (b) structural pattern — bento / sticky-rail / single-column-narrative / split-screen-comparison etc., chosen for the page''s job-to-be-done; (c) 3 reference URLs from competitors who solve this exact IA problem at-tier; (d) which existing components in the project to reuse vs which to scaffold new')`. The output is the `rebuild_brief` for each iter, passed to `web-page` skill args.
+
+    **Why:** Run #3 (2026-05-17) locked Phase R to "singular B signature" and shipped 8 hero-focused iters. User then opened `/services` (tile-soup) and `/services/digital-ecosystem-audit` (fully blank page). User's verdict on the run + on the prior version of this rule: "I dont trust it reviews everything and changes it if its bad. This is evolve. not polish a turd skill." The prior rule's "ia_bottlenecks" framing was too soft — orchestrator could route a flagged route through a refinement skill and call it done. The new contract is: REBUILD verdict → `web-page` only, no exceptions, and the rebuilt page must clear the tier floor before the iter is accepted. **Added 2026-05-17, rewritten 2026-05-17 same day to force `web-page` routing instead of refinement-skill polish.**
+
+33. **Default verdict is REBUILD, not REFINE. Refinement skills are only invoked AFTER a page has cleared the tier floor.**
+
+    **The orchestrator's natural bias is to reach for `polish` / `impeccable` / `typeset` / `colorize` — because those skills are safer, faster, and produce committable diffs. That bias is the failure mode this rule prevents.**
+
+    **Rules of engagement:**
+
+    1. **A route can only enter the refinement queue (Phase C iters routed through `impeccable` / `overdrive` / `polish` / `typeset` / `colorize` / `animate` / `layout` / `delight` / `bolder` / `clarify` / `distill` / `adapt`) if its current critique verdict is `REFINE` or `KEEP`.**
+    2. **A route with `verdict === "REBUILD"` cannot be polished — it must be rebuilt first via `web-page` or `web-scaffold`, re-scored, and re-verdicted. Only when the new score clears the tier floor (Rule 29) does the route become eligible for refinement skills.**
+    3. **Orchestrator MUST log skill routing per iter:** `trajectory.real_iterations_detail[n].skill_class ∈ {rebuild, refine}` and `trajectory.real_iterations_detail[n].route_verdict_at_dispatch ∈ {REBUILD, REFINE, KEEP}`. Mismatch (e.g. `skill_class: refine, route_verdict_at_dispatch: REBUILD`) is a Phase failure — iter is voided + `route_around_rebuild_to_refine` logged in trajectory.failed_gates.
+
+    **Mental model the orchestrator should use:**
+
+    > "Would a senior designer at Linear / Stripe / Vercel look at this page and reach for the polish tool, or would they tear it down and rewrite it? If the honest answer is 'tear it down', I invoke `web-page`. Only if the honest answer is 'this is already good, just needs the last 10%' do I invoke a refinement skill. The bias to polish is the AI failure mode — defaulting to rebuild is the correction."
+
+    **Why:** Run #3 (2026-05-17) shipped 8 iters across 6 refinement-skill invocations. ZERO `web-page` invocations, ZERO `web-scaffold` invocations. The `/services` page was tile-soup and the `/services/digital-ecosystem-audit` page was blank — both should have been routed through `web-page` for a structural rebuild, but the orchestrator never even saw them (Rule 29 closes that). Even if it had seen them, the prior rules would have allowed it to route them through `polish` or `impeccable` ("rebuild the structure with a polish skill"), which would have produced another invisible-delta iter. Rule 33 forces the routing decision: REBUILD verdict → `web-page` only, REFINE verdict → refinement skills only. **Added 2026-05-17.**
+
+34. **`Skill('critique')` fires at three points, not just exit. Missing any of them is a Phase failure.**
 
     **Three mandatory critique invocations per run:**
 
@@ -237,7 +270,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
     **Self-scoring is BANNED at all three points.** If `Skill('critique')` is unavailable, the run HALTs even under --unsupervised (cannot fly blind on the primary signal). Cardinal Rule 28 dispatch table updated: critique unavailability is now a HARD HALT.
 
-    **Why:** Run #3 (2026-05-17) cited Rule 8 (independent VQ measurement) as a "would-be" requirement but the orchestrator never actually fired `Skill('critique')` once across the entire run. Result: 8 iters shipped with zero independent measurement, exit retro acknowledged the gap but couldn't quantify the failure. Rule 32 closes the "would-be" hole by naming the three invocation points and refusing to exit Phase F without all three. **Added 2026-05-17.**
+    **Why:** Run #3 (2026-05-17) cited Rule 8 (independent VQ measurement) as a "would-be" requirement but the orchestrator never actually fired `Skill('critique')` once across the entire run. Result: 8 iters shipped with zero independent measurement, exit retro acknowledged the gap but couldn't quantify the failure. Rule 34 closes the "would-be" hole by naming the three invocation points and refusing to exit Phase F without all three. **Added 2026-05-17.**
 
 ---
 
