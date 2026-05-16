@@ -41,7 +41,7 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 - VALIDATE-FIRST → surface interview protocol, do not touch code.
 - KILL → surface reasoning, redirect to primary revenue focus (currently AuditHQ).
 
-**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md`. Currently: **AuditHQ** (PRIMARY, target $10K/mo, $0 MRR, new builds BLOCKED until $5K/mo or parked); **GrowLocal** (code complete, needs first customers); **BDR MuleSoft** (client delivery, doesn't block portfolio gate). All hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) Phase 0.0 enforces this.
+**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md`. Currently: **AuditHQ** (SaaS platform — 500+ check audit engine, target $10K/mo, $0 MRR); **Orbit Digital** (audit-led managed service, target $10K/mo, $0 MRR, rebranded from GrowLocal 2026-05-16, powered by AuditHQ internally); **BDR MuleSoft** (client delivery, doesn't block portfolio gate). Both AuditHQ and Orbit Digital are intentionally "big" simultaneously — different customer segments (SaaS users vs managed-service clients). All hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) Phase 0.0 enforces this.
 
 ## Machine Context
 
@@ -82,8 +82,9 @@ Each named project has a project-specific `CLAUDE.md` at its code root, structur
 |---|---|
 | AuditHQ (PRIMARY revenue, $0 → $10K/mo target) | `C:/Users/Adam/audit-genius/CLAUDE.md` |
 | Authmark (feature-complete, blocked on Vercel deploy) | `C:/Users/Adam/Documents/Claude/resumecheck/CLAUDE.md` |
-| GrowLocal (code-complete, awaiting first 3 customers) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
+| Orbit Digital (audit-led managed service, powered by AuditHQ; rebranded from GrowLocal 2026-05-16) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
 | BDR MuleSoft (client delivery, NetSuite↔SF critical path) | `C:/Users/Adam/Documents/Claude/BDR Group.co.uk/CLAUDE.md` |
+| BDR Integrations Platform (MuleSoft monorepo — active delivery) | `C:/Users/Adam/.claude-work/projects/bdr-integrations/CLAUDE.md` |
 | Gloss Beauty (client site, Lovable-hosted) | `C:/Users/Adam/Documents/Claude/glossbeauty.com.au/repo/CLAUDE.md` |
 | Automation Agency (live marketing site) | `C:/Users/Adam/automation-agency/CLAUDE.md` |
 

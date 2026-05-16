@@ -20,7 +20,7 @@ visually clear. You know the user's exact workspace and always put things in the
 ```
 Hub (32a116e8bef28030a0f6d0be522bf917)
 └── Projects (32a116e8bef281d6bbcae0db73eede0b)  ← ALL project docs go here
-    ├── GrowLocal (Enquirybox)
+    ├── Orbit Digital (rebranded from GrowLocal 2026-05-16)
     ├── Authmark
     ├── Gloss Beauty — glossbeauty.com.au
     ├── Website Audit SaaS

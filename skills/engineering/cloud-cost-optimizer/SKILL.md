@@ -74,7 +74,7 @@ Current on-demand spend by service → commitment purchase recommendations
 Tags required on all resources:
 - env: production | staging | development
 - team: engineering | data | infra | ml
-- product: authmark | growlocal | platform
+- product: authmark | orbit-digital | platform
 - owner: email of responsible engineer
 ```
 
