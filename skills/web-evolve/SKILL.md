@@ -1,16 +1,22 @@
 ---
 name: web-evolve
 description: >
-  Score-driven continuous improvement loop for existing websites. Orchestrates
-  a swarm of specialist agents — web-score (audit), web-benchmark (competitor gap),
-  web-patch (commit-only), web-screenshot (visual diff) — to iteratively improve
-  a landing page until it hits the target score. Skill() refinement skills are
-  called directly in orchestrator context. Agents only audit, screenshot, or commit.
+  Auto-decided, score-driven continuous improvement loop for existing websites.
+  Invoke with `/web-evolve` — no flags. Phase A.0 assesses the site and history
+  (trajectory.json) and picks the target tier: Premium SaaS (90), Stripe/Linear
+  (95), Awwwards SOTD (98), or Awwwards SOTM (100). Re-invoke in any chat to
+  advance — the skill reads disk state and pushes one tier higher. Phrases like
+  "repeat", "again", "level up" trigger the same advance path. Orchestrates four
+  specialist agents (web-score, web-benchmark, web-patch, web-screenshot) plus
+  refinement skills (impeccable, overdrive, animate, typeset, colorize, polish,
+  etc.) and MCPs (21st.dev builder/refiner, chrome-devtools, puppeteer).
 ---
 
 # Skill: /web-evolve
 
-Coordinates four specialist agents. Never audits or fixes inline. Calls refinement skills directly in its own context. Delegates commit-only work to web-patch.
+**Single command, auto-decided.** Run `/web-evolve` with no flags. The skill examines the live site, the project signals (CLAUDE.md, CONTEXT.md, Vercel presence, motion stack), and `.evolution/trajectory.json` if it exists, then picks the right target tier and phase plan automatically. Re-running it (same chat or new chat) advances to the next tier. See `references/multi-run-orchestration.md` for the full decision tree.
+
+Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-screenshot). Never audits or fixes inline. Calls refinement skills directly in its own context. Delegates commit-only work to web-patch.
 
 ---
 
@@ -27,29 +33,88 @@ Coordinates four specialist agents. Never audits or fixes inline. Calls refineme
 9. **Invisible checks must never block visible ones.** Code-quality checks (B-series, D1, H-series, C6, C7, I5, I6, A11, I4, I8, I2) must NEVER occupy iteration slots 1-3 if any visual check (A7, A9, D4, D5, F6, K2, K4, E-section checks) exists in the queue.
 10. **Bold execution required.** Every call to overdrive/impeccable/bolder MUST include explicit boldness instructions. "Subtle" is a failure. The before/after screenshots must show obvious visible difference.
 11. **CONTEXT.md is the anchor.** No iteration begins without a fresh CONTEXT.md (≤7 days, no newer commits). Every refinement is checked against Locked Decisions and Anti-Goals from CONTEXT.md before commit. A change that violates either is a VOID, not a KEEP — even if it improves the score.
+11.5 **Auto-decide everything from disk + signals — no flags required.** Phase A.0 decides target_score, mode (fresh/resume/advance), phases to run, max_iterations, and focus list. The user invokes `/web-evolve` with nothing and gets the right plan. Re-invocation (any chat, any time) reads `.evolution/trajectory.json` and advances one tier. Repeat-signal phrases (`repeat`, `again`, `level up`, `continue`, `next`, etc.) map to "advance" mode. Flags exist as escape hatches only — see `references/multi-run-orchestration.md`. **NEVER ask the user "Resume? yes/no" or "Target tier?" — decide and proceed.**
+12. **`impeccable teach` is mandatory once per project.** Refinement skills (typeset, colorize, layout, animate, polish, bolder, distill, quieter, delight, clarify) produce generic output without design context. Phase A MUST fire `Skill('impeccable', args='teach')` once per project. The "teach" output is cached in `.evolution/design-context.md` and passed to every subsequent skill call. Skipping = silent generic-output failure mode (AuditHQ v2 retro 2026-04-24).
+13. **Design DNA loaded before any UI call.** `~/.claude/web-system-prompt.md` (token system, typography scale, color discipline, visual signatures) MUST be read in Phase A and re-cited in every Skill() args block as a token-discipline marker. Refinement skills must respect Design DNA over their own defaults.
+14. **Self-audit at exit.** Phase F runs after Phase D and writes `.evolution/retro.md` with per-skill efficacy (KEEPs/REVERTs/VOIDs), proposed `fix-routing.md` edits, and a diff vs `/premium-website` contract. The loop never exits without producing this retro — it is how the skill self-improves.
+15. **21st.dev pipeline is three-stage, not one.** Component-source flow is `inspiration` → `builder` → `refiner`, never just `inspiration`. Inspiration alone gives prose suggestions; builder generates actual JSX; refiner improves what is already in the repo (which is what `web-evolve` does most of the time).
+
+---
+
+## Cardinal rules — World-Class tier (apply when `--world-class` OR `target_score ≥ 98`)
+
+These rules supersede their generic versions when world-class mode is active. Full spec: `references/world-class-tier.md`.
+
+16. **Awwwards-aligned scoring.** Drop the flat 0–100 score. Use 4 dimensions on 10-point scale: Design (40%) / Usability (30%) / Creativity (20%) / Content (10%). Loop exits only when per-dimension minima are met AND weighted average ≥ target. SOTD = 8.0 avg. SOTM = 8.5 avg with Creativity ≥ 9.
+17. **Pick one hero signature, execute fully.** Hero must be one of: (A) WebGL/3D scene via R3F+drei+postprocessing, (B) GSAP ScrollTrigger pinned narrative (2–4 viewports), (C) Kinetic typography with variable-axis animation. Half-committed heroes (small glow + gradient blob) fail this tier — visible signature or VOID.
+18. **Lenis is mandatory** at world-class. Locomotive is deprecated. `lenis` package with `autoRaf: false syncTouch: false` when GSAP drives the ticker. No native CSS `scroll-behavior: smooth`.
+19. **GSAP owns scroll choreography.** ScrollTrigger pins, SplitText reveals, Flip transitions, MorphSVG when relevant — all free post-Webflow acquisition (Apr 2024). Framer Motion is allowed for component state but never for scroll-narrative.
+20. **Custom cursor + magnetic interactions required.** Replace native cursor. `data-magnetic="true"` on primary CTAs. Motion's `<Cursor>` primitive OR hand-rolled with `lenis` velocity. Touch devices replace hover with explicit tap states.
+21. **View Transitions API on every route change.** Same-doc transitions (Chrome 111+, Safari 18+, Firefox 144+). `viewTransitionName` on shared elements. `prefers-reduced-motion` respected (skip if reduce).
+22. **Variable font from foundry — not Inter from Google as the only choice.** Recommended free: Geist (Vercel, OFL). Commercial: Söhne, Calibre, GT America. At least one variable axis animated on hover or scroll. Pangram fonts are free-to-try ONLY — pay if shipping, do not auto-install.
+23. **Real product UI in hero.** No gradient blob. No shadcn primitives playing dress-up. Either actual product screenshots/videos, OR an R3F scene that visualises the product concept.
+24. **Performance traced by chrome-devtools-mcp, not synthetic PageSpeed.** Real Chrome traces against deployed URL with 4× CPU slowdown + Slow 4G emulation. Targets: LCP < 2.0s, INP < 150ms, CLS < 0.05 (target 98) — tighter at target 100.
+25. **OKLCH color tokens. No shadcn defaults.** `slate`/`zinc`/`neutral` are the AI-template signature. 1 brand accent + 2 neutrals + 1 surface, period.
 
 ---
 
 ## Inputs
 
-| Input | Default | Notes |
-|---|---|---|
-| `project_path` | current directory | auto-detect |
-| `live_url` | from BUILD-LOG.md | production URL — Phase E only |
-| `dev_server_url` | none | if set, loop uses localhost — no deploy wait per iteration |
-| `target_score` | 90 | 95 = Stripe/Linear quality mode |
-| `benchmark_url` | auto by personality | override with `--benchmark=URL` |
-| `mode` | auto-detect | backfill = DESIGN-BRIEF.md + src/components/landing/ populated |
-| `max_iterations` | 8 (greenfield) / 20 (backfill) | VOID iters excluded from cap |
+**Normal invocation:** `/web-evolve` — no flags, no args. The skill decides everything.
+
+**Optional escape-hatch overrides** (only used when the user explicitly contradicts auto-decided defaults):
+
+| Override | What it does |
+|---|---|
+| `--target=N` | Force target_score = N (90/95/98/100). Skips Phase A.0 auto-decide. |
+| `--fresh` | Ignore `.evolution/trajectory.json` and start as if Run #1. Use to reset trajectory. |
+| `--no-branch` | Don't create `evolve/{date}` branch. Work on current branch. |
+| `--benchmark=URL` | Override auto-picked benchmark URL. |
+| `--pages=/,/pricing` | Multi-page run. Default: just landing. |
+| `--dev-server=http://localhost:3000` | Use localhost instead of live URL (faster iterations, no deploy wait). |
+
+**Everything else is auto-decided** by Phase A.0 from disk state + visual assessment + project signals. See `references/multi-run-orchestration.md` for the full decision tree.
+
+### What gets auto-decided (no flags needed)
+
+| Decision | Auto-source |
+|---|---|
+| `target_score` | Phase A.0 — first run uses visual_quality_score + project signals; advance run reads `trajectory.runs[-1].final_score` and pushes one tier higher |
+| `mode` (fresh/resume/advance) | `.evolution/` state — interrupted run with no final-score = resume; trajectory exists + last completed = advance; nothing = fresh |
+| `phases_to_run` | target ≥ 98 + no prior run with `world_class_anchor` → Phase R + G run; otherwise skipped |
+| `world_class_anchor` (hero signature) | Phase R user pick on Run #1, locked in trajectory for all subsequent runs |
+| `motion_stack` install | Phase G if missing; subsequent runs skip — already installed |
+| `mobile_loop` | true when target ≥ 95 |
+| `a11y + seo + /critique` parallel agents | run when target ≥ 95 |
+| `chrome-devtools-mcp` for perf | used when connected AND target ≥ 95; mandatory at target ≥ 98 |
+| `branch_isolation` | true by default — `evolve/{YYYY-MM-DD}` branch |
+| `max_iterations` | Run #1: 8 greenfield / 20 backfill. Advance runs: `last_iterations × 0.7` (diminishing returns) |
+| `project_path` | current working directory |
+| `live_url` | from `BUILD-LOG.md` last successful deploy entry; failing that, from `vercel.json` or `package.json` deploy URL field |
+
+---
+
+## Target tier table
+
+| `target_score` | Tier label | What it gates | Phase R / G run? |
+|---|---|---|---|
+| 90 | Premium SaaS | Generic high-quality SaaS landing | No |
+| 95 | Stripe / Linear quality | Disciplined design system, real motion, mobile parity, a11y/SEO pass | No |
+| 98 | **Awwwards SOTD candidate** | Awwwards 4-dimension avg ≥ 8.0, all per-dim minima, WC1–WC10 PASS, chrome-devtools-mcp perf trace ≥ 90 | **YES** |
+| 100 | **Awwwards SOTM candidate** | Avg ≥ 8.5, Creativity ≥ 9.0, real Chrome trace ≥ 95, 60fps motion, foundry typography, custom cursor, View Transitions | **YES + stricter gates** |
+
+`--world-class` auto-sets target=98. `--world-class --target=100` enters SOTM mode.
 
 ---
 
 ## Reference paths (always use tilde paths — never hardcode machine paths)
 
 ```
-checklist:     ~/.claude/skills/shared/landing-page-checklist.md
-fix-routing:   ~/.claude/skills/web-evolve/references/fix-routing.md
-scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
+checklist:               ~/.claude/skills/shared/landing-page-checklist.md
+fix-routing:             ~/.claude/skills/web-evolve/references/fix-routing.md
+scoring-engine:          ~/.claude/skills/web-evolve/references/scoring-engine.md
+world-class-tier:        ~/.claude/skills/web-evolve/references/world-class-tier.md
+multi-run-orchestration: ~/.claude/skills/web-evolve/references/multi-run-orchestration.md
 ```
 
 ---
@@ -69,6 +134,344 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
 | E9 | final-cta |
 | E10 | footer |
 | F1–F6, H1–H2, K1–K4 | full-page |
+
+---
+
+## Phase A.0 — Auto-Decide Mode (MANDATORY, runs before every other phase)
+
+This phase reads disk state + signals and decides: target_score, mode (fresh/resume/advance), which phases run, max_iterations, and the focus list. No user prompts unless decision is genuinely ambiguous.
+
+Full decision tree: `~/.claude/skills/web-evolve/references/multi-run-orchestration.md`. The skill MUST read that file at the start of Phase A.0.
+
+**Step A.0.1 — Detect explicit overrides from invocation:**
+
+If user passed `--target=N`, `--fresh`, `--no-branch`, `--benchmark=URL`, `--pages=...`, or `--dev-server=...` → store overrides, will be applied in subsequent steps. Override takes precedence over auto-decide for that specific dimension.
+
+**Step A.0.2 — Detect repeat-signal phrases in the invoking message:**
+
+If the user's prompt contains any of: `repeat`, `again`, `continue`, `keep going`, `next`, `level up`, `push further`, `more`, `another pass`, `iterate again`, `round 2`, `next round`, `do another`, `go again` → set `repeat_signal = true`. Treat the same as "trajectory exists and last completed". Force `mode = "advance"` regardless of how recently the prior run finished.
+
+**Step A.0.3 — Read disk state (parallel):**
+
+```
+Read in parallel: 
+  - {project_path}/.evolution/trajectory.json
+  - {project_path}/.evolution/loop-state.json
+  - {project_path}/.evolution/scores/final-score.json
+  - {project_path}/CLAUDE.md  (extract: client_work, revenue_critical flags)
+  - {project_path}/CONTEXT.md  (extract: explicit target_score if set)
+```
+
+Any of these missing is fine — that's a signal.
+
+**Step A.0.4 — Branch decision:**
+
+```
+if loop-state.json exists AND loop-state.real_iterations < max_iterations AND no final-score.json for current run:
+    mode = "resume"
+    skip_phases = [R, G, 0, A, B]
+    restore from loop-state
+    target_score = loop-state.target_score
+    
+elif trajectory.json exists AND last_run.status == "completed":
+    mode = "advance"
+    last_final = trajectory.runs[-1].final_score
+    if last_final >= 99:  new_target = 100
+    elif last_final >= 95: new_target = 100
+    elif last_final >= 90: new_target = 98
+    elif last_final >= 80: new_target = 95
+    else: new_target = min(95, last_final + 8)
+    skip_phases = [R if anchor locked, G if motion stack installed, A.8.5 if design-context fresh]
+    
+elif trajectory.json exists AND last_run.status == "halted_needs_human":
+    HALT NEEDS_HUMAN — "Last run halted: {reason}. Resolve and re-run, or pass --fresh to start over."
+    
+elif trajectory.json missing OR --fresh:
+    mode = "fresh"
+    # Will determine target from visual_quality_score in Step A.0.5 after puppeteer probe
+    new_target = null  # to be set
+```
+
+**Step A.0.5 — For `fresh` mode only: visual_quality_score puppeteer probe:**
+
+```
+mcp__puppeteer__puppeteer_navigate(url={live_url})
+mcp__puppeteer__puppeteer_screenshot(path={project_path}/.evolution/baseline/probe-1440.png, viewport={width:1440,height:900})
+```
+
+Visually assess on the 1–5 scale (4 axes: hero impact, hierarchy, distinctiveness, product visibility — same as Phase A.7.5). Compute `visual_quality_score`.
+
+Apply the decision table from `multi-run-orchestration.md` Branch 3:
+
+| visual_q | Client work? | Revenue critical? | → target |
+|---|---|---|---|
+| < 2.0 | any | any | 90 |
+| 2.0–2.99 | any | any | 95 |
+| 3.0–3.99 | yes OR yes | — | 98 |
+| 3.0–3.99 | no AND no | — | 95 |
+| ≥ 4.0 | any | any | 98 |
+| ≥ 4.5 + custom hero detected (canvas/three/gsap globals via puppeteer_evaluate) | yes | yes | 100 |
+
+Set `new_target` accordingly.
+
+**Step A.0.6 — Apply explicit overrides:**
+
+If `--target=N` was passed in A.0.1, `new_target = N` (override).
+
+If `target_score:` field in CONTEXT.md AND no `--target=N` override, use CONTEXT.md value.
+
+**Step A.0.7 — Compute phase plan:**
+
+```
+phases_to_run = ["A.0", "0"]                                  # always
+
+if new_target >= 98 AND trajectory.world_class_anchor missing:
+    phases_to_run.append("R")
+if new_target >= 98 AND trajectory.motion_stack missing or incomplete:
+    phases_to_run.append("G")
+
+phases_to_run += ["A", "B", "C", "D", "E", "F"]              # always
+
+# Per-phase skips for advance mode
+if mode == "advance":
+    skip_phases.add("R") if trajectory.world_class_anchor decided
+    skip_phases.add("G.1-G.7") if all motion stack libs present
+    skip_phases.add("A.8.5") if design-context.md fresh (<30 days)
+    skip_phases.add("A.8.6") if Trend Pulse fresh (<30 days)
+```
+
+**Step A.0.8 — Compute max_iterations:**
+
+```
+if mode == "advance":
+    max_iterations = max(5, int(trajectory.runs[-1].real_iterations * 0.7))  # diminishing returns
+elif mode == "fresh":
+    max_iterations = 8 if greenfield else 20
+elif mode == "resume":
+    max_iterations = loop-state.max_iterations (unchanged)
+```
+
+**Step A.0.9 — Compute focus list (advance mode):**
+
+If mode == "advance", build a prioritised list of what to attack this run:
+
+1. Any check in `trajectory.runs[-1].uncompleted_wc_checks` — these are world-class gates that didn't close last time
+2. Any check in `trajectory.runs[-1].next_run_recommendations` (Phase F output from last run)
+3. New failures: re-baseline in Phase B and diff against last `final-score.json` — any newly-failing check goes to top
+
+These focus items get `+500` priority bonus in the queue beyond their normal weighting.
+
+**Step A.0.10 — Echo decision to user (single block, no prompt):**
+
+```
+web-evolve — Run #{N} ({mode})
+
+{Reasoning sentence}
+
+Target: {new_target}/100 ({tier_label})
+{If fresh:} Baseline visual quality: {v}/5
+{If advance:} Last run finished at {last_final}/100 ({last_tier}). Pushing to {new_target}.
+Phases this run: {phases_to_run join space}
+Estimated iterations: {max_iterations}
+Focus this run: {top 3 priorities from focus list, or "full audit" if fresh}
+
+Continuing automatically. Interrupt to stop.
+```
+
+**No user prompt.** The skill proceeds. If the user wanted different behaviour they would have passed an override flag or interrupted.
+
+**Step A.0.11 — Write current run header to trajectory.json:**
+
+If trajectory.json missing → create it with `project_path`, `live_url`, empty `runs[]`, and initial `current_run_state`.
+
+Otherwise append a new entry to `current_run_state`:
+```json
+{
+  "id": N,
+  "started_at": "{now}",
+  "status": "in_progress",
+  "target_score": new_target,
+  "tier": tier_label,
+  "mode": mode,
+  "phases_planned": phases_to_run,
+  "focus_list": focus_list
+}
+```
+
+Write to disk. This file is committed at the end of Phase F.
+
+---
+
+## Phase R — World-Class Research (runs when Phase A.0 plan includes R)
+
+Runs BEFORE Phase 0. Skipped entirely otherwise.
+
+This phase exists because Awwwards SOTM-tier quality cannot be reached by polishing checklist items — it requires reference-anchored signature decisions made before iteration begins. Phase R produces `.evolution/world-class-references.json` and updates `DESIGN-BRIEF.md` with hero-signature commitments.
+
+**Step R.1 — Fetch reference galleries in parallel:**
+
+```
+WebFetch(url=https://www.awwwards.com/inspiration_search/sites_of_the_month/, prompt="List the 6 most recent Sites of the Month with site name, URL, hero technique (3D/scroll/typo/other), motion library detected from copy if mentioned, color palette description, typography pairing. Return JSON array.")
+WebFetch(url=https://www.awwwards.com/websites/sites_of_the_day/, prompt="List the 8 most recent Sites of the Day with same fields as above. Return JSON array.")
+WebFetch(url=https://godly.website/, prompt="List the 6 most recent curated picks. Same field schema. JSON array.")
+WebFetch(url=https://thefwa.com/cases/site-of-the-day, prompt="List the 6 most recent FWA Site of the Day picks. Same fields. JSON array.")
+WebFetch(url=https://land-book.com/, prompt="List 6 recent picks tagged as {personality from DESIGN-BRIEF.md}. Same fields. JSON array.")
+WebFetch(url=https://www.awwwards.com/websites/webgl/, prompt="List 6 recent WebGL-tagged sites with hero scene description. JSON array.")
+```
+
+Aggregate into `.evolution/world-class-references.json` — deduplicate by URL, score each by relevance to the project's personality + industry from CONTEXT.md.
+
+**Step R.2 — Probe top 6 candidates for live signature:**
+
+For each top-6 reference (by relevance), run:
+```
+mcp__puppeteer__puppeteer_navigate(url={reference.url})
+mcp__puppeteer__puppeteer_screenshot(path={path}, viewport={width:1440,height:900})
+mcp__puppeteer__puppeteer_evaluate(script=`
+  return {
+    has_three_js: typeof THREE !== 'undefined' || !!document.querySelector('canvas[data-engine="three.js"]'),
+    has_lenis: typeof Lenis !== 'undefined' || !!document.documentElement.dataset.lenisPrevent,
+    has_gsap: typeof gsap !== 'undefined',
+    has_rive: !!document.querySelector('canvas[data-rive]') || typeof Rive !== 'undefined',
+    has_lottie: !!document.querySelector('[data-lottie], .lottie-animation'),
+    custom_cursor: getComputedStyle(document.body).cursor === 'none',
+    has_view_transitions: !!document.startViewTransition,
+    canvas_count: document.querySelectorAll('canvas').length,
+    color_tokens: getComputedStyle(document.documentElement).cssText.match(/--[\\w-]+: oklch/g)?.length || 0,
+    font_families: Array.from(new Set(Array.from(document.querySelectorAll('h1,h2,p,button')).map(el => getComputedStyle(el).fontFamily))),
+    fps_estimate: 'see chrome-devtools-mcp trace'
+  };
+`)
+```
+
+Record the live signature per reference in the JSON.
+
+**Step R.3 — Surface to user for signature commitment:**
+
+```
+"World-Class Research complete. Top 6 references for your project:
+
+1. Bruno Simon Portfolio (bruno-simon.com) — WebGL 3D scene, R3F+drei, Lenis
+2. Renaissance Edition (shopify.com/editions/winter2026) — Scroll-narrative, GSAP ScrollTrigger
+3. Oryzo AI (oryzo.ai) — Kinetic typography, SplitText reveals, custom cursor
+4. Resend (resend.com) — Variable font signature (Söhne), View Transitions
+5. Linear (linear.app) — Disciplined motion + product-UI hero
+6. Vercel (vercel.com) — Geist variable font, GSAP, scroll-driven product reveal
+
+Pick your hero signature direction (Cardinal Rule 17):
+  A) WebGL/3D scene  (like 1)
+  B) Scroll-narrative (like 2, 5)
+  C) Kinetic typography (like 3, 6)
+
+Pick 2–3 references to anchor refinements against:"
+```
+
+Wait for user reply. Write hero signature + selected references back to `DESIGN-BRIEF.md` under a new `## World-Class Anchor` section. From now on every refinement skill receives `world_class_anchor: {hero_signature, primary_reference_url, secondary_reference_urls}` in its args.
+
+**Step R.4 — Inject WC1–WC10 synthetic checks** into the priority queue (visual_bonus 2500 each — higher than checklist 2000-tier). Routing in `fix-routing.md` SKILL_LOOKUP. These checks lead the queue once Phase G completes.
+
+---
+
+## Phase G — Generative Motion Stack Setup (runs when Phase A.0 plan includes G)
+
+Triggered automatically when Phase A.0 sets `target_score ≥ 98` AND trajectory.json shows motion stack not yet installed. Subsequent runs skip this phase entirely — the stack persists across runs.
+
+Runs after Phase A but before Phase B. Installs and wires the world-class motion stack. Idempotent — safe to re-run.
+
+**Step G.1 — Detect existing motion stack:**
+```bash
+grep -E '"(lenis|gsap|@react-three/fiber|@rive-app/react-canvas)"' "{project_path}/package.json"
+```
+
+**Step G.2 — Install missing dependencies:**
+
+Based on hero signature from Phase R.3:
+
+```bash
+# Always install (baseline world-class):
+npm i lenis gsap
+
+# If hero signature = A (WebGL/3D):
+npm i three @react-three/fiber @react-three/drei @react-three/postprocessing
+
+# If hero signature = B (scroll-narrative):
+# GSAP ScrollTrigger covered above — no additional installs
+
+# If hero signature = C (kinetic typography):
+# GSAP SplitText covered above — no additional installs
+
+# If user wants Rive (interactive stateful animation):
+npm i @rive-app/react-canvas
+
+# Variable font from Geist (free, OFL):
+npm i geist
+```
+
+**Step G.3 — Wire Lenis at app root via `Skill('animate')`:**
+
+```
+Skill('animate', args='install-lenis-root |
+  Create or update {project_path}/src/app/layout.tsx (or app root equivalent) to wire Lenis with autoRaf:false syncTouch:false, driven by gsap.ticker, with cleanup on unmount |
+  ScrollTrigger.update bound to lenis scroll event |
+  prefers-reduced-motion: reduce → disable Lenis entirely |
+  fail_proof: grep "new Lenis" returns the wiring file; grep "autoRaf" shows false |
+  design_dna_tokens: NA |
+  bold_execution: NA — config wiring, must be exact')
+```
+
+**Step G.4 — Wire GSAP registration:**
+
+```
+Skill('animate', args='register-gsap-plugins |
+  Create or update {project_path}/src/lib/gsap.ts to call gsap.registerPlugin(ScrollTrigger, SplitText, Flip, MorphSVGPlugin) ONCE in a use-client boundary |
+  Export configured gsap instance |
+  fail_proof: grep "registerPlugin" returns the registration')
+```
+
+**Step G.5 — Initialize chrome-devtools-mcp connection:**
+
+If `chrome-devtools-mcp` is not connected, log:
+```
+"⚠️ chrome-devtools-mcp not connected. World-class perf gates cannot be enforced.
+Install: npx chrome-devtools-mcp@latest (Sept 2025 launch from Google Chrome team)
+Or add to ~/.claude/settings.json mcpServers block.
+Continuing without it — falling back to WebFetch PageSpeed Insights for G4-G6."
+```
+
+If connected, log: `"chrome-devtools-mcp: ready for perf traces"`.
+
+**Step G.6 — Install custom cursor scaffold (WC4):**
+
+```
+Skill('web-component', args='install-custom-cursor |
+  Create {project_path}/src/components/ui/Cursor.tsx with: dot + ring follower, magnetic snap to [data-magnetic="true"], hover-state morph on links/buttons, hidden on touch devices, prefers-reduced-motion respected (replace with native cursor) |
+  Use Motion library Cursor primitive if installed, else hand-roll with Lenis velocity |
+  Mount in root layout |
+  fail_proof: grep "data-magnetic" returns CTA elements; computed cursor:none on body desktop')
+```
+
+**Step G.7 — Wire View Transitions baseline (WC5):**
+
+For Next.js App Router:
+```
+Skill('web-fix', args='enable-view-transitions |
+  In src/app/layout.tsx add <meta name="view-transition" content="same-origin"> |
+  For React Router 7: wrap Link with viewTransition prop |
+  For Next.js: add experimental.viewTransition: true in next.config.js |
+  Add CSS @view-transition rule and ::view-transition-* pseudo-element styling for hero, nav, footer |
+  Respect prefers-reduced-motion via @media query |
+  fail_proof: grep "view-transition" returns wiring')
+```
+
+**Step G.8 — Log baseline + commit:**
+
+Write `.evolution/motion-stack.json` with installed versions, then:
+```bash
+git -C "{project_path}" add package.json package-lock.json src/lib/gsap.ts src/components/ui/Cursor.tsx src/app/layout.tsx
+git -C "{project_path}" commit -m "world-class: install motion stack (lenis + gsap + cursor + view-transitions)"
+```
+
+This commit is the world-class baseline. From here, Phase B baseline scores measure the lifted floor — not the pre-stack state.
 
 ---
 
@@ -93,11 +496,35 @@ This phase exists because scoring against generic premium-SaaS criteria produces
 
 **Run all reads in parallel (single message):**
 
-1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/CONTEXT.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`
+1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/CONTEXT.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`, `~/.claude/web-system-prompt.md` (**Design DNA** — token system, typography scale, color discipline, visual signatures. Cardinal Rule 13 — loaded once, re-cited in every Skill() args block), `~/.claude/skills/premium-website/SKILL.md` (cross-check contract — Phase F diffs against this), `~/.claude/skills/premium-website/references/component-registry.md` (21st.dev registry — used by Step 3 Case B for builder pipeline)
 
-2. **Check for existing loop state** — if `.evolution/loop-state.json` exists, read it. Offer to resume:
-   > "Existing loop state found at iteration {N}, score {S}. Resume? (yes/no)"
-   If yes — skip Phases A-B, restore loop state, continue from Phase C. If no — proceed fresh (loop-state.json will be overwritten).
+1.5 **Apply target-tier behaviour (auto from Phase A.0):**
+
+   Read `target_score` from Phase A.0 decision.
+   - `target ≥ 95` → enable mobile_loop, a11y-audit + seo-strategy + /critique parallel agents in Phase B, set `visual_quality_exit_floor = 4.5`
+   - `target ≥ 98` → enable chrome-devtools-mcp perf traces (HALT if not connected), Phase R and G run if not already done
+   - `target = 100` → tighter perf gates (LCP < 1.5s, INP < 100ms, CLS < 0.01), foundry typography mandatory, custom cursor required, View Transitions on every route
+
+   Log: `"Tier behaviour: target {target}/100 → {behaviour list}"`
+
+1.6 **Multi-page detection:**
+   - If `--pages` flag provided → parse comma-separated list into `pages_to_evolve`
+   - Else → read SCOPE.md for `## Page Inventory`. If found, default to first page (landing). If absent, default to `["/"]`.
+   - Phase C will loop over `pages_to_evolve`. Each page gets its own `.evolution/{page-slug}/` subdir, its own loop-state, its own iteration cap. Phase D produces one EVOLUTION-LOG.md covering all pages.
+
+1.7 **Branch isolation (unless `--no-branch`):**
+   ```bash
+   git -C "{project_path}" status --porcelain
+   ```
+   - If clean → `git -C "{project_path}" checkout -b "evolve/$(date +%Y-%m-%d-%H%M)"`
+   - If dirty → HALT NEEDS_HUMAN: "Working tree dirty. Commit or stash before running web-evolve, or pass `--no-branch` to evolve current branch."
+   - Log new branch name to BUILD-LOG.md.
+   - Phase D's final commit goes to this branch. Merge to main is a user decision after reviewing EVOLUTION-LOG.md.
+
+2. **Loop state handling — automated, not asked.** Phase A.0 already decided `mode` (resume / advance / fresh). For this step:
+   - `mode == "resume"` → restore `.evolution/loop-state.json`, skip Phases A.1.5–A.8.7 and Phase B, jump to Phase C. The user will see "Resuming Run #N at iteration {it}" in the A.0.10 echo.
+   - `mode == "advance"` → archive last run's loop-state.json to `.evolution/archive/run-{last_run_id}-loop-state.json` (in case user wants to inspect), then create fresh loop-state.json for the new run.
+   - `mode == "fresh"` → if loop-state.json exists, archive then overwrite. No "are you sure" — the user passed `--fresh` or there was no trajectory, both intentional.
 
 3. Detect mode: DESIGN-BRIEF.md exists AND `src/components/landing/` non-empty → `backfill`. Else → `greenfield`.
 
@@ -174,15 +601,67 @@ This phase exists because scoring against generic premium-SaaS criteria produces
    
    Log: `visual_quality_score: {score}/5 → {inserted VQ iterations | skipped (score >= 3.0)}`
 
-8. **Discover CSS selectors for scroll targeting** — grep the main landing page file to build a section-to-selector map. Run:
+8. **Discover CSS selectors for scroll targeting (hybrid grep + live DOM):**
+
+   **Step 8a — grep source** (fast path):
    ```bash
    grep -nE 'id="[^"]*"' "{project_path}/src/pages/index.tsx" 2>/dev/null || grep -nE 'id="[^"]*"' "{project_path}/src/app/page.tsx" 2>/dev/null
-   ```
-   Also grep section component files:
-   ```bash
    grep -rhE 'id="[^"]+"' "{project_path}/src/components/landing/" 2>/dev/null
    ```
-   Build a `section_selectors` map, e.g.: `{"hero": "#hero", "features": "#features", "pricing": "#pricing"}`. Use `""` (empty — scroll to top) for any section without a discovered id. This map is used in Steps 2 and 4 to pass `scroll_to_selector` to web-screenshot.
+
+   **Step 8b — live DOM verification** (catches runtime-generated IDs grep misses):
+   ```
+   mcp__puppeteer__puppeteer_navigate(url={dev_server_url or live_url})
+   mcp__puppeteer__puppeteer_evaluate(script=`
+     const ids = Array.from(document.querySelectorAll('[id]')).map(el => ({
+       id: el.id,
+       tag: el.tagName.toLowerCase(),
+       text: el.textContent?.slice(0,40),
+       y: el.getBoundingClientRect().top + window.scrollY
+     })).sort((a,b) => a.y - b.y);
+     const datasections = Array.from(document.querySelectorAll('[data-section]')).map(el => ({
+       selector: '[data-section="' + el.dataset.section + '"]',
+       section: el.dataset.section,
+       y: el.getBoundingClientRect().top + window.scrollY
+     }));
+     return { ids, datasections };
+   `)
+   ```
+
+   Merge grep + DOM results. Build `section_selectors` map (e.g. `{"hero": "#hero", "features": "#features", "pricing": "#pricing"}`). Prefer `[data-section]` when present. Use `""` (empty — scroll to top) for any section without a discovered id. This map is used in Steps 2 and 4 to pass `scroll_to_selector` to web-screenshot.
+
+8.5 **Fire `Skill('impeccable')` with `args: 'teach'` ONCE per project (Cardinal Rule 12):**
+
+   Check if `.evolution/design-context.md` exists with `Generated:` date ≤ 30 days:
+   - YES → skip, read existing file into loop state as `design_context`
+   - NO or stale → fire now:
+     ```
+     Skill('impeccable', args='teach | project: {project_path} | personality: {personality} | design_brief: {project_path}/DESIGN-BRIEF.md | context: {project_path}/CONTEXT.md | design_dna: ~/.claude/web-system-prompt.md | output: {project_path}/.evolution/design-context.md')
+     ```
+   - Read the produced `.evolution/design-context.md`. This text is **appended to every refinement Skill() args string in Phase C** under the marker `| design_context: {first 800 chars}`. This is how typeset, colorize, etc. avoid producing generic output.
+   - Log: `"impeccable teach: {NEW | CACHED} → design-context.md ready"`
+
+8.6 **If `--premium` AND DESIGN-BRIEF.md Trend Pulse is >30 days old or missing:**
+
+   Refresh trend pulse via WebSearch:
+   ```
+   WebSearch(query="awwwards site of the year 2026 {industry from CONTEXT.md} winners")
+   WebSearch(query="godly.website {personality} 2026 trending design patterns")
+   ```
+   Update DESIGN-BRIEF.md `## Trend Pulse` section with top 5 patterns and `search_date: {today}`. This blocks personality drift on long-running projects.
+
+8.7 **If `--benchmark-search` set:**
+
+   Auto-pick a benchmark via WebSearch instead of the personality table:
+   ```
+   WebSearch(query="awwwards {industry} {personality} winner 2026 site:awwwards.com")
+   WebSearch(query="godly.website {industry} top sites")
+   ```
+   Score top 3 candidates by:
+   - Page weight < 2MB (fetch with WebFetch, count bytes)
+   - At least 5 sections detectable
+   - Has hero animation (regex `motion|gsap|three|lottie` in returned HTML)
+   Select highest score. Set `benchmark_url` and `benchmark_name`. Log the choice + reasoning to BUILD-LOG.md.
 
 9. Echo confirmation to user and wait:
    ```
@@ -220,9 +699,9 @@ This phase exists because scoring against generic premium-SaaS criteria produces
 
 ---
 
-## Phase B — Parallel baseline audit (4 agents + benchmark)
+## Phase B — Parallel baseline audit (4 score agents + benchmark + deep signals)
 
-For Tier 2 baseline, spawn **five** agents in a single message (all `run_in_background: true`) to prevent 79-check drift in one context:
+For Tier 2 baseline, spawn agents in a single message (all `run_in_background: true`) to prevent 79-check drift in one context. The standard spawn count is **5** (4 score + 1 benchmark). When **Phase A.0 set target_score ≥ 95**, add **3 more** (a11y, seo, critique) and **1 inline** (PageSpeed or chrome-devtools-mcp) for **9 total signals** before merging. (Previously gated on `--premium` — now auto-gated on target_score.)
 
 ```
 Agent 1 — web-score (A+B categories, ~19 checks):
@@ -282,9 +761,61 @@ Agent 5 — web-benchmark:
     target_page_description: {aesthetic_direction + hero description from DESIGN-BRIEF.md}
     target_personality: {personality}
     output_path: {project_path}/.evolution/benchmark
+    fetch_html: true                       # NEW — pull raw HTML via WebFetch
+    extract_sections: true                 # NEW — parse benchmark section structure
+    extract_color_tokens: true             # NEW — pull computed CSS custom props from :root
+
+(if target ≥ 95) Agent 6 — a11y-audit:
+  Skill('a11y-audit', args='url: {live_url} | mode: audit-only | output: {project_path}/.evolution/a11y.json | wcag_level: AA')
+  Run in background.
+
+(if target ≥ 95) Agent 7 — seo-strategy:
+  Skill('seo-strategy', args='url: {live_url} | mode: audit | output: {project_path}/.evolution/seo.json | check: meta+og+jsonld+headings+image-alt+sitemap+robots+canonical')
+  Run in background.
+
+(if target ≥ 95) Agent 8 — /critique cross-check:
+  Skill('critique', args='url: {live_url} | mode: scored | output: {project_path}/.evolution/critique.json | dimensions: hierarchy,IA,emotional,cognitive-load,anti-pattern-detection')
+  Run in background.
 ```
 
-Wait for all five to complete.
+Wait for all (5 standard, 8 with --premium) to complete.
+
+**Inline performance trace — chrome-devtools-mcp when available, PageSpeed Insights fallback:**
+
+**Primary path (target ≥ 98 OR chrome-devtools-mcp connected):**
+
+Real Chrome trace via the official Chrome DevTools MCP server (launched Sept 2025):
+```
+mcp__chrome-devtools__performance_start_trace(
+  url={live_url},
+  reload=true,
+  autoStop=true,
+  network_throttling="Slow 4G",
+  cpu_throttling=4
+)
+mcp__chrome-devtools__performance_stop_trace()
+mcp__chrome-devtools__performance_analyze_insight(
+  trace_id={returned trace id},
+  insights=["LCPBreakdown","INPBreakdown","CLSCulprits","DocumentLatency","RenderBlocking","ThirdPartyImpact","ImageDelivery","FontDisplay","MainThreadBlocking","UnusedCode"]
+)
+```
+
+Parse the structured insights. Write to `.evolution/perf-trace.json` with: LCP, INP, CLS, TBT, TTI, Lighthouse category scores, and the per-insight breakdown (which third-party blocked, which image delayed LCP, which font caused FOIT etc).
+
+The per-insight breakdown enables targeted fixes — `ImageDelivery` issue routes to `optimize` with the offending image src; `FontDisplay` routes to `typeset` with the font-face fix. This is the difference between "score went down" and "fix the exact image at line N".
+
+**Fallback path (chrome-devtools-mcp not connected, target < 98):**
+```
+WebFetch(
+  url=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={encodeURIComponent(live_url)}&strategy=mobile&category=performance&category=accessibility&category=best-practices&category=seo`,
+  prompt="Extract lighthouseResult.audits['largest-contentful-paint'].numericValue, ['interaction-to-next-paint'].numericValue, ['cumulative-layout-shift'].numericValue, ['total-blocking-time'].numericValue, ['speed-index'].numericValue. Also extract category scores: performance, accessibility, best-practices, seo. Return JSON."
+)
+```
+Write to `.evolution/pagespeed.json`. PageSpeed uses Lighthouse 10 as of 2026.
+
+**At target ≥ 98, fallback is NOT acceptable** — if chrome-devtools-mcp is missing, HALT NEEDS_HUMAN: "chrome-devtools-mcp required for world-class perf gates. Install via npx chrome-devtools-mcp@latest or add to ~/.claude/settings.json mcpServers block."
+
+These values become the authoritative source for G4/G5/G6 + WC9 in the merge — overrides any local Puppeteer CWV estimate.
 
 ### After all complete — merge + enrich
 
@@ -298,8 +829,9 @@ Wait for all five to complete.
      merged_checks.update(partial.checks)
 
    # Visual weight multipliers — visual checks count 3×, code quality 0.5×, process 0×
+   # At target >= 98 (world-class), motion (D-series) + hero (A7/A9) become 4×, WC-series 5×
    # NOTE: no duplicate keys — each check_id appears exactly once
-   VISUAL_WEIGHT = {
+   VISUAL_WEIGHT_STANDARD = {
      # 3× — hero depth, product visibility, layout quality (directly visible to users)
      "A7":3, "A9":3, "D4":3, "D5":3, "F6":3, "K2":3, "K4":3,
      # 2× — section presence and copy quality (visible, conversion impact)
@@ -312,6 +844,25 @@ Wait for all five to complete.
      "B1":0, "B2":0, "B3":0, "B4":0, "B7":0, "B8":0, "B9":0,
      "H1":0, "H2":0,
    }
+   VISUAL_WEIGHT_WORLD_CLASS = {
+     # 5× — WC-series synthetic checks (motion stack, cursor, view transitions, fonts)
+     "WC1":5, "WC2":5, "WC3":5, "WC4":5, "WC5":4, "WC6":4, "WC7":4, "WC8":5, "WC9":5, "WC10":3,
+     # 4× — hero atmosphere + motion + product visibility (Awwwards Design + Creativity axes)
+     "A7":4, "A9":4, "D4":4, "D5":4, "F6":4, "K2":4, "K4":4,
+     # 3× — color/typography signature (Design axis)
+     "A1":3, "A2":3, "A3":3, "A4":3, "A5":3, "A6":3,
+     "C4":3, "C5":3, "C6":3, "C7":3,
+     # 2× — sections + copy
+     "E3":2, "E4":2, "E5":2, "E6":2, "E9":2, "E10":2,
+     "J1":2, "J2":2, "J3":2, "J6":2,
+     # 0.5× — code quality
+     "A11":0.5, "I4":0.5, "I8":0.5, "I2":0.5, "D1":0.5,
+     "I5":0.5, "I6":0.5,
+     # 0× — process / sourcing
+     "B1":0, "B2":0, "B3":0, "B4":0, "B7":0, "B8":0, "B9":0,
+     "H1":0, "H2":0,
+   }
+   VISUAL_WEIGHT = VISUAL_WEIGHT_WORLD_CLASS if world_class else VISUAL_WEIGHT_STANDARD
    default_weight = 1  # all other checks (A1-A6, A8, A10, C1-C5, C8, D2, D3, D6, E1-E2, E7-E8, F1-F5, G-series, I1, I3, I7, J4-J5, J7-J8, K1, K3)
 
    weighted_passed = sum(VISUAL_WEIGHT.get(k, default_weight)
@@ -369,6 +920,23 @@ Wait for all five to complete.
    Exception: A11 is allowed in the queue IF the DESIGN-BRIEF aesthetic direction is genuinely saturated/wrong and needs a redesign → only then escalate to web-design-research.
 
 5. **Prepend benchmark gaps:** Read `.evolution/benchmark/gap-analysis.json`. For each in `top_5_priority_queue`: look up `maps_to_check` in SKILL_LOOKUP, set routing fields. Add to front of priority_queue with priority 400. Deduplicate by check_id.
+
+5.1 **Override CWV checks with PageSpeed data:** Read `.evolution/pagespeed.json`. For G4 (LCP), G5 (INP), G6 (CLS): override `status` and `proof` with PageSpeed numericValue. Thresholds: LCP < 2.5s = PASS, INP < 200ms = PASS, CLS < 0.1 = PASS. Cite the PageSpeed run ID in `proof` so the source is auditable.
+
+5.2 **Inject a11y findings into priority_queue (if target ≥ 95):** Read `.evolution/a11y.json`. For each violation with `severity: serious|critical`:
+   - Create synthetic check entry `A11Y-{rule-id}` with priority 350 (between benchmark 400 and quality 300)
+   - `fix_skill = "polish"` for contrast/focus issues, `clarify` for label/alt-text issues, `web-fix` for landmark/ARIA structural issues
+   - Mark `wcag_level` in the entry so the rescore can verify the fix improved the actual a11y score
+
+5.3 **Inject SEO findings into priority_queue (if target ≥ 95):** Read `.evolution/seo.json`. For each FAIL:
+   - meta tags / og / canonical / robots / sitemap → synthetic `SEO-{check}` with priority 200, `fix_skill: null`, `edit_direct: true` (these are edit-the-head fixes)
+   - Image alt missing → route to `clarify` with the image src list
+   - JSON-LD missing → synthetic, `edit_direct: true`, priority 150
+
+5.4 **Reconcile /critique findings (if target ≥ 95):** Read `.evolution/critique.json`. If critique flags a dimension that web-score scored PASS:
+   - Demote that check's PASS to NEEDS_HUMAN with note `"web-score PASS but /critique flagged: {critique reason}"`
+   - User confirms which source to trust → update score.json before iteration begins
+   This is the cross-check that catches checklist blind spots.
 
 6. **Surface NEEDS_HUMAN blocks** — one message to user listing all vision checks. Wait for replies. Update score.json check entries.
 
@@ -438,6 +1006,11 @@ Before selecting from the queue, apply these visual impact bonuses to the sort k
 
 ```
 visual_bonus = {
+  # World-class synthetic checks (only present when --world-class)
+  "WC1": 2500, "WC2": 2500, "WC3": 2500, "WC4": 2500, "WC8": 2500,  # hero, lenis, gsap, cursor, real product UI
+  "WC9": 2400,                                                        # 60fps performance gate
+  "WC5": 2200, "WC10": 2200,                                          # view transitions + reduced motion
+  "WC6": 2100, "WC7": 2100,                                           # typography + color tokens
   # Critical visual impact — product visible, hero depth, layout quality
   "A7": 2000, "A9": 2000, "D4": 2000, "D5": 2000, "F6": 2000, "K2": 1500, "K4": 1500,
   # Section presence — visible to all users
@@ -506,20 +1079,71 @@ EXECUTE BOLDLY. No atmospheric opacity below 0.15. No subtle-only changes. The v
 **Case A — `edit_direct: true`** (A10, B5, E1, G1, G2 etc):
 Use the Edit tool directly. The `fix_context` from the priority_queue entry contains the exact change needed. Log to BUILD-LOG: "H1: PASS (Edit tool — edit_direct fix, too small for skill invocation)".
 
-**Case B — `prereq` is not null** (A8, A9, B3, B9, E3, F6, K2 etc):
-1. Call the prereq MCP tool first:
+**Case B — `prereq` is not null** (A8, A9, B3, B9, E3, F6, K2 etc) — **three-stage 21st.dev pipeline (Cardinal Rule 15):**
+
+1. **Stage 1 — Inspiration:**
    ```
-   mcp__magic__21st_magic_component_inspiration(query="{fix_context}")
+   mcp__magic__21st_magic_component_inspiration(message="{fix_context}", searchQuery="{section name + personality + 2-word descriptor}")
    ```
-2. Then call `Skill('{fix_skill}', args='{fix_context} | inspired_by: {MCP result summary} | checks: {current_checks} | fail_proof: {fail_proofs}')`.
+   Returns prose suggestions and reference component URLs. Read top 3.
+
+2. **Stage 2 — Decide builder vs refiner (deterministic):**
+
+   Check if the section already exists in the repo:
+   ```bash
+   ls "{project_path}/src/components/landing/{Section}*" 2>/dev/null
+   ```
+   - **No file exists** → use **builder** (new component generation):
+     ```
+     mcp__magic__21st_magic_component_builder(
+       message="{fix_context} | inspired_by: {stage 1 top pick} | design_dna: {first 300 chars of ~/.claude/web-system-prompt.md} | tokens_only: hsl(var(--token)) no hex",
+       searchQuery="{section} component {personality}",
+       absolutePathToCurrentFile="{project_path}/src/components/landing/{Section}.tsx",
+       absolutePathToProjectDirectory="{project_path}",
+       standaloneRequestQuery="Generate {section} for {personality} landing with: {fail_proofs joined}"
+     )
+     ```
+   - **File exists** → use **refiner** (improve existing component — the common case for web-evolve):
+     ```
+     mcp__magic__21st_magic_component_refiner(
+       userMessage="{fix_context} | bold-execution-mandate | inspired_by: {stage 1 top pick} | design_dna: {token contract} | preserve-section-structure (CONTEXT.md locked landing structure)",
+       absolutePathToRefiningFile="{project_path}/src/components/landing/{Section}.tsx",
+       context="{design_context first 800 chars} | failing checks: {current_checks} | fail_proof: {fail_proofs}"
+     )
+     ```
+
+3. **Stage 3 — Refinement skill polishes the output:**
+   ```
+   Skill('{fix_skill}', args='{fix_context} | post_21st: builder|refiner produced new component, polish it | checks: {current_checks} | fail_proof: {fail_proofs} | design_context: {first 800 chars of .evolution/design-context.md} | design_dna_tokens: hsl(var(--token)) only, no hex | bold_execution: yes')
+   ```
+
+**Special prereq cases:**
+- **E3 (logo cloud)** — replace inspiration with logo_search:
+  ```
+  mcp__magic__logo_search(queries=["{logo1}","{logo2}",...], format="TSX", variant="GrayscaleColored")
+  ```
+  Then refiner on the logo cloud section.
+
+- **A7 / D4 / D5 / F6 (hero atmosphere, scroll choreography, immersion)** — when `fix_skill = "overdrive"`, the prereq Stage 1 inspiration MAY also call `WebFetch(url=https://lottiefiles.com/featured, prompt="Find 3 trending hero animations matching {personality}. Return JSON [{name,url,download_url}].")`. Lottie animations integrate into overdrive output for scroll-driven choreography.
 
 **Case C — standard Skill() fix:**
 
 Use the `Skill` tool with:
 - `skill`: the fix_skill name (e.g. `"typeset"`, `"clarify"`, `"animate"`)
-- `args`: a structured string in this exact format: `{fix_context} | checks: {current_checks joined with comma} | fail_proof: {fail_proofs joined with semicolon}`
+- `args`: structured string with these mandatory markers (Cardinal Rules 12 + 13):
 
-Example args string: `"Hero H1 uses Inter — replace with Geist font | checks: A1, A2 | fail_proof: tailwind.config.ts fontFamily.display is 'Inter'; same in globals.css"`
+```
+{fix_context}
+ | checks: {current_checks joined with comma}
+ | fail_proof: {fail_proofs joined with semicolon}
+ | design_context: {first 800 chars of .evolution/design-context.md}
+ | design_dna_tokens: hsl(var(--token)) only — no hex, no rgb literals, use semantic tokens (text-muted-foreground not text-gray-500)
+ | bold_execution: yes — see Cardinal Rule 10
+ | locked_decisions: {bullet list from CONTEXT.md section 4}
+ | anti_goals: {bullet list from CONTEXT.md section 9}
+```
+
+Example: `"Hero H1 uses Inter — replace with Geist font | checks: A1, A2 | fail_proof: tailwind.config.ts fontFamily.display is 'Inter'; globals.css same | design_context: {first 800 chars of design-context.md} | design_dna_tokens: hsl tokens only | bold_execution: yes | locked_decisions: hero section position fixed; pricing tiers locked at $49/$99/$249 | anti_goals: do not add testimonial section; no AI emoji in headers"`
 
 The refinement skills read the `checks:` and `fail_proof:` markers to enter Targeted Mode (skip impeccable, apply only what args describe).
 
@@ -560,17 +1184,29 @@ If `dev_server_url` is set: skip — dev server serves changes immediately.
 ### Step 4 — Post-fix screenshot + rescore (parallel)
 
 ```
-Agent 1 — web-screenshot:
+Agent 1 — web-screenshot (desktop):
   subagent_type: "web-screenshot"
   run_in_background: true
   prompt: |
     live_url: {dev_server_url if set, else live_url}
     section_name: {section}
     mode: diff
-    before_path: {project_path}/.evolution/iter-{iteration}/before-{section}.png
-    output_path: {project_path}/.evolution/iter-{iteration}/after-{section}.png
+    before_path: {project_path}/.evolution/iter-{iteration}/before-{section}-desktop.png
+    output_path: {project_path}/.evolution/iter-{iteration}/after-{section}-desktop.png
     scroll_to_selector: {CSS selector if known}
     viewport: desktop
+
+(if mobile_loop) Agent 1b — web-screenshot (mobile, 390x844 iPhone 14 Pro):
+  subagent_type: "web-screenshot"
+  run_in_background: true
+  prompt: |
+    live_url: {dev_server_url if set, else live_url}
+    section_name: {section}
+    mode: diff
+    before_path: {project_path}/.evolution/iter-{iteration}/before-{section}-mobile.png
+    output_path: {project_path}/.evolution/iter-{iteration}/after-{section}-mobile.png
+    scroll_to_selector: {CSS selector if known}
+    viewport: mobile
 
 Agent 2 — web-score (affected categories only):
   subagent_type: "web-score"
@@ -591,7 +1227,20 @@ Agent 2 — web-score (affected categories only):
 - `current_checks = ["I1", "I3", "I5"]` → `affected_categories = "I"`
 - `current_checks = ["C4", "I3"]` → `affected_categories = "C,I"`
 
-Wait for both agents. Read `diff-verdict-{section}.json` and `score-rescore.json`.
+Wait for both/three agents. Read `diff-verdict-{section}-desktop.json`, `diff-verdict-{section}-mobile.json` (if mobile_loop), and `score-rescore.json`.
+
+**Desktop + mobile reconciliation (when mobile_loop = true):**
+
+| Desktop | Mobile | Combined verdict |
+|---|---|---|
+| VISIBLE_DIFF | VISIBLE_DIFF | VISIBLE_DIFF (both improved) |
+| VISIBLE_DIFF | NULL_DELTA | **MOBILE_REGRESSION** — desktop improved but mobile unchanged. Decision: KEEP only if `--no-mobile-parity` flag set, else REVERT and add `mobile-broken-fix` to excluded_skills for this check |
+| NULL_DELTA | VISIBLE_DIFF | **DESKTOP_NO_OP** — likely a mobile-only fix landed correctly. KEEP. |
+| NULL_DELTA | NULL_DELTA | VOID (consistent — fix did nothing) |
+| VISIBLE_DIFF | UNCERTAIN | Wait 10s, re-run mobile once. Still UNCERTAIN → trust desktop, log mobile flag |
+| any | any-down (visual regression on either) | REVERT |
+
+The combined verdict feeds into the Step 5 decision table as the single `Screenshot` value.
 
 Merge rescore into current score: update only the checks whose category letters match `affected_categories`. Recalculate summary and final_score across ALL merged checks (re-apply full veto logic).
 
@@ -715,19 +1364,217 @@ Commit: {sha | "(reverted)" | "(voided)"}
    - Baseline → Final score + category delta table
    - Per-section before/after screenshot pairs
    - Full iteration log from BUILD-LOG entries
-4. Commit + push:
+   - PageSpeed delta (LCP / INP / CLS baseline → final)
+   - a11y delta (violation count baseline → final, if --premium)
+   - SEO delta (if target ≥ 95)
+   - /critique scored dimensions (if target ≥ 95)
+4. Commit + push (to the `evolve/{date}` branch from Phase A.1.7 if branch_isolation, else main):
    ```bash
    git -C "{project_path}" add EVOLUTION-LOG.md BUILD-LOG.md
    git -C "{project_path}" commit -m "evolve: {page} final — score {baseline} → {final}"
-   git -C "{project_path}" push origin main
+   git -C "{project_path}" push origin {evolve_branch_or_main}
    ```
 5. Wait 45s for Vercel.
 
 ---
 
-## Phase E — Post-deploy verification
+## Phase E — Post-deploy verification (puppeteer-driven, not curl)
 
-Spawn web-score (tier: category:A,G) against `live_url` — the two most likely categories to have deploy-specific regressions (fonts not loading, Puppeteer CWV values). Append result to EVOLUTION-LOG.md.
+**Step E.1 — Status code:**
+```bash
+curl -s -o /dev/null -w "%{http_code}" "{live_url}"
+```
+HALT if not 200.
+
+**Step E.2 — Hydration + font + console error sweep (puppeteer):**
+```
+mcp__puppeteer__puppeteer_navigate(url={live_url})
+mcp__puppeteer__puppeteer_evaluate(script=`
+  const result = {
+    title: document.title,
+    h1_text: document.querySelector('h1')?.textContent || null,
+    has_react_root: !!document.querySelector('#__next, #root, [data-reactroot]'),
+    hydration_complete: !document.querySelector('[data-react-loading]'),
+    fonts_loaded: document.fonts.ready.then(() => Array.from(document.fonts).map(f => ({family: f.family, status: f.status}))),
+    failed_requests: performance.getEntriesByType('resource').filter(r => r.responseStatus >= 400).map(r => r.name),
+    css_var_root_color: getComputedStyle(document.documentElement).getPropertyValue('--background'),
+    section_count: document.querySelectorAll('section').length,
+    images_with_alt: Array.from(document.querySelectorAll('img')).map(i => ({src: i.src, alt: i.alt, loaded: i.complete && i.naturalHeight !== 0}))
+  };
+  return JSON.stringify(result);
+`)
+```
+
+Parse the result. HALT NEEDS_HUMAN if any:
+- `h1_text` does NOT contain the expected hero text from CONTEXT.md (deploy is showing stale content)
+- `has_react_root` is false
+- `fonts_loaded` includes any font with `status: 'error'` or `status: 'unloaded'`
+- `failed_requests` is non-empty
+- `css_var_root_color` is empty string (token system not loaded)
+- `section_count` differs from local-build expected count by >1
+- Any image has `loaded: false`
+
+**Step E.3 — Console error capture:**
+```
+mcp__puppeteer__puppeteer_evaluate(script=`
+  // Capture console errors that occurred since navigation
+  return JSON.stringify(window.__pp_console_errors || []);
+`)
+```
+If non-empty → log to EVOLUTION-LOG.md and flag as deploy_warning (do not HALT — sometimes 3rd-party scripts log harmlessly).
+
+**Step E.4 — Re-run perf trace on the deployed URL:**
+- World-class: `mcp__chrome-devtools__performance_start_trace` on live_url, compare to Phase B `.evolution/perf-trace.json`
+- Standard: WebFetch PageSpeed on live_url, compare to `.evolution/pagespeed.json`
+
+If LCP regressed >500ms or INP regressed >50ms or CLS regressed >0.05 → flag deploy_regression in EVOLUTION-LOG.md.
+
+**Step E.4b — Vercel Speed Insights RUM (if project deploys to Vercel AND `@vercel/speed-insights` is installed):**
+
+Real-user monitoring data is the ultimate truth — synthetic Lighthouse can't catch what users actually experience. Read the deployed RUM data:
+```
+WebFetch(
+  url=`https://vercel.com/api/web-vitals/{project_id}?since=24h`,
+  prompt="Extract p75 LCP, INP, CLS, FCP, TTFB across all real visitors in the last 24h. Compare to synthetic targets (LCP < 2.0s, INP < 150ms, CLS < 0.05). Return JSON."
+)
+```
+Note: requires Vercel API token in env. If unavailable, log "Vercel Speed Insights RUM skipped (no token)" — do not HALT.
+
+If p75 RUM values regress vs Phase E.4 synthetic by >30% on any metric → flag rum_real_world_regression in EVOLUTION-LOG.md. This is the strongest possible signal — synthetic looked fine but real users are suffering.
+
+**Step E.5 — Final rescore (tier A+G):**
+Spawn web-score (tier: category:A,G) against `live_url` — the two most likely categories to have deploy-specific regressions (fonts not loading, real-world CWV values). Append result to EVOLUTION-LOG.md.
+
+---
+
+## Phase F — Self-audit retrospective (MANDATORY — Cardinal Rule 14)
+
+The loop never exits without Phase F. This is how `/web-evolve` improves itself between runs. Output: `.evolution/retro.md` + a separate commit `evolve-retro: {date}` to a `retro/` folder.
+
+**Step F.1 — Read run data:**
+- `.evolution/loop-state.json` (final state)
+- `BUILD-LOG.md` (all iteration entries this session)
+- `.evolution/scores/score.json` + `.evolution/scores/final-score.json`
+- `.evolution/{a11y,seo,critique,pagespeed}.json` (if target ≥ 95)
+
+**Step F.2 — Compute per-skill efficacy table:**
+
+For each fix_skill that was invoked this run:
+```
+{
+  "typeset":   { "calls": 7, "keeps": 4, "reverts": 2, "voids": 1, "keep_rate": 0.57, "avg_delta_score": +0.6 },
+  "overdrive": { "calls": 3, "keeps": 3, "reverts": 0, "voids": 0, "keep_rate": 1.00, "avg_delta_score": +4.2 },
+  ...
+}
+```
+
+Flag any skill with `keep_rate < 0.5` AND `calls >= 3` → recommend routing edit.
+
+**Step F.3 — Propose `fix-routing.md` edits:**
+
+For each flagged skill:
+- If a `secondary` was set and outperformed primary → recommend swapping primary↔secondary in SKILL_LOOKUP
+- If no secondary set → propose one based on which skill produced the cleanest unrelated improvements
+
+Output as a unified diff in retro.md that the user can apply with `git apply` if they agree.
+
+**Step F.4 — Propose `SKILL.md` (this file) edits:**
+
+Catalog this run's friction:
+- Steps that produced GUARD FAIL — what condition? Tighten the guard.
+- Iterations that needed UNCERTAIN → 10s retry — was the selector wrong? Was the scroll position off? Recommend selector-map improvement.
+- VOID rate above 30% — what was the common cause? (skill choice, selector, scope mismatch)
+- Cardinal rule violations — any iteration where a rule was bent? Strengthen the wording.
+
+Output as a "Recommended SKILL.md edits" section in retro.md.
+
+**Step F.5 — Diff against `/premium-website` contract:**
+
+Read `~/.claude/skills/premium-website/SKILL.md` and `~/.claude/skills/premium-website/references/*.md`. Compare against what this run actually did. Flag drift:
+- Any premium-website rule not enforced here?
+- Any premium-website cardinal not in this skill's Cardinal Rules?
+- Any premium-website MCP/Skill the suite uses that web-evolve skipped this run?
+
+Output as a "Contract Drift" table in retro.md.
+
+**Step F.6 — Update Trend Pulse / fix-routing if user approves:**
+
+After writing retro.md, surface the top-3 recommended edits to the user:
+> "Self-audit complete. 3 recommended edits to web-evolve config:
+>  1. fix-routing.md: swap A7 primary/secondary (overdrive keep_rate 1.00 > impeccable 0.40)
+>  2. SKILL.md: tighten Step 4.5 fix_type detection (3 mis-classifications this run)
+>  3. fix-routing.md: add `delight` as secondary for D5 (animate REVERTed twice on hero)
+>  Apply now? (yes/no/edit)"
+
+If yes — apply via Edit tool, commit `evolve-retro: route updates from {date}`. If no — retro.md still exists for future review.
+
+**Step F.7 — Update trajectory.json with this run's completion:**
+
+Read `.evolution/trajectory.json`, move `current_run_state` into `runs[]` array with completed fields:
+
+```json
+{
+  "id": N,
+  "started_at": "...",
+  "completed_at": "{now}",
+  "status": "completed",
+  "target_score": ...,
+  "tier": "...",
+  "mode": "...",
+  "baseline_score": ...,
+  "final_score": ...,
+  "real_iterations": ...,
+  "void_count": ...,
+  "visual_quality_baseline": ...,
+  "visual_quality_final": ...,
+  "awwwards": {"design": ..., "usability": ..., "creativity": ..., "content": ..., "avg": ...},
+  "perf_trace": {"lcp_ms": ..., "inp_ms": ..., "cls": ..., "lighthouse_perf": ...},
+  "uncompleted_wc_checks": [...],
+  "next_run_recommendations": [
+    "Top 3 fixes the loop ran out of iterations on, ordered by visual_bonus",
+    "Any check stuck at WONTFIX that the user might want to revisit",
+    "Any NEEDS_HUMAN that was never resolved"
+  ],
+  "phase_f_retro_path": ".evolution/retro.md",
+  "skill_efficacy": { "typeset": {"keeps": 4, "reverts": 1, ...}, ... }
+}
+```
+
+If this run set `world_class_anchor` (Phase R) or installed motion stack (Phase G), update those fields at the trajectory root level (not under any specific run — they are cross-run invariants).
+
+Clear `current_run_state` (set to null).
+
+Write trajectory.json back to disk.
+
+**Step F.8 — Commit trajectory + retro:**
+```bash
+git -C "{project_path}" add .evolution/retro.md .evolution/trajectory.json
+git -C "{project_path}" commit -m "evolve-retro: Run #{N} {baseline}→{final} ({tier}) — trajectory updated"
+git -C "{project_path}" push origin {evolve_branch_or_main}
+```
+
+**Step F.9 — Final echo to user:**
+
+```
+✓ web-evolve Run #{N} complete.
+
+  Baseline:  {baseline}/100 ({baseline_tier})
+  Final:     {final}/100 ({final_tier})
+  Delta:     +{delta} ({iterations} iterations, {void_count} VOIDs)
+
+Awwwards-equivalent score: {design}D / {usability}U / {creativity}Cr / {content}Co = {avg}/10 avg
+Perf: LCP {lcp}ms · INP {inp}ms · CLS {cls} · Lighthouse {lh}/100
+
+Next-run recommendations:
+  1. {rec 1}
+  2. {rec 2}
+  3. {rec 3}
+
+To advance to the next tier, run /web-evolve again (here or in a new chat).
+The skill will read trajectory.json and push toward {next_target}/100.
+```
+
+This is the explicit invitation for the user to re-invoke. The trajectory.json now has everything the next run needs.
 
 ---
 
@@ -739,3 +1586,8 @@ Spawn web-score (tier: category:A,G) against `live_url` — the two most likely 
 - Self-grade vision checks — always NEEDS_HUMAN
 - Skip BUILD-LOG entry for any iteration (including VOID)
 - Count VOID toward max_iterations
+- **Skip `Skill('impeccable', args='teach')` in Phase A** — every refinement skill needs design context to avoid generic output (Cardinal Rule 12)
+- **Call refinement Skills without `design_context:` and `design_dna_tokens:` markers** — those markers are how the skills enter targeted mode (Cardinal Rule 13)
+- **Use inspiration MCP without the builder/refiner follow-up** — three-stage pipeline is mandatory (Cardinal Rule 15)
+- **Exit without Phase F retro** — the loop must self-audit (Cardinal Rule 14)
+- **Touch `main` directly when `branch_isolation = true`** — Phase A creates `evolve/{date}`, Phase D pushes there, user merges to main
