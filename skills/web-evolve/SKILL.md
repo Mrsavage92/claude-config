@@ -29,7 +29,19 @@ Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-scr
 5. **Vision checks block until user confirms.** Surface NEEDS_HUMAN, wait, update, continue.
 6. **NULL_DELTA = VOID for design checks only.** For code-quality/documentation-only checks (B-series, H-series, D1, A11, I4, I8, I2 when fix_context is docs-only), NULL_DELTA does NOT trigger VOID — rescore only, KEEP if checks now PASS.
 7. **Raw transparency.** Veto cap hiding >5 pts: show both numbers always.
-8. **Visual impact is the primary success criterion. Score is a proxy, not the goal — and the proxy can be gamed.** The loop succeeds when a human looking at the before/after says "this looks dramatically better." Enforcement: at exit-attempt the orchestrator MUST re-probe `visual_quality_score` via Puppeteer screenshot + 4-axis assessment (hero impact / hierarchy / distinctiveness / product visibility). **Required delta:** `post_run_vq - baseline_vq ≥ 0.5` at target 90, `≥ 0.7` at target 95, `≥ 1.0` at target 98, `≥ 1.5` at target 100. If the delta floor is not met, the score does not matter — the run is NOT complete. Re-enter Phase C with the priority queue re-sorted by `visual_bonus` and force the top 3 unflipped visual checks through their refinement skill. The OR-clause exit ("score met OR baseline_vq already high") is **banned** — it lets runs report complete without visible change. This rule was tightened 2026-05-16 after a route-around run hit 60 → 99 score with 4.0 → 4.1 visual delta (user verified "looks no different").
+8. **Visual impact is the primary success criterion. Score is a proxy, not the goal — and the proxy can be gamed. Independent measurement is mandatory.** The loop succeeds when a human (or independent skill) looking at before/after says "this looks dramatically better." Enforcement happens via TWO independent measurements at exit-attempt, NOT via orchestrator self-scoring:
+
+   **Measurement 1 — Puppeteer screenshots** (objective evidence): capture baseline_screenshot (from Phase A.7.5 archived to `.evolution/baseline/`) + post_run_screenshot (fresh, post-final-deploy).
+
+   **Measurement 2 — `Skill('critique', args='compare baseline vs post-run | screenshots: [path1, path2] | output: scored | dimensions: hero-impact, hierarchy, distinctiveness, product-visibility, motion, type, color, layout | tier: {target}')`** — the critique skill scores both screenshots independently on a 4-axis 1-5 scale (matching the Phase A.7.5 baseline axes). The orchestrator MUST use critique's returned scores, NOT its own.
+
+   **`vq_delta = critique.post_run_vq - critique.baseline_vq`**
+
+   **Required delta:** `≥ 0.5` at target 90, `≥ 0.7` at target 95, `≥ 1.0` at target 98, `≥ 1.5` at target 100. If the delta floor is not met, the score does not matter — the run is NOT complete. Re-enter Phase C with the priority queue re-sorted by `visual_bonus` and force the top 3 unflipped visual checks through their refinement skill.
+
+   **Self-scoring is BANNED.** Run #2 on Orbit Digital (2026-05-16) "measured" post_run_vq = 4.5 via orchestrator self-grading — that is exactly the failure mode this rule exists to prevent. If `Skill('critique')` is unavailable (skill missing, error), the run HALTs NEEDS_HUMAN: `"Independent VQ measurement requires Skill('critique'). Install or fix critique skill before re-running."` Do not fall back to self-scoring.
+
+   The OR-clause exit ("score met OR baseline_vq already high") is **banned** — it lets runs report complete without visible change. This rule was tightened 2026-05-16 after Run #1 hit 60 → 99 score with 4.0 → 4.1 self-scored delta (user verified "looks no different"), and re-tightened the same day after Run #2 self-scored its own 4.0 → 4.5 delta to claim partial success.
 9. **Invisible checks must never block visible ones.** Code-quality checks (B-series, D1, H-series, C6, C7, I5, I6, A11, I4, I8, I2) must NEVER occupy iteration slots 1-3 if any visual check (A7, A9, D4, D5, F6, K2, K4, E-section checks) exists in the queue.
 10. **Bold execution required.** Every call to overdrive/impeccable/bolder MUST include explicit boldness instructions. "Subtle" is a failure. The before/after screenshots must show obvious visible difference.
 11. **CONTEXT.md is the anchor.** No iteration begins without a fresh CONTEXT.md (≤7 days, no newer commits). Every refinement is checked against Locked Decisions and Anti-Goals from CONTEXT.md before commit. A change that violates either is a VOID, not a KEEP — even if it improves the score.
@@ -62,7 +74,7 @@ Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-scr
 These rules supersede their generic versions when world-class mode is active. Full spec: `references/world-class-tier.md`.
 
 16. **Awwwards-aligned scoring.** Drop the flat 0–100 score. Use 4 dimensions on 10-point scale: Design (40%) / Usability (30%) / Creativity (20%) / Content (10%). Loop exits only when per-dimension minima are met AND weighted average ≥ target. SOTD = 8.0 avg. SOTM = 8.5 avg with Creativity ≥ 9.
-17. **Pick one hero signature, execute fully.** Hero must be one of: (A) WebGL/3D scene via R3F+drei+postprocessing, (B) GSAP ScrollTrigger pinned narrative (2–4 viewports), (C) Kinetic typography with variable-axis animation. Half-committed heroes (small glow + gradient blob) fail this tier — visible signature or VOID.
+17. **Pick ONE hero signature, execute fully. Combined / "all of the above" picks are BANNED.** Hero must be EXACTLY ONE of: (A) WebGL/3D scene via R3F+drei+postprocessing, (B) GSAP ScrollTrigger pinned narrative (2–4 viewports), (C) Kinetic typography with variable-axis animation. Half-committed heroes (small glow + gradient blob) fail this tier — visible signature or VOID. **At Phase R Step R.3 the orchestrator MUST reject answers that pick multiple options or say "all of them" / "combined" / "every one"** — re-surface the question with the explicit clarification: "Pick ONE. Combined heroes are half-committed by construction — A's R3F WebGL takes a 150KB bundle hit; B's pinned scroll choreography takes 2-3 viewports of scroll budget; C's kinetic-typography axis-on-scroll requires the variable font to be the visual centrepiece. They CONFLICT — pick the one that wins." If the user insists on combined → write `world_class_anchor.user_overrode_singularity: true` to trajectory.json and lower the gate-C minimum by 1 (since the user is paying for breadth not depth, the minimum count requirement softens) — but the run is flagged `quality: "combined-signature-warning"` for the retro. Run #2 on Orbit Digital (2026-05-16) declared "B+A+C combined" and delivered B-only at ~40% completeness — that was a Rule 17 violation enabled by ambiguous language. **Tightened 2026-05-16.**
 18. **Lenis is mandatory** at world-class. Locomotive is deprecated. `lenis` package with `autoRaf: false syncTouch: false` when GSAP drives the ticker. No native CSS `scroll-behavior: smooth`.
 19. **GSAP owns scroll choreography.** ScrollTrigger pins, SplitText reveals, Flip transitions, MorphSVG when relevant — all free post-Webflow acquisition (Apr 2024). Framer Motion is allowed for component state but never for scroll-narrative.
 20. **Custom cursor + magnetic interactions required.** Replace native cursor. `data-magnetic="true"` on primary CTAs. Motion's `<Cursor>` primitive OR hand-rolled with `lenis` velocity. Touch devices replace hover with explicit tap states.
@@ -277,16 +289,63 @@ If mode == "advance", build a prioritised list of what to attack this run:
 
 These focus items get `+500` priority bonus in the queue beyond their normal weighting.
 
-**Step A.0.10 — Echo decision to user (single block, no prompt):**
+**Step A.0.10 — Compute deliverable_target_score (NOT declared_target_score) + echo to user:**
+
+The declared_target (Phase A.0 decision) is what the run aims for. The deliverable_target is what the run can actually achieve given installed tooling. They MUST match before the run starts — if they don't, surface upfront, not in retro.
+
+Compute `deliverable_target_score`:
+```
+start with: declared_target
+if declared_target >= 98:
+  required tooling:
+    - chrome-devtools-mcp connected (Phase G.5 Cardinal Rule 24)
+    - Skill('critique') available (Cardinal Rule 8 + Gate B)
+    - Skill('a11y-audit') available (Phase A.1.5 mandate)
+    - Skill('seo-strategy') available (Phase A.1.5 mandate)
+    - Phase R will run (Gate E artifact gate)
+  for each missing → deliverable_target_score = min(deliverable_target_score, 95)
+  if no R3F libs in package.json AND signature == A → cannot deliver A
+  if no GSAP/lenis in package.json AND signature == B → cannot deliver B
+  if no variable font in font config AND signature == C → cannot deliver C
+if declared_target >= 95:
+  required tooling:
+    - Skill('critique') available
+    - Skill('a11y-audit') available
+    - Skill('seo-strategy') available
+  for each missing → deliverable_target_score = min(deliverable_target_score, 90)
+```
+
+If `deliverable_target_score < declared_target` → SURFACE TO USER (single message, then proceed only if user confirms or 5s passes without interrupt):
+
+```
+⚠️ TIER MISMATCH — declared target {declared_target} but only {deliverable_target} is deliverable with current setup.
+
+Missing for target {declared_target}:
+  - chrome-devtools-mcp: NOT installed (run npx chrome-devtools-mcp@latest first)
+  - Skill('critique'): {available|missing}
+  - {other missing items}
+
+Options:
+  (a) Install missing tooling, re-run /web-evolve to attempt target={declared_target} properly
+  (b) Run at deliverable_target={deliverable_target} now (Trajectory will record this)
+  (c) Interrupt and decide
+
+Continuing in 5s with deliverable_target={deliverable_target}. Trajectory will record both numbers.
+```
+
+This prevents Run #2's failure mode: declaring 98, delivering 95, and only surfacing the gap in retro. Now the gap is surfaced at run start so the user makes an informed choice.
+
+Then the standard echo:
 
 ```
 web-evolve — Run #{N} ({mode})
 
 {Reasoning sentence}
 
-Target: {new_target}/100 ({tier_label})
+Declared target:    {declared_target}/100 ({declared_tier})
+Deliverable target: {deliverable_target}/100 ({deliverable_tier})   ← what gates evaluate against
 {If fresh:} Baseline visual quality: {v}/5
-{If advance:} Last run finished at {last_final}/100 ({last_tier}). Pushing to {new_target}.
+{If advance:} Last run finished at {last_final}/100 ({last_tier}). Pushing to {deliverable_target}.
 Phases this run: {phases_to_run join space}
 Estimated iterations: {max_iterations}
 Focus this run: {top 3 priorities from focus list, or "full audit" if fresh}
@@ -294,7 +353,7 @@ Focus this run: {top 3 priorities from focus list, or "full audit" if fresh}
 Continuing automatically. Interrupt to stop.
 ```
 
-**No user prompt.** The skill proceeds. If the user wanted different behaviour they would have passed an override flag or interrupted.
+**No user prompt UNLESS tier mismatch exists.** The skill proceeds. If the user wanted different behaviour they would have passed an override flag or interrupted.
 
 **Step A.0.11 — Write current run header to trajectory.json:**
 
@@ -386,6 +445,28 @@ Wait for user reply. Write hero signature + selected references back to `DESIGN-
 
 **Step R.4 — Inject WC1–WC10 synthetic checks** into the priority queue (visual_bonus 2500 each — higher than checklist 2000-tier). Routing in `fix-routing.md` SKILL_LOOKUP. These checks lead the queue once Phase G completes.
 
+**Step R.5 — HARD GATE: world-class-references.json MUST exist before Phase G can begin (Cardinal Rule 14 Gate E):**
+
+Verify that Steps R.1–R.4 actually produced their artifacts. The orchestrator cannot bypass Phase R by writing a signature commitment to DESIGN-BRIEF directly from memory (this happened in Run #2 on Orbit Digital 2026-05-16 — Phase R was claimed "complete" with zero reference probing).
+
+```bash
+# Hard gate — all three MUST be true before Phase G starts:
+[ -s "{project_path}/.evolution/world-class-references.json" ] || HALT
+[ -s "{project_path}/.evolution/world-class-references.json" ] && \
+  jq '.references | length' "{project_path}/.evolution/world-class-references.json" | grep -qE "^([6-9]|[1-9][0-9])$" || HALT  # >= 6 references
+grep -q "## World-Class Anchor" "{project_path}/DESIGN-BRIEF.md" || HALT
+grep -qE "hero_signature: \"[ABC]\"" "{project_path}/DESIGN-BRIEF.md" || HALT  # singular A or B or C only
+```
+
+If any check fails → HALT NEEDS_HUMAN: `"Phase R artifacts missing or malformed. world-class-references.json (≥6 references), DESIGN-BRIEF ## World-Class Anchor section with hero_signature one of A/B/C — required before Phase G installs the motion stack. Re-run Phase R from R.1."`
+
+**Add Gate E to Cardinal Rule 14 evaluation:**
+- Gate E — `phase_r_artifacts_present` (target ≥ 98 only):
+  - `.evolution/world-class-references.json` exists with ≥6 reference entries
+  - `DESIGN-BRIEF.md` contains `## World-Class Anchor` section
+  - `hero_signature` is one of "A", "B", "C" (literal — combined banned per Cardinal Rule 17)
+  - If false → status `phase_r_skipped`
+
 ---
 
 ## Phase G — Generative Motion Stack Setup (runs when Phase A.0 plan includes G)
@@ -444,17 +525,36 @@ Skill('animate', args='register-gsap-plugins |
   fail_proof: grep "registerPlugin" returns the registration')
 ```
 
-**Step G.5 — Initialize chrome-devtools-mcp connection:**
+**Step G.5 — chrome-devtools-mcp install or HALT (target ≥ 98 — Cardinal Rule 24 enforcement):**
 
-If `chrome-devtools-mcp` is not connected, log:
-```
-"⚠️ chrome-devtools-mcp not connected. World-class perf gates cannot be enforced.
-Install: npx chrome-devtools-mcp@latest (Sept 2025 launch from Google Chrome team)
-Or add to ~/.claude/settings.json mcpServers block.
-Continuing without it — falling back to WebFetch PageSpeed Insights for G4-G6."
+Probe MCP availability:
+```bash
+# Detect via settings.json mcpServers block
+grep -E "chrome-devtools-mcp|chrome_devtools" ~/.claude/settings.json
 ```
 
-If connected, log: `"chrome-devtools-mcp: ready for perf traces"`.
+**Branching logic:**
+
+- **If connected** → log `"chrome-devtools-mcp: ready for perf traces"`. Continue.
+
+- **If NOT connected AND target ≥ 98** → this is a HARD HALT, not a warning. Auto-install path:
+  ```bash
+  # Try auto-install via npx (Sept 2025 official launch from Google Chrome team)
+  npx -y chrome-devtools-mcp@latest --install
+  # OR via Edit to ~/.claude/settings.json mcpServers block:
+  ```
+  Edit `~/.claude/settings.json`, insert into `mcpServers`:
+  ```json
+  "chrome-devtools": {
+    "command": "npx",
+    "args": ["-y", "chrome-devtools-mcp@latest"]
+  }
+  ```
+  Then HALT NEEDS_HUMAN: `"chrome-devtools-mcp config added to ~/.claude/settings.json. RESTART Claude Code to load the MCP, then re-invoke /web-evolve to continue. Target=98 cannot proceed without real Chrome perf traces (Cardinal Rule 24)."`
+
+  **NEVER silently fall back to WebFetch PageSpeed at target ≥ 98.** Run #2 on Orbit Digital (2026-05-16) did exactly that — synthetic puppeteer PerformanceObserver was used as fallback and the run claimed target=98 perf-trace gate met when it wasn't. That violation is now blocked at this gate.
+
+- **If NOT connected AND target = 95** → log the warning + fall back to WebFetch PageSpeed (fallback IS acceptable at target ≤ 95).
 
 **Step G.6 — Install custom cursor scaffold (WC4):**
 
@@ -514,14 +614,28 @@ This phase exists because scoring against generic premium-SaaS criteria produces
 
 1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/CONTEXT.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`, `~/.claude/web-system-prompt.md` (**Design DNA** — token system, typography scale, color discipline, visual signatures. Cardinal Rule 13 — loaded once, re-cited in every Skill() args block), `~/.claude/skills/premium-website/SKILL.md` (cross-check contract — Phase F diffs against this), `~/.claude/skills/premium-website/references/component-registry.md` (21st.dev registry — used by Step 3 Case B for builder pipeline)
 
-1.5 **Apply target-tier behaviour (auto from Phase A.0):**
+1.5 **Apply target-tier behaviour (auto from Phase A.0) — MANDATED, not "enabled":**
 
-   Read `target_score` from Phase A.0 decision.
-   - `target ≥ 95` → enable mobile_loop, a11y-audit + seo-strategy + /critique parallel agents in Phase B, set `visual_quality_exit_floor = 4.5`
-   - `target ≥ 98` → enable chrome-devtools-mcp perf traces (HALT if not connected), Phase R and G run if not already done
+   Read `target_score` from Phase A.0 decision. The agents below are MANDATORY for their tier. "Enable" was the old wording — actual semantics is "MUST RUN OR HALT NEEDS_HUMAN." Skipping them to save tool calls is a route-around (Run #2 on Orbit Digital 2026-05-16 skipped all three at target=98 — this gate now prevents that).
+
+   - `target ≥ 95` → mobile_loop MUST be set, and ALL of these MUST fire in Phase B:
+     - `Skill('a11y-audit', ...)` — accessibility WCAG 2.2 audit
+     - `Skill('seo-strategy', ...)` — site-wide SEO audit
+     - `Skill('critique', ...)` — UX critique with persona-based testing + anti-pattern detection
+     - Set `visual_quality_exit_floor = 4.5`
+     If ANY of these three fails to fire (skill unavailable, agent error, orchestrator deliberately skipped) → trajectory.json `status: "mandated_agents_skipped"` (per Cardinal Rule 14 Gate D — see below) AND user-facing summary leads with `⚠️ MANDATED AGENTS SKIPPED — re-run required.`
+   - `target ≥ 98` → all of the above PLUS:
+     - `chrome-devtools-mcp` MUST be connected (Phase G.5 auto-install + HALT path enforces this)
+     - Phase R MUST produce `.evolution/world-class-references.json` (P4 below — Phase R gate)
+     - Phase R signature commitment MUST be singular (Cardinal Rule 17 — P1 above)
    - `target = 100` → tighter perf gates (LCP < 1.5s, INP < 100ms, CLS < 0.01), foundry typography mandatory, custom cursor required, View Transitions on every route
 
-   Log: `"Tier behaviour: target {target}/100 → {behaviour list}"`
+   Log: `"Tier behaviour: target {target}/100 → MANDATED agents: {list}. HALT if any cannot fire."`
+
+   **Add Gate D to Cardinal Rule 14 evaluation** (Phase F.7 reads this):
+   - Gate D — `mandated_agents_fired_count` per tier:
+     - target 95+: a11y + seo + critique = 3 mandatory. If `count < 3` → status `mandated_agents_skipped`.
+     - target 98+: above 3 + chrome-devtools-mcp perf trace = 4 mandatory. If `count < 4` → status `mandated_agents_skipped`.
 
 1.6 **Multi-page detection:**
    - If `--pages` flag provided → parse comma-separated list into `pages_to_evolve`
@@ -1187,6 +1301,51 @@ The refinement skills read the `checks:` and `fail_proof:` markers to enter Targ
 
 If Skill() errors or returns "no changes" → log NEEDS_HUMAN for each check_id, increment `attempt_counts`, continue loop (skip 3.5 onwards).
 
+**Complexity budget gate (post-Skill, pre-commit):** After the Skill returns and before commit, check the diff size:
+```bash
+git -C "{project_path}" diff --shortstat
+```
+
+Apply the budget:
+- **≤ 200 lines changed in single file** → normal commit, no gate.
+- **201-500 lines changed in single file** → log `"⚠️ Large change: {n} lines in {file}. Single-shot rebuild — high blast radius."` Continue, but flag iteration as `complexity: "high"` in BUILD-LOG.
+- **> 500 lines changed in single file** → HALT NEEDS_HUMAN: `"Iteration produced {n}-line change in {file}. That's too large for a single iteration — risk of unverifiable regression. Options: (a) split into 2-3 smaller iterations targeting specific sub-elements, (b) override and continue (`/web-evolve --allow-large-change`), (c) discard this iter and replan."` Do NOT auto-commit.
+- **> 100 lines changed across > 5 files** → same HALT path. Spanning too many files in one iter blocks verification.
+
+Run #2 on Orbit Digital (2026-05-16) made a 440-line single-file rebuild of `ServicesSection.tsx` via `Skill('impeccable')` in one iteration. Worked, but the spec had no gate — pure luck. This budget surfaces blast radius before commit. **Added 2026-05-16.**
+
+---
+
+### Step 3.4 — Above-fold sanity check BEFORE commit (mandatory for hero/CTA-touching iters)
+
+Before committing the change, simulate the change locally via dev-server OR run the dev build and probe with Puppeteer to verify the **primary CTA is visible above the 900px viewport** on desktop AND above the 800px viewport on mobile.
+
+**When this step fires:** iter touches any of `HeroSection.tsx`, `CTABand.tsx`, `Navbar.tsx`, or anything that changes font sizes / heights / layout in the first viewport-worth of the page.
+
+**Probe script (Puppeteer evaluate on dev_server_url or staged change):**
+```javascript
+(async () => {
+  await new Promise(r => setTimeout(r, 1500)); // wait for layout settle
+  const cta = document.querySelector('a[href*="get-started"], button[type="submit"], a[href*="signup"]');
+  if (!cta) return JSON.stringify({ status: 'no-cta-found' });
+  const r = cta.getBoundingClientRect();
+  return JSON.stringify({
+    status: r.bottom < 900 ? 'pass-desktop' : 'fail-desktop',
+    cta_top: Math.round(r.top), cta_bottom: Math.round(r.bottom),
+    viewport_h: 900,
+  });
+})()
+```
+
+Then probe at 390×844 (iPhone 14 Pro mobile dimensions) for mobile gate.
+
+**Branching:**
+- **PASS both desktop + mobile** → continue to Step 3.5 commit
+- **FAIL desktop** → log `"CTA below fold (y={cta_bottom}/900) — forcing size-pass iteration before commit"`, do NOT commit. Re-fire `Skill('layout', args='reduce vertical-space: H1 size step down, mb-* step down, leading step down — CTA MUST be above 900px')` once. Re-probe. If still failing → log NEEDS_HUMAN and abort the iter (do not commit a hero that hides the CTA).
+- **FAIL mobile but PASS desktop** → log warning + commit, but flag the iter for mobile fix in the queue.
+
+Run #2 on Orbit Digital (2026-05-16) shipped a hero with 128px H1 that pushed the CTA below the 900px fold — caught by Puppeteer probe AFTER commit and required 2 corrective size-pass commits (9407778, c2bda00). This gate moves the check BEFORE commit so a single commit suffices.
+
 ---
 
 ### Step 3.5 — Commit
@@ -1419,13 +1578,59 @@ The orchestrator MUST measure `post_run_vq` via Puppeteer screenshot + 4-axis as
    - a11y delta (violation count baseline → final, if --premium)
    - SEO delta (if target ≥ 95)
    - /critique scored dimensions (if target ≥ 95)
-4. Commit + push (to the `evolve/{date}` branch from Phase A.1.7 if branch_isolation, else main):
+4. Commit + push to **evolve branch first** (never directly to main):
    ```bash
+   # CRITICAL: never push directly to main from Phase D.
+   # All evolve-branch changes go to remote, get a Vercel preview URL,
+   # get visually verified, THEN merged to main.
    git -C "{project_path}" add EVOLUTION-LOG.md BUILD-LOG.md
    git -C "{project_path}" commit -m "evolve: {page} final — score {baseline} → {final}"
-   git -C "{project_path}" push origin {evolve_branch_or_main}
+   git -C "{project_path}" push -u origin {evolve_branch}
    ```
-5. Wait 45s for Vercel.
+
+5. **Resolve Vercel preview URL for the evolve branch:**
+   ```bash
+   # Wait for Vercel webhook to fire (usually 5s)
+   sleep 5
+   # Query GitHub deployments API for the latest deploy on the evolve branch
+   gh api "repos/{org}/{repo}/deployments?sha=$(git rev-parse HEAD)&per_page=1" \
+     --jq '.[0].statuses_url' | xargs -I {} gh api {} --jq '.[0].target_url'
+   # Returns the preview deployment URL (e.g. https://{slug}-git-{branch}-{team}.vercel.app)
+   ```
+
+   If preview URL not available within 90s → log NEEDS_HUMAN: `"Vercel preview URL not resolved within 90s. Check Vercel dashboard for build failure, then re-run /web-evolve to retry."`
+
+6. **Poll preview URL until deploy completes** (HTTP 200 + new content marker present):
+   ```bash
+   PREVIEW_URL="<from step 5>"
+   # Use a marker unique to this run — e.g. a new check/visual you know just landed
+   MARKER="<unique-string-from-the-iter-2-or-later-change>"
+   until curl -fsS "$PREVIEW_URL" 2>/dev/null | grep -q "$MARKER"; do sleep 5; done
+   ```
+
+7. **Visual-verify on preview URL with Puppeteer + critique (THE preview-deploy-verify gate):**
+   - Puppeteer navigate to preview URL
+   - Screenshot at 1440×900 desktop + 390×844 mobile
+   - `Skill('critique', args='compare preview vs Phase A baseline | screenshots: [{baseline}, {preview-desktop}, {preview-mobile}] | scored | dimensions: hero-impact, hierarchy, distinctiveness, product-visibility')` — same critique invocation as Cardinal Rule 8 VQ measurement
+   - If critique's delta ≥ tier_vq_delta_floor → proceed to step 8
+   - If critique's delta < floor → trajectory.json status `vq_delta_below_floor_at_preview`, HALT NEEDS_HUMAN: `"Preview deployed but visual delta below floor ({delta} < {required}). Inspect preview URL: {PREVIEW_URL}. Decide: (a) merge anyway (override), (b) discard branch, (c) run more iterations."`
+
+8. **Fast-forward merge evolve → main + push to main** (only AFTER preview verify):
+   ```bash
+   git -C "{project_path}" checkout main
+   git -C "{project_path}" merge --ff-only {evolve_branch}
+   git -C "{project_path}" push origin main
+   ```
+
+9. Wait 45s for Vercel production rebuild (main triggers prod alias auto-deploy).
+
+10. **Production verify** (final sanity check on live URL):
+    ```bash
+    until curl -fsS "{live_url}" 2>/dev/null | grep -q "$MARKER"; do sleep 5; done
+    ```
+    If marker doesn't appear within 120s on prod → HALT NEEDS_HUMAN: `"Prod deploy didn't propagate marker '{MARKER}' within 120s. Vercel/CDN may need cache invalidation. Check {live_url} manually."`
+
+**Why this flow:** Run #2 on Orbit Digital (2026-05-16) shipped a broken hero (everything opacity:0 at landing) directly to prod via `git push origin main` from Phase D — discovered only via Puppeteer probe AFTER prod was already broken. The preview-deploy-verify gate moves the visual check BEFORE main, so prod never sees a regression that hadn't been verified on a preview URL first. **Added 2026-05-16.**
 
 ---
 
@@ -1507,6 +1712,52 @@ The loop never exits without Phase F. This is how `/web-evolve` improves itself 
 - `BUILD-LOG.md` (all iteration entries this session)
 - `.evolution/scores/score.json` + `.evolution/scores/final-score.json`
 - `.evolution/{a11y,seo,critique,pagespeed}.json` (if target ≥ 95)
+
+**Step F.1.5 — Phase R signature delivery checklist (target ≥ 98 only — Cardinal Rule 17 + Gate F):**
+
+Read `DESIGN-BRIEF.md` `## World-Class Anchor` section → extract `hero_signature` (A, B, or C). Then verify the signature was ACTUALLY delivered, not just that a skill was invoked claiming to deliver it. This is the gate that Run #2 on Orbit Digital (2026-05-16) bypassed — it declared "B+A+C combined" and delivered B-only at ~40%, calling it done.
+
+**Signature A (WebGL/3D via R3F):**
+```bash
+# All MUST be true:
+grep -rE "from ['\"]@react-three/fiber['\"]" "{project_path}/src/" | grep -q "Canvas"  # <Canvas> imported
+grep -rE "<Canvas[^>]*>" "{project_path}/src/components/" | head -1  # <Canvas> rendered
+grep -rE "@react-three/(drei|postprocessing)" "{project_path}/src/" | head -1  # supporting libs used
+# Bundle check: a R3F bundle chunk ≥ 80KB exists (lazy-loaded)
+find "{project_path}/.next/static/chunks/" -name "*.js" -size +80k | xargs grep -l "react-three" | head -1
+```
+If any fail → Gate F status `signature_a_undelivered`, retro lists missing pieces.
+
+**Signature B (GSAP ScrollTrigger pinned narrative, 2-4 viewports):**
+```bash
+# All MUST be true:
+grep -rE "ScrollTrigger\.create\|gsap\.timeline\(.*scrollTrigger" "{project_path}/src/" | grep -q "pin: *true"  # pin: true used
+grep -rE "end: ['\"]?\+=([0-9]+)" "{project_path}/src/" | grep -qE "\+=(15[0-9]|[2-3][0-9][0-9])"  # ≥ 150% extra viewport
+grep -rE "SplitText" "{project_path}/src/components/" | head -1  # SplitText used for typography reveal
+# Scroll-DRIVEN, not mount-driven (timeline must bind to ScrollTrigger.scrub, not gsap.timeline().play())
+grep -rE "scrub:" "{project_path}/src/" | grep -qE "scrub: *(true|1)"
+```
+If any fail → Gate F status `signature_b_undelivered`.
+
+**Signature C (Kinetic typography with variable-axis animation on scroll):**
+```bash
+# All MUST be true:
+grep -rE "font-variation-settings" "{project_path}/src/" | head -1  # font-variation CSS used
+grep -rE "useScroll\|scrollYProgress\|ScrollTrigger" "{project_path}/src/components/.*HeroSection" | head -1  # scroll-driven
+grep -rE "wght|wdth|opsz|GRAD|YOPQ" "{project_path}/src/" | head -1  # variable axis named in code (wght/wdth/opsz/etc)
+# Variable font installed
+grep -rE "variable=true|--font-.*-variable|@font-face.*variation-settings" "{project_path}/src/app/" | head -1
+```
+If any fail → Gate F status `signature_c_undelivered`.
+
+**Combined signature (Cardinal Rule 17 — user-overrode_singularity = true):** verify ALL applicable signature gates above. Combined doesn't lower the bar — it raises it (must deliver all 2-3 picks). If user-overrode happened, the orchestrator MUST surface in retro: "User declared combined signature. Verified pieces: A={pass/fail}, B={pass/fail}, C={pass/fail}. Anything `fail` = signature_combined_partial_delivery."
+
+**Add Gate F to Cardinal Rule 14 evaluation:**
+- Gate F — `signature_delivered` (target ≥ 98 only):
+  - signature A → R3F Canvas in DOM + bundle chunk present
+  - signature B → ScrollTrigger pin + scrub + ≥150% viewport + SplitText
+  - signature C → font-variation-settings + scroll-driven + variable font registered
+  - If false → status `signature_{a|b|c}_undelivered`
 
 **Step F.2 — Compute per-skill efficacy table:**
 
