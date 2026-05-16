@@ -43,7 +43,7 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "D6":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "E1":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
   "E2":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
-  "E3":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
+  "E3":  {"fix_skill": "web-component", "prereq": "mcp__magic__logo_search", "secondary": "mcp__magic__21st_magic_component_inspiration", "edit_direct": false},
   "E4":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
   "E5":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
   "E6":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
@@ -82,15 +82,40 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "K3":  {"fix_skill": "layout",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "K4":  {"fix_skill": "colorize",   "prereq": null,                                        "secondary": "overdrive", "edit_direct": false},
   "H1":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — the fix was applied inline rather than via Skill(). No code fix needed; the process was wrong. Re-run the correct fix via the appropriate Skill() entry for the original check."},
-  "H2":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — null-delta means the committed code produced no visible change. git revert HEAD --no-edit. Try a different fix_skill (use secondary if available) or mark WONTFIX after 3 attempts."}
+  "H2":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — null-delta means the committed code produced no visible change. git revert HEAD --no-edit. Try a different fix_skill (use secondary if available) or mark WONTFIX after 3 attempts."},
+
+  "WC1": {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "animate", "edit_direct": false, "meta": "World-class hero signature missing. Build one of: WebGL/3D scene (R3F+drei+postprocessing), GSAP ScrollTrigger pinned narrative, or kinetic typography. Pick per DESIGN-BRIEF World-Class Anchor."},
+  "WC2": {"fix_skill": "animate",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Lenis not installed/wired. Phase G should have handled this; if loop reached here, re-run Phase G.3 manually."},
+  "WC3": {"fix_skill": "animate",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "GSAP + ScrollTrigger not registered OR no active ScrollTrigger pin. Add ≥1 scroll-pinned section."},
+  "WC4": {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "polish", "edit_direct": false, "meta": "Custom cursor missing OR data-magnetic not on primary CTAs. Use Motion <Cursor> or hand-rolled with Lenis velocity."},
+  "WC5": {"fix_skill": "web-fix",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "View Transitions API not wired. Add meta tag + viewTransitionName on shared elements + CSS @view-transition rules + reduced-motion guard."},
+  "WC6": {"fix_skill": "typeset",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Typography uses default Inter from Google. Replace with foundry choice: Geist (free, npm i geist), or paid Söhne/Calibre. Animate ≥1 variable axis on hover or scroll."},
+  "WC7": {"fix_skill": "colorize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Color tokens use shadcn defaults (slate/zinc/neutral) or HSL. Convert to OKLCH. 1 brand accent + 2 neutrals + 1 surface."},
+  "WC8": {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_builder",     "secondary": "web-component", "edit_direct": false, "meta": "Hero lacks real product UI. Replace gradient blob with: product screenshot/video, R3F scene visualising the product, or live product mockup using actual product primitives."},
+  "WC9": {"fix_skill": "optimize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Performance below world-class gate (LCP<2.0, INP<150, CLS<0.05). Read perf-trace.json insights, target the specific culprit (image, font, third-party, render-blocking)."},
+  "WC10":{"fix_skill": "web-fix",    "prereq": null,                                          "secondary": null,      "edit_direct": true,  "meta": "prefers-reduced-motion not respected. Wrap motion in @media (prefers-reduced-motion: reduce) { /* disable */ }. Lenis: lenis.stop() when reduce. View Transitions: skipTransition()."}
 }
 ```
 
 **How to read this lookup:**
+
 - `fix_skill`: the primary Skill() to invoke. null means edit_direct=true (use Edit tool directly).
 - `prereq`: MCP tool to call BEFORE the fix_skill (component sourcing). null means no prereq.
 - `secondary`: fallback skill if primary causes regression or VOID (in excluded_skills).
 - `edit_direct`: true means use Edit tool directly — too small for a full skill invocation.
+
+**21st.dev three-stage pipeline (Cardinal Rule 15 — applies to any prereq containing `mcp__magic__`):**
+
+1. **Inspiration** (`mcp__magic__21st_magic_component_inspiration`) — prose suggestions + reference URLs. Read top 3.
+2. **Builder OR Refiner** (deterministic, based on whether the target file exists):
+   - File missing → `mcp__magic__21st_magic_component_builder` — generates new JSX
+   - File exists → `mcp__magic__21st_magic_component_refiner` — improves existing component (the common case for web-evolve)
+3. **Refinement skill** (`fix_skill` from this table) — polishes the 21st.dev output with design context, Design DNA tokens, and bold execution mandate.
+
+**Special prereqs:**
+
+- `mcp__magic__logo_search` — used for E3 (logo cloud). Returns TSX with grayscale-colored variants. After logo_search → refiner on the logo cloud section.
+- Lottie integration (overdrive on A7/D4/D5/F6) — `WebFetch(lottiefiles.com/featured)` runs alongside inspiration when fix_skill = "overdrive".
 
 ---
 
