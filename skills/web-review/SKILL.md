@@ -14,11 +14,25 @@ Score what a real user experiences, not just what the code does. A page that tec
 
 ## Process
 
+### Step 0 — Project Context Read (MANDATORY)
+
+Anchor the review to what THIS product is meant to be. Generic "premium SaaS" scoring produces template-drift.
+
+1. Check `{project_root}/CONTEXT.md` exists.
+2. **If missing OR `Generated:` >7 days OR `git log -1` newer than `Generated:` → fire `Skill('project-context')` now.** Literal Skill invocation. Do NOT self-synthesise.
+3. Read CONTEXT.md. Extract:
+   - **Locked Decisions** (section 4) — findings that propose changes contradicting these are auto-INVALID.
+   - **Landing Page Structure** (section 5) — if locked, do NOT flag "missing stats section" or similar unless the structure includes it.
+   - **Pricing & Packaging** (section 6) — if locked, do NOT propose pricing changes.
+   - **Anti-Goals** (section 9) — every recommendation checked against this list before being added to findings.
+4. If verdict = `KILL` or `VALIDATE-FIRST` → HALT, surface, do not review.
+
 ### Step 1 — Read Context
 
 **TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root, replication mode is active. The review must measure the project against the lock file, NOT against `web-system-prompt.md` defaults. Flag any drift from the lock (font swap, radius change, signature-element injection) as a CRITICAL finding. Do not suggest "add a gradient mesh" or "wrap in fadeUp" if the lock does not contain those tokens.
 
 Read `~/.claude/web-system-prompt.md`.
+Read `CONTEXT.md` (already verified in Step 0).
 Read `SCOPE.md` if it exists — use page definitions to verify every page was built as planned.
 Read `CLAUDE.md` for the color job definition.
 Read `src/styles/index.css` and `tailwind.config.ts`.

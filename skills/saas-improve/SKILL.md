@@ -18,6 +18,22 @@ Seven specialist agents scan the product simultaneously — each from a differen
 
 ## Phase 0 — Orient + Production Signal Read
 
+### 0.-1 PROJECT CONTEXT READ — runs BEFORE revenue check, BEFORE any agent dispatch
+
+Anchor the entire swarm to what THIS product is meant to be. Skipping this produces findings that polish a generic SaaS — not this specific one.
+
+1. Check `{project_root}/CONTEXT.md` exists.
+2. **If missing OR `Generated:` date >7 days old OR `git log -1` is newer than `Generated:` → fire `Skill('project-context')` now.** Literal Skill invocation. Do NOT self-synthesise.
+3. Read CONTEXT.md.
+4. Pass these CONTEXT.md fields to every dispatched agent in their prompt:
+   - Locked Decisions (section 4) — agents may not propose changes that contradict
+   - Anti-Goals (section 9) — findings that violate anti-goals are auto-INVALID
+   - Pricing & Packaging (section 6) — if locked, conversion agent may NOT propose pricing changes
+   - Landing Page Structure (section 5) — if locked, UX agent may NOT propose section additions/removals
+   - ICP (section 2) — every marketing/conversion finding scored against this specific buyer
+5. If CONTEXT.md verdict = `KILL` → HALT, surface, do not dispatch.
+6. If CONTEXT.md verdict = `VALIDATE-FIRST` → HALT, surface interview protocol, do not dispatch.
+
 ### 0.0 REVENUE REALITY CHECK — run BEFORE any agent dispatch
 
 Read the project's memory file (if it exists): `~/.claude/projects/c--Users-Adam--claude-projects/memory/project_{slug}.md`.
@@ -44,15 +60,16 @@ This check exists because Tender Writer consumed ~40% of a token budget going fr
 **TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active. The improvement stack must measure against the lock, not against `web-system-prompt.md` defaults. Findings like "missing gradient mesh" or "needs hover scale" are INVALID under replication mode — the lock decides what is missing. Pass lock awareness to every downstream skill in the stack.
 
 Read these files before doing anything else:
-1. `BUILD-LOG.md` — last completed phase, STUCK items, deployed URL
-2. `IMPROVEMENT-STACK.md` — previous stack (if exists and was generated in the last 24 hours: skip Phase 1 and Phase 2, jump directly to Phase 3 execution with the existing stack. If older than 24 hours: re-run Phase 1 and Phase 2 to refresh findings)
-3. `SCOPE.md` — page inventory and feature set
-4. `DESIGN-BRIEF.md` — locked color + typography contract
-5. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
-6. `~/Documents/Claude/outputs/product-validation-{slug}.md` — validator verdict + locked moat/competitors (strategic spine)
-7. `~/.claude/commands/premium-website.md` — quality standard
-8. `~/.claude/skills/shared/saas-gap-checklist.md` — base completeness checklist
-9. `~/.claude/web-system-prompt.md` — Design DNA
+1. `CONTEXT.md` — product anchor (generated in 0.-1; do NOT skip)
+2. `BUILD-LOG.md` — last completed phase, STUCK items, deployed URL
+3. `IMPROVEMENT-STACK.md` — previous stack (if exists and was generated in the last 24 hours: skip Phase 1 and Phase 2, jump directly to Phase 3 execution with the existing stack. If older than 24 hours: re-run Phase 1 and Phase 2 to refresh findings)
+4. `SCOPE.md` — page inventory and feature set
+5. `DESIGN-BRIEF.md` — locked color + typography contract
+6. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
+7. `~/Documents/Claude/outputs/product-validation-{slug}.md` — validator verdict + locked moat/competitors (strategic spine)
+8. `~/.claude/commands/premium-website.md` — quality standard
+9. `~/.claude/skills/shared/saas-gap-checklist.md` — base completeness checklist
+10. `~/.claude/web-system-prompt.md` — Design DNA
 
 Run `git log --oneline -20` and `git status`.
 
