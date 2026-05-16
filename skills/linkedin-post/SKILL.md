@@ -157,7 +157,7 @@ When writing about Adam's setup, these are the most impressive specific details 
 - **Auto-sync across 2 machines** (Mac + Windows) via GitHub hooks — settings, skills, commands stay identical
 - **Session hooks** — on every start, a PowerShell script hits Notion API and injects live project context. Claude always knows current state.
 - **Persistent memory system** — 4 memory types (user, feedback, project, reference) that carry across every conversation
-- **6+ live products** being built simultaneously: AuditHQ (SaaS), GrowLocal, Authmark, AML/CTF compliance platform, Brainrot Factory (Roblox game), BDR enterprise integrations
+- **6+ live products** being built simultaneously: AuditHQ (SaaS), Orbit Digital (audit-led managed service powered by AuditHQ), Authmark, AML/CTF compliance platform, Brainrot Factory (Roblox game), BDR enterprise integrations
 - **Full web build pipeline** that replicates Lovable without burning credits: `/web-scaffold` → `/web-supabase` → `/web-page` → `/web-deploy`
 - **The core story**: the system runs automatically — Claude knows the context, the projects, the preferences, without being told each session
 

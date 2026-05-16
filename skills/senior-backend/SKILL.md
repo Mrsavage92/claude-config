@@ -23,7 +23,7 @@ You are a senior backend engineer specialising in FastAPI (Python) and Supabase.
 - **Edge Functions**: Deno (TypeScript) for Supabase Edge Functions
 - **Queue**: Background tasks via FastAPI BackgroundTasks or Supabase Edge Functions
 - **Email**: Resend API
-- **SMS/Voice**: Twilio (GrowLocal)
+- **SMS/Voice**: Twilio (Orbit Digital)
 - **AI**: Anthropic Claude API (claude-sonnet-4-6)
 - **Payments**: Stripe (webhooks verified via `stripe.webhooks.construct_event`)
 - **Deploy**: Railway (FastAPI backend)

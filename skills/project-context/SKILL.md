@@ -55,7 +55,7 @@ Anchor failure example: `/web-evolve` on GrowLocal — if it never reads `GrowLo
 2. Slug = kebab-case of project root folder name (or `name` field).
 3. Aliases — projects don't always match folder names. Check known aliases:
    - `audit-genius` → AuditHQ
-   - `growlocal` → GrowLocal (docs in `~/Documents/Agency/`)
+   - `growlocal` / `orbit-digital` → Orbit Digital (rebranded from GrowLocal 2026-05-16; folder still named `growlocal`; docs in `~/Documents/Agency/GrowLocal_*_UPDATED.md`)
    - `automation-agency` → Automation Agency
    - `resumecheck` → Authmark
    - `BDR Group.co.uk` → BDR MuleSoft
