@@ -33,9 +33,30 @@ Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-scr
 
    **Measurement 1 — Puppeteer screenshots** (objective evidence): capture baseline_screenshot (from Phase A.7.5 archived to `.evolution/baseline/`) + post_run_screenshot (fresh, post-final-deploy).
 
-   **Measurement 2 — `Skill('critique', args='compare baseline vs post-run | screenshots: [path1, path2] | output: scored | dimensions: hero-impact, hierarchy, distinctiveness, product-visibility, motion, type, color, layout | tier: {target}')`** — the critique skill scores both screenshots independently on a 4-axis 1-5 scale (matching the Phase A.7.5 baseline axes). The orchestrator MUST use critique's returned scores, NOT its own.
+   **Measurement 2 — `Skill('critique', args='compare baseline vs post-run | screenshots: [path1, path2] | output_format: json | output_schema: {dimensions: [{name, score_0_to_5, evidence_summary, screenshot_hash}], aggregate_vq: number, screenshots_analyzed: [{path, sha256}]} | dimensions: hero-impact, hierarchy, distinctiveness, product-visibility, motion, type, color, layout | tier: {target}')`** — the critique skill scores both screenshots independently on a 4-axis 1-5 scale (matching the Phase A.7.5 baseline axes), returning STRUCTURED JSON with a defined schema. The orchestrator MUST use critique's returned scores, NOT its own.
 
-   **`vq_delta = critique.post_run_vq - critique.baseline_vq`**
+   **Output contract (mandatory — orchestrator validates):**
+   ```json
+   {
+     "screenshots_analyzed": [
+       { "path": "<exact path passed in args>", "sha256": "<hash of file content>" },
+       { "path": "<exact path passed in args>", "sha256": "<hash of file content>" }
+     ],
+     "dimensions": [
+       { "name": "hero-impact", "score_0_to_5": 4.2, "evidence_summary": "..." },
+       ...
+     ],
+     "aggregate_vq_baseline": 4.0,
+     "aggregate_vq_post_run": 4.5
+   }
+   ```
+
+   **Hash verification (P10 — proves critique saw the actual files, not stale/cached):**
+   Before invoking critique, orchestrator computes `sha256sum` of each screenshot file. After critique returns, orchestrator compares the returned `sha256` hashes against the locally-computed ones. **If they don't match → critique returned without actually reading the files → REJECT result, retry once, then HALT NEEDS_HUMAN.** This catches the failure mode where the skill returns generic scores based on file paths in args without actually reading file content.
+
+   **Schema validation:** If returned JSON is missing required fields, has type mismatches, or `aggregate_vq_*` is outside [0, 5] → REJECT, retry once with explicit schema reminder in args, then HALT.
+
+   **`vq_delta = critique.aggregate_vq_post_run - critique.aggregate_vq_baseline`**
 
    **Required delta:** `≥ 0.5` at target 90, `≥ 0.7` at target 95, `≥ 1.0` at target 98, `≥ 1.5` at target 100. If the delta floor is not met, the score does not matter — the run is NOT complete. Re-enter Phase C with the priority queue re-sorted by `visual_bonus` and force the top 3 unflipped visual checks through their refinement skill.
 
@@ -74,7 +95,7 @@ Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-scr
 These rules supersede their generic versions when world-class mode is active. Full spec: `references/world-class-tier.md`.
 
 16. **Awwwards-aligned scoring.** Drop the flat 0–100 score. Use 4 dimensions on 10-point scale: Design (40%) / Usability (30%) / Creativity (20%) / Content (10%). Loop exits only when per-dimension minima are met AND weighted average ≥ target. SOTD = 8.0 avg. SOTM = 8.5 avg with Creativity ≥ 9.
-17. **Pick ONE hero signature, execute fully. Combined / "all of the above" picks are BANNED.** Hero must be EXACTLY ONE of: (A) WebGL/3D scene via R3F+drei+postprocessing, (B) GSAP ScrollTrigger pinned narrative (2–4 viewports), (C) Kinetic typography with variable-axis animation. Half-committed heroes (small glow + gradient blob) fail this tier — visible signature or VOID. **At Phase R Step R.3 the orchestrator MUST reject answers that pick multiple options or say "all of them" / "combined" / "every one"** — re-surface the question with the explicit clarification: "Pick ONE. Combined heroes are half-committed by construction — A's R3F WebGL takes a 150KB bundle hit; B's pinned scroll choreography takes 2-3 viewports of scroll budget; C's kinetic-typography axis-on-scroll requires the variable font to be the visual centrepiece. They CONFLICT — pick the one that wins." If the user insists on combined → write `world_class_anchor.user_overrode_singularity: true` to trajectory.json and lower the gate-C minimum by 1 (since the user is paying for breadth not depth, the minimum count requirement softens) — but the run is flagged `quality: "combined-signature-warning"` for the retro. Run #2 on Orbit Digital (2026-05-16) declared "B+A+C combined" and delivered B-only at ~40% completeness — that was a Rule 17 violation enabled by ambiguous language. **Tightened 2026-05-16.**
+17. **Pick ONE hero signature, execute fully. Combined picks are BANNED at base tier.** Hero must be EXACTLY ONE of: (A) WebGL/3D scene via R3F+drei+postprocessing, (B) GSAP ScrollTrigger pinned narrative (2–4 viewports), (C) Kinetic typography with variable-axis animation. Half-committed heroes fail this tier. **Phase R Step R.3 rejects combined picks** — see `references/world-class-tier.md` for the full singularity prompt + combined-override contract (raises Gate F bar AND raises Gate C floor proportionally to the number of signatures picked, not softens — combined is HARDER, not easier). Run #2 on Orbit Digital (2026-05-16) declared "B+A+C combined" and delivered B-only at ~40% — that was a Rule 17 violation enabled by both ambiguous language and a softening clause that contradicted Phase F.1.5 (Gate F). Both fixed 2026-05-16.
 18. **Lenis is mandatory** at world-class. Locomotive is deprecated. `lenis` package with `autoRaf: false syncTouch: false` when GSAP drives the ticker. No native CSS `scroll-behavior: smooth`.
 19. **GSAP owns scroll choreography.** ScrollTrigger pins, SplitText reveals, Flip transitions, MorphSVG when relevant — all free post-Webflow acquisition (Apr 2024). Framer Motion is allowed for component state but never for scroll-narrative.
 20. **Custom cursor + magnetic interactions required.** Replace native cursor. `data-magnetic="true"` on primary CTAs. Motion's `<Cursor>` primitive OR hand-rolled with `lenis` velocity. Touch devices replace hover with explicit tap states.
@@ -118,6 +139,10 @@ These rules supersede their generic versions when world-class mode is active. Fu
 | `--benchmark=URL` | Override auto-picked benchmark URL. |
 | `--pages=/,/pricing` | Multi-page run. Default: just landing. |
 | `--dev-server=http://localhost:3000` | Use localhost instead of live URL (faster iterations, no deploy wait). |
+| `--allow-large-change` | Override P8 complexity gate (Phase C). Required when a single Skill() returns >500 lines or changes >5 files in one iter. Use with caution — blast radius is real. |
+| `--allow-tier-mismatch` | Override P10 tier-mismatch warning (Phase A.0.10). Auto-proceed at deliverable_target without surfacing 5s soft-pause. Use when tooling install is known to be coming next session. |
+| `--allow-anti-goal-override` | Override Phase R.3.6 CONTEXT.md anti-goal conflict warning. Use when user explicitly chose signature despite anti-goal collision (e.g. agency-portfolio look intentional). |
+| `--no-preview-verify` | Skip Phase D Step 7 preview-deploy-verify (push directly to main). Use only when Vercel preview deploys are disabled or unavailable. Trade safety for speed. |
 
 **Everything else is auto-decided** by Phase A.0 from disk state + visual assessment + project signals. See `references/multi-run-orchestration.md` for the full decision tree.
 
@@ -307,24 +332,24 @@ If mode == "advance", build a prioritised list of what to attack this run:
 
 These focus items get `+500` priority bonus in the queue beyond their normal weighting.
 
-**Step A.0.10 — Compute deliverable_target_score (NOT declared_target_score) + echo to user:**
+**Step A.0.10 — Compute deliverable_target_score (TOOLING-ONLY check, NOT declared_target_score) + echo to user:**
 
 The declared_target (Phase A.0 decision) is what the run aims for. The deliverable_target is what the run can actually achieve given installed tooling. They MUST match before the run starts — if they don't, surface upfront, not in retro.
 
-Compute `deliverable_target_score`:
+**This check is TOOLING-ONLY at Phase A.0.10** — signature-specific lib checks happen in Phase R.3.5 AFTER signature is picked (see P4 fix below). Compute `deliverable_target_score`:
 ```
 start with: declared_target
 if declared_target >= 98:
-  required tooling:
+  required tooling (signature-agnostic):
     - chrome-devtools-mcp connected (Phase G.5 Cardinal Rule 24)
     - Skill('critique') available (Cardinal Rule 8 + Gate B)
     - Skill('a11y-audit') available (Phase A.1.5 mandate)
     - Skill('seo-strategy') available (Phase A.1.5 mandate)
     - Phase R will run (Gate E artifact gate)
   for each missing → deliverable_target_score = min(deliverable_target_score, 95)
-  if no R3F libs in package.json AND signature == A → cannot deliver A
-  if no GSAP/lenis in package.json AND signature == B → cannot deliver B
-  if no variable font in font config AND signature == C → cannot deliver C
+  # NOTE: signature-specific lib checks (R3F for A / GSAP+lenis for B / variable font for C)
+  # cannot run here — signature isn't picked yet. They're enforced in Phase R Step R.3.5 below
+  # as a SECOND deliverable_target check that runs after R.3 signature lock.
 if declared_target >= 95:
   required tooling:
     - Skill('critique') available
@@ -332,6 +357,15 @@ if declared_target >= 95:
     - Skill('seo-strategy') available
   for each missing → deliverable_target_score = min(deliverable_target_score, 90)
 ```
+
+**Iteration cap (P13 — math actually adds up at target ≥ 98):**
+At target ≥ 98 the floors add up to MORE than the default 8-iter cap (6 refinement skills + 3 mandated agents + 1 signature delivery + 1 perf trace = 11 must-happens). Apply this corrected cap math:
+```
+if declared_target == 98 AND mode == "fresh": max_iterations = 12
+if declared_target == 98 AND mode == "advance": max_iterations = max(8, int(last_run.real_iterations * 0.7))
+if declared_target == 100: max_iterations = 16 fresh / max(12, int(last_run.real_iterations * 0.7)) advance
+```
+Mandated agents (a11y/seo/critique) DO NOT consume Phase C iterations — they fire in Phase B as parallel-background spawns. Only refinement-skill iterations consume the Phase C cap.
 
 If `deliverable_target_score < declared_target` → SURFACE TO USER (single message, then proceed only if user confirms or 5s passes without interrupt):
 
@@ -373,21 +407,37 @@ Continuing automatically. Interrupt to stop.
 
 **No user prompt UNLESS tier mismatch exists.** The skill proceeds. If the user wanted different behaviour they would have passed an override flag or interrupted.
 
-**Step A.0.11 — Write current run header to trajectory.json:**
+**Step A.0.11 — Write current run header to trajectory.json (with schema_version — P15 fix):**
 
-If trajectory.json missing → create it with `project_path`, `live_url`, empty `runs[]`, and initial `current_run_state`.
+If trajectory.json missing → create it with `schema_version: 2`, `project_path` (use the env-var pattern `${PROJECT_PATH}` for template expansion per P17 — set at Phase 0 start so all phases reference the same value), `live_url`, empty `runs[]`, and initial `current_run_state`.
 
-Otherwise append a new entry to `current_run_state`:
+If trajectory.json exists BUT has no `schema_version` field (old Run #1-era trajectory) → migration step:
+```
+1. Read entire old trajectory.json
+2. Each entry in runs[]: backfill `failed_gates: []` (P8 fix — see Phase F.7), `schema_version_at_write: 1`
+3. Top-level: add `schema_version: 2`, `migration_applied_at: now()`
+4. Write back
+5. Log: "Migrated trajectory.json schema 1 → 2 (added failed_gates array, schema_version field)"
+```
+
+If trajectory.json has `schema_version: 2` already → continue normally.
+
+If trajectory.json has `schema_version > 2` (newer code wrote it) → HALT NEEDS_HUMAN: `"trajectory.json schema_version is {n}, this orchestrator only supports schema_version 2. Update web-evolve skill or back up + delete trajectory.json to start fresh."`
+
+Append a new entry to `current_run_state`:
 ```json
 {
   "id": N,
+  "schema_version": 2,
   "started_at": "{now}",
   "status": "in_progress",
-  "target_score": new_target,
+  "declared_target_score": declared_target,
+  "deliverable_target_score": deliverable_target,
   "tier": tier_label,
   "mode": mode,
   "phases_planned": phases_to_run,
-  "focus_list": focus_list
+  "focus_list": focus_list,
+  "failed_gates": []
 }
 ```
 
@@ -460,6 +510,49 @@ Pick 2–3 references to anchor refinements against:"
 ```
 
 Wait for user reply. Write hero signature + selected references back to `DESIGN-BRIEF.md` under a new `## World-Class Anchor` section. From now on every refinement skill receives `world_class_anchor: {hero_signature, primary_reference_url, secondary_reference_urls}` in its args.
+
+**Step R.3.5 — Second deliverable_target check (signature-specific libs — P4 fix):**
+
+Phase A.0.10's deliverable_target check was tooling-only because signature wasn't picked yet. NOW we know the signature. Re-check libs:
+
+```
+signature = world_class_anchor.hero_signature  # one of A, B, C, or combined array
+required_libs_per_signature = {
+  "A": ["@react-three/fiber", "@react-three/drei", "@react-three/postprocessing", "three"],
+  "B": ["gsap", "lenis"],  # ScrollTrigger + SplitText come via gsap package
+  "C": ["geist", "<some-variable-font-with-font-variation-settings>"],
+}
+
+for sig in (signature if combined else [signature]):
+  for lib in required_libs_per_signature[sig]:
+    if lib not in package.json dependencies:
+      missing_libs.append((sig, lib))
+
+if missing_libs is non-empty:
+  if Phase G is scheduled to run → Phase G will install them, log "Phase G will install: {libs}" and continue
+  else (Phase G already ran or skipped) → HALT NEEDS_HUMAN:
+    "Signature {sig} requires {libs} but they're not in package.json. Install via Phase G (npm install) or re-pick signature. Phase R will not lock until libs match signature."
+```
+
+**Step R.3.6 — CONTEXT.md anti-goal conflict check (P14 fix):**
+
+Read CONTEXT.md §9 anti-goals. If any anti-goal string matches the locked signature's natural description, SURFACE the conflict:
+
+```
+CONFLICT_PATTERNS = {
+  "A": ["3d", "webgl", "agency-portfolio", "decorative", "wow-for-wow-sake"],
+  "B": ["scroll-narrative", "pinned-hero", "longform-scroll"],
+  "C": ["typographic-art", "type-as-hero", "no-product-visible"],
+}
+
+for anti_goal in CONTEXT.md §9 anti-goals (text):
+  for pattern in CONFLICT_PATTERNS[signature]:
+    if pattern matches anti_goal substring (case-insensitive, fuzzy):
+      → surface to user: "CONFLICT: signature {sig} ({pattern}) conflicts with CONTEXT.md anti-goal '{anti_goal}'. Pick: (a) override anti-goal (write 'world_class_anchor.overrides_anti_goal: {anti_goal}' to trajectory), (b) re-pick signature, (c) interrupt."
+      Wait for user reply. Default after 30s soft-pause = (b) re-pick signature.
+```
+
+This catches the Orbit Digital case: CONTEXT.md §9 = "NOT generic agency portfolio aesthetic" — signature A (WebGL) and signature C (kinetic typography centrepiece) both naturally land in agency-portfolio territory. Was implicit in Run #2, now explicit.
 
 **Step R.4 — Inject WC1–WC10 synthetic checks** into the priority queue (visual_bonus 2500 each — higher than checklist 2000-tier). Routing in `fix-routing.md` SKILL_LOOKUP. These checks lead the queue once Phase G completes.
 
@@ -613,7 +706,11 @@ This commit is the world-class baseline. From here, Phase B baseline scores meas
 
 This phase exists because scoring against generic premium-SaaS criteria produces template-drift. The loop must improve toward what THIS product is meant to be, not toward what a SaaS-in-general looks like.
 
-1. Check `{project_path}/CONTEXT.md` exists.
+**Template variable convention (P17):** All paths in this skill use `${PROJECT_PATH}` as the env-var pattern. The orchestrator sets this at Phase 0 start via `export PROJECT_PATH=<resolved absolute path>` so every subsequent bash invocation expands consistently. Legacy `{project_path}` literal markers in this file are equivalent placeholders the orchestrator replaces at template-expansion time. **Never paste a literal `{project_path}` into a bash command** — that fails. Use `"${PROJECT_PATH}"` (double-quoted env var) for bash, `{project_path}` only in prompt template strings to subagents (which the orchestrator pre-expands).
+
+0. **Set `${PROJECT_PATH}`:** `export PROJECT_PATH=$(realpath .)` (or pass via subagent prompt as the explicit absolute path).
+
+1. Check `${PROJECT_PATH}/CONTEXT.md` exists.
 2. **If missing OR `Generated:` date is older than 7 days OR `git log -1` shows commits newer than `Generated:` date → fire `Skill('project-context')` now.** This is a literal Skill invocation. Do NOT self-synthesise the brief by reading docs inline.
 3. Read CONTEXT.md after it exists.
 4. Extract into loop state:
@@ -651,9 +748,15 @@ This phase exists because scoring against generic premium-SaaS criteria produces
    Log: `"Tier behaviour: target {target}/100 → MANDATED agents: {list}. HALT if any cannot fire."`
 
    **Add Gate D to Cardinal Rule 14 evaluation** (Phase F.7 reads this):
-   - Gate D — `mandated_agents_fired_count` per tier:
-     - target 95+: a11y + seo + critique = 3 mandatory. If `count < 3` → status `mandated_agents_skipped`.
-     - target 98+: above 3 + chrome-devtools-mcp perf trace = 4 mandatory. If `count < 4` → status `mandated_agents_skipped`.
+   - Gate D — `mandated_agents_effective_count` per tier (P7 fix — counts ARTIFACTS, not firings):
+     - target 95+: requires ALL of these artifact files to exist + parse as valid JSON:
+       - `${PROJECT_PATH}/.evolution/a11y.json` (from `Skill('a11y-audit')`)
+       - `${PROJECT_PATH}/.evolution/seo.json` (from `Skill('seo-strategy')`)
+       - `${PROJECT_PATH}/.evolution/critique.json` (from `Skill('critique')` cross-check at Phase B)
+     - target 98+: above 3 + `${PROJECT_PATH}/.evolution/perf-trace.json` (from chrome-devtools-mcp).
+     - For each artifact: check exists AND is non-empty AND parses as JSON. Count is the number that pass all three checks. Firing the skill but producing no artifact = doesn't count.
+     - If `count < required` → status `mandated_agents_skipped` with detail string listing which artifacts are missing/malformed.
+   - This catches: skill invoked but errored, skill invoked but returned text instead of JSON, skill invoked but wrote to wrong path. ALL of these previously counted as "fired" under the original spec.
 
 1.6 **Multi-page detection:**
    - If `--pages` flag provided → parse comma-separated list into `pages_to_evolve`
@@ -726,18 +829,39 @@ This phase exists because scoring against generic premium-SaaS criteria produces
    mkdir -p "{project_path}/.evolution/final"
    ```
 
-7.5 **VISUAL QUALITY GATE** — Take a Puppeteer screenshot of `live_url` at 1440×900. Assess visually:
+7.5 **VISUAL QUALITY GATE — via `Skill('critique')`, NOT self-scored (P3 fix):**
+
+   **Step 7.5.a — Capture baseline screenshot to mandated path (P11):**
+   ```
+   mcp__puppeteer__puppeteer_navigate(url={live_url})
+   mcp__puppeteer__puppeteer_screenshot(
+     name="baseline-1440",
+     width=1440, height=900,
+     # Save to canonical path so Cardinal Rule 8 post-run comparison can find it
+   )
+   ```
+   The screenshot MUST be saved to `${PROJECT_PATH}/.evolution/baseline/probe-1440.png` (Puppeteer MCP saves to its own path; orchestrator copies to canonical location). Cardinal Rule 8 reads this exact path at exit-attempt — without it, post-run VQ comparison has no anchor.
+
+   ```bash
+   # After Puppeteer screenshot, copy to canonical baseline path:
+   mkdir -p "${PROJECT_PATH}/.evolution/baseline"
+   cp <puppeteer_screenshot_path> "${PROJECT_PATH}/.evolution/baseline/probe-1440.png"
+   ```
+
+   **Step 7.5.b — Compute baseline VQ via `Skill('critique')` (NOT orchestrator self-score):**
+
+   Same independent measurement as Cardinal Rule 8 post-run. Self-scoring was the loophole that defeated Rules 8 + 14 even after they were patched — closing it at the baseline side too.
 
    ```
-   Rate each 1–5:
-   - Hero impact:        Does the above-fold experience stop a scroll? Flat text on plain bg = 1. Split-pane with visible product, atmospheric depth = 5.
-   - Visual hierarchy:   Is there obvious size/weight contrast between sections? All same = 1.
-   - Distinctiveness:    Does this look like a $10K product or a SaaS template? Template = 1.
-   - Product visibility: Is the actual product UI visible above the fold without scrolling? Not visible = 1.
-   
-   visual_quality_score = average of 4 ratings
+   Skill('critique', args='baseline-mode | screenshots: ["${PROJECT_PATH}/.evolution/baseline/probe-1440.png"] | output_format: json | output_schema: {dimensions: [{name, score_0_to_5, evidence_summary, screenshot_hash}], aggregate_vq: number, screenshots_analyzed: [{path, sha256}]} | dimensions: hero-impact, hierarchy, distinctiveness, product-visibility | tier: {target}')
    ```
-   
+
+   Orchestrator computes sha256 of the screenshot file before invoking critique, validates the returned `screenshots_analyzed[0].sha256` matches (same hash verification as Cardinal Rule 8). If mismatch → REJECT, retry once, then HALT NEEDS_HUMAN.
+
+   Parse `aggregate_vq` from critique's JSON output → `visual_quality_score`. Schema validation: must be in [0, 5]. Reject + retry if malformed.
+
+   **If `Skill('critique')` unavailable at this stage** → HALT NEEDS_HUMAN: `"Baseline VQ measurement requires Skill('critique'). Run cannot proceed at target ≥ 90 without it (self-scoring banned per Cardinal Rule 8 + memory:feedback_no_self_quality_claims)."` No silent fallback to orchestrator scoring.
+
    **If visual_quality_score < 3.0 → INSERT these at the VERY START of the Phase C iteration queue (BEFORE checklist-driven checks):**
    - VQ-1: `Skill('impeccable')` on the hero section with BOLD execution mandate
    - VQ-2: `Skill('layout')` on the features/main content section
@@ -1317,9 +1441,41 @@ Example: `"Hero H1 uses Inter — replace with Geist font | checks: A1, A2 | fai
 
 The refinement skills read the `checks:` and `fail_proof:` markers to enter Targeted Mode (skip impeccable, apply only what args describe).
 
-If Skill() errors or returns "no changes" → log NEEDS_HUMAN for each check_id, increment `attempt_counts`, continue loop (skip 3.5 onwards).
+**Effect verification (P1 fix — Gate A counts Skill EFFECT, not invocations):**
 
-**Complexity budget gate (post-Skill, pre-commit):** After the Skill returns and before commit, check the diff size:
+Before invoking Skill, snapshot mtimes of all files in the iter scope:
+```bash
+# Snapshot mtimes BEFORE Skill call
+declare -A mtime_before
+for f in $(git -C "${PROJECT_PATH}" ls-files src/components src/app src/lib); do
+  mtime_before["$f"]=$(stat -c %Y "${PROJECT_PATH}/$f" 2>/dev/null || echo 0)
+done
+```
+
+After Skill returns, compare:
+```bash
+mtime_changes=0
+for f in "${!mtime_before[@]}"; do
+  mtime_after=$(stat -c %Y "${PROJECT_PATH}/$f" 2>/dev/null || echo 0)
+  if [ "${mtime_before[$f]}" != "$mtime_after" ]; then
+    mtime_changes=$((mtime_changes + 1))
+  fi
+done
+
+if [ "$mtime_changes" == "0" ]; then
+  # Skill produced no file changes despite being invoked
+  log "SKILL EFFECT GATE FAILED: Skill('${fix_skill}') returned without modifying any file. DOES NOT count toward Gate A refinement_skill_invocations_count."
+  # Iteration is effectively a no-op. Log VOID, increment attempt_counts, continue (skip 3.4-3.6).
+  # Critical: the orchestrator MUST NOT then manually Edit the file as a workaround — that's Rule 11.6 bypass.
+  # If Skill produces nothing → check the prompt args, re-route to secondary skill, or escalate to NEEDS_HUMAN.
+fi
+```
+
+The Gate A counter only increments when `mtime_changes > 0`. This closes the loophole where orchestrator could fire `Skill(...)` with empty/bad args, get back "no changes", then manually Edit the file — Skill was "invoked" so old Gate A passed but no Skill effect actually happened.
+
+If Skill() errors or returns "no changes" AND mtime_changes is 0 → log NEEDS_HUMAN for each check_id, increment `attempt_counts`, continue loop (skip 3.4-3.6 onwards).
+
+**Complexity budget gate (post-Skill effect-verified, pre-commit):** After the Skill returns AND mtime gate passes, check the diff size:
 ```bash
 git -C "{project_path}" diff --shortstat
 ```
@@ -1330,7 +1486,26 @@ Apply the budget:
 - **> 500 lines changed in single file** → HALT NEEDS_HUMAN: `"Iteration produced {n}-line change in {file}. That's too large for a single iteration — risk of unverifiable regression. Options: (a) split into 2-3 smaller iterations targeting specific sub-elements, (b) override and continue (`/web-evolve --allow-large-change`), (c) discard this iter and replan."` Do NOT auto-commit.
 - **> 100 lines changed across > 5 files** → same HALT path. Spanning too many files in one iter blocks verification.
 
-Run #2 on Orbit Digital (2026-05-16) made a 440-line single-file rebuild of `ServicesSection.tsx` via `Skill('impeccable')` in one iteration. Worked, but the spec had no gate — pure luck. This budget surfaces blast radius before commit. **Added 2026-05-16.**
+**Disposal step on user-discard (P12 fix):** If user picks "(c) discard this iter and replan" OR interrupts during HALT, the orchestrator MUST clean up working tree to remove the unkept changes — otherwise next iter's diff measurement is contaminated by leftover uncommitted Skill output:
+```bash
+# Get list of files Skill modified (via mtime fingerprint snapshot from effect verification above):
+modified_files=$(git -C "${PROJECT_PATH}" diff --name-only)
+# Revert each in working tree:
+for f in $modified_files; do
+  git -C "${PROJECT_PATH}" checkout HEAD -- "$f"
+done
+# Also clean any untracked files Skill may have created:
+git -C "${PROJECT_PATH}" clean -fd src/
+# Log the disposal:
+log "Discarded iter ${iteration} via complexity gate: ${n} lines reverted across ${file_count} files."
+# Increment attempt_counts and continue with next iter pick (skip this check_id for the rest of run via excluded_skills)
+```
+
+On `(a) split into smaller iters` → same disposal, then re-queue the same check_id with a `split_hint: true` flag so the next iter's Skill call gets `args='SPLIT MODE: prior attempt at this fix was too large. Target ONLY {sub-element-X} this iter.'`
+
+On `(b) --allow-large-change override` → proceed to commit + flag iter `complexity: high+overridden` in BUILD-LOG + trajectory.
+
+Run #2 on Orbit Digital (2026-05-16) made a 440-line single-file rebuild of `ServicesSection.tsx` via `Skill('impeccable')` in one iteration. Worked, but the spec had no gate — pure luck. This budget surfaces blast radius before commit + defines exact cleanup. **Added 2026-05-16.**
 
 ---
 
@@ -1338,7 +1513,26 @@ Run #2 on Orbit Digital (2026-05-16) made a 440-line single-file rebuild of `Ser
 
 Before committing the change, simulate the change locally via dev-server OR run the dev build and probe with Puppeteer to verify the **primary CTA is visible above the 900px viewport** on desktop AND above the 800px viewport on mobile.
 
-**When this step fires:** iter touches any of `HeroSection.tsx`, `CTABand.tsx`, `Navbar.tsx`, or anything that changes font sizes / heights / layout in the first viewport-worth of the page.
+**When this step fires — explicit trigger detection (P18 fix):**
+
+After Skill returns + mtime fingerprint confirmed effect + complexity gate passed, run:
+```bash
+# Determine which files changed in working tree (uncommitted):
+touched_files=$(git -C "${PROJECT_PATH}" diff --name-only HEAD)
+```
+
+The above-fold check FIRES when `touched_files` matches any of:
+- `**/Hero*.tsx` (HeroSection, HeroBackground, HeroDashboardMockup, HeroMockup, etc.)
+- `**/CTABand.tsx`
+- `**/Navbar.tsx`
+- `**/layout.tsx` (root or section layouts — may change header height / inject providers that affect first-viewport)
+- `**/globals.css` (if grep `touched_files` for globals.css → ALWAYS fires; CSS changes can affect any first-viewport layout)
+- `**/tailwind.config.*` (theme changes affect entire site)
+- Any component imported INTO `page.tsx` for routes `/`, `/index`, `/[slug]` where the section is in the first 900px (resolved via SSR HTML inspection — if Puppeteer landing-page screenshot shows the section in viewport at y < 900 before scroll)
+
+**If `touched_files` matches none of the above glob patterns** → SKIP this check, proceed directly to Step 3.5 commit. (Pure backend / CMS / non-first-viewport changes don't need the above-fold probe.)
+
+**If `touched_files` matches one or more** → run the probe below.
 
 **Probe script (Puppeteer evaluate on dev_server_url or staged change):**
 ```javascript
@@ -1606,17 +1800,81 @@ The orchestrator MUST measure `post_run_vq` via Puppeteer screenshot + 4-axis as
    git -C "{project_path}" push -u origin {evolve_branch}
    ```
 
-5. **Resolve Vercel preview URL for the evolve branch:**
+5. **Resolve Vercel preview URL for the evolve branch (P19 + P5 — gh precheck + fallback):**
+
+   **5a. Precheck `gh` CLI availability + auth:**
    ```bash
-   # Wait for Vercel webhook to fire (usually 5s)
-   sleep 5
-   # Query GitHub deployments API for the latest deploy on the evolve branch
-   gh api "repos/{org}/{repo}/deployments?sha=$(git rev-parse HEAD)&per_page=1" \
-     --jq '.[0].statuses_url' | xargs -I {} gh api {} --jq '.[0].target_url'
-   # Returns the preview deployment URL (e.g. https://{slug}-git-{branch}-{team}.vercel.app)
+   if ! command -v gh >/dev/null 2>&1; then
+     log "gh CLI not found. Cannot query GitHub deployments API for Vercel preview URL."
+     PREVIEW_RESOLUTION_PATH="fallback-construct"
+   elif ! gh auth status >/dev/null 2>&1; then
+     log "gh CLI present but not authenticated. Run 'gh auth login' first."
+     PREVIEW_RESOLUTION_PATH="fallback-construct"
+   else
+     PREVIEW_RESOLUTION_PATH="gh-api"
+   fi
    ```
 
-   If preview URL not available within 90s → log NEEDS_HUMAN: `"Vercel preview URL not resolved within 90s. Check Vercel dashboard for build failure, then re-run /web-evolve to retry."`
+   **5b. Detect Vercel project's preview deploy config (P5 — handles Vercel projects with previews disabled):**
+   ```bash
+   # Check if any prior preview deploy exists on this project (means previews are enabled):
+   if [ "$PREVIEW_RESOLUTION_PATH" = "gh-api" ]; then
+     prior_previews=$(gh api "repos/${ORG}/${REPO}/deployments?environment=Preview&per_page=1" --jq 'length')
+     if [ "$prior_previews" = "0" ]; then
+       log "No prior Vercel preview deploys found — preview deploys may be disabled on this Vercel project."
+       PREVIEW_RESOLUTION_PATH="no-preview-deploys"
+     fi
+   fi
+   ```
+
+   **5c. Branch:**
+
+   **Path 1 — `gh-api` (preferred):**
+   ```bash
+   sleep 5  # Vercel webhook ~5s
+   PREVIEW_URL=$(gh api "repos/${ORG}/${REPO}/deployments?sha=$(git rev-parse HEAD)&per_page=1" \
+     --jq '.[0].statuses_url' | xargs -I {} gh api {} --jq '.[0].target_url')
+   ```
+   Wait up to 90s polling. If URL not resolved within 90s → fall through to Path 3.
+
+   **Path 2 — `fallback-construct`:** Construct the typical Vercel preview URL pattern and probe:
+   ```bash
+   # Pattern: {project-slug}-git-{branch-slug}-{team-slug}.vercel.app
+   BRANCH_SLUG=$(echo "${EVOLVE_BRANCH}" | tr '/' '-' | tr '_' '-')
+   PROJECT_SLUG=$(cat "${PROJECT_PATH}/.vercel/project.json" 2>/dev/null | jq -r .projectName)
+   TEAM_SLUG=$(cat "${PROJECT_PATH}/.vercel/project.json" 2>/dev/null | jq -r .orgSlug)
+   CANDIDATE_URL="https://${PROJECT_SLUG}-git-${BRANCH_SLUG}-${TEAM_SLUG}.vercel.app"
+   # Probe — wait up to 90s for HTTP 200:
+   for i in {1..18}; do
+     if curl -fsS -o /dev/null "$CANDIDATE_URL"; then
+       PREVIEW_URL="$CANDIDATE_URL"
+       break
+     fi
+     sleep 5
+   done
+   ```
+   If URL still not 200 within 90s → fall through to Path 3.
+
+   **Path 3 — `no-preview-deploys` OR all-paths-failed:** Vercel previews are disabled or unreachable. Two sub-options:
+
+   - **`--no-preview-verify` flag set** → skip preview verify entirely, push directly to main, accept the verify-on-prod risk. Log: `"Preview-verify SKIPPED per --no-preview-verify flag. Pushing direct to main. Rollback ready if regression detected at Step 10."`
+   - **Default behavior** → HALT NEEDS_HUMAN with explicit options:
+     ```
+     "Cannot resolve Vercel preview URL. Possible causes:
+       1. Vercel preview deploys disabled on this project → enable in Vercel dashboard
+       2. gh CLI unavailable or not authenticated → run 'gh auth login'
+       3. First commit to this branch — wait 2 min and re-run
+     Options:
+       (a) Fix above + re-run /web-evolve (resumes from Phase D)
+       (b) Override with --no-preview-verify (push direct to main, accept risk)
+       (c) Discard evolve branch entirely"
+     ```
+
+   **HALT escalation counter (P20):** Each HALT writes `${PROJECT_PATH}/.evolution/halts.json`:
+   ```json
+   { "halts": [{"phase": "D", "step": "5", "reason": "preview-url-unresolvable", "ts": "..."}, ...] }
+   ```
+   If `halts[].length >= 3` for THIS project → escalate beyond HALT: fire `Skill('root-cause-analyzer', args='analyze .evolution/halts.json across last 3 halts — common pattern?')` to surface the underlying issue. Don't loop user through 3 prompts.
 
 6. **Poll preview URL until deploy completes** (HTTP 200 + new content marker present):
    ```bash
@@ -1735,38 +1993,75 @@ The loop never exits without Phase F. This is how `/web-evolve` improves itself 
 
 Read `DESIGN-BRIEF.md` `## World-Class Anchor` section → extract `hero_signature` (A, B, or C). Then verify the signature was ACTUALLY delivered, not just that a skill was invoked claiming to deliver it. This is the gate that Run #2 on Orbit Digital (2026-05-16) bypassed — it declared "B+A+C combined" and delivered B-only at ~40%, calling it done.
 
-**Signature A (WebGL/3D via R3F):**
-```bash
-# All MUST be true:
-grep -rE "from ['\"]@react-three/fiber['\"]" "{project_path}/src/" | grep -q "Canvas"  # <Canvas> imported
-grep -rE "<Canvas[^>]*>" "{project_path}/src/components/" | head -1  # <Canvas> rendered
-grep -rE "@react-three/(drei|postprocessing)" "{project_path}/src/" | head -1  # supporting libs used
-# Bundle check: a R3F bundle chunk ≥ 80KB exists (lazy-loaded)
-find "{project_path}/.next/static/chunks/" -name "*.js" -size +80k | xargs grep -l "react-three" | head -1
-```
-If any fail → Gate F status `signature_a_undelivered`, retro lists missing pieces.
+**Verification approach (P2 fix — Puppeteer runtime, not grep):**
 
-**Signature B (GSAP ScrollTrigger pinned narrative, 2-4 viewports):**
-```bash
-# All MUST be true:
-grep -rE "ScrollTrigger\.create\|gsap\.timeline\(.*scrollTrigger" "{project_path}/src/" | grep -q "pin: *true"  # pin: true used
-grep -rE "end: ['\"]?\+=([0-9]+)" "{project_path}/src/" | grep -qE "\+=(15[0-9]|[2-3][0-9][0-9])"  # ≥ 150% extra viewport
-grep -rE "SplitText" "{project_path}/src/components/" | head -1  # SplitText used for typography reveal
-# Scroll-DRIVEN, not mount-driven (timeline must bind to ScrollTrigger.scrub, not gsap.timeline().play())
-grep -rE "scrub:" "{project_path}/src/" | grep -qE "scrub: *(true|1)"
-```
-If any fail → Gate F status `signature_b_undelivered`.
+Grep on source code is brittle — comments pass (`// scrub: true`), template-literal end values fail (`end: \`+=${vh*2}\``), .next chunks may not exist yet, font-variation can route via `next/font` without literal CSS. **Replace all greps with Puppeteer runtime probes against the deployed preview/prod URL.** Runtime is ground truth, source code is hope.
 
-**Signature C (Kinetic typography with variable-axis animation on scroll):**
-```bash
-# All MUST be true:
-grep -rE "font-variation-settings" "{project_path}/src/" | head -1  # font-variation CSS used
-grep -rE "useScroll\|scrollYProgress\|ScrollTrigger" "{project_path}/src/components/.*HeroSection" | head -1  # scroll-driven
-grep -rE "wght|wdth|opsz|GRAD|YOPQ" "{project_path}/src/" | head -1  # variable axis named in code (wght/wdth/opsz/etc)
-# Variable font installed
-grep -rE "variable=true|--font-.*-variable|@font-face.*variation-settings" "{project_path}/src/app/" | head -1
+```javascript
+// Puppeteer navigate to {live_url} or {preview_url}, then evaluate:
+(async () => {
+  await new Promise(r => setTimeout(r, 2000)); // wait for hero motion to mount
+  return JSON.stringify({
+    // Signature A — WebGL via R3F
+    A_canvas_present: !!document.querySelector('canvas'),
+    A_canvas_count: document.querySelectorAll('canvas').length,
+    A_three_loaded: typeof THREE !== 'undefined',
+    A_r3f_reconciler: !!document.querySelector('canvas[data-engine*="three"], canvas[data-engine*="r3f"]')
+                    || (typeof window.__R3F !== 'undefined'),
+
+    // Signature B — GSAP ScrollTrigger pin + scrub + SplitText
+    B_gsap_loaded: typeof gsap !== 'undefined' || !!window.gsap,
+    B_scrolltrigger_loaded: typeof ScrollTrigger !== 'undefined' || (window.gsap && !!window.gsap.ScrollTrigger),
+    B_pin_active: (function(){
+      try { return (window.ScrollTrigger || window.gsap?.ScrollTrigger)?.getAll?.()
+        ?.some(t => t.pin && t.scrub) ?? false; } catch { return false; }
+    })(),
+    B_pin_distance_vh: (function(){
+      try {
+        const triggers = (window.ScrollTrigger || window.gsap?.ScrollTrigger)?.getAll?.() || [];
+        const pinned = triggers.find(t => t.pin && t.scrub);
+        if (!pinned) return 0;
+        return Math.round((pinned.end - pinned.start) / window.innerHeight * 100); // % of vh
+      } catch { return 0; }
+    })(),
+    B_splittext_used: document.querySelectorAll('.hero-word, [class*="split-text"]').length > 0,
+    B_lenis_active: !!window.lenis || typeof Lenis !== 'undefined'
+                  || !!document.documentElement.dataset.lenisPrevent,
+
+    // Signature C — Kinetic typography with variable-axis on scroll
+    C_h1_font_variation_settings: getComputedStyle(document.querySelector('h1')).fontVariationSettings,
+    C_variable_font_present: (function(){
+      const ff = getComputedStyle(document.querySelector('h1')).fontFamily;
+      // Check if the loaded font has variable axes
+      try {
+        return Array.from(document.fonts).some(f => f.family.includes(ff.split(',')[0].replace(/['"]/g, '')) && f.featureSettings !== 'normal');
+      } catch { return false; }
+    })(),
+    C_axis_animated_on_scroll: (function(){
+      // Inspect H1 inline style or any animation tied to scroll changing font-variation-settings
+      const h1 = document.querySelector('h1');
+      if (!h1) return false;
+      const initialFVS = getComputedStyle(h1).fontVariationSettings;
+      window.scrollBy(0, 200);
+      const afterScrollFVS = getComputedStyle(h1).fontVariationSettings;
+      window.scrollBy(0, -200);
+      return initialFVS !== afterScrollFVS;
+    })(),
+  });
+})()
 ```
-If any fail → Gate F status `signature_c_undelivered`.
+
+Orchestrator parses the JSON and evaluates per signature:
+
+**Signature A delivered** = `A_canvas_present === true` AND `A_canvas_count >= 1` AND (`A_three_loaded === true` OR `A_r3f_reconciler === true`). Bundle-size check is OPTIONAL — runtime presence is the real proof.
+
+**Signature B delivered** = `B_gsap_loaded === true` AND `B_scrolltrigger_loaded === true` AND `B_pin_active === true` AND `B_pin_distance_vh >= 150` AND `B_splittext_used === true` AND `B_lenis_active === true`.
+
+**Signature C delivered** = `C_h1_font_variation_settings !== 'normal'` AND `C_variable_font_present === true` AND `C_axis_animated_on_scroll === true`.
+
+If any fail for the picked signature → Gate F status `signature_{a|b|c}_undelivered` with the SPECIFIC field that failed (e.g. `signature_b_undelivered: pin_distance_vh was 80, required >=150`).
+
+**Combined signature override:** verify ALL applicable signature checks pass (P9 fix — combined requires ALL, doesn't soften).
 
 **Combined signature (Cardinal Rule 17 — user-overrode_singularity = true):** verify ALL applicable signature gates above. Combined doesn't lower the bar — it raises it (must deliver all 2-3 picks). If user-overrode happened, the orchestrator MUST surface in retro: "User declared combined signature. Verified pieces: A={pass/fail}, B={pass/fail}, C={pass/fail}. Anything `fail` = signature_combined_partial_delivery."
 
@@ -1830,29 +2125,52 @@ If yes — apply via Edit tool, commit `evolve-retro: route updates from {date}`
 
 **Step F.7 — Update trajectory.json with this run's completion + EVALUATE HARD GATES (Cardinal Rule 14):**
 
-Before writing the run entry, compute `status` by evaluating the three hard gates in order. The status is NOT "completed" if any gate fails:
+Before writing the run entry, compute `status` (worst gate) + `failed_gates: string[]` (P8 fix — array, not single string) by evaluating ALL six hard gates and collecting all failures:
 
 ```
-# Gate A — route-around detection (Cardinal Rule 14 Gate A)
+failed_gates = []
+
+# Gate A — route-around detection
 if refinement_skill_invocations_count == 0 AND target_score >= 90:
-    status = "route_around_detected"
-    severity = "CRITICAL"
+    failed_gates.append({"gate": "A", "name": "route_around_detected", "severity": "CRITICAL",
+      "detail": "Zero refinement skills fired. Skill invocations: " + str(skill_invocations_log)})
 
-# Gate B — visual quality delta floor (Cardinal Rule 14 Gate B + Rule 8)
-elif (post_run_vq - baseline_vq) < tier_vq_delta_floor:
-    status = "vq_delta_below_floor"
-    severity = "HIGH"
+# Gate B — visual quality delta floor (via Skill('critique'), not self-scored)
+if (critique.aggregate_vq_post_run - critique.aggregate_vq_baseline) < tier_vq_delta_floor:
+    failed_gates.append({"gate": "B", "name": "vq_delta_below_floor", "severity": "HIGH",
+      "detail": "delta=" + str(delta) + ", required=" + str(tier_vq_delta_floor)})
 
-# Gate C — refinement-skill floor (Cardinal Rule 14 Gate C + Rule 11.7)
-elif refinement_skill_invocations_count < tier_refinement_floor:
-    status = "incomplete_refinement_floor"
-    severity = "HIGH"
+# Gate C — refinement-skill floor (effect-verified count, not invocation count)
+if refinement_skill_effective_count < tier_refinement_floor:
+    failed_gates.append({"gate": "C", "name": "incomplete_refinement_floor", "severity": "HIGH",
+      "detail": "effective=" + str(count) + ", required=" + str(tier_refinement_floor)})
 
-# All gates passed
-else:
+# Gate D — mandated agents (artifact-verified)
+if mandated_agents_artifact_count < tier_required_artifacts:
+    failed_gates.append({"gate": "D", "name": "mandated_agents_skipped", "severity": "HIGH",
+      "detail": "missing artifacts: " + ", ".join(missing_artifacts)})
+
+# Gate E — Phase R artifacts (target >= 98)
+if target_score >= 98 AND not phase_r_artifacts_present:
+    failed_gates.append({"gate": "E", "name": "phase_r_skipped", "severity": "CRITICAL"})
+
+# Gate F — signature delivery via Puppeteer runtime
+if target_score >= 98 AND not signature_runtime_verified:
+    failed_gates.append({"gate": "F", "name": "signature_" + signature.lower() + "_undelivered",
+      "severity": "HIGH", "detail": runtime_check_failure_field})
+
+# Status assignment from collected failures
+if failed_gates is empty:
     status = "completed"
-    severity = "OK"
+elif any gate has severity CRITICAL:
+    status = (first CRITICAL gate's name)  # most-severe wins
+elif any gate has severity HIGH:
+    status = (first HIGH gate's name)
+else:
+    status = "completed_with_warnings"
 ```
+
+The trajectory.json entry records BOTH `status` (single most-severe gate for backwards-compat with old code that reads one status) AND `failed_gates` (full array — what new code reads to see complete picture). Run #2 on Orbit Digital recorded `completed_at_lower_tier` and lost the fact that Gates B + C + D all failed independently — `failed_gates: []` preserves all of them.
 
 Then write the run entry:
 
@@ -1961,3 +2279,39 @@ This is the explicit invitation for the user to re-invoke. The trajectory.json n
 - **Use inspiration MCP without the builder/refiner follow-up** — three-stage pipeline is mandatory (Cardinal Rule 15)
 - **Exit without Phase F retro** — the loop must self-audit (Cardinal Rule 14)
 - **Touch `main` directly when `branch_isolation = true`** — Phase A creates `evolve/{date}`, Phase D pushes there, user merges to main
+
+---
+
+## Changelog
+
+Spec version log. Each entry references commits in `Mrsavage92/claude-config`. Rules tagged `[CL-N]` reference these entries.
+
+**CL-3 (2026-05-16, cd17c7e + this commit):** Adam called out two failure modes after Run #2 on Orbit Digital. (a) Behavioural: orchestrator self-rated output as "perfect / shit hot / epic" then found post-hoc P0s. (b) Taste: orchestrator default reaches are mid-2024-SaaS template (Geist, dark navy + gold, dashboard mockup in hero, bento grid, Lucide-tinted-squares, GSAP pinned scroll as default). Patches: Cardinal Rule 26 (Originality Gate — banned reflex reaches with project-to-project trajectory cross-check), Cardinal Rule 27 (orchestrator may not self-rate visual output as quality claim). Memory entries: `feedback_no_self_quality_claims`, `feedback_taste_calibration`. Plus the 22-issue P0/P1/P2/P3 patch batch:
+- P1 mtime fingerprint (Gate A counts effect, not invocations)
+- P2 grep → Puppeteer runtime for Phase F.1.5 signature checks
+- P3 baseline VQ via Skill('critique'), not self-scored
+- P4 deliverable_target signature-lib re-check at Phase R Step R.3.5
+- P5 Vercel preview fallback path + `--no-preview-verify` flag
+- P6 structured critique output contract with JSON schema
+- P7 Gate D counts artifacts (.evolution/a11y.json etc), not firings
+- P8 trajectory.status as worst-gate + failed_gates: string[] array
+- P9 combined-signature contract: HARDENS Gate F + raises Gate C floor, not softens (contradiction fixed)
+- P10 critique screenshot hash verification (sha256 echo)
+- P11 Phase A.7.5 baseline screenshot save to `${PROJECT_PATH}/.evolution/baseline/probe-1440.png` mandated
+- P12 complexity gate explicit disposal (git checkout + clean) on user-discard
+- P13 max_iterations 12 at target=98 / 16 at target=100 (math actually adds up now)
+- P14 Phase R.3.6 CONTEXT.md anti-goal vs signature conflict check
+- P15 trajectory.json `schema_version: 2` + migration step
+- P16 new flags in Inputs table: --allow-large-change, --allow-tier-mismatch, --allow-anti-goal-override, --no-preview-verify
+- P17 ${PROJECT_PATH} env-var convention at Phase 0
+- P18 above-fold check trigger detection via explicit `git diff --name-only` + glob match
+- P19 gh CLI precheck + fallback URL construction
+- P20 HALT escalation counter (`.evolution/halts.json`, fires root-cause-analyzer at 3 halts)
+- P21 this Changelog section
+- P22 Rule 17 long copy moved to references/world-class-tier.md
+
+**CL-2 (2026-05-16, 1a9fff5):** First 10-patch batch responding to Run #2's deliveries-vs-claims gap. Cardinal Rules 11.6 (edit_direct enforcement), 11.7 (refinement-skill floor), 14 (Phase F hard gates A/B/C), 17 (combined signature ban first pass), 24 (chrome-devtools-mcp HALT). Added Phase R.5 (world-class-references.json gate), Phase G.5 (mcp install path), Phase A.0.10 (deliverable_target_score), Phase D Steps 4-10 (preview-deploy-verify flow), Phase F.1.5 (signature delivery checklist — first version, replaced by P2 runtime checks in CL-3), Phase F.7 (gate evaluation).
+
+**CL-1 (2026-05-16, 4867e7a):** Initial route-around prevention patch series after Run #1 on Orbit Digital fired zero refinement skills + reported 60→99 score with 0.1 vq delta. Tightened Rules 8, 11.5, 14. Added Step 0 iteration guards 0.8 (edit_direct gate), 0.9 (refinement floor tracking). Replaced loose OR-clause Stop conditions with tier floor table.
+
+**Date-policy:** Date stamps in rule text reference the Changelog entry, not inline ("see CL-N" rather than "added 2026-05-16"). Older inline date stamps stay where they are for traceability but new patches reference CL entries.
