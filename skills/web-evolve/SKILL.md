@@ -300,6 +300,34 @@ These rules supersede their generic versions when world-class mode is active. Fu
     }
     ```
 
+    **EXACT critique invocation args (orchestrator MUST use this shape — matches critique's Web-evolve Targeted Mode contract):**
+
+    Phase A.1.5 per-route baseline:
+    ```
+    Skill('critique', args='mode: web-evolve | output_format: json | checklist: sales-page-10 | run_mode: per-route-baseline | screenshots: [.evolution/baseline/home.png, .evolution/baseline/services.png, .evolution/baseline/services-digital-ecosystem-audit.png, ...] | routes: [/, /services, /services/digital-ecosystem-audit, ...] | tier: 98')
+    ```
+
+    Phase C iter visible-delta check (Rule 30):
+    ```
+    Skill('critique', args='mode: web-evolve | output_format: json | run_mode: per-iter-delta | screenshots: [.evolution/iter-{n}-before.png, .evolution/iter-{n}-after.png] | route: /services | tier: 98')
+    ```
+
+    Phase F exit aggregate (Rule 36):
+    ```
+    Skill('critique', args='mode: web-evolve | output_format: json | run_mode: exit-aggregate | baseline_screenshots: [...] | post_run_screenshots: [...] | routes: [...] | tier: 98')
+    ```
+
+    **Expected JSON response shape:** see `~/.claude/skills/critique/SKILL.md` "Web-evolve Targeted Mode" section for the exact contract. Orchestrator MUST validate the response against this schema and HARD HALT if it doesn't match (Rule 28 dispatch table).
+
+    **REBUILD routing (orchestrator action after critique returns):**
+
+    For every route where `verdict: "REBUILD"`, the orchestrator builds the Phase C iter args as:
+    ```
+    Skill('web-page', args='mode: rebuild | route: {route} | rebuild_brief: "{critique.rebuild_brief}" | checklist_fails: {critique.checklist_fails} | tier: 98 | tokens_lock_present: {bool} | existing_components: [...] | data_sources: [src/lib/services-data.ts, ...]')
+    ```
+
+    The orchestrator does NOT pick the skill itself — critique's `recommended_skill` field is the source of truth. For REBUILD verdicts, this is always `"web-page"` or `"web-scaffold"` (critique's Web-evolve Targeted Mode enforces this).
+
     **Why:** Rule 35 was added 2026-05-17 after user pointed at a specific section ("Your website is only one part of the picture" on Orbit Digital home) — 6 problem cards (Weak trust signals, Low visibility, Poor enquiry flow, Missed follow-ups, Outdated structure, No monitoring) listed as pain points with **no answer section** describing what Orbit actually does about them. User's verdict: "okay.. what does orbit digital do. as this isnt clear at all." That's a Rule 35 #5 + #4 + #2 triple-fail — the section enumerates problems without naming what the business does. Critique flagging this requires an explicit checklist, not just an aesthetic vibe score. **Added 2026-05-17.**
 
 36. **`Skill('critique')` fires at three points, not just exit. Missing any of them is a Phase failure.**

@@ -5,10 +5,45 @@ Build one complete, production-quality page with a per-page review loop before m
 ## When to Use
 - Building any page in an existing scaffolded project
 - Called per-page by /saas-build — not all pages at once
+- **Called by /web-evolve in REBUILD mode** when a route's critique verdict is `REBUILD` — see Web-evolve Targeted Mode below
 
 ## Critical Rule
 **One page at a time. Build it. Review it. Fix it. Only then move to the next.**
 The old pattern (build all pages, review at the end) produced thin, empty-feeling pages. This skill enforces the per-page loop.
+
+## Web-evolve Targeted Mode
+
+If your args contain `mode: rebuild` AND `rebuild_brief:` AND `route:`, you are invoked from the **web-evolve** orchestrator after a route received a `REBUILD` verdict from `Skill('critique')`. In this mode:
+
+1. **Skip Step 1 interactive context-gathering for landing-page detection.** The route is already known.
+2. **Skip Step 2 (Enforce Page Order)** — the orchestrator already validated that landing exists.
+3. **Parse args.** Required:
+    - `route: /services` — the route slug being rebuilt.
+    - `rebuild_brief: "..."` — the structured rebuild brief from critique. Contains: what the visitor problem is, what the rebuilt page must communicate, structural pattern to use (bento / sticky-rail / single-column-narrative / split-screen-comparison), reference URLs from competitors, content-rewrite hints.
+    - `checklist_fails: [list]` — the specific Rule 35 (sales-page) FAILs that triggered the REBUILD. The rebuild MUST resolve every item in this list — that's the acceptance criteria.
+    - `tier: 90 | 95 | 98 | 100` — target tier.
+    - `tokens_lock_present: true | false` — if true, read tokens.lock.json and respect replication mode.
+    - `existing_components: [path1, path2]` — components in the project the rebuild can reuse (e.g. `Container`, `GetStartedButton`, `SectionLabel`).
+    - `data_sources: [path1, path2]` — files containing the content data the page should render (e.g. `src/lib/services-data.ts` for `/services` rebuild).
+4. **Still read** these files (they're cheap and load-bearing):
+    - `DESIGN-BRIEF.md` — aesthetic direction, component lock, motion strategy.
+    - `CLAUDE.md` — color job, design decisions.
+    - `tokens.lock.json` if present.
+    - The data source(s) named in `data_sources: []`.
+5. **Build the page from scratch.** Don't patch the existing file. Replace the whole component tree at `src/app/{route}/page.tsx` with a rebuilt version that:
+    - Resolves every item in `checklist_fails` (acceptance criteria).
+    - Uses the structural pattern from `rebuild_brief`.
+    - Reuses components from `existing_components` where applicable.
+    - Renders content from the named `data_sources` instead of hardcoded prose.
+    - Has a clear primary CTA above the fold.
+    - Names WHO YOU ARE + WHAT YOU DO + WHO IT'S FOR in the hero/intro.
+6. **A partial rebuild is a failure.** If you ship only a banner + new headline (not the full page), the orchestrator will VOID the iter per Cardinal Rule 31. A REBUILD iter that's actually a polish iter wearing a rebuild costume is the failure mode this contract prevents.
+7. **Do not invoke /impeccable teach or /critique inline.** The orchestrator handles those. Just build.
+8. **Output** one paragraph: which file changed, what the structural pattern is now, which checklist_fails are resolved, and any new components scaffolded. The orchestrator will re-screenshot + re-critique to verify the rebuilt page clears the tier floor.
+
+Jump directly to the relevant Step 4 page-type template below. Skip Steps 1-3.
+
+---
 
 ---
 

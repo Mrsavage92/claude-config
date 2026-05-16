@@ -6,7 +6,77 @@ user-invocable: true
 argument-hint: "[area (feature, page, component...)]"
 ---
 
+## Web-evolve Targeted Mode
+
+If your args contain `output_format: json` OR `mode: web-evolve` OR a `checklist:` block, you are invoked from the **web-evolve** orchestrator. In this mode:
+
+1. **Skip Steps 1–5 entirely** (the interactive flow). Do not invoke `/impeccable`. Do not ask the user questions. Do not generate a prose report.
+2. **Parse args.** Required:
+    - `screenshots: [path1, path2, ...]` — absolute paths to PNGs to score.
+    - `routes: [/route1, /route2, ...]` — matching route slugs (one per screenshot).
+    - `tier: 90 | 95 | 98 | 100` — target tier for floor calculation.
+    - `checklist: sales-page-10` (or inline 10-rule list) — see Sales-Page Checklist below.
+    - `mode: per-route-baseline | per-iter-delta | exit-aggregate` — what kind of run.
+3. **For each screenshot, run THREE assessments in sequence:**
+    - **(a) Sales-page checklist** (NEW, 10 rules — see below) — count FAILs, list them by rule name.
+    - **(b) Nielsen heuristics** (existing — Step 2 Assessment A logic) — score 0–4 per heuristic, sum 0–40.
+    - **(c) AI Slop Detection** (existing — Step 2 Assessment A logic) — verdict `clean | suspect | critical`.
+4. **Compute per-route verdict:**
+    - `REBUILD` if `checklist_fails >= 2` OR `nielsen_total < 20` OR `ai_slop_critical === "critical"`.
+    - `REFINE` if `checklist_fails === 1` AND `nielsen_total >= 20` AND `nielsen_total < tier_floor`.
+    - `KEEP` if `checklist_fails === 0` AND `nielsen_total >= tier_floor`.
+    - **Tier floor (per route, sum-of-40):** target 90 → 24, target 95 → 28, target 98 → 32, target 100 → 36.
+5. **Return ONLY structured JSON** (no prose, no recommendations to the user, no questions). Exact schema:
+    ```json
+    {
+      "mode": "per-route-baseline",
+      "routes": [
+        {
+          "route": "/services",
+          "screenshot_path": "...",
+          "screenshot_sha256": "...",
+          "verdict": "REBUILD",
+          "checklist_fails": ["sections_earn_place", "what_you_do_above_fold", "outcome_not_process"],
+          "checklist_pass_rate": "7/10",
+          "nielsen_total": 22,
+          "nielsen_scores": { "visibility": 3, "match_real_world": 2, ... },
+          "ai_slop_verdict": "suspect",
+          "vq_aggregate": 2.4,
+          "vq_by_dimension": { "hierarchy": 2.0, "content_density": 2.5, "hero_impact": 2.8, ... },
+          "blocking_issues": ["page renders fully black on load — hydration error suspected"],
+          "recommended_skill": "web-page",
+          "rebuild_brief": "Services index is tile-soup with no service-by-service clarity. Visitor reads 6 problem cards then bounces because no answer section. Rebuild as service-by-service explainer: per service: name + one-sentence what-it-does + outcome the buyer gets + named price-range + 'see details →' link to /services/[slug]. Above the section, add intro: 'Six services. One audit-led flow.' Reference: linear.app/features (single-column-narrative)."
+        }
+      ]
+    }
+    ```
+6. **Skill routing rules (CRITICAL — recommended_skill field):**
+    - For `verdict: "REBUILD"` → `recommended_skill` MUST be `"web-page"` (full route rebuild) OR `"web-scaffold"` (specific section rebuild). **Refinement skills (impeccable / polish / typeset / colorize / animate / overdrive / layout / delight / bolder / clarify / distill / adapt) are BANNED in the recommended_skill field for REBUILD verdicts.** If you find yourself wanting to recommend a refinement skill for a REBUILD route, the verdict is wrong — escalate it to REBUILD by definition.
+    - For `verdict: "REFINE"` → `recommended_skill` is the refinement skill most likely to fix the single checklist FAIL or the Nielsen weakness.
+    - For `verdict: "KEEP"` → `recommended_skill` is `null`.
+
+### Sales-Page Checklist (the 10 golden rules — applied in Web-evolve Targeted Mode)
+
+Score each route against these 10 rules. Each is binary PASS/FAIL.
+
+1. **`who_you_are_clear_in_5_seconds`** — Within 5 seconds of viewing, can the visitor identify the company name + business category? Brand name + category visible above the fold = PASS. Inferring from copy = FAIL.
+2. **`what_you_do_above_fold`** — Is what the company DOES expressed in one plain-English sentence above the fold? Jargon ("deterministic synthesis"), vague ("digital ecosystem optimisation"), or invisible above fold = FAIL.
+3. **`who_its_for_named`** — Target audience explicit ("for local service businesses", "for SaaS founders pre-Series-A"). Generic "for businesses" or unnamed = FAIL.
+4. **`outcome_not_process`** — Sections describe what the visitor GETS (more leads, less admin time), not what you DO methodologically (we audit, we synthesise). Process-heavy without outcomes = FAIL.
+5. **`sections_earn_place`** — Every section answers a visitor question or moves them down the funnel. **A "problem awareness" section MUST be followed immediately by a "here's what we do about it" answer section — never standalone.** Standalone problem-awareness sections that leave the visitor asking "okay so what does this company DO?" = FAIL.
+6. **`social_proof_early`** — Logos, testimonials, case studies, or review counts within the first 2 scroll-screens. Social proof only in footer = FAIL.
+7. **`clear_primary_cta_above_fold`** — One unambiguous "do this next" button above the fold. Two competing primaries = FAIL. No CTA above fold = FAIL.
+8. **`you_language_not_we`** — Hero + first 2 sections frame the visitor's pain and outcome (you / your). Sections starting with "We at [Company]…" or "Our team…" in first 3 scrolls = FAIL.
+9. **`pricing_transparency_or_tease`** — Number, "from $X", "starts at $Y", or "free quote in 30 sec" visible somewhere prominent. Mystery-meat pricing = FAIL.
+10. **`mobile_parity`** — Rules 1–9 above all pass at 375px viewport, 768px tall above-the-fold. If primary CTA or WHAT YOU DO disappears at mobile = FAIL.
+
+**This checklist is mandatory in Web-evolve Targeted Mode.** It is NOT used in interactive `/critique` invocations (those keep the Nielsen-only flow below).
+
+---
+
 ## STEPS
+
+(The sections below are the INTERACTIVE flow. Web-evolve Targeted Mode above skips them entirely. Use these only when `/critique` is invoked directly by a user without `output_format: json` or `mode: web-evolve` markers.)
 
 ### Step 1: Preparation
 
