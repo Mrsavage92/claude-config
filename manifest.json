@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-15",
+  "last_updated": "2026-05-16",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -237,6 +237,7 @@
     "privacy-report-pdf",
     "product-team",
     "product-validator",
+    "project-context",
     "project-doc",
     "project-management",
     "project-manager",
@@ -317,6 +318,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 175
+    "skills": 176
   }
 }

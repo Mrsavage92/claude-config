@@ -26,6 +26,7 @@ Coordinates four specialist agents. Never audits or fixes inline. Calls refineme
 8. **Visual impact is the primary success criterion.** The loop succeeds when a human looking at the site says "this looks dramatically better" — not just when checklist score reaches target. If score hits target but site looks unchanged → continue with visual improvements.
 9. **Invisible checks must never block visible ones.** Code-quality checks (B-series, D1, H-series, C6, C7, I5, I6, A11, I4, I8, I2) must NEVER occupy iteration slots 1-3 if any visual check (A7, A9, D4, D5, F6, K2, K4, E-section checks) exists in the queue.
 10. **Bold execution required.** Every call to overdrive/impeccable/bolder MUST include explicit boldness instructions. "Subtle" is a failure. The before/after screenshots must show obvious visible difference.
+11. **CONTEXT.md is the anchor.** No iteration begins without a fresh CONTEXT.md (≤7 days, no newer commits). Every refinement is checked against Locked Decisions and Anti-Goals from CONTEXT.md before commit. A change that violates either is a VOID, not a KEEP — even if it improves the score.
 
 ---
 
@@ -71,11 +72,28 @@ scoring-engine: ~/.claude/skills/web-evolve/references/scoring-engine.md
 
 ---
 
+## Phase 0 — Project Context Read (MANDATORY, runs before Phase A)
+
+This phase exists because scoring against generic premium-SaaS criteria produces template-drift. The loop must improve toward what THIS product is meant to be, not toward what a SaaS-in-general looks like.
+
+1. Check `{project_path}/CONTEXT.md` exists.
+2. **If missing OR `Generated:` date is older than 7 days OR `git log -1` shows commits newer than `Generated:` date → fire `Skill('project-context')` now.** This is a literal Skill invocation. Do NOT self-synthesise the brief by reading docs inline.
+3. Read CONTEXT.md after it exists.
+4. Extract into loop state:
+   - **Locked Decisions** (section 4) — anti-patterns: do NOT propose changes that contradict these.
+   - **Landing Page Structure** (section 5) — if locked, the section order is FIXED. Refinement skills may not add/remove sections, only refine within them. If "NOT LOCKED" → skill may propose structure.
+   - **Pricing & Packaging** (section 6) — if locked, refinement skills may NOT modify pricing copy or tiers.
+   - **Anti-Goals** (section 9) — every refinement output must be checked against this list before commit. A "better" change that violates an anti-goal is a VOID.
+   - **Open Questions / Gaps** (section 10) — surface to user at end of Phase A before iteration begins.
+5. If CONTEXT.md reports validator verdict = `KILL` or `VALIDATE-FIRST` → HALT the loop. Surface verdict. Do not iterate on a product that shouldn't exist yet.
+
+---
+
 ## Phase A — Setup
 
 **Run all reads in parallel (single message):**
 
-1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`
+1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/CONTEXT.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`
 
 2. **Check for existing loop state** — if `.evolution/loop-state.json` exists, read it. Offer to resume:
    > "Existing loop state found at iteration {N}, score {S}. Resume? (yes/no)"
