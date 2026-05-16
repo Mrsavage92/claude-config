@@ -29,14 +29,30 @@ Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-scr
 5. **Vision checks block until user confirms.** Surface NEEDS_HUMAN, wait, update, continue.
 6. **NULL_DELTA = VOID for design checks only.** For code-quality/documentation-only checks (B-series, H-series, D1, A11, I4, I8, I2 when fix_context is docs-only), NULL_DELTA does NOT trigger VOID — rescore only, KEEP if checks now PASS.
 7. **Raw transparency.** Veto cap hiding >5 pts: show both numbers always.
-8. **Visual impact is the primary success criterion.** The loop succeeds when a human looking at the site says "this looks dramatically better" — not just when checklist score reaches target. If score hits target but site looks unchanged → continue with visual improvements.
+8. **Visual impact is the primary success criterion. Score is a proxy, not the goal — and the proxy can be gamed.** The loop succeeds when a human looking at the before/after says "this looks dramatically better." Enforcement: at exit-attempt the orchestrator MUST re-probe `visual_quality_score` via Puppeteer screenshot + 4-axis assessment (hero impact / hierarchy / distinctiveness / product visibility). **Required delta:** `post_run_vq - baseline_vq ≥ 0.5` at target 90, `≥ 0.7` at target 95, `≥ 1.0` at target 98, `≥ 1.5` at target 100. If the delta floor is not met, the score does not matter — the run is NOT complete. Re-enter Phase C with the priority queue re-sorted by `visual_bonus` and force the top 3 unflipped visual checks through their refinement skill. The OR-clause exit ("score met OR baseline_vq already high") is **banned** — it lets runs report complete without visible change. This rule was tightened 2026-05-16 after a route-around run hit 60 → 99 score with 4.0 → 4.1 visual delta (user verified "looks no different").
 9. **Invisible checks must never block visible ones.** Code-quality checks (B-series, D1, H-series, C6, C7, I5, I6, A11, I4, I8, I2) must NEVER occupy iteration slots 1-3 if any visual check (A7, A9, D4, D5, F6, K2, K4, E-section checks) exists in the queue.
 10. **Bold execution required.** Every call to overdrive/impeccable/bolder MUST include explicit boldness instructions. "Subtle" is a failure. The before/after screenshots must show obvious visible difference.
 11. **CONTEXT.md is the anchor.** No iteration begins without a fresh CONTEXT.md (≤7 days, no newer commits). Every refinement is checked against Locked Decisions and Anti-Goals from CONTEXT.md before commit. A change that violates either is a VOID, not a KEEP — even if it improves the score.
 11.5 **Auto-decide everything from disk + signals — no flags required.** Phase A.0 decides target_score, mode (fresh/resume/advance), phases to run, max_iterations, and focus list. The user invokes `/web-evolve` with nothing and gets the right plan. Re-invocation (any chat, any time) reads `.evolution/trajectory.json` and advances one tier. Repeat-signal phrases (`repeat`, `again`, `level up`, `continue`, `next`, etc.) map to "advance" mode. Flags exist as escape hatches only — see `references/multi-run-orchestration.md`. **NEVER ask the user "Resume? yes/no" or "Target tier?" — decide and proceed.**
+11.6 **SKILL_LOOKUP is the routing authority — orchestrator MAY NEVER self-promote `edit_direct`.** Before applying any fix, the orchestrator MUST read `references/fix-routing.md` `SKILL_LOOKUP[check_id]`. If `edit_direct === false`, the iteration MUST invoke `Skill(fix_skill, ...)` via the Skill tool. Direct `Edit`, `Write`, `Bash sed`, or `npm install + Edit` for that check is a **PHASE FAILURE**:
+    - The iteration does NOT count toward `real_iterations`
+    - The check is re-queued (not flipped to PASS)
+    - The run is logged in trajectory.json with `status: "route_around_detected"`, blocking the next-tier advance
+    - The user-facing summary leads with `⚠️ Route-around detected on checks: [list]`
+    **Why this rule exists:** Run #1 on Orbit Digital (2026-05-16) fired ZERO refinement skills across 5 iterations by treating `edit_direct` as the default for A1/E10/J2/C4/I1/I2/I8/D1 — all of which had `edit_direct: false` in SKILL_LOOKUP. Score went 60 → 99, visual quality went 4.0 → 4.1. The user said "looks no different to me." The orchestrator was scoring the proxy and skipping the work. **Only checks with `edit_direct: true` in SKILL_LOOKUP (A10, B5, E1, G1, G2 — the small process/admin/declarative ones) are eligible for direct Edit. Everything else MUST route through the named skill, even if the orchestrator can "see" a one-line fix.**
+11.7 **Refinement-skill invocation floor — Phase C must invoke design skills.** At least `floor(max_iterations * 0.6)` iterations MUST invoke a skill from `{impeccable, overdrive, animate, typeset, colorize, polish, bolder, delight, layout, distill, clarify, adapt}` via the `Skill()` tool. Minima:
+    - target 90 → ≥ 1 refinement-skill iteration
+    - target 95 → ≥ 3 refinement-skill iterations
+    - target 98 → ≥ 6 refinement-skill iterations (one per Phase R hero-signature commitment + one per major visual category)
+    - target 100 → ≥ 8 refinement-skill iterations
+    If the priority queue empties before the floor is met (rare — usually means the checklist found nothing visible to fix), the orchestrator MUST fire `Skill('critique', args='...')` to generate fresh visual targets, route them through the appropriate refinement skill, and continue Phase C. **Exiting Phase C with the refinement-skill floor unmet is a route-around failure** — trajectory.json records `status: "incomplete_refinement_floor"`.
 12. **`impeccable teach` is mandatory once per project.** Refinement skills (typeset, colorize, layout, animate, polish, bolder, distill, quieter, delight, clarify) produce generic output without design context. Phase A MUST fire `Skill('impeccable', args='teach')` once per project. The "teach" output is cached in `.evolution/design-context.md` and passed to every subsequent skill call. Skipping = silent generic-output failure mode (AuditHQ v2 retro 2026-04-24).
 13. **Design DNA loaded before any UI call.** `~/.claude/web-system-prompt.md` (token system, typography scale, color discipline, visual signatures) MUST be read in Phase A and re-cited in every Skill() args block as a token-discipline marker. Refinement skills must respect Design DNA over their own defaults.
-14. **Self-audit at exit.** Phase F runs after Phase D and writes `.evolution/retro.md` with per-skill efficacy (KEEPs/REVERTs/VOIDs), proposed `fix-routing.md` edits, and a diff vs `/premium-website` contract. The loop never exits without producing this retro — it is how the skill self-improves.
+14. **Self-audit at exit, with hard gates.** Phase F runs after Phase D and writes `.evolution/retro.md` with per-skill efficacy (KEEPs/REVERTs/VOIDs), proposed `fix-routing.md` edits, and a diff vs `/premium-website` contract. The loop never exits without producing this retro. **Three hard gates that override "completed" status:**
+    - **Gate A (route-around):** if Phase C invoked zero refinement skills AND `target_score ≥ 90` → trajectory.json `status: "route_around_detected"`. User-facing summary leads with `⚠️ Route-around failure — this run optimised the score without invoking a single refinement skill. Visual quality delta: {x}. Re-run required.`
+    - **Gate B (visual delta floor):** if `post_run_vq - baseline_vq < required_delta_for_tier` (see Rule 8) → trajectory.json `status: "vq_delta_below_floor"`. Summary leads with `⚠️ Score met but visual quality moved {x} — below the {required} threshold for target {tier}. Re-run required.`
+    - **Gate C (refinement-skill floor):** if Phase C invocations of refinement skills < tier minimum (see Rule 11.7) → trajectory.json `status: "incomplete_refinement_floor"`. Summary leads with `⚠️ {n} refinement-skill iterations fired, {required} required for target {tier}. Re-run required.`
+    The retro must then propose the specific skill invocations that should have fired (priority, skill, args) and offer to run them now via a single message: "Run the missed iterations now? They will be added to the same evolve branch."
 15. **21st.dev pipeline is three-stage, not one.** Component-source flow is `inspiration` → `builder` → `refiner`, never just `inspiration`. Inspiration alone gives prose suggestions; builder generates actual JSX; refiner improves what is already in the repo (which is what `web-evolve` does most of the time).
 
 ---
@@ -970,14 +986,19 @@ Read loop state from `loop-state.json` at start of each iteration. Write it afte
 
 Loop condition: `current_score < target_score AND real_iterations < max_iterations`
 
-**Visual progress gate (evaluated alongside loop condition):**
-Track `visual_checks_flipped` = count of checks with `visual_bonus >= 1000` that flipped FAIL→PASS this session.
+**Visual progress gate (evaluated alongside loop condition) — see Stop Conditions table below for full spec:**
+Track in `loop-state.json`:
+- `visual_checks_flipped` = count of checks with `visual_bonus >= 1000` that flipped FAIL→PASS this session
+- `refinement_skill_invocations_count` = count of Phase C iterations that called `Skill(...)` for a refinement skill from `{impeccable, overdrive, animate, typeset, colorize, polish, bolder, delight, layout, distill, clarify, adapt}`
+- `baseline_vq` = visual quality score from Phase A.7.5 probe (4-axis assessment)
+- `post_run_vq` = re-probed visual quality score at exit-attempt (Puppeteer + 4-axis assessment)
 
-When `current_score >= target_score`:
-- If `visual_checks_flipped >= 1` OR `baseline_visual_quality_score >= 4.0` → exit normally to Phase D.
-- If `visual_checks_flipped == 0` AND `baseline_visual_quality_score < 4.0` → **do NOT exit**. Log: `"Score target met via invisible fixes — forcing visual iteration before exit."` Insert one more VQ-1 iteration (Skill('impeccable') on hero) then exit. This prevents the loop declaring victory when only copy/docs/code-quality checks improved.
+When `current_score >= target_score`, the orchestrator MUST re-probe `post_run_vq` then evaluate ALL THREE GATES from the Stop Conditions table below:
+1. `visual_checks_flipped >= tier_visual_floor`
+2. `(post_run_vq - baseline_vq) >= tier_vq_delta_floor`
+3. `refinement_skill_invocations_count >= tier_refinement_floor`
 
-Store `visual_checks_flipped` in loop-state.json alongside `current_score`.
+If any gate fails → do NOT exit. Force one more iteration through the highest-visual-bonus unflipped check via its refinement skill. Re-evaluate gates after. The old "exit if score met OR baseline_vq high" path is **banned** (Cardinal Rule 8) — it allowed runs to declare complete without visible change, which is the route-around failure mode this skill was designed to prevent, not enable.
 
 ---
 
@@ -993,6 +1014,8 @@ This guard enforces the cardinal rules mechanically. Complete all checks in orde
 [ ] 0.5  excluded_skills loaded — if primary fix_skill is excluded, secondary is set
 [ ] 0.6  If current_score >= target_score AND visual_checks_flipped == 0 AND baseline_vq < 4.0 → this must be the forced VQ-1 iteration, not a normal pick
 [ ] 0.7  BUILD-LOG has an entry for every completed iteration (no silent drops)
+[ ] 0.8  **edit_direct enforcement (Cardinal Rule 11.6):** for every check in `current_checks`, read `SKILL_LOOKUP[check_id].edit_direct`. If `false` for ANY check in the batch, the iteration MUST use `Skill(fix_skill, ...)` via the Skill tool — direct Edit / Bash sed / npm install + Edit are FORBIDDEN. The orchestrator may NOT decide "the fix is small enough to edit directly" — that judgment is SKILL_LOOKUP's, not the orchestrator's. If about to invoke Edit on a `edit_direct: false` check → STOP, route through `Skill(fix_skill)` instead.
+[ ] 0.9  **Refinement-skill floor tracking (Cardinal Rule 11.7):** read `loop-state.json.refinement_skill_invocations_count` and `tier_minimum`. If `current_iteration_index ≥ max_iterations - (tier_minimum - count)` AND count < tier_minimum → the remaining iteration slots are RESERVED for refinement-skill invocations. Pick from the queue only checks routed through refinement skills (impeccable/overdrive/animate/typeset/colorize/polish/bolder/delight/layout/distill/clarify/adapt); skip non-refinement checks even if they have higher visual_bonus. If no refinement-routed checks remain in queue → fire `Skill('critique', args='generate-visual-targets')` to synthesise some.
 ```
 
 If any guard check fails → log `"GUARD FAIL: 0.X — {reason}"` and resolve before Step 1.
@@ -1076,8 +1099,23 @@ Append this to every `args` string when calling a design skill:
 EXECUTE BOLDLY. No atmospheric opacity below 0.15. No subtle-only changes. The visual difference must be immediately obvious when comparing before/after screenshots at 1440x900. If a human looking at the screenshots cannot immediately say "yes, that's clearly different and better" — the fix has FAILED and must be redone with more dramatic execution. For hero sections: commit to a direction and execute fully. A half-committed hero (tiny glow, imperceptible grain) is worse than no change.
 ```
 
-**Case A — `edit_direct: true`** (A10, B5, E1, G1, G2 etc):
-Use the Edit tool directly. The `fix_context` from the priority_queue entry contains the exact change needed. Log to BUILD-LOG: "H1: PASS (Edit tool — edit_direct fix, too small for skill invocation)".
+**Case A — `edit_direct: true`** (ONLY A10, B5, E1, G1, G2 per `SKILL_LOOKUP` — this list is closed):
+
+**Hard gate (Cardinal Rule 11.6) — re-check before invoking Edit:**
+```
+for check_id in current_checks:
+    routing = SKILL_LOOKUP[check_id]
+    if routing.edit_direct is False:
+        ABORT — this iteration is misrouted.
+        Re-pick via Case C (refinement skill).
+        Log to BUILD-LOG: "GUARD 0.8 FAIL: about to Edit a edit_direct:false check ({check_id}). Routing to Skill('{routing.fix_skill}') instead."
+        DO NOT proceed with Edit.
+```
+
+Only AFTER the gate passes:
+Use the Edit tool directly. The `fix_context` from the priority_queue entry contains the exact change needed. Log to BUILD-LOG: "{check_id}: PASS (Edit tool — edit_direct fix per SKILL_LOOKUP, too small for skill invocation)".
+
+**The orchestrator's judgment that a fix "looks small enough to edit directly" is NOT sufficient.** SKILL_LOOKUP is the authority. If you find yourself thinking "I could just sed this across 7 files faster than calling Skill('colorize')" — STOP. That is the route-around failure mode (Cardinal Rule 11.6). Call the skill.
 
 **Case B — `prereq` is not null** (A8, A9, B3, B9, E3, F6, K2 etc) — **three-stage 21st.dev pipeline (Cardinal Rule 15):**
 
@@ -1347,12 +1385,25 @@ Commit: {sha | "(reverted)" | "(voided)"}
 
 | Condition | Action |
 |---|---|
-| `current_score >= target_score` AND `(visual_checks_flipped >= 1 OR baseline_visual_quality_score >= 4.0)` | Exit → Phase D |
-| `current_score >= target_score` AND `visual_checks_flipped == 0` AND `baseline_visual_quality_score < 4.0` | Force one VQ-1 iteration (Skill('impeccable') on hero, BOLD), then exit → Phase D |
-| `real_iterations >= max_iterations` | Log TIMEOUT → Phase D |
-| Queue empty | Log STUCK → Phase D |
+| `current_score >= target_score` AND `visual_checks_flipped >= tier_visual_floor` AND `(post_run_vq - baseline_vq) >= tier_vq_delta_floor` AND `refinement_skill_invocations >= tier_refinement_floor` | Exit → Phase D |
+| `current_score >= target_score` but ANY of the three visual/refinement gates above fail | Do NOT exit. Force one more iteration via `Skill('overdrive')` on the highest-visual-bonus unflipped check (or `Skill('critique', args='generate-visual-targets')` if queue empty), re-test gates after. Max 3 forced iterations before HALT NEEDS_HUMAN (`"score met but visual gates cannot be satisfied — manual decision required"`). |
+| `real_iterations >= max_iterations` AND any gate unmet | Log TIMEOUT-WITH-GATE-FAILURE → Phase D BUT trajectory.json `status: "incomplete_*"` per Rule 14 Gates A/B/C |
+| `real_iterations >= max_iterations` AND all gates met | Log TIMEOUT-COMPLETE → Phase D, status `completed` |
+| Queue empty AND any gate unmet | Fire `Skill('critique')` to refill queue with visual targets, continue. If still empty after critique → HALT NEEDS_HUMAN |
+| Queue empty AND all gates met | Log STUCK-COMPLETE → Phase D |
 | Check attempted 3× | Auto-WONTFIX, continue |
 | Build breaks twice | HALT → NEEDS_HUMAN |
+
+**Tier floor table** (read by orchestrator at start of Phase C, written to loop-state.json):
+
+| Target | `visual_checks_flipped` floor | `vq_delta` floor | `refinement_skill_invocations` floor |
+|---|---|---|---|
+| 90 | ≥ 1 | ≥ 0.5 | ≥ 1 |
+| 95 | ≥ 2 | ≥ 0.7 | ≥ 3 |
+| 98 | ≥ 4 | ≥ 1.0 | ≥ 6 |
+| 100 | ≥ 6 | ≥ 1.5 | ≥ 8 |
+
+The orchestrator MUST measure `post_run_vq` via Puppeteer screenshot + 4-axis assessment at exit-attempt — not assume "baseline was already 4.0, no change needed." See Cardinal Rule 8.
 
 ---
 
@@ -1508,16 +1559,43 @@ After writing retro.md, surface the top-3 recommended edits to the user:
 
 If yes — apply via Edit tool, commit `evolve-retro: route updates from {date}`. If no — retro.md still exists for future review.
 
-**Step F.7 — Update trajectory.json with this run's completion:**
+**Step F.7 — Update trajectory.json with this run's completion + EVALUATE HARD GATES (Cardinal Rule 14):**
 
-Read `.evolution/trajectory.json`, move `current_run_state` into `runs[]` array with completed fields:
+Before writing the run entry, compute `status` by evaluating the three hard gates in order. The status is NOT "completed" if any gate fails:
+
+```
+# Gate A — route-around detection (Cardinal Rule 14 Gate A)
+if refinement_skill_invocations_count == 0 AND target_score >= 90:
+    status = "route_around_detected"
+    severity = "CRITICAL"
+
+# Gate B — visual quality delta floor (Cardinal Rule 14 Gate B + Rule 8)
+elif (post_run_vq - baseline_vq) < tier_vq_delta_floor:
+    status = "vq_delta_below_floor"
+    severity = "HIGH"
+
+# Gate C — refinement-skill floor (Cardinal Rule 14 Gate C + Rule 11.7)
+elif refinement_skill_invocations_count < tier_refinement_floor:
+    status = "incomplete_refinement_floor"
+    severity = "HIGH"
+
+# All gates passed
+else:
+    status = "completed"
+    severity = "OK"
+```
+
+Then write the run entry:
 
 ```json
 {
   "id": N,
   "started_at": "...",
   "completed_at": "{now}",
-  "status": "completed",
+  "status": "{computed above — completed | route_around_detected | vq_delta_below_floor | incomplete_refinement_floor}",
+  "gate_a_route_around": {"failed": bool, "refinement_skill_invocations_count": N, "iterations_via_edit_direct_only": [list of check_ids]},
+  "gate_b_vq_delta": {"failed": bool, "baseline_vq": x, "post_run_vq": y, "delta": z, "required": w},
+  "gate_c_refinement_floor": {"failed": bool, "count": N, "required": M, "tier_min": K},
   "target_score": ...,
   "tier": "...",
   "mode": "...",
@@ -1527,6 +1605,8 @@ Read `.evolution/trajectory.json`, move `current_run_state` into `runs[]` array 
   "void_count": ...,
   "visual_quality_baseline": ...,
   "visual_quality_final": ...,
+  "refinement_skill_invocations_count": ...,
+  "refinement_skills_used": ["overdrive", "typeset", ...],
   "awwwards": {"design": ..., "usability": ..., "creativity": ..., "content": ..., "avg": ...},
   "perf_trace": {"lcp_ms": ..., "inp_ms": ..., "cls": ..., "lighthouse_perf": ...},
   "uncompleted_wc_checks": [...],
@@ -1539,6 +1619,27 @@ Read `.evolution/trajectory.json`, move `current_run_state` into `runs[]` array 
   "skill_efficacy": { "typeset": {"keeps": 4, "reverts": 1, ...}, ... }
 }
 ```
+
+**If any gate failed, the Phase F.9 user-facing summary MUST lead with the failure (see Rule 14):**
+
+```
+⚠️ ROUTE-AROUND DETECTED — Run #{N} did not invoke any refinement skill.
+   Score moved {baseline} → {final} via edit_direct on checks the SKILL_LOOKUP
+   says require refinement skills: {list}.
+   Visual quality moved {baseline_vq} → {post_run_vq} (delta {x}, required {y}).
+   This run does NOT count as a tier-advance. Re-run required.
+
+   Refinement skills that should have fired:
+   - Skill('typeset')  on A1 (font swap requires typography judgment, not edit)
+   - Skill('layout')   on E10 (footer restructure)
+   - Skill('clarify')  on J2 (copy quality)
+   - Skill('colorize') on C4 (token migration)
+   - Skill('animate')  on D1 (motion adoption)
+
+   Run them now? (yes / pick subset / no)
+```
+
+The next `/web-evolve` invocation reads `trajectory.runs[-1].status` — if it is anything other than `"completed"`, it MUST NOT advance the target tier. It re-runs at the SAME target with `mode: "advance"` carrying the failed-gates as `focus_list`.
 
 If this run set `world_class_anchor` (Phase R) or installed motion stack (Phase G), update those fields at the trajectory root level (not under any specific run — they are cross-run invariants).
 
