@@ -136,6 +136,45 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
 27. **NEVER self-rate the visual output as a quality claim.** The orchestrator's instinct is to say "this looks epic / dramatically better / shit hot / world-class." That's the same self-scoring loophole Cardinal Rule 8 closes for VQ delta — extended to all visual judgment. **At Phase D and Phase F user-facing summaries, the orchestrator may state ONLY facts** ("deployed to commit X, GSAP timeline pinned for 100vh, font swapped from Inter to {foundry}{font}") — never quality claims about its own output. Quality assessment is `Skill('critique')`'s job, not the orchestrator's. Run #2's "EPIC hero!" / "Services rebuild!" / "TRANSFORMATION!" framing was exactly this failure mode. **Added 2026-05-16.**
 
+28. **HALT NEEDS_HUMAN paths are SUPERVISED-mode-only by default. `--unsupervised` mode converts them to soft-degrades.** Run #1 + Run #2's failure was orchestrator self-completion; the patch series in CL-1/CL-2/CL-3 fixed that by adding ~15 HALT gates. But HALT = wait for human = run dies overnight. For autonomous overnight runs the gates should DOWNGRADE the outcome (mark in trajectory.failed_gates) not BLOCK execution.
+
+    **Read at Phase A.0 startup:** if `--unsupervised` flag is set, write `UNSUPERVISED_MODE=true` to env + loop-state.json. All subsequent HALT NEEDS_HUMAN dispatches read this flag.
+
+    **HALT dispatch table (canonical — every HALT in the spec routes through this):**
+
+    | Original HALT trigger | Supervised behaviour (default) | Unsupervised behaviour |
+    |---|---|---|
+    | chrome-devtools-mcp missing at target≥98 (Phase G.5 / Cardinal Rule 24) | HALT for install | Auto-downgrade `deliverable_target_score = 95`, log `chrome-devtools-mcp unavailable, downgraded to deliverable_target=95 for this run`, continue |
+    | Mandated agents (a11y/seo/critique) skipped or errored (Phase A.1.5 / Gate D) | HALT | Continue with `gate_d.failed=true, missing_artifacts: [list]`, Gate B (VQ delta) marks `confidence: low` |
+    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | Fall back to orchestrator self-score with explicit `baseline_vq_self_scored: true` flag, trajectory records `vq_measurement_unverified: true` |
+    | `Skill('critique')` JSON schema invalid (Cardinal Rule 8 / P6) | retry once + HALT | retry once + loose-parse what came back + log warning + continue |
+    | Critique screenshot hash mismatch (Cardinal Rule 8 / P10) | retry + HALT | log warning + continue (it's a verification, not a contract) |
+    | CONTEXT anti-goal vs Phase R signature conflict (Phase R.3.6 / P14) | Surface to user, 30s soft-pause | Default to "respect anti-goal" (re-pick signature OR if no fallback, lock signature with `anti_goal_overridden: true` flag) |
+    | Phase R artifacts missing (Phase R.5 / Gate E) | HALT for re-run | Auto-run R.1-R.4 inline (don't HALT, just do the work) |
+    | Vercel preview URL unresolvable (Phase D Step 5 / P5) | HALT or `--no-preview-verify` | Auto-act as if `--no-preview-verify` is set, log `preview-verify skipped, prod-verify only` |
+    | Above-fold check fails post-corrective (Phase C Step 3.4 / P6) | HALT abort iter | Force one corrective size-pass; if STILL fails, commit anyway + flag iter `above_fold_unrecoverable` + continue |
+    | Complexity gate >500 lines or >100 lines across >5 files (Phase C Step 3 / P8) | HALT for user decision | Auto-act as `--allow-large-change`, commit + flag iter `complexity: high+autoapproved` |
+    | Tier mismatch declared vs deliverable (Phase A.0.10 / P10) | 5s soft-pause | Auto-act as if `--allow-tier-mismatch`, run at deliverable, log mismatch |
+    | trajectory.json schema mismatch / unparseable (P15) | HALT | Back up old trajectory to `.evolution/trajectory.backup-{ts}.json` + start fresh trajectory, log warning |
+    | HALT escalation counter ≥3 (P20) | Fire root-cause-analyzer | Same — but root-cause-analyzer fires in background, run continues (don't await its result, just log to trajectory) |
+    | Tier 98 + Phase R signature lib missing (Phase R.3.5 / P4) | HALT | If Phase G is scheduled → continue (Phase G installs); if not → auto-add to package.json + run npm install + continue |
+    | mtime fingerprint shows zero file changes after Skill (Cardinal Rule 11.6 / P1) | log NEEDS_HUMAN | Same as supervised — this one stays as-is (it's a critical signal that orchestrator can't bypass) but increments `consecutive_no_op_skill_calls` counter; if counter ≥3 → HALT even in unsupervised (legitimately stuck, no point continuing) |
+
+    **HARD HALTs preserved in `--unsupervised` mode** (these must HALT even autonomously — continuing causes prod breakage or data loss):
+
+    1. **TypeScript / build errors** — `npx tsc --noEmit` fails. Cannot deploy broken code.
+    2. **Dirty working tree at Phase A.1.7 pre-branch-create** — uncommitted user changes might be lost in branch switching. HALT regardless.
+    3. **>5 consecutive iteration VOIDs** — the run is stuck; continuing wastes the rest of the night burning Opus tokens on no-ops.
+    4. **Vercel prod deploy returns BUILD FAILURE on main push** — Phase D Step 9 polls for prod deploy; if Vercel reports `failed` status, HALT immediately (don't keep iterating against a broken main).
+    5. **`Skill()` invocation infrastructure errors** (skill not found, MCP server down, network error preventing any tool calls) — run can't proceed at all.
+
+    **Morning review pattern:** when user wakes up to an unsupervised run, the first thing they read is `trajectory.runs[-1].failed_gates` (P8 fix array). Each soft-degrade logs there with structured detail. Decision tree:
+    - All gates passed → run completed cleanly, review the diff
+    - Some gates failed but run completed → review which gates, decide whether to re-run vs accept
+    - Run HALTed early on a hard-HALT → trajectory.halted_at field shows where + why
+
+    **Why this rule exists:** Adam called out 2026-05-17 that the gate-tightening series turned every uncertainty into a HALT path, making overnight runs unviable. Architecturally the gates should DOWNGRADE outcomes, not BLOCK execution. **Added 2026-05-17 (CL-5).**
+
 ---
 
 ## Inputs
@@ -156,6 +195,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
 | `--allow-tier-mismatch` | Override P10 tier-mismatch warning (Phase A.0.10). Auto-proceed at deliverable_target without surfacing 5s soft-pause. Use when tooling install is known to be coming next session. |
 | `--allow-anti-goal-override` | Override Phase R.3.6 CONTEXT.md anti-goal conflict warning. Use when user explicitly chose signature despite anti-goal collision (e.g. agency-portfolio look intentional). |
 | `--no-preview-verify` | Skip Phase D Step 7 preview-deploy-verify (push directly to main). Use only when Vercel preview deploys are disabled or unavailable. Trade safety for speed. |
+| `--unsupervised` | Overnight / autonomous mode. Converts ~15 soft-failure HALT NEEDS_HUMAN paths into "log + soft-degrade + continue" so the run doesn't sit at a prompt all night. Hard HALTs preserved: TS/build errors, dirty working tree pre-Phase-A, >5 consecutive VOIDs, Vercel prod deploy build failure. Everything else degrades + records in trajectory.failed_gates for morning review. Cardinal Rule 28 spec. |
 
 **Everything else is auto-decided** by Phase A.0 from disk state + visual assessment + project signals. See `references/multi-run-orchestration.md` for the full decision tree.
 
@@ -2299,7 +2339,9 @@ This is the explicit invitation for the user to re-invoke. The trajectory.json n
 
 Spec version log. Each entry references commits in `Mrsavage92/claude-config`. Rules tagged `[CL-N]` reference these entries.
 
-**CL-4 (2026-05-17, this commit):** Installed `taste-skill` from `github.com/Leonxlnx/taste-skill` (Leonxlnx) into `~/.claude/skills/taste-skill/SKILL.md`. The skill is a 226-line bias-correction system for AI-generated frontend: dial values (DESIGN_VARIANCE 8 / MOTION_INTENSITY 6 / VISUAL_DENSITY 4), 10 sections covering typography/color/layout/materiality/interactive-states/forms/creative-proactivity/performance/AI-tells/creative-arsenal/bento-motion-engine/pre-flight-check. Cardinal Rule 26 rewritten to DEFER to taste-skill as the canonical authority for banned patterns + approved alternatives (it's more researched than my own banned-list — notable diff: my Rule 26 banned Geist outright; taste-skill allows Geist when paired with Geist Mono for technical UIs). Mandatory taste-skill integration points: (1) Phase R Step R.3 signature commitment cross-checks taste-skill rules, (2) Phase A Step A.8.5 fires taste-skill in parallel with impeccable teach + merges output into design-context.md, (3) every Phase C refinement skill call includes taste-skill rules marker in args, (4) Phase F.1.5 pre-flight check runs taste-skill against final deployed URL, (5) project-to-project trajectory cross-check preserved. Memory: `feedback_taste_calibration` updated to reference taste-skill as canonical source.
+**CL-5 (2026-05-17, this commit):** Cardinal Rule 28 — `--unsupervised` mode. The gate-tightening series in CL-1/2/3 added ~15 HALT NEEDS_HUMAN paths. Adam pointed out this makes overnight unsupervised runs unviable — HALT means wait for human, no human = run dies. Rule 28 converts the 14 soft-failure HALTs to log+degrade+continue when `--unsupervised` flag is set. Only 5 hard HALTs preserved (TS errors, dirty tree, ≥5 consecutive VOIDs, Vercel prod build fail, infrastructure errors). Soft-degrades record in trajectory.failed_gates for morning review. The 1 path that stays HALT even unsupervised: ≥3 consecutive Skill no-op invocations (legitimately stuck signal).
+
+**CL-4 (2026-05-17, 55b6ed9):** Installed `taste-skill` from `github.com/Leonxlnx/taste-skill` (Leonxlnx) into `~/.claude/skills/taste-skill/SKILL.md`. The skill is a 226-line bias-correction system for AI-generated frontend: dial values (DESIGN_VARIANCE 8 / MOTION_INTENSITY 6 / VISUAL_DENSITY 4), 10 sections covering typography/color/layout/materiality/interactive-states/forms/creative-proactivity/performance/AI-tells/creative-arsenal/bento-motion-engine/pre-flight-check. Cardinal Rule 26 rewritten to DEFER to taste-skill as the canonical authority for banned patterns + approved alternatives (it's more researched than my own banned-list — notable diff: my Rule 26 banned Geist outright; taste-skill allows Geist when paired with Geist Mono for technical UIs). Mandatory taste-skill integration points: (1) Phase R Step R.3 signature commitment cross-checks taste-skill rules, (2) Phase A Step A.8.5 fires taste-skill in parallel with impeccable teach + merges output into design-context.md, (3) every Phase C refinement skill call includes taste-skill rules marker in args, (4) Phase F.1.5 pre-flight check runs taste-skill against final deployed URL, (5) project-to-project trajectory cross-check preserved. Memory: `feedback_taste_calibration` updated to reference taste-skill as canonical source.
 
 **CL-3 (2026-05-16, cd17c7e + 09c6ced):** Adam called out two failure modes after Run #2 on Orbit Digital. (a) Behavioural: orchestrator self-rated output as "perfect / shit hot / epic" then found post-hoc P0s. (b) Taste: orchestrator default reaches are mid-2024-SaaS template (Geist, dark navy + gold, dashboard mockup in hero, bento grid, Lucide-tinted-squares, GSAP pinned scroll as default). Patches: Cardinal Rule 26 (Originality Gate — banned reflex reaches with project-to-project trajectory cross-check), Cardinal Rule 27 (orchestrator may not self-rate visual output as quality claim). Memory entries: `feedback_no_self_quality_claims`, `feedback_taste_calibration`. Plus the 22-issue P0/P1/P2/P3 patch batch:
 - P1 mtime fingerprint (Gate A counts effect, not invocations)
