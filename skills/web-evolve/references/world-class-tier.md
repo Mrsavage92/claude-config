@@ -266,3 +266,28 @@ Phase R fetches the top 6 winners across these sources, screenshots each, extrac
 - Mobile = "responsive squeeze of desktop" with stale hover states
 - Generic stock photography (Unsplash hero image)
 - AI-generated illustration that signals AI-generated (Midjourney hero with 6-finger hands etc.)
+
+---
+
+## Hero Signature Singularity (Cardinal Rule 17 detail)
+
+Phase R Step R.3 surfaces 3 hero signature options (A WebGL/3D, B GSAP scroll-narrative, C kinetic typography variable-axis). Pick ONE. **Combined / "all of them" / "every one" picks are rejected by default** with this orchestrator-side clarification re-surfaced:
+
+> Pick ONE. Combined heroes are half-committed by construction.
+> - A's R3F WebGL takes a 150KB+ bundle hit and dominates LCP if loaded synchronously.
+> - B's pinned scroll choreography takes 2-3 viewports of scroll budget that other narrative sections can't reuse.
+> - C's kinetic-typography axis-on-scroll requires the variable font to be the visual centrepiece — competing with any non-typographic hero element.
+>
+> These CONFLICT for visual centrality. Pick the one that wins. The other two can appear as supporting accents in OTHER sections (not the hero).
+
+### Combined-signature override contract
+
+If the user insists on combined after the singularity prompt:
+
+1. Write `world_class_anchor.user_overrode_singularity: true` to trajectory.json
+2. Write `world_class_anchor.combined_picks: ["A", "B"]` (or whatever subset)
+3. **Gate F (signature delivery, Phase F.1.5) requires ALL picked signatures to be verifiably delivered** — not softened. If user picks A+B, Phase F.1.5 must verify `<Canvas>` rendered AND ScrollTrigger pin+scrub+SplitText. Failing either = status `signature_combined_partial_delivery`.
+4. **Gate C (refinement-skill floor) is RAISED proportionally, not softened.** Combined picks need MORE refinement skill iterations (each signature element needs its own iter), not fewer. Formula: `tier_refinement_floor = base_floor * (1 + 0.5 * (combined_count - 1))`. Combined of 2 → 1.5x floor (e.g. target 98 = 6 → 9). Combined of 3 → 2x floor (6 → 12).
+5. The run is flagged `quality: "combined-signature-elevated-bar"` for the retro and `max_iterations` MUST be auto-raised by the same proportional factor.
+
+The earlier softening clause ("lower the gate-C minimum by 1") was a contradiction with Gate F and is removed. Combined is a HARDER commitment, not an easier one. Most users picking combined will reverse to a singular pick when the bar is shown.
