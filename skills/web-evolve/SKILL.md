@@ -84,6 +84,24 @@ These rules supersede their generic versions when world-class mode is active. Fu
 24. **Performance traced by chrome-devtools-mcp, not synthetic PageSpeed.** Real Chrome traces against deployed URL with 4× CPU slowdown + Slow 4G emulation. Targets: LCP < 2.0s, INP < 150ms, CLS < 0.05 (target 98) — tighter at target 100.
 25. **OKLCH color tokens. No shadcn defaults.** `slate`/`zinc`/`neutral` are the AI-template signature. 1 brand accent + 2 neutrals + 1 surface, period.
 
+26. **Originality Gate — refuse mid-tier SaaS reaches (mechanical, not aspirational).** The orchestrator's reflex picks ARE the AI-generic aesthetic. Block them at the source. **At Phase R Step R.3 + Phase G + every refinement Skill() args composition, the orchestrator MUST reject the following default reaches and force a deliberate alternative:**
+
+    **Banned fonts** (reflex picks for "premium dark technical"): Inter, **Geist** (same designer as Inter, same neutral character — "non-Inter alternative" is still the AI reach), DM Sans, Plus Jakarta, Outfit, Instrument Sans, IBM Plex. At target ≥ 98, font must come from: Pangram Pangram (free-to-try / paid), Velvetyne (OFL free), Klim Type Foundry (paid), ABC Dinamo (paid), Future Fonts (early-access), or a foundry of equivalent specificity. The choice must be defensible as a deliberate character pick, not "the next safe one after Inter."
+
+    **Banned color reaches:** dark navy `#0d0e10`-ish bg + warm gold accent on dark + 4-shade-near-black surface palette is the universal SaaS pattern (GitHub default + every Stripe clone). At target ≥ 95, the palette must NOT match the trajectory.json's any prior project's hue range. Force a different anchor hue per project (read trajectory across all evolve projects + reject palette collision).
+
+    **Banned hero patterns:** dashboard mockup in hero (Stripe / Linear / Vercel / Resend universal), big-h1-centered + dual-CTA + product-mockup-below (the YC SaaS layout), gradient blob behind h1, hero with floating cards/badges. At target ≥ 98, hero must have ONE memorable element no comparable competitor has — and the orchestrator must NAME that element in DESIGN-BRIEF `world_class_anchor.signature_originality`.
+
+    **Banned component reaches:** Lucide-icons-in-tinted-squares cards, SVG arc gauges as "live metric", workflow node diagrams (T→P→O circles + dashed lines), sparkline mini-charts as card decoration, "live scan" sweep lines. These are universal SaaS visual library. If a component visually matches any of these — orchestrator must commit to a custom variation distinct enough that another project couldn't reuse the same render.
+
+    **Originality cross-check before signature lock:** at Phase R Step R.3, the orchestrator MUST read trajectory.json across ALL prior web-evolve projects on this machine (not just current project's runs). If the proposed Phase R signature (font + palette + hero pattern) matches any prior project's final state by ≥2 dimensions (font same/adjacent, palette same hue range, hero pattern same archetype) → reject + re-pick. **Project-to-project visual collision is the failure mode** — every project must be visually distinguishable from every other I've shipped.
+
+    **"One memorable choice" rule:** before exit (Phase F.1.5 alongside signature delivery), orchestrator must name the ONE thing about this site that no other site has. If unable to name it, the design is mid — re-enter Phase C with `Skill('overdrive', args='originality-emergency: this site has no memorable choice, add one — proposals: ...')`. **Status `mid_tier_no_originality` blocks exit.**
+
+    **Why this exists:** Run #2 on Orbit Digital (2026-05-16) shipped Geist + dark navy `#0d1117` + dashboard mockup in hero + bento services + Lucide-tinted-squares + GSAP pinned scroll. Every choice was the most-common version of the choice. The user's feedback: "no style, no true unique designs, everything you generate for me is 2020 same copy and paste AI design." This rule blocks the reflex reaches at the spec level. **Added 2026-05-16.**
+
+27. **NEVER self-rate the visual output as a quality claim.** The orchestrator's instinct is to say "this looks epic / dramatically better / shit hot / world-class." That's the same self-scoring loophole Cardinal Rule 8 closes for VQ delta — extended to all visual judgment. **At Phase D and Phase F user-facing summaries, the orchestrator may state ONLY facts** ("deployed to commit X, GSAP timeline pinned for 100vh, font swapped from Inter to {foundry}{font}") — never quality claims about its own output. Quality assessment is `Skill('critique')`'s job, not the orchestrator's. Run #2's "EPIC hero!" / "Services rebuild!" / "TRANSFORMATION!" framing was exactly this failure mode. **Added 2026-05-16.**
+
 ---
 
 ## Inputs
