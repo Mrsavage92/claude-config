@@ -11,6 +11,7 @@ If your args contain `checks:` and `fail_proof:`, you are invoked from the **web
 3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
 4. **Do not ask questions** — all context is in args.
 5. **Output** one sentence: which file changed and what changed.
+6. **Refuse invisible diffs (web-evolve Cardinal Rule 30).** Before returning, check if your edit changes a rendered pixel. If you're only swapping a token for an identical-value token (e.g. `#21262d` → `bg-card` when `bg-card` resolves to `#21262d`), shifting alpha by < 0.1, or making a structural change with no visible impact, return `INVISIBLE_DIFF: <reason>` instead of committing. The orchestrator will VOID the iter and re-pick with a bolder skill.
 
 Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 

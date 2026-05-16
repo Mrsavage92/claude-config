@@ -73,12 +73,21 @@ Coordinates four specialist agents (web-score, web-benchmark, web-patch, web-scr
     - The run is logged in trajectory.json with `status: "route_around_detected"`, blocking the next-tier advance
     - The user-facing summary leads with `⚠️ Route-around detected on checks: [list]`
     **Why this rule exists:** Run #1 on Orbit Digital (2026-05-16) fired ZERO refinement skills across 5 iterations by treating `edit_direct` as the default for A1/E10/J2/C4/I1/I2/I8/D1 — all of which had `edit_direct: false` in SKILL_LOOKUP. Score went 60 → 99, visual quality went 4.0 → 4.1. The user said "looks no different to me." The orchestrator was scoring the proxy and skipping the work. **Only checks with `edit_direct: true` in SKILL_LOOKUP (A10, B5, E1, G1, G2 — the small process/admin/declarative ones) are eligible for direct Edit. Everything else MUST route through the named skill, even if the orchestrator can "see" a one-line fix.**
-11.7 **Refinement-skill invocation floor — Phase C must invoke design skills.** At least `floor(max_iterations * 0.6)` iterations MUST invoke a skill from `{impeccable, overdrive, animate, typeset, colorize, polish, bolder, delight, layout, distill, clarify, adapt}` via the `Skill()` tool. Minima:
-    - target 90 → ≥ 1 refinement-skill iteration
-    - target 95 → ≥ 3 refinement-skill iterations
-    - target 98 → ≥ 6 refinement-skill iterations (one per Phase R hero-signature commitment + one per major visual category)
-    - target 100 → ≥ 8 refinement-skill iterations
+11.7 **Refinement-skill invocation floor — Phase C must invoke design skills, AND each invocation must be tied to a specific Phase A finding.** The floor is a minimum, not a counter to game.
+
+    **Counting rules (updated 2026-05-17):**
+
+    - At least `floor(max_iterations * 0.6)` iterations MUST invoke a skill from `{impeccable, overdrive, animate, typeset, colorize, polish, bolder, delight, layout, distill, clarify, adapt}` via the `Skill()` tool. Minima:
+        - target 90 → ≥ 1 refinement-skill iteration
+        - target 95 → ≥ 3 refinement-skill iterations
+        - target 98 → ≥ 6 refinement-skill iterations (one per Phase R hero-signature commitment + one per major visual category)
+        - target 100 → ≥ 8 refinement-skill iterations
+    - **Each counting invocation MUST cite a specific `page-baselines.json` finding ID or `blocking_issue` in its args.** Skill calls that don't reference a Phase A finding by ID are not counted toward the floor. (Stops orchestrator from manufacturing busywork iters to pad the count.)
+    - **Iters VOIDED by Rule 30 (invisible diff, SSIM > 0.985) are subtracted from the count.** A VOIDED iter is not a counted iter. (Stops orchestrator from gaming the floor with no-op refinements.)
+
     If the priority queue empties before the floor is met (rare — usually means the checklist found nothing visible to fix), the orchestrator MUST fire `Skill('critique', args='...')` to generate fresh visual targets, route them through the appropriate refinement skill, and continue Phase C. **Exiting Phase C with the refinement-skill floor unmet is a route-around failure** — trajectory.json records `status: "incomplete_refinement_floor"`.
+
+    **Why the tightening:** Run #3 (2026-05-17) "met" the target-98 floor of 6 with 3 invisible iters (border-token swap, 0.85→0.72 alpha shift, hex-to-token cleanup — all SSIM ≥ 0.99). The count was met; the spirit (visible improvement) was violated. The two new clauses force every counted iter to (a) address a real Phase A finding and (b) produce a visible delta.
 12. **`impeccable teach` is mandatory once per project.** Refinement skills (typeset, colorize, layout, animate, polish, bolder, distill, quieter, delight, clarify) produce generic output without design context. Phase A MUST fire `Skill('impeccable', args='teach')` once per project. The "teach" output is cached in `.evolution/design-context.md` and passed to every subsequent skill call. Skipping = silent generic-output failure mode (AuditHQ v2 retro 2026-04-24).
 13. **Design DNA loaded before any UI call.** `~/.claude/web-system-prompt.md` (token system, typography scale, color discipline, visual signatures) MUST be read in Phase A and re-cited in every Skill() args block as a token-discipline marker. Refinement skills must respect Design DNA over their own defaults.
 14. **Self-audit at exit, with hard gates.** Phase F runs after Phase D and writes `.evolution/retro.md` with per-skill efficacy (KEEPs/REVERTs/VOIDs), proposed `fix-routing.md` edits, and a diff vs `/premium-website` contract. The loop never exits without producing this retro. **Three hard gates that override "completed" status:**
@@ -146,7 +155,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
     |---|---|---|
     | chrome-devtools-mcp missing at target≥98 (Phase G.5 / Cardinal Rule 24) | HALT for install | Auto-downgrade `deliverable_target_score = 95`, log `chrome-devtools-mcp unavailable, downgraded to deliverable_target=95 for this run`, continue |
     | Mandated agents (a11y/seo/critique) skipped or errored (Phase A.1.5 / Gate D) | HALT | Continue with `gate_d.failed=true, missing_artifacts: [list]`, Gate B (VQ delta) marks `confidence: low` |
-    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | Fall back to orchestrator self-score with explicit `baseline_vq_self_scored: true` flag, trajectory records `vq_measurement_unverified: true` |
+    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | **HARD HALT (updated 2026-05-17 by Rule 32) — critique unavailability now blocks ALL runs, supervised or not. Cannot fly blind on the primary VQ signal. If critique skill is missing/errored, the run dies before iter 1 with `HALT NEEDS_HUMAN: Install or fix Skill(critique) before re-running`.** |
     | `Skill('critique')` JSON schema invalid (Cardinal Rule 8 / P6) | retry once + HALT | retry once + loose-parse what came back + log warning + continue |
     | Critique screenshot hash mismatch (Cardinal Rule 8 / P10) | retry + HALT | log warning + continue (it's a verification, not a contract) |
     | CONTEXT anti-goal vs Phase R signature conflict (Phase R.3.6 / P14) | Surface to user, 30s soft-pause | Default to "respect anti-goal" (re-pick signature OR if no fallback, lock signature with `anti_goal_overridden: true` flag) |
@@ -167,6 +176,8 @@ These rules supersede their generic versions when world-class mode is active. Fu
     3. **>5 consecutive iteration VOIDs** — the run is stuck; continuing wastes the rest of the night burning Opus tokens on no-ops.
     4. **Vercel prod deploy returns BUILD FAILURE on main push** — Phase D Step 9 polls for prod deploy; if Vercel reports `failed` status, HALT immediately (don't keep iterating against a broken main).
     5. **`Skill()` invocation infrastructure errors** (skill not found, MCP server down, network error preventing any tool calls) — run can't proceed at all.
+    6. **`Skill('critique')` unavailable** (added 2026-05-17 by Rule 32) — primary VQ signal; orchestrator cannot self-rate per Rules 8 + 27. Without critique the run is gate-blind.
+    7. **Phase A.1.5 page enumeration produces zero routes** (added 2026-05-17 by Rule 29) — sitemap unreadable + homepage crawl returned no internal links. Cannot establish per-route baselines. Without baselines Phase R-IA mode (Rule 31) cannot run.
 
     **Morning review pattern:** when user wakes up to an unsupervised run, the first thing they read is `trajectory.runs[-1].failed_gates` (P8 fix array). Each soft-degrade logs there with structured detail. Decision tree:
     - All gates passed → run completed cleanly, review the diff
@@ -174,6 +185,59 @@ These rules supersede their generic versions when world-class mode is active. Fu
     - Run HALTed early on a hard-HALT → trajectory.halted_at field shows where + why
 
     **Why this rule exists:** Adam called out 2026-05-17 that the gate-tightening series turned every uncertainty into a HALT path, making overnight runs unviable. Architecturally the gates should DOWNGRADE outcomes, not BLOCK execution. **Added 2026-05-17 (CL-5).**
+
+29. **Phase A enumerates EVERY public route — not just the homepage. NO EXCEPTIONS, including --unsupervised.** Hero-only baseline is the route to "you didn't evolve anything" failure.
+
+    **Phase A.1.5 NEW spec (replaces "baseline screenshot homepage only"):**
+
+    1. **Read the sitemap.** Prefer (in order): `public/sitemap.xml`, `app/sitemap.ts`, `.next/server/app/sitemap.xml`, OR crawl internal `<a href>` links from the homepage. Build `route_list: string[]`. Cap at 20 routes; if more, take the 20 most-linked-from-homepage.
+    2. **For each route, screenshot + critique.** Use chrome-devtools (preferred) or puppeteer. Save to `.evolution/baseline/{route-slug}.png`. Fire `Skill('critique', args='per-route VQ baseline | screenshots: [...] | dimensions: hierarchy, content-density, hero-impact, layout, distinctiveness | tier: {target}')` and capture the per-route aggregate VQ + blocking_issues list.
+    3. **Write `.evolution/page-baselines.json`** with one entry per route: `{ route, screenshot_path, vq_aggregate, vq_by_dimension, blocking_issues: [], priority_rank }`. Routes are ranked by `(blocking_issues.length × 100) + (3.0 - vq_aggregate) × 10 + traffic_proxy`.
+    4. **Any route with `vq_aggregate < 2.0` OR `blocking_issues.length > 0` becomes a P0 iter.** P0 iters take priority over hero-only refinements. The orchestrator builds `focus_list` from `page-baselines.json.routes WHERE priority_rank <= 5`, not from hero gap analysis alone.
+
+    **--unsupervised does NOT skip this rule.** Without per-route baselines the run is flying blind. The route-crawl + screenshot batch costs ~30s and ~5 critique calls — cheap.
+
+    **Why:** Run #3 on Orbit Digital (2026-05-17) shipped 8 iters all touching the homepage hero + global CSS. User opened `/services` (tile-soup, zero service-by-service clarity) and `/services/digital-ecosystem-audit` (page rendered fully BLACK). Verdict: "you didn't evolve anything." Phase A had only screenshotted the homepage hero — neither broken page was visible to the orchestrator at any point in the run. **Added 2026-05-17.**
+
+30. **Visible-delta floor per iter — invisible iters are VOIDED, not committed.** Cardinal Rule 11.7's refinement-skill floor was being gamed by iters that produced zero visible change. Rule 30 closes that loophole.
+
+    **Per-iter contract (Phase C.iter):**
+
+    1. **Pre-iter screenshot** of the affected route (use chrome-devtools, save to `.evolution/iter-{n}-before.png`).
+    2. **Apply the iter** via the chosen Skill().
+    3. **Post-iter screenshot** to `.evolution/iter-{n}-after.png`.
+    4. **Compare.** Either (a) compute SSIM via Bash `python -c "from PIL import Image; ..."` if Pillow available, OR (b) fire `Skill('critique', args='compare iter-{n}-before vs iter-{n}-after | output: visible_delta_verdict_0_to_5 | screenshots: [before, after]')`. Compare is REQUIRED. Skipping = VOID by default.
+    5. **VOID if:** SSIM > 0.985 OR critique visible_delta_verdict < 1.0. Run `git reset --hard HEAD~1`. Log `void_reason: invisible_change` in `trajectory.real_iterations_detail[n]`. Iter does NOT count toward refinement-skill floor (Rule 11.7).
+    6. **KEEP if:** SSIM ≤ 0.985 AND critique visible_delta_verdict ≥ 1.0. Commit stays, count increments.
+
+    **Exception:** code-quality-only iters (B-series checks, fix-routing changes, lazy-init bug fixes) are exempt from Rule 30 — they're allowed to produce zero pixel delta. Flag them `iter_class: code_quality` in trajectory and exclude from refinement-floor count.
+
+    **Why:** Run #3 (2026-05-17) gamed the 6-iter refinement floor with three iters that produced SSIM ≥ 0.99: iter 5 (border-white/8 → border-gl-border, same visual color), iter 6 (alpha 0.85 → 0.72, near-imperceptible), iter 7 (hex literal → token of same value, by-construction zero delta). The floor was met by counting, not by producing visible improvement. User verdict: "you literally add a few words, a shitty animation or two — nothing has evolved." **Added 2026-05-17.**
+
+31. **Phase R defers to IA fixes when secondary pages are broken.** A SOTD hero on top of broken services pages is still a broken site. Phase R Step R.0 (NEW — runs BEFORE Step R.1) is the IA bottleneck gate.
+
+    **Phase R Step R.0 spec:**
+
+    1. Read `.evolution/page-baselines.json` (produced by Rule 29 Phase A.1.5).
+    2. Build `ia_bottlenecks: route[]` — every entry where `vq_aggregate < 3.0` OR `blocking_issues.length > 0`.
+    3. **If `ia_bottlenecks.length >= 2`:** activate **Phase R-IA mode**. SKIP Steps R.1-R.4 (signature pick). Build `focus_list` from `ia_bottlenecks` instead. Each becomes a P0 iter — rebuild the route entirely, not patch it. Trajectory records `phase_r_mode: "IA"`. Hero signature pick is DEFERRED to Run #N+1.
+    4. **If `ia_bottlenecks.length <= 1`:** proceed with normal Phase R Steps R.1-R.4 signature pick.
+
+    **At target ≥ 98 in Phase R-IA mode:** before iter 1, fire `Skill('critique', args='for each bottleneck route, propose structural rebuild approach (which existing component to reuse, which new component to build), content rewrite (what each section should say at minimum), 3 reference URLs from competitors who solve this same IA problem well')`. The output is appended to each iter's args as `ia_rebuild_brief`.
+
+    **Why:** Run #3 (2026-05-17) locked Phase R to "singular B signature" and shipped 8 hero-focused iters. User then opened `/services` (tile-soup) and `/services/digital-ecosystem-audit` (fully blank page). The IA bottleneck was on routes the orchestrator never looked at because Phase R framing forced "pick a hero signature" instead of "rebuild what's broken." **Added 2026-05-17.**
+
+32. **`Skill('critique')` fires at three points, not just exit. Missing any of them is a Phase failure.**
+
+    **Three mandatory critique invocations per run:**
+
+    1. **Phase A.1.5 — per-route baseline.** Output written to `.evolution/page-baselines.json` (Rule 29).
+    2. **Phase C.iter.4 — per-iter visible delta verification.** Output flips iter status to KEEP or VOID (Rule 30).
+    3. **Phase F.0 — paired baseline-vs-post-run aggregate.** For each route critiqued in Phase A, capture a post-run screenshot, fire `Skill('critique')` against the paired set, compute `route_vq_delta`. Aggregate vq_delta is the **mean across ALL routes**, not just the homepage. A run that improved the homepage by 1.5 but left `/services` at the same broken baseline shows aggregate ~0.3 — fails the target-98 floor (≥1.0).
+
+    **Self-scoring is BANNED at all three points.** If `Skill('critique')` is unavailable, the run HALTs even under --unsupervised (cannot fly blind on the primary signal). Cardinal Rule 28 dispatch table updated: critique unavailability is now a HARD HALT.
+
+    **Why:** Run #3 (2026-05-17) cited Rule 8 (independent VQ measurement) as a "would-be" requirement but the orchestrator never actually fired `Skill('critique')` once across the entire run. Result: 8 iters shipped with zero independent measurement, exit retro acknowledged the gap but couldn't quantify the failure. Rule 32 closes the "would-be" hole by naming the three invocation points and refusing to exit Phase F without all three. **Added 2026-05-17.**
 
 ---
 

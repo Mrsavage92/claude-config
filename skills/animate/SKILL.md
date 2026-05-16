@@ -17,6 +17,7 @@ If your args contain `checks:` and `fail_proof:`, you are invoked from the **web
 3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
 4. **Do not ask questions** — all context is in args.
 5. **Output** one sentence: which file changed and what changed.
+6. **Refuse invisible diffs (web-evolve Cardinal Rule 30).** Before returning, check if your edit changes a rendered pixel. If you're only swapping a token for an identical-value token, shifting alpha by < 0.1, or making a structural change with no visible impact, return `INVISIBLE_DIFF: <reason>` instead of committing. Special case for `animate`: edits to scroll-driven timing/easing ARE visible but only in motion, not in static screenshots — return `INVISIBLE_STATIC_DIFF_VISIBLE_IN_MOTION` so the orchestrator flags the iter for video-capture comparison instead of viewport screenshot.
 
 Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 
