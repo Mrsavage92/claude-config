@@ -107,7 +107,16 @@ These rules supersede their generic versions when world-class mode is active. Fu
 17. **Pick ONE hero signature, execute fully. Combined picks are BANNED at base tier.** Hero must be EXACTLY ONE of: (A) WebGL/3D scene via R3F+drei+postprocessing, (B) GSAP ScrollTrigger pinned narrative (2–4 viewports), (C) Kinetic typography with variable-axis animation. Half-committed heroes fail this tier. **Phase R Step R.3 rejects combined picks** — see `references/world-class-tier.md` for the full singularity prompt + combined-override contract (raises Gate F bar AND raises Gate C floor proportionally to the number of signatures picked, not softens — combined is HARDER, not easier). Run #2 on Orbit Digital (2026-05-16) declared "B+A+C combined" and delivered B-only at ~40% — that was a Rule 17 violation enabled by both ambiguous language and a softening clause that contradicted Phase F.1.5 (Gate F). Both fixed 2026-05-16.
 18. **Lenis is mandatory** at world-class. Locomotive is deprecated. `lenis` package with `autoRaf: false syncTouch: false` when GSAP drives the ticker. No native CSS `scroll-behavior: smooth`.
 19. **GSAP owns scroll choreography.** ScrollTrigger pins, SplitText reveals, Flip transitions, MorphSVG when relevant — all free post-Webflow acquisition (Apr 2024). Framer Motion is allowed for component state but never for scroll-narrative.
-20. **Custom cursor + magnetic interactions required.** Replace native cursor. `data-magnetic="true"` on primary CTAs. Motion's `<Cursor>` primitive OR hand-rolled with `lenis` velocity. Touch devices replace hover with explicit tap states.
+20. **Custom cursor + magnetic interactions — OPT-IN only, never auto-shipped.** ~~Required~~ Removed-as-default 2026-05-17 after user rejected the iter-1 custom cursor on Orbit Digital ("wtf is that mouse animation - omg no remove immediately"). Custom cursors are an Awwwards-portfolio aesthetic that read as "agency show-off" on service-business sites — wrong tone for diagnostic / professional / Linear-tier brands.
+
+    **The new contract:** custom cursors are OPT-IN per project. They ship ONLY when:
+    1. The project's CLAUDE.md or DESIGN-BRIEF.md explicitly authorises a custom cursor, OR
+    2. The user explicitly asks for one in their `/web-evolve` invocation (e.g. `/web-evolve --custom-cursor`), OR
+    3. `tokens.lock.json` shows the reference site uses one (replication mode).
+
+    Absent any of those signals, **DO NOT ship a custom cursor**. The native OS cursor is the correct default for service-business sites. `data-magnetic="true"` on CTAs is allowed only when the cursor is opted-in (it's a no-op otherwise).
+
+    **Why:** Run #3 on Orbit Digital (2026-05-17) shipped a 166-line custom dot+ring magnetic cursor as iter 1 because Rule 20 said "required." User's verdict on seeing it: immediate reject. The cursor was reverted same day. Rule 20 was too prescriptive — Awwwards-tier ≠ Awwwards-portfolio-aesthetic ≠ correct for every project's audience. **Demoted 2026-05-17.**
 21. **View Transitions API on every route change.** Same-doc transitions (Chrome 111+, Safari 18+, Firefox 144+). `viewTransitionName` on shared elements. `prefers-reduced-motion` respected (skip if reduce).
 22. **Variable font from foundry — not Inter from Google as the only choice.** Recommended free: Geist (Vercel, OFL). Commercial: Söhne, Calibre, GT America. At least one variable axis animated on hover or scroll. Pangram fonts are free-to-try ONLY — pay if shipping, do not auto-install.
 23. **Real product UI in hero.** No gradient blob. No shadcn primitives playing dress-up. Either actual product screenshots/videos, OR an R3F scene that visualises the product concept.
@@ -155,7 +164,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
     |---|---|---|
     | chrome-devtools-mcp missing at target≥98 (Phase G.5 / Cardinal Rule 24) | HALT for install | Auto-downgrade `deliverable_target_score = 95`, log `chrome-devtools-mcp unavailable, downgraded to deliverable_target=95 for this run`, continue |
     | Mandated agents (a11y/seo/critique) skipped or errored (Phase A.1.5 / Gate D) | HALT | Continue with `gate_d.failed=true, missing_artifacts: [list]`, Gate B (VQ delta) marks `confidence: low` |
-    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | **HARD HALT (updated 2026-05-17 by Rule 34) — critique unavailability now blocks ALL runs, supervised or not. Cannot fly blind on the primary VQ signal. If critique skill is missing/errored, the run dies before iter 1 with `HALT NEEDS_HUMAN: Install or fix Skill(critique) before re-running`.** |
+    | `Skill('critique')` unavailable for baseline VQ (Phase A.7.5 / Cardinal Rule 8) | HALT | **HARD HALT (updated 2026-05-17 by Rule 36) — critique unavailability now blocks ALL runs, supervised or not. Cannot fly blind on the primary VQ signal. If critique skill is missing/errored, the run dies before iter 1 with `HALT NEEDS_HUMAN: Install or fix Skill(critique) before re-running`.** |
     | `Skill('critique')` JSON schema invalid (Cardinal Rule 8 / P6) | retry once + HALT | retry once + loose-parse what came back + log warning + continue |
     | Critique screenshot hash mismatch (Cardinal Rule 8 / P10) | retry + HALT | log warning + continue (it's a verification, not a contract) |
     | CONTEXT anti-goal vs Phase R signature conflict (Phase R.3.6 / P14) | Surface to user, 30s soft-pause | Default to "respect anti-goal" (re-pick signature OR if no fallback, lock signature with `anti_goal_overridden: true` flag) |
@@ -176,7 +185,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
     3. **>5 consecutive iteration VOIDs** — the run is stuck; continuing wastes the rest of the night burning Opus tokens on no-ops.
     4. **Vercel prod deploy returns BUILD FAILURE on main push** — Phase D Step 9 polls for prod deploy; if Vercel reports `failed` status, HALT immediately (don't keep iterating against a broken main).
     5. **`Skill()` invocation infrastructure errors** (skill not found, MCP server down, network error preventing any tool calls) — run can't proceed at all.
-    6. **`Skill('critique')` unavailable** (added 2026-05-17 by Rule 34) — primary VQ signal; orchestrator cannot self-rate per Rules 8 + 27. Without critique the run is gate-blind.
+    6. **`Skill('critique')` unavailable** (added 2026-05-17 by Rule 36) — primary VQ signal; orchestrator cannot self-rate per Rules 8 + 27. Without critique the run is gate-blind.
     7. **Phase A.1.5 page enumeration produces zero routes** (added 2026-05-17 by Rule 29) — sitemap unreadable + homepage crawl returned no internal links. Cannot establish per-route baselines. Without baselines Phase R-IA mode (Rule 31) cannot run.
 
     **Morning review pattern:** when user wakes up to an unsupervised run, the first thing they read is `trajectory.runs[-1].failed_gates` (P8 fix array). Each soft-degrade logs there with structured detail. Decision tree:
@@ -202,7 +211,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
         - target 98 → floor 4.0
         - target 100 → floor 4.5
     5. **Write `.evolution/page-baselines.json`** with one entry per route: `{ route, screenshot_path, vq_aggregate, vq_by_dimension, blocking_issues: [], content_problems: [], verdict: REBUILD|REFINE|KEEP, priority_rank }`. Routes are ranked by `(verdict === 'REBUILD' ? 1000 : 0) + (blocking_issues.length × 100) + (floor - vq_aggregate) × 10 + traffic_proxy`.
-    6. **Default-to-rebuild discipline:** if critique is ambiguous between REFINE and REBUILD for a given route, default to REBUILD. "Polish a turd" is the failure mode this rule exists to prevent. The bar is "would a Linear/Stripe designer leave this page as-is?" — if the honest answer is no, the verdict is REBUILD.
+    6. **Resolving ambiguity — use the sales-page best-practices checklist (Rule 35), not a default-to-rebuild reflex.** Critique uses the Rule 35 checklist (who-you-are, what-you-do, who-it's-for, outcome-not-process, social proof early, clear CTA, sections-earn-their-place, you-vs-we language, pricing transparency) to score each route. If the page FAILS ≥ 2 checklist items → REBUILD verdict. If it PASSES the checklist but vq is below tier floor → REFINE. If it PASSES the checklist AND clears tier floor → KEEP. **Rebuild only when warranted by checklist failures or below-floor vq. Don't rebuild for the sake of rebuilding.** Updated 2026-05-17 after user clarified: "but dont rebuild for the sake of rebuilding it.. only if its shit."
 
     **--unsupervised does NOT skip this rule.** Without per-route baselines + verdicts the run is flying blind. The route-crawl + screenshot batch costs ~30s and ~5 critique calls — cheap.
 
@@ -260,7 +269,40 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
     **Why:** Run #3 (2026-05-17) shipped 8 iters across 6 refinement-skill invocations. ZERO `web-page` invocations, ZERO `web-scaffold` invocations. The `/services` page was tile-soup and the `/services/digital-ecosystem-audit` page was blank — both should have been routed through `web-page` for a structural rebuild, but the orchestrator never even saw them (Rule 29 closes that). Even if it had seen them, the prior rules would have allowed it to route them through `polish` or `impeccable` ("rebuild the structure with a polish skill"), which would have produced another invisible-delta iter. Rule 33 forces the routing decision: REBUILD verdict → `web-page` only, REFINE verdict → refinement skills only. **Added 2026-05-17.**
 
-34. **`Skill('critique')` fires at three points, not just exit. Missing any of them is a Phase failure.**
+35. **Sales-page best-practices checklist — every public route is scored against the 10 golden rules of a service-business website.** This is the checklist `Skill('critique')` uses in Rule 29's per-route verdict logic. Failing ≥ 2 items = REBUILD verdict.
+
+    **The 10 golden rules of a service-business website (apply per route):**
+
+    1. **WHO YOU ARE clear in <5 seconds.** Visitor lands; within 5 seconds of viewing, can they identify the company name + what category of business it is (audit firm? web agency? SaaS tool? consultancy?). If the brand name + business category is not visible above the fold → FAIL.
+    2. **WHAT YOU DO is one sentence above the fold.** Plain English, no jargon. "We audit, fix and monitor your digital presence for local businesses" passes. "Transforming digital ecosystems through deterministic synthesis" fails. If the visitor has to scroll or infer → FAIL.
+    3. **WHO IT'S FOR is named.** Target audience explicit in the hero or just below ("for local service businesses with 1-50 staff", "for SaaS founders pre-Series-A"). Generic "for businesses" or unnamed audience → FAIL.
+    4. **OUTCOME, not process.** Sections describe what the visitor GETS (more leads, fewer missed enquiries, less admin time), not what you DO methodologically (we audit, we deliberate, we synthesise). Process descriptions belong on the about page, not the home / services pages. Process-heavy without outcome-naming → FAIL.
+    5. **Sections EARN their place.** Every section answers a visitor question or moves them down the funnel. **A "problem awareness" section ("here are your problems!") MUST be followed immediately by a "here's what we do about it" answer section — never standalone.** Standalone problem-awareness sections that leave the visitor asking "okay so what does this company DO?" → FAIL. *(This rule explicitly added 2026-05-17 from the Orbit Digital "Your website is only one part of the picture" section that listed 6 problems with no "what we do" response.)*
+    6. **Social proof early.** Logos, testimonials, case studies, review counts, or named clients near the top — at minimum within the first 2 scroll-screens. Social proof only in the footer → FAIL.
+    7. **Clear primary CTA above the fold.** One unambiguous "do this next" button (Book a call / Start free scan / Get a quote / See pricing). Two competing primary CTAs → FAIL. No CTA above the fold → FAIL.
+    8. **"You" language, not "we" language, in the first 3 sections.** Hero + first 2 sections frame the visitor's pain and outcome, not the company's history or methodology. Sections that start with "We at [Company]…" or "Our team…" within the first 3 scrolls → FAIL.
+    9. **Pricing transparency or pricing tease.** If you don't have a number on the site, you need at least a "from $X" / "starts at $Y" / "free quote in 30 sec" tease in the hero or pricing-section CTA. Mystery-meat pricing with no number anywhere → FAIL.
+    10. **Mobile parity.** The above 9 rules apply at 375px viewport too. If "WHO YOU ARE" + "WHAT YOU DO" + primary CTA aren't visible at 375px above-the-fold (768px tall viewport) → FAIL.
+
+    **Per-route scoring (used by Rule 29 critique):**
+    - Count FAILs per route.
+    - 0 FAILs → eligible for REFINE or KEEP verdict (further determined by tier-floor vq).
+    - 1 FAIL → REFINE (the fix is content/copy-level, not structural).
+    - ≥ 2 FAILs → REBUILD (structural sales-page failure that polish can't fix).
+
+    **Per-route page-baselines.json schema extension:**
+    ```json
+    {
+      "route": "/services",
+      "checklist_fails": ["sections_earn_place", "outcome_not_process", "clear_primary_cta"],
+      "checklist_pass_rate": "7/10",
+      "verdict": "REBUILD"
+    }
+    ```
+
+    **Why:** Rule 35 was added 2026-05-17 after user pointed at a specific section ("Your website is only one part of the picture" on Orbit Digital home) — 6 problem cards (Weak trust signals, Low visibility, Poor enquiry flow, Missed follow-ups, Outdated structure, No monitoring) listed as pain points with **no answer section** describing what Orbit actually does about them. User's verdict: "okay.. what does orbit digital do. as this isnt clear at all." That's a Rule 35 #5 + #4 + #2 triple-fail — the section enumerates problems without naming what the business does. Critique flagging this requires an explicit checklist, not just an aesthetic vibe score. **Added 2026-05-17.**
+
+36. **`Skill('critique')` fires at three points, not just exit. Missing any of them is a Phase failure.**
 
     **Three mandatory critique invocations per run:**
 
@@ -270,7 +312,7 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
     **Self-scoring is BANNED at all three points.** If `Skill('critique')` is unavailable, the run HALTs even under --unsupervised (cannot fly blind on the primary signal). Cardinal Rule 28 dispatch table updated: critique unavailability is now a HARD HALT.
 
-    **Why:** Run #3 (2026-05-17) cited Rule 8 (independent VQ measurement) as a "would-be" requirement but the orchestrator never actually fired `Skill('critique')` once across the entire run. Result: 8 iters shipped with zero independent measurement, exit retro acknowledged the gap but couldn't quantify the failure. Rule 34 closes the "would-be" hole by naming the three invocation points and refusing to exit Phase F without all three. **Added 2026-05-17.**
+    **Why:** Run #3 (2026-05-17) cited Rule 8 (independent VQ measurement) as a "would-be" requirement but the orchestrator never actually fired `Skill('critique')` once across the entire run. Result: 8 iters shipped with zero independent measurement, exit retro acknowledged the gap but couldn't quantify the failure. Rule 36 closes the "would-be" hole by naming the three invocation points and refusing to exit Phase F without all three. **Added 2026-05-17.**
 
 ---
 
