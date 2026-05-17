@@ -83,7 +83,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 
 export function ProfileSettings() {
   const { user } = useAuth()
@@ -249,7 +249,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ExternalLink, CreditCard } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 
 export function BillingSettings() {
@@ -291,10 +291,14 @@ export function BillingSettings() {
     setRedirecting(true)
     try {
       // Call your backend to create a Stripe Billing Portal session
-      // Pattern from web-stripe skill:
+      // Must include Authorization header — backend uses JWT to look up stripe_customer_id
+      const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch('/api/billing/portal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({ return_url: window.location.href }),
       })
       const { url } = await response.json()
@@ -396,7 +400,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 
 interface TeamMember {
   id: string
@@ -413,7 +417,7 @@ export function TeamSettings() {
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
   const [removeTarget, setRemoveTarget] = useState<TeamMember | null>(null)
 
-  const { data: members = [], isLoading } = useQuery<TeamMember[]>({
+  const { data: members = [], isPending } = useQuery<TeamMember[]>({
     queryKey: ['team-members', user?.id],
     queryFn: async () => {
       const { data } = await supabase
@@ -513,7 +517,7 @@ export function TeamSettings() {
           <CardDescription>{members.length} member{members.length !== 1 ? 's' : ''}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
+          {isPending ? (
             <div className="p-6 space-y-4">
               {[1, 2, 3].map(i => (
                 <div key={i} className="flex items-center gap-3">
@@ -626,7 +630,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 
 export function DangerSettings() {
   const { user } = useAuth()

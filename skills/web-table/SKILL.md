@@ -348,7 +348,7 @@ export function ResourcesPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['resources', status],
     queryFn: async () => {
       let q = supabase.from('resources').select('*').order('created_at', { ascending: false })
@@ -399,7 +399,7 @@ export function ResourcesPage() {
       <DataTable
         columns={resourceColumns}
         data={filtered}
-        loading={isLoading}
+        loading={isPending}
         pageSize={25}
         globalFilter={search}
         emptyState={{

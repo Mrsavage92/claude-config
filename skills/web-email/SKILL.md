@@ -25,7 +25,7 @@ npm install @react-email/components @react-email/render
 pip install resend
 ```
 
-**Resend API key:** Get from resend.com → API Keys. Store as `RESEND_API_KEY` in Railway env vars. Never in frontend.
+**Resend API key:** Get from resend.com → API Keys. Store as `RESEND_API_KEY` in Vercel env vars (for Edge Functions) or Supabase secrets. Never in frontend.
 
 ---
 
@@ -291,15 +291,60 @@ export function InvoiceEmail({ firstName, amount, plan, period, invoiceUrl, invo
 
 ## Step 2 — FastAPI Email Service
 
+**Architecture note:** React Email templates are TSX files that run in Node.js, not Python. There is no `react-email-python` PyPI package. The correct pattern is a Node render script that FastAPI calls via subprocess. This is the only reliable way to render React Email templates from a Python backend.
+
+**Step 2a — Create the Node render script:**
+
+```javascript
+// services/api/emails/render.mjs
+import { render } from '@react-email/render'
+import { WelcomeEmail } from './welcome.tsx'
+import { TrialEndingEmail } from './trial-ending.tsx'
+import { TeamInviteEmail } from './team-invite.tsx'
+import { PasswordResetEmail } from './password-reset.tsx'
+import { InvoiceEmail } from './invoice.tsx'
+
+const [, , template, propsJson] = process.argv
+const props = JSON.parse(propsJson)
+
+const templates = {
+  welcome: WelcomeEmail,
+  'trial-ending': TrialEndingEmail,
+  'team-invite': TeamInviteEmail,
+  'password-reset': PasswordResetEmail,
+  invoice: InvoiceEmail,
+}
+
+const Component = templates[template]
+if (!Component) { console.error(`Unknown template: ${template}`); process.exit(1) }
+const html = await render(Component(props))
+process.stdout.write(html)
+```
+
+Ensure `tsx` or `ts-node/esm` can run TSX. Add to `services/api/package.json`: `{ "type": "module" }`. Install: `npm install tsx` in services/api.
+
+**Step 2b — FastAPI email service:**
+
 ```python
 # services/api/email_service.py
 import resend
 import os
-from react_email import render  # pip install react-email-python (or use subprocess to render)
+import subprocess
+import json
 
 resend.api_key = os.environ["RESEND_API_KEY"]
 
 FROM_ADDRESS = "ProductName <noreply@yourdomain.com>"
+
+def _render_email(template: str, props: dict) -> str:
+    """Render a React Email template to HTML by calling the Node render script."""
+    result = subprocess.run(
+        ['node', '--loader', 'tsx', 'emails/render.mjs', template, json.dumps(props)],
+        capture_output=True, text=True, cwd=os.path.dirname(__file__)
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Email render failed [{template}]: {result.stderr}")
+    return result.stdout
 
 def send_welcome_email(to: str, first_name: str, dashboard_url: str):
     """Send immediately on signup - called from auth webhook or signup endpoint."""
@@ -307,7 +352,7 @@ def send_welcome_email(to: str, first_name: str, dashboard_url: str):
         "from": FROM_ADDRESS,
         "to": [to],
         "subject": f"Welcome to ProductName",
-        "html": render_welcome(first_name=first_name, dashboard_url=dashboard_url),
+        "html": _render_email('welcome', {'firstName': first_name, 'dashboardUrl': dashboard_url, 'productName': 'ProductName'}),
         "tags": [{"name": "type", "value": "welcome"}],
     }
     resend.Emails.send(params)
@@ -319,7 +364,7 @@ def send_trial_ending_email(to: str, first_name: str, days_left: int, upgrade_ur
         "from": FROM_ADDRESS,
         "to": [to],
         "subject": f"Your trial ends in {days_left} day{'s' if days_left != 1 else ''}",
-        "html": render_trial_ending(first_name=first_name, days_left=days_left, upgrade_url=upgrade_url),
+        "html": _render_email('trial-ending', {'firstName': first_name, 'daysLeft': days_left, 'upgradeUrl': upgrade_url, 'productName': 'ProductName'}),
         "tags": [{"name": "type", "value": "trial_ending"}],
     }
     resend.Emails.send(params)
@@ -330,7 +375,7 @@ def send_team_invite_email(to: str, inviter_name: str, org_name: str, role: str,
         "from": FROM_ADDRESS,
         "to": [to],
         "subject": f"{inviter_name} invited you to {org_name}",
-        "html": render_team_invite(inviter_name=inviter_name, org_name=org_name, role=role, accept_url=accept_url),
+        "html": _render_email('team-invite', {'inviterName': inviter_name, 'orgName': org_name, 'role': role, 'acceptUrl': accept_url}),
         "tags": [{"name": "type", "value": "team_invite"}],
     }
     resend.Emails.send(params)
@@ -342,7 +387,7 @@ def send_invoice_email(to: str, first_name: str, amount: str, plan: str, period:
         "from": FROM_ADDRESS,
         "to": [to],
         "subject": f"Your {plan} receipt - {amount}",
-        "html": render_invoice(first_name=first_name, amount=amount, plan=plan, period=period, invoice_url=invoice_url, invoice_number=invoice_number),
+        "html": _render_email('invoice', {'firstName': first_name, 'amount': amount, 'plan': plan, 'period': period, 'invoiceUrl': invoice_url, 'invoiceNumber': invoice_number}),
         "tags": [{"name": "type", "value": "invoice"}],
     }
     resend.Emails.send(params)
@@ -370,7 +415,12 @@ async def trigger_welcome(background_tasks: BackgroundTasks, user=Depends(get_cu
     return {"status": "queued"}
 ```
 
-### Trial ending scheduled job (Railway Cron)
+### Trial ending scheduled job
+
+**Option A — Supabase native cron (recommended, 2025):**
+Supabase now ships cron jobs as a first-class Postgres module (no Railway required). Enable in the Supabase dashboard → Database → Cron Jobs, then create a job that calls a Postgres function or Edge Function on schedule.
+
+**Option B — Railway Cron (if using FastAPI backend):**
 
 ```python
 # services/api/jobs/trial_reminders.py

@@ -3,6 +3,11 @@ name: sync-knowledge-base
 description: Scan all installed commands, agents and skills, push changes to the claude-config GitHub repo as the shared source of truth, and update the Notion documentation hub. Run at the end of any session where skills were added or modified.
 ---
 
+## Hardened Rules (load-bearing)
+
+1. **Run automatically — never ask.** After any session that creates, modifies, or reorganises skills, commands, or agents, invoke this skill as the final step. Do NOT say "run /sync-knowledge-base when ready" or suggest the user trigger it. The sync is part of completing the task, not a separate step.
+2. **Canonical repo is `Mrsavage92/claude-config`.** All skills, agents, commands, hooks, settings.json, rules/ live there. Local `~/.claude/` is a working copy that gets pulled FROM the repo by the SessionStart hook and pushed back on Stop. NEVER push to `Mrsavage92/skills-library` — that is a public showcase fork Adam found, not the working source. If skills-library needs updating, mirror FROM claude-config, never the reverse.
+
 Execute the full knowledge base sync workflow directly (no external skill file required):
 
 ## Workflow
@@ -43,8 +48,14 @@ commands = {f: md5(os.path.join(commands_dir, f))
             for f in sorted(os.listdir(commands_dir)) if f.endswith('.md')}
 agents = {f: md5(os.path.join(agents_dir, f))
           for f in sorted(os.listdir(agents_dir)) if f.endswith('.md')}
-skills = sorted([s.rstrip('@/') for s in os.listdir(skills_dir)
-                 if s.rstrip('@/') not in SKILLS_EXCLUDE and not s.startswith('.')])
+# A valid skill = directory with SKILL.md. Stray .md files and non-skill dirs are ignored.
+skills = sorted([
+    s.rstrip('@/') for s in os.listdir(skills_dir)
+    if s.rstrip('@/') not in SKILLS_EXCLUDE
+    and not s.startswith('.')
+    and os.path.isdir(os.path.join(skills_dir, s.rstrip('@/')))
+    and os.path.isfile(os.path.join(skills_dir, s.rstrip('@/'), 'SKILL.md'))
+])
 
 manifest = {
     "last_updated": str(date.today()),
@@ -64,12 +75,11 @@ manifest = {
 
 **Step 2 — Validate before pushing**
 
-Run these checks and abort with a clear error if any fail:
+Run these checks:
 
-1. No skill name appears in both `~/.claude/commands/` AND `~/.claude/skills/` (duplicate detection)
-2. All entries in skills list have a `SKILL.md` file (no ghost entries)
-3. Counts in manifest match actual filesystem counts
-4. README.md in claude-config repo has matching counts — update it if not
+1. Command/skill name overlap — REPORT at end of sync (do NOT abort; overlap is intentional for many wrappers)
+2. Counts in manifest match actual filesystem counts (the skill filter above handles ghost entries automatically)
+3. README.md in claude-config repo has matching counts — update it if not
 
 **Step 3 — Push to GitHub**
 - Copy agents and commands to `~/Documents/Git/claude-config/`

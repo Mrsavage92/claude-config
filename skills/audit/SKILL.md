@@ -22,7 +22,13 @@ Run comprehensive checks across 5 dimensions. Score each dimension 0-4 using the
 
 ### 1. Accessibility (A11y)
 
-**Check for**:
+**Measure first (preferred):** if a dev server or live URL is reachable:
+- `mcp__chrome-devtools__lighthouse_audit(device="mobile")` and `(device="desktop")` — captures the Accessibility category with audit-by-audit detail (colour contrast, ARIA, semantic HTML, form labels, etc.)
+- `mcp__chrome-devtools__take_snapshot()` — accessibility tree (verify ARIA roles, landmarks, focus order, interactive element labelling)
+
+Use Lighthouse Accessibility score as the primary score. Code-inspect for source-level fixes.
+
+**Check for** (code-level — root causes):
 - **Contrast issues**: Text contrast ratios < 4.5:1 (or 7:1 for AAA)
 - **Missing ARIA**: Interactive elements without proper roles, labels, or states
 - **Keyboard navigation**: Missing focus indicators, illogical tab order, keyboard traps
@@ -34,14 +40,32 @@ Run comprehensive checks across 5 dimensions. Score each dimension 0-4 using the
 
 ### 2. Performance
 
-**Check for**:
+**Measure first (preferred):** if a dev server or live URL is reachable, capture real-Chrome data before code inspection:
+
+1. `mcp__chrome-devtools__new_page(url={url})`
+2. `mcp__chrome-devtools__performance_start_trace(reload=true, autoStop=true)` → `performance_stop_trace()` — returns LCP, INP, CLS, TBT, and a list of blocking insights
+3. For each insight: `mcp__chrome-devtools__performance_analyze_insight(insightName=...)` — exact blocking resources + estimated savings
+4. `mcp__chrome-devtools__lighthouse_audit(device="mobile")` — Best Practices score (image format, caching, compression)
+5. `mcp__chrome-devtools__list_console_messages(types=["error","warn"])` — runtime perf warnings (e.g. forced reflow)
+6. `mcp__chrome-devtools__list_network_requests()` — payload sizes; sort by `transferSize` desc
+
+Use measured numbers to score. Then code-inspect for the source-level causes below.
+
+**Check for** (code-level — root causes that produced the measured numbers above):
 - **Layout thrashing**: Reading/writing layout properties in loops
 - **Expensive animations**: Animating layout properties (width, height, top, left) instead of transform/opacity
 - **Missing optimization**: Images without lazy loading, unoptimized assets, missing will-change
 - **Bundle size**: Unnecessary imports, unused dependencies
 - **Render performance**: Unnecessary re-renders, missing memoization
 
-**Score 0-4**: 0=Severe issues (layout thrash, unoptimized everything), 1=Major problems (no lazy loading, expensive animations), 2=Partial (some optimization, gaps remain), 3=Good (mostly optimized, minor improvements possible), 4=Excellent (fast, lean, well-optimized)
+**Score 0-4 (when chrome-devtools-mcp connected — measured)**:
+- 0: LCP > 4s OR CLS > 0.25 OR Lighthouse Best Practices < 50
+- 1: LCP 3-4s, INP > 500ms, multiple major blocking resources
+- 2: LCP 2.5-3s, INP 200-500ms, several insights with > 200ms savings each
+- 3: LCP 1.5-2.5s, INP < 200ms, CLS < 0.1, Best Practices ≥ 90
+- 4: LCP < 1.5s, INP < 100ms, CLS < 0.05, Best Practices ≥ 95
+
+**Score 0-4 (chrome-devtools-mcp NOT connected — heuristic)**: 0=Severe issues (layout thrash, unoptimized everything), 1=Major problems (no lazy loading, expensive animations), 2=Partial (some optimization, gaps remain), 3=Good (mostly optimized, minor improvements possible), 4=Excellent (fast, lean, well-optimized). Flag the report as heuristic-mode in this case.
 
 ### 3. Theming
 

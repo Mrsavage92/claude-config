@@ -106,9 +106,14 @@ Read `src/lib/supabase.ts`. If it doesn't exist, create it:
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database.types'
 
-// Values from Supabase MCP — anon key is safe to commit
-const supabaseUrl = 'https://[project-ref].supabase.co'
-const supabaseAnonKey = '[anon-key-from-mcp]'
+// Read from env vars — anon key is safe to expose in browser (RLS enforces access control)
+// Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local and Vercel env vars
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — check .env.local')
+}
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 ```
@@ -147,13 +152,14 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
+    // Do NOT call getSession() first — it returns stale cached data.
+    // onAuthStateChange fires immediately with the current session on mount,
+    // making a separate getSession() call redundant and potentially misleading.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => setUser(session?.user ?? null)
+      (_event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
     )
 
     return () => subscription.unsubscribe()
@@ -170,42 +176,33 @@ export function useAuth() {
 // Wraps all authenticated app pages (dashboard, settings, etc.)
 // Three checks: (a) session exists, (b) skeleton while loading, (c) onboarding complete
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/use-auth'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
-  const navigate = useNavigate()
   const [onboardingChecked, setOnboardingChecked] = useState(false)
+  const [onboardingComplete, setOnboardingComplete] = useState(false)
 
   useEffect(() => {
-    // (a) No session → redirect to /auth
-    if (!loading && !user) {
-      navigate('/auth')
-      return
-    }
-
-    // (c) Check onboarding_complete on org record
+    // (c) Check onboarding_complete on org record — only when user is confirmed
     if (!loading && user) {
       supabase
         .from('organizations')
         .select('onboarding_complete')
-        .eq('user_id', user.id)
+        .eq('owner_id', user.id)
         .single()
         .then(({ data }) => {
-          if (!data?.onboarding_complete) {
-            navigate('/setup')
-          } else {
-            setOnboardingChecked(true)
-          }
+          setOnboardingComplete(!!data?.onboarding_complete)
+          setOnboardingChecked(true)
         })
     }
-  }, [user, loading, navigate])
+  }, [user, loading])
 
   // (b) Skeleton layout while session or onboarding check is in flight — never a blank flash
-  if (loading || !onboardingChecked) {
+  if (loading || (user && !onboardingChecked)) {
     return (
       <div className="flex h-screen flex-col gap-4 p-6">
         <Skeleton className="h-10 w-48" />
@@ -219,6 +216,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
+
+  // Synchronous redirects — no flash, no useEffect + navigate pattern
+  if (!user) return <Navigate to="/auth" replace />
+  if (!onboardingComplete) return <Navigate to="/setup" replace />
 
   return <>{children}</>
 }

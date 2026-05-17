@@ -51,9 +51,18 @@ Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested pa
 
 ## Capability Declaration — What This Audit CAN and CANNOT Do
 
-**We CAN check (2026 capability — multi-page crawl + PSI integration):**
+**We CAN check (2026 capability — multi-page crawl + PSI integration + chrome-devtools-mcp):**
 
-*Core Web Vitals via Google PageSpeed Insights API:*
+*Real Chrome traces via chrome-devtools-mcp (preferred when MCP connected):*
+- `mcp__chrome-devtools__lighthouse_audit` — full Lighthouse run with audit-by-audit detail for Accessibility, SEO, Best Practices, and Agentic Browsing categories (device: mobile + desktop)
+- `mcp__chrome-devtools__performance_start_trace` + `performance_stop_trace` + `performance_analyze_insight` — real-Chrome performance trace (LCP, INP, CLS, TBT, render-blocking insights, third-party impact, image delivery)
+- `mcp__chrome-devtools__list_console_messages` — JS runtime errors and warnings (the thing static HTML cannot see)
+- `mcp__chrome-devtools__list_network_requests` — real waterfall: payload sizes, timing, failed requests, third-party domains
+- `mcp__chrome-devtools__take_snapshot` — accessibility tree (real WCAG check, not CSS heuristic)
+
+When chrome-devtools-mcp is connected, use it as the primary data source for Performance, Accessibility, and Code Quality categories. Static HTML analysis becomes a complement, not the primary signal.
+
+*Core Web Vitals via Google PageSpeed Insights API (fallback when chrome-devtools-mcp unavailable):*
 - LCP (Largest Contentful Paint) — Google 2026 thresholds: ≤2.5s good, 2.5-4s needs improvement, >4s poor
 - INP (Interaction to Next Paint) — replaced FID March 2024: ≤200ms good, 200-500ms needs improvement, >500ms poor
 - CLS (Cumulative Layout Shift) — ≤0.1 good, 0.1-0.25 needs improvement, >0.25 poor
@@ -107,23 +116,45 @@ Choose output root: `CLAUDE_AUDIT_OUTPUT_ROOT` > `./outputs` > user-requested pa
 - `<script>` type="module" usage (modern JS)
 - HTML payload size (post-minification)
 
-**We CANNOT directly measure (requires a real browser or paid tooling):**
-- JavaScript runtime errors / dynamic content behaviour
-- Real touch-target sizing on real devices (we check CSS, not interaction)
-- Whether `loading="lazy"` actually lazy-loads (varies by viewport)
-- Full colour contrast ratio (requires rendered DOM)
-- Real user RUM data beyond PSI's CrUX dataset
-- Lighthouse Performance Score breakdown (we get the score from PSI but not the audit-by-audit detail)
+**We CANNOT directly measure (even with chrome-devtools-mcp):**
+- Real user RUM data beyond PSI's CrUX dataset (chrome-devtools gives lab data, not field data)
+- Long-tail device matrix beyond Chrome (Safari/Firefox-specific bugs)
+- Multi-session user behaviour, funnels, drop-off (this is product analytics, not technical audit)
+
+**When chrome-devtools-mcp is NOT connected (degraded mode):**
+- JavaScript runtime errors are invisible (only HTML source is parsed)
+- Touch-target sizing checks become CSS-only (not real interaction)
+- `loading="lazy"` behaviour cannot be verified
+- Full colour contrast requires rendered DOM
+- No Lighthouse audit-by-audit detail — only PSI top-line scores
+- In this mode, do NOT claim "equivalent to Lighthouse/web.dev scoring". State the degraded-mode disclaimer in the report.
 
 **How to handle limits:**
-- Do NOT claim "equivalent to Lighthouse/web.dev scoring". Static HTML analysis is a distinct, narrower check.
-- Do NOT estimate page weight as if it's a real measurement — either omit it or mark it explicitly as "estimated from HTML tag count, not a real page weight measurement".
-- Recommend PageSpeed Insights / WebPageTest / Lighthouse as add-on deliverables for CWV, not as things this audit produces.
-- If the client needs real CWV data, offer it as a paid add-on with an external tool integration.
+- Prefer chrome-devtools-mcp data when connected. Cite it as "measured via real-Chrome trace" in the report (in plain English: "we tested how your site actually loads in a real browser").
+- When in degraded mode, recommend PageSpeed Insights / WebPageTest / Lighthouse as add-on deliverables for CWV.
+- Do NOT estimate page weight as if it's a real measurement — either use chrome-devtools network data OR mark it explicitly as "estimated from HTML tag count".
 
 ---
 
 ## Phase 1: Data Gathering
+
+### 1.0 Real-Chrome Capture (PREFERRED — when chrome-devtools-mcp connected)
+
+Before falling back to static HTML analysis, capture real-browser data. Run these in order:
+
+1. **Navigate:** `mcp__chrome-devtools__new_page(url={homepage})` — opens a real Chrome tab.
+2. **Lighthouse (mobile):** `mcp__chrome-devtools__lighthouse_audit(device="mobile", mode="navigation", outputDirPath="{output_dir}/lighthouse-mobile")` — reload + full audit for Accessibility, SEO, Best Practices, Agentic Browsing. Capture the score per category.
+3. **Lighthouse (desktop):** Same as above with `device="desktop"`.
+4. **Performance trace:** `mcp__chrome-devtools__performance_start_trace(reload=true, autoStop=true)` — records LCP, INP, CLS, TBT, render-blocking insights. Then `mcp__chrome-devtools__performance_stop_trace()`. For each blocking insight, `mcp__chrome-devtools__performance_analyze_insight(insightName=...)` to get specific recommendations.
+5. **Console messages:** `mcp__chrome-devtools__list_console_messages(types=["error","warn"])` — capture JS runtime errors (the thing static HTML cannot see).
+6. **Network requests:** `mcp__chrome-devtools__list_network_requests()` — capture real waterfall, payload sizes, failed requests, third-party domains.
+7. **Accessibility snapshot:** `mcp__chrome-devtools__take_snapshot()` — capture the real accessibility tree (verifies ARIA, landmarks, focus order, interactive element labelling).
+
+Save raw output to `{output_dir}/chrome-devtools-capture.json` (synthesize from the tool returns).
+
+**If chrome-devtools-mcp is NOT connected:** Skip this phase, proceed to 1.1, and add the degraded-mode disclaimer to the final report.
+
+**Repeat 1.0 for 2-3 interior pages** identified in 1.2 — Lighthouse + perf trace per page produces richer audit data than homepage alone.
 
 ### 1.1 Fetch the Homepage
 
@@ -373,7 +404,7 @@ Technical Health Score = (
 | 0-39 | F | Critical - fundamental issues breaking user experience |
 
 **Scoring Anchors:**
-- 80-100: Strong static-analysis profile — fast-loading HTML, all security headers present, full schema, responsive meta + media queries, clean heading hierarchy, alt-text coverage >95%. (NOTE: Lighthouse Core Web Vitals require a real-browser test — this score is a static-HTML proxy, not a Lighthouse score.)
+- 80-100: Strong profile — fast-loading HTML, all security headers present, full schema, responsive meta + media queries, clean heading hierarchy, alt-text coverage >95%. When chrome-devtools-mcp is connected, additionally requires Lighthouse Accessibility ≥ 90, Best Practices ≥ 90, SEO ≥ 90, LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1. (Without chrome-devtools-mcp, this score is a static-HTML proxy and should be reported as such.)
 - 60-79: Modern WordPress/Next.js site with good basics — HTTPS, responsive, some optimization gaps
 - 40-59: Functional but slow — render-blocking scripts, missing headers, accessibility gaps
 - 20-39: Visibly broken — slow load, mobile issues, no HTTPS or mixed content

@@ -1,13 +1,15 @@
 # /web-animations
 
-Framer Motion animation patterns for the web-* skill suite. Read this file when web-scaffold or web-page reference "web-animations Technique 3".
+Motion animation patterns for the web-* skill suite. Read this file when web-scaffold or web-page reference "web-animations Technique 3".
+
+**Package note (2025):** Framer Motion v12 renamed the package from `framer-motion` to `motion`. Install: `npm install motion`. Import: `from 'motion/react'` (NOT `from 'framer-motion'`). The old package still installs as a shim but is no longer maintained — always use `motion` for new projects.
 
 ---
 
 ## Technique 1 — Simple Fade Up (single element)
 
 ```tsx
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -52,7 +54,7 @@ const fadeUp = {
 Use this for hero entrance (animate on mount) and section entrances (whileInView). The parent controls the stagger; children inherit via `variants`.
 
 ```tsx
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 // Parent container — controls stagger timing
 const staggerContainer = {
@@ -116,7 +118,7 @@ const fadeUp = {
 Always wrap animated backgrounds and decorative animations. Text/content animations can use the CSS `prefers-reduced-motion` media query in Tailwind instead.
 
 ```tsx
-import { useReducedMotion } from 'framer-motion'
+import { useReducedMotion } from 'motion/react'
 
 function AnimatedBackground() {
   const shouldReduce = useReducedMotion()

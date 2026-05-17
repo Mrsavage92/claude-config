@@ -15,6 +15,21 @@ Deep analysis of page load performance. Maps every render-blocking resource, cat
 
 ## How to Execute
 
+### Step 0: Real-Chrome Performance Trace (PREFERRED — when chrome-devtools-mcp connected)
+
+Before inventorying resources from HTML, capture real-browser perf data. This replaces "estimated load time improvements" with measured ones.
+
+1. `mcp__chrome-devtools__new_page(url={target_url})` — open real Chrome tab.
+2. `mcp__chrome-devtools__performance_start_trace(reload=true, autoStop=true)` — records the full load.
+3. `mcp__chrome-devtools__performance_stop_trace()` — returns LCP, INP, CLS, TBT, and an `insights` array (LCPBreakdown, RenderBlocking, DocumentLatency, ImageDelivery, FontDisplay, ThirdParties, etc.).
+4. For each insight in the returned list, call `mcp__chrome-devtools__performance_analyze_insight(insightName=<name>)` to get the specific blocking resources, their sizes, and the estimated time-saving per fix.
+5. `mcp__chrome-devtools__list_network_requests()` — capture every request with size + timing. Sort by `transferSize` desc to find the heaviest payloads.
+6. `mcp__chrome-devtools__lighthouse_audit(device="mobile", mode="navigation")` — captures Best Practices (image format, compression, caching headers) as audit-by-audit detail.
+
+Save raw output to `{output_dir}/perf-trace.json`. Use the **measured** numbers (not estimates) for the Step 4 Optimisation Plan. Each recommendation's "Estimated improvement" becomes an actual figure from `performance_analyze_insight`.
+
+**If chrome-devtools-mcp is NOT connected:** Skip to Step 1 (static HTML inventory) and label the report "Heuristic estimate — chrome-devtools-mcp not connected. For measured numbers, install chrome-devtools-mcp and rerun."
+
 ### Step 1: Resource Inventory
 Fetch the page and catalogue every resource:
 
@@ -86,5 +101,5 @@ Save to `SPEED-AUDIT.md` in the domain output directory (`~/Documents/Claude/{do
 
 ## Output Standards
 - Every recommendation must include the specific file/resource URL
-- Estimated improvements should be conservative ranges (e.g. "0.5-1.2s saved")
+- When chrome-devtools-mcp connected: use measured numbers from `performance_analyze_insight` (e.g. "saves 1.8s — measured"). When NOT connected: use conservative ranges (e.g. "0.5-1.2s saved — estimate") and flag the difference.
 - Group recommendations by effort level so the user can batch quick wins

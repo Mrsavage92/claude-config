@@ -1130,7 +1130,7 @@ This phase exists because scoring against generic premium-SaaS criteria produces
        y: el.getBoundingClientRect().top + window.scrollY
      }));
      return { ids, datasections };
-   `)
+   }`)
    ```
 
    Merge grep + DOM results. Build `section_selectors` map (e.g. `{"hero": "#hero", "features": "#features", "pricing": "#pricing"}`). Prefer `[data-section]` when present. Use `""` (empty — scroll to top) for any section without a discovered id. This map is used in Steps 2 and 4 to pass `scroll_to_selector` to web-screenshot.

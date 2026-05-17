@@ -44,8 +44,8 @@ The lock-conformance sweep catches drift between the hero (built first, lock fre
 ### Procedure
 
 1. Read `tokens.lock.json` and capture the full token set.
-2. Use `mcp__puppeteer__puppeteer_navigate` to load the running dev server.
-3. For every route in `SCOPE.md`, run `mcp__puppeteer__puppeteer_evaluate` to extract computed styles for these selectors and properties:
+2. Use `mcp__chrome-devtools__new_page` (or `mcp__puppeteer__puppeteer_navigate` as fallback) to load the running dev server.
+3. For every route in `SCOPE.md`, run `mcp__chrome-devtools__evaluate_script` (function-wrapped) — or `mcp__puppeteer__puppeteer_evaluate` (script string) as fallback — to extract computed styles for these selectors and properties:
 
    | Selector | Properties to capture |
    |---|---|

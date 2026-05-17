@@ -5,7 +5,7 @@ description: >
   Extracts exact values (colors, layout structure, typography, spacing, gradients) via screenshot +
   live CSS inspection, produces a diff, then applies every change systematically.
   Invoked when the user says "make it look like X", "mirror X", or "I want it to look like X".
-tools: Read, Write, Edit, Bash, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate, Glob, Grep
+tools: Read, Write, Edit, Bash, mcp__chrome-devtools__new_page, mcp__chrome-devtools__navigate_page, mcp__chrome-devtools__take_screenshot, mcp__chrome-devtools__evaluate_script, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate, Glob, Grep
 ---
 
 # Skill: /style-mirror
@@ -25,7 +25,7 @@ This skill prevents that failure by making the process systematic and verifiable
 
 ## Cardinal rules
 
-1. **Extract before changing.** Never estimate colours from memory — always inspect the live site via Puppeteer.
+1. **Extract before changing.** Never estimate colours from memory — always inspect the live site via chrome-devtools (preferred) or puppeteer (fallback).
 2. **Layout is not optional.** If the reference is centered single-column and the current site is split-pane, that layout change is required. Colour changes alone do not make sites look alike.
 3. **Typography is not optional.** Font family, weight, and size are as visible as colour. If the reference uses geometric sans bold and the current site uses a display serif, that must change.
 4. **Produce a diff table first.** Never touch code until the diff is written and confirmed.

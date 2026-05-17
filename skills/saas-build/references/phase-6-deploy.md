@@ -94,25 +94,30 @@ Invoke agent-browser via the Skill tool (it is NOT a bash CLI command). The sequ
 9. Open [production-url]/terms — verify page loads without 404
 10. Set viewport to 375px, open [production-url] — verify no horizontal overflow, hero readable
 
-**Tool B — Puppeteer MCP (screenshot verification, run in parallel with Tool A):**
+**Tool B — chrome-devtools MCP (screenshot + behavioural verification, run in parallel with Tool A):**
 
-Use `mcp__puppeteer__puppeteer_navigate` + `mcp__puppeteer__puppeteer_screenshot` for visual verification. Run these in sequence:
+Use `mcp__chrome-devtools__navigate_page` + `mcp__chrome-devtools__take_screenshot` for visual verification, plus `list_console_messages` + `list_network_requests` to catch runtime errors and failed requests that screenshots alone miss. Run these in sequence:
 
 ```
-1. mcp__puppeteer__puppeteer_navigate({ url: "[production-url]" })
-   mcp__puppeteer__puppeteer_screenshot({ name: "smoke-desktop", fullPage: false })
+1. mcp__chrome-devtools__new_page({ url: "[production-url]" })
+   mcp__chrome-devtools__take_screenshot({ filePath: "outputs/smoke-desktop.png" })
+   mcp__chrome-devtools__list_console_messages({ types: ["error","warn"] })
+   mcp__chrome-devtools__list_network_requests()
 
-2. mcp__puppeteer__puppeteer_navigate({ url: "[production-url]/auth" })
-   mcp__puppeteer__puppeteer_screenshot({ name: "smoke-auth", fullPage: false })
+2. mcp__chrome-devtools__navigate_page({ url: "[production-url]/auth", type: "url" })
+   mcp__chrome-devtools__take_screenshot({ filePath: "outputs/smoke-auth.png" })
+   mcp__chrome-devtools__list_console_messages({ types: ["error","warn"] })
 
-3. mcp__puppeteer__puppeteer_navigate({ url: "[production-url]/[core-feature-route]" })
-   mcp__puppeteer__puppeteer_screenshot({ name: "smoke-feature", fullPage: false })
+3. mcp__chrome-devtools__navigate_page({ url: "[production-url]/[core-feature-route]", type: "url" })
+   mcp__chrome-devtools__take_screenshot({ filePath: "outputs/smoke-feature.png" })
+   mcp__chrome-devtools__list_console_messages({ types: ["error","warn"] })
 
-4. mcp__puppeteer__puppeteer_navigate({ url: "[production-url]/settings" })
-   mcp__puppeteer__puppeteer_screenshot({ name: "smoke-settings", fullPage: false })
+4. mcp__chrome-devtools__navigate_page({ url: "[production-url]/settings", type: "url" })
+   mcp__chrome-devtools__take_screenshot({ filePath: "outputs/smoke-settings.png" })
+   mcp__chrome-devtools__list_console_messages({ types: ["error","warn"] })
 ```
 
-Read each screenshot with the Read tool to visually verify: renders correctly, no blank pages, no layout breaks, no visible errors. If Puppeteer MCP is unavailable: log NEEDS_HUMAN "Puppeteer MCP unavailable — take manual screenshots of all 4 routes for visual verification."
+Read each screenshot with the Read tool to visually verify: renders correctly, no blank pages, no layout breaks. For each route, any console error or any non-analytics network request with status ≥ 400 = SMOKE FAIL even if screenshot looks fine. If chrome-devtools MCP is unavailable: fall back to puppeteer MCP (`mcp__puppeteer__puppeteer_navigate` + `puppeteer_screenshot` — same screenshot coverage, no console/network capture, log NEEDS_HUMAN for runtime verification).
 
 **Step 3 — Merge findings from both tools:**
 - Any check failed by EITHER tool counts as a failure
@@ -133,13 +138,14 @@ supabase.auth.admin.deleteUser([saved-user-id])
 
 Phase 6d cannot be marked complete unless THIS conversation's tool-call log contains:
 
-- [ ] At least 4 `mcp__puppeteer__puppeteer_navigate` invocations (one per smoke route: /, /auth, /[core-feature], /settings)
-- [ ] At least 4 `mcp__puppeteer__puppeteer_screenshot` invocations (one per route)
+- [ ] At least 4 navigations (one per smoke route: /, /auth, /[core-feature], /settings) via `mcp__chrome-devtools__navigate_page` (preferred) or `mcp__puppeteer__puppeteer_navigate` (fallback)
+- [ ] At least 4 screenshot invocations (one per route) via `mcp__chrome-devtools__take_screenshot` or `mcp__puppeteer__puppeteer_screenshot`
+- [ ] If chrome-devtools used: at least 4 `mcp__chrome-devtools__list_console_messages` invocations (one per route) — any console error = SMOKE FAIL
 - [ ] At least one `Skill('agent-browser')` invocation OR a logged NEEDS_HUMAN if the skill is unavailable
 
 `curl` exit codes and HTTP 200 checks alone are NOT sufficient — visual rendering must be verified via screenshot Read or interactive-flow walk. (See `feedback_playwright_cli_smoke_test.md` memory and AuditHQ v2 retro 2026-04-24 — that build deployed with curl-only verification and shipped a broken bento layout to production.)
 
-Log: "Phase 6d smoke test complete — N puppeteer navigations, N screenshots Read, agent-browser invoked, all checks passed" to BUILD-LOG.md.
+Log: "Phase 6d smoke test complete — N navigations (chrome-devtools|puppeteer), N screenshots Read, N console-message checks, agent-browser invoked, all checks passed" to BUILD-LOG.md.
 
 **6e. Update CORS**
 In monorepo mode: append the new Vercel URL to the existing comma-separated `FRONTEND_URL` env var in Railway — do not replace existing product URLs. In standalone mode: set `FRONTEND_URL` to the production Vercel URL. Either way, backend CORS must never be `*` in production.

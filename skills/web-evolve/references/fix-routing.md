@@ -205,7 +205,7 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 
 | Check | Failure pattern | Fix skill |
 |---|---|---|
-| F1, F2 | Screenshots not captured | `mcp__puppeteer__puppeteer_screenshot` direct (this is the loop's responsibility) |
+| F1, F2 | Screenshots not captured | `mcp__chrome-devtools__take_screenshot` direct, or `mcp__puppeteer__puppeteer_screenshot` fallback (this is the loop's responsibility) |
 | F3 | Horizontal overflow at 375px | `Skill('adapt')` for responsive fix |
 | F4 | < 3 text sizes in hero | `Skill('typeset')` to expand scale |
 | F5 | < 4 colors visible | `Skill('colorize')` to add semantic accent |

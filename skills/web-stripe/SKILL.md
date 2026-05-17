@@ -18,7 +18,7 @@ Read `CLAUDE.md` and `SCOPE.md` — extract:
 - Trial model (free-trial-no-card | free-trial-card-required | paid-only)
 - Which features are gated behind paid plan
 
-Read `packages/stripe-utils/src/index.ts` if in the au-compliance-platform monorepo — use the existing PRICE_MAP pattern.
+If the project uses a shared billing utility module, read it before generating — reuse the existing PRICE_MAP pattern rather than creating a new one.
 
 ### Step 2 — Backend: Checkout Session Endpoint
 
@@ -197,7 +197,7 @@ import { useStripe } from '@/hooks/use-stripe'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Check, Loader2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 // Import from PRICE_MAP in stripe-utils (monorepo) or define inline (standalone)
 // Replace placeholder price IDs before going live
@@ -296,22 +296,22 @@ useEffect(() => {
 
 Add to `.env.example`:
 ```
-STRIPE_SECRET_KEY=sk_test_...          # Railway env var — never commit
-STRIPE_WEBHOOK_SECRET=whsec_...       # Railway env var — never commit
+STRIPE_SECRET_KEY=sk_test_...          # Vercel env var — never commit
+STRIPE_WEBHOOK_SECRET=whsec_...       # Vercel env var — never commit
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_... # Safe to commit (public key)
 ```
 
 Add to Vercel dashboard: `VITE_STRIPE_PUBLISHABLE_KEY`
-Add to Railway dashboard: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+Add to Vercel dashboard (or Supabase secrets): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 
-Register webhook in Stripe dashboard → `https://[railway-url]/billing/webhook`
+Register webhook in Stripe dashboard → `https://[your-backend-url]/billing/webhook`
 Events to listen for: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`, `invoice.payment_succeeded`
 
 ---
 
 ## Rules
 
-- Never commit `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET` — Railway env vars only
+- Never commit `STRIPE_SECRET_KEY` or `STRIPE_WEBHOOK_SECRET` — use Vercel env vars or Supabase secrets
 - `VITE_STRIPE_PUBLISHABLE_KEY` is safe to commit (it's public)
 - Always use test mode price IDs during development (`price_test_...`)
 - Replace placeholder price IDs in PRICE_MAP before going live — they are never real

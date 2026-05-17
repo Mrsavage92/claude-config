@@ -1,6 +1,19 @@
 # /web-deploy
 
-Deploy a web project to Vercel (frontend) and/or Railway (backend) with full environment configuration, smoke testing, and CORS lockdown.
+Deploy a web project to Vercel with full environment configuration and smoke testing. Default stack: Vite SPA + Supabase — no separate backend service required.
+
+## Hardened Rules (load-bearing — do not weaken)
+
+These are deploy lessons paid for in lost time. Every one was caused by skipping a check. Do them in order, every deploy.
+
+1. **Vercel account is `mrsavage92` ALWAYS.** Run `vercel whoami` first. If it doesn't return `mrsavage92`: `vercel logout && vercel login` → GitHub flow with `adamsavage6@hotmail.co.uk`. Team ID `team_X5tGJ0T9KXxFyiTx5ZJspJuc`. NEVER deploy via the `eloquentechnology` team — if that name appears anywhere, halt.
+2. **Set git author email before deploy.** `git config user.email "adamsavage6@hotmail.co.uk"` in every project. Vercel blocks deploys when commit author email doesn't match the account email — error message is empty, looks like a platform bug.
+3. **Deploy via `git push`, not `vercel --prod`.** GitHub-connected projects auto-deploy. The Vercel CLI fails silently on Windows. If you must use the CLI, check the real error via Vercel API: `curl -s "https://api.vercel.com/v6/deployments?projectId=..." -H "Authorization: Bearer ..."`.
+4. **Domain clash check BEFORE deploy.** `curl -s -o /dev/null -w "%{http_code}" https://<slug>.vercel.app`. If 200: that subdomain is taken (orphaned project, Lovable, another account). Vercel will silently suffix (`-xi`, `-two`) and the user will see the wrong app. Tell the user, do not proceed.
+5. **Never assume URLs.** Read the ACTUAL `Production:` or `Aliased:` URL from CLI output. NEVER construct `<project-name>.vercel.app` and trust it.
+6. **Verify content, not status.** `curl -s <actual-url> | grep "<unique title from index.html>"`. HTTP 200 proves something is there, not that YOUR thing is there. Use the `<title>` tag or `og:description` as the unique check.
+7. **Playwright-cli smoke test required.** After every deploy: `playwright-cli screenshot <live-url> --filename=smoke-test.png`, Read the screenshot, walk the golden path (`goto`, `click`, `fill` on nav/CTA/key flow). HTTP 200 + content match is necessary but not sufficient — the browser must actually render correctly.
+8. **Never delete a Vercel project without checking domains.** Before `vercel remove`: `curl -s https://<custom-domain> | grep title` for every domain known to point at the project, and `vercel inspect <domain>`. The domain's CURRENT content tells you which project is live — NOT the project name. "Duplicate by name" is not a safe conclusion. Asked Adam which domain points where if uncertain.
 
 ## When to Use
 - After /web-review scores 38+/40
@@ -42,31 +55,22 @@ Pre-Deploy Gate
 
 If any item fails: fix it before proceeding.
 
-### Step 3 — CORS Lockdown (backend only — do before frontend deploy)
+### Step 3 — CORS (Supabase-only projects: skip this step)
 
-Update `main.py` to support comma-separated multi-product `FRONTEND_URL`. This pattern is required — single-origin string breaks when a second product deploys to the same backend:
+**Supabase-only projects have no CORS to configure.** Supabase handles all backend requests via its own API layer — JWT auth + RLS enforce access. CORS is not a concern.
+
+**FastAPI backend only (monorepo with a separate Python API service):** Update `main.py` to support comma-separated `FRONTEND_URL` before deploying the frontend:
 ```python
 import os
-
-# Supports comma-separated list: "https://product-a.vercel.app,https://product-b.vercel.app"
 _frontend_urls = [u.strip() for u in os.getenv("FRONTEND_URL", "").split(",") if u.strip()]
 _allowed_origins = (
     _frontend_urls + ["http://localhost:5173", "http://localhost:3000"]
     if _frontend_urls
     else ["*"]
 )
-
-app.add_middleware(CORSMiddleware,
-    allow_origins=_allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=_allowed_origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 ```
-
-To add a new frontend to an existing backend: append to `FRONTEND_URL` with a comma — do not replace the existing value.
-
-Commit and push so Railway auto-deploys the CORS fix before the frontend goes live.
+Set `FRONTEND_URL` to the Vercel production URL in your backend hosting platform's env vars.
 
 ### Step 4 — Vercel Deploy
 
@@ -122,16 +126,10 @@ For every variable in `.env.example`, use the Vercel MCP `addEnvVar` (or equival
 
 **Fallback — CLI:**
 ```bash
-npx vercel env add VITE_API_URL production --value https://[railway-url] --yes
+npx vercel env add VITE_API_URL production --value https://[your-backend-url] --yes
 ```
 
-If Railway URL is unknown: log as NEEDS_HUMAN in BUILD-LOG.md:
-```
-NEEDS_HUMAN: Set VITE_API_URL in Vercel
-  1. Get Railway production URL from Railway dashboard
-  2. Use Vercel MCP addEnvVar or: npx vercel env add VITE_API_URL production --value [url] --yes
-  3. Redeploy: npx vercel --prod --yes
-```
+If backend URL is unknown: log as NEEDS_HUMAN with the variable name and where to find the URL.
 
 **After all env vars are confirmed set: trigger a redeploy.**
 Env vars set after the initial deploy do not take effect until the next deploy.
@@ -140,32 +138,11 @@ npx vercel --prod --yes
 ```
 Or via Vercel MCP redeploy. Skip this redeploy only if every env var was set before the Step 4 deploy.
 
-### Step 6 — Update FRONTEND_URL in Railway (backend only)
+### Step 6 — Update backend CORS (FastAPI backend only — skip for Supabase-only projects)
 
-Set or append the Vercel production URL in Railway FRONTEND_URL:
+**Supabase-only: skip this step entirely.** No backend service to update.
 
-**Standalone product (first deploy to this backend):**
-```bash
-railway variables --set "FRONTEND_URL=https://[vercel-url]"
-```
-
-**Monorepo (backend already serves other products):** Append — do not replace:
-```bash
-# Get current value first, then append with comma
-railway variables --set "FRONTEND_URL=https://[existing-url],https://[new-vercel-url]"
-```
-
-**If `railway variables --set` fails or Railway CLI is not authenticated:**
-1. Try Railway MCP tool `setEnvVar` if available
-2. If neither works: log as NEEDS_HUMAN with exact variable name and value:
-   ```
-   NEEDS_HUMAN: Update FRONTEND_URL in Railway
-   Service: [service name]
-   Action: [append / replace]
-   New value: [existing-url],[new-vercel-url]
-   Steps: Railway dashboard → Service → Variables → FRONTEND_URL → edit
-   ```
-   Do not skip this step — CORS will block all API calls from the new frontend until it is done.
+**FastAPI backend only:** Set `FRONTEND_URL` to include the new Vercel production URL in your backend platform's environment variables. If the backend already serves other products, append with a comma — do not replace the existing value. CORS will block all API calls from the new frontend until this is set.
 
 ### Step 7 — Automated Smoke Test (agent-browser — no human required)
 

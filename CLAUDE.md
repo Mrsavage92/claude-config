@@ -19,6 +19,8 @@ Synced Mac + Windows PC via `Mrsavage92/claude-config`. Update when both instanc
 
 **Trust the user over stale assumptions.** Their real-world knowledge is more current than my system info. Don't contradict — investigate first.
 
+**Estimate in AI wall-clock, never human dev-team time, for work I will execute.** Before writing any duration in a plan/roadmap/summary, ask: "Am I doing this work, or is a human team?" If me → minutes/hours. If a human → days/weeks is fine. **Banned for my own work:** "1 week", "2 weeks", "few days", "1-2 weeks", "a couple days", "next sprint", "month of work". **Use instead:** "10 min", "30 min", "an hour", "this turn", "this session". If I copy a roadmap from human-team planning docs (PRDs, sprint plans), convert the durations before quoting them back. The 100-1000x inflation is dishonest framing and Adam has called it out repeatedly — see [feedback_ai_time_not_human_time](memory).
+
 ## Goal-Driven Execution
 
 Before non-trivial work, state the success criterion. Loop until verified — don't hand back on the first green light.
@@ -81,7 +83,6 @@ Each named project has a project-specific `CLAUDE.md` at its code root, structur
 | Project | CLAUDE.md location |
 |---|---|
 | AuditHQ (PRIMARY revenue, $0 → $10K/mo target) | `C:/Users/Adam/audit-genius/CLAUDE.md` |
-| Authmark (feature-complete, blocked on Vercel deploy) | `C:/Users/Adam/Documents/Claude/resumecheck/CLAUDE.md` |
 | Orbit Digital (audit-led managed service, powered by AuditHQ; rebranded from GrowLocal 2026-05-16) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
 | BDR MuleSoft (client delivery, NetSuite↔SF critical path) | `C:/Users/Adam/Documents/Claude/BDR Group.co.uk/CLAUDE.md` |
 | BDR Integrations Platform (MuleSoft monorepo — active delivery) | `C:/Users/Adam/.claude-work/projects/bdr-integrations/CLAUDE.md` |
@@ -122,12 +123,19 @@ Index: `~/.claude/rules/README.md`. Language rules override common where they co
 
 When any instruction contains "match this site visually", "look the same", "mirror the design", "copy the style", "make it look like X", or similar — **STOP. Do not write a single line of code until steps 1–3 are complete.**
 
-1. `mcp__puppeteer__puppeteer_navigate` → load the target URL
-2. `mcp__puppeteer__puppeteer_screenshot` → 1440×900
-3. `mcp__puppeteer__puppeteer_evaluate` → extract computed styles:
+**Preferred (chrome-devtools-mcp):**
+1. `mcp__chrome-devtools__new_page(url=...)` → load the target URL
+2. `mcp__chrome-devtools__resize_page(width=1440, height=900)` then `mcp__chrome-devtools__take_screenshot(filePath=...)` → 1440×900 reference
+3. `mcp__chrome-devtools__evaluate_script(function="() => { ... }")` → extract computed styles:
    - CSS custom properties from `:root` (colors, spacing, typography, radius, animation)
    - `getComputedStyle` on: `body`, `nav/header`, `h1`, `h2`, `p`, primary button, secondary button, input, first link
    - `backgroundImage`/`backgroundColor` on `html`, `body`, hero section
+
+**Fallback (puppeteer, only if chrome-devtools-mcp not connected):**
+- `mcp__puppeteer__puppeteer_navigate` → load
+- `mcp__puppeteer__puppeteer_screenshot` → 1440×900
+- `mcp__puppeteer__puppeteer_evaluate` → extract the same fields
+
 4. Present extracted tokens to confirm before building
 5. Build using **only the extracted values** — no approximations
 

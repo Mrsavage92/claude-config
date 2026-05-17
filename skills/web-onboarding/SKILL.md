@@ -40,12 +40,12 @@ npx shadcn@latest add progress card input label select textarea button
 // src/pages/OnboardingPage.tsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { Progress } from '@/components/ui/progress'
 import { StepProfile } from '@/components/onboarding/StepProfile'
 import { StepBusiness } from '@/components/onboarding/StepBusiness'
 import { StepPlan } from '@/components/onboarding/StepPlan'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase'
 
 const STEPS = ['Profile', 'Business', 'Plan']
@@ -479,7 +479,7 @@ ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_status text DEFA
 ```tsx
 // src/components/auth/ProtectedRoute.tsx
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/use-auth'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -487,7 +487,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth()
 
-  const { data: org, isLoading: orgLoading } = useQuery({
+  const { data: org, isPending: orgLoading } = useQuery({
     queryKey: ['org', user?.id],
     queryFn: async () => {
       const { data } = await supabase

@@ -11,7 +11,7 @@ For each row in the checklist:
 1. **Read the verification method.** Examples:
    - "grep `tailwind.config.ts` for `display:`" → use `Grep` tool with that pattern
    - "Read DESIGN-BRIEF.md, count rows in Component Lock" → use `Read` tool, count
-   - "Puppeteer evaluate `document.documentElement.scrollWidth === window.innerWidth`" → use `mcp__puppeteer__puppeteer_evaluate`
+   - "Evaluate `document.documentElement.scrollWidth === window.innerWidth`" → use `mcp__chrome-devtools__evaluate_script` (preferred, function-wrapped) or `mcp__puppeteer__puppeteer_evaluate` (fallback, script-string)
    - "Vision check on desktop screenshot" → use `Read` tool on the screenshot file path, inspect visually, name the element
 
 2. **Execute the method.** Capture the actual result (grep output, count, JS return value, vision observation).
@@ -127,8 +127,11 @@ Post-score: [capped]/100 (raw [raw]%)
 Delta capped: [+X / -X / 0]
 Delta raw: [+X% / -X% / 0]  ← MUST appear, especially when capped hides progress
 Visual diff: [before screenshot path] → [after screenshot path] — [visible change description OR "null-delta VOID"]
+Console diff: [before errors: N] → [after errors: N] — [new errors list OR "no new errors"]
+Network diff: [before failed: N] → [after failed: N] — [new failed requests list OR "no new failures"]
 H1 check: PASS (Skill invoked: yes) | FAIL (inline fix — process violation)
 H2 check: PASS (visible diff confirmed) | VOID (null-delta — iteration does not count)
+H3 check: PASS (no console/network regressions) | VOID (behavioural regression — iter reverted)
 Decision: [KEPT | REVERTED | SKIPPED | WONTFIX | VOID]
 Reason (if REVERTED/SKIPPED/WONTFIX/VOID): [text]
 Commit: [sha or "(reverted)" or "(voided — null-delta)"]

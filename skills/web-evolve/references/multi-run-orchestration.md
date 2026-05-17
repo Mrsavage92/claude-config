@@ -14,7 +14,7 @@ INPUTS available at decision time:
   - live_url (from BUILD-LOG.md or argument)
   - .evolution/trajectory.json (if exists) — every prior run logged
   - .evolution/loop-state.json (if exists) — interrupted run mid-flight
-  - visual_quality_score (computed by puppeteer screenshot assessment, 1-5)
+  - visual_quality_score (computed by chrome-devtools screenshot assessment — puppeteer fallback, 1-5)
   - chrome-devtools-mcp connected? (probe attempt)
   - Vercel project? (presence of vercel.json or .vercel/)
   - CLAUDE.md flags: client_work=true? revenue_critical=true? target_audience=stated?
@@ -61,7 +61,7 @@ If `trajectory.json` exists AND `trajectory.runs[-1].status == "completed"`:
 
 If `.evolution/` is empty or missing:
 - `mode = "fresh"`
-- Determine target from `visual_quality_score` (puppeteer-assessed 1–5) + project signals:
+- Determine target from `visual_quality_score` (chrome-devtools-assessed 1–5, puppeteer fallback) + project signals:
 
 | visual_q | Client work? | Revenue critical? | → target | Tier |
 |---|---|---|---|---|
@@ -194,7 +194,7 @@ In a NEW chat with no memory of the prior run, just running `/web-evolve` in the
 | Phase B priority queue weighting | Standard | Boosted: uncompleted WC checks from last trajectory + NEEDS_HUMAN revisits get +500 priority |
 | Phase C iteration cap | 8 (greenfield) / 20 (backfill) | `last_iterations × 0.7` — diminishing returns expected |
 | Phase D (final commit) | Commits to `evolve/{date}` branch | Commits to same `evolve/{date}` branch if same day, else new branch |
-| Phase E (deploy verification) | Full puppeteer + perf + RUM | Full |
+| Phase E (deploy verification) | Full chrome-devtools (or puppeteer fallback) + perf + RUM | Full |
 | Phase F (retro) | Writes trajectory.runs[N] | Appends trajectory.runs[N+1] |
 
 ---

@@ -159,8 +159,8 @@ Use as much from 21st.dev as possible. Building generic from scratch when 21st.d
 | G2 | All interactive icon-only elements have aria-label | grep `<button` and `<a` for icon imports without aria-label | none unguarded |
 | G3 | Build green + tests passing | `npm run build` exit 0 + `npm test` exit 0 | exit codes |
 | G4 | All chunks < 250KB gzipped | `npm run build` output | per-chunk sizes |
-| G5 | **LCP (Largest Contentful Paint) < 2.5s** on the live deployed URL | `mcp__puppeteer__puppeteer_navigate` to live URL, then `mcp__puppeteer__puppeteer_evaluate`: `new Promise(r => new PerformanceObserver(l => r(l.getEntries().at(-1).startTime)).observe({type:'largest-contentful-paint',buffered:true}))` | measured LCP value in ms |
-| G6 | **CLS (Cumulative Layout Shift) < 0.1** on the live deployed URL | `mcp__puppeteer__puppeteer_evaluate`: `new Promise(r => { let v=0; new PerformanceObserver(l => { l.getEntries().forEach(e => { if(!e.hadRecentInput) v+=e.value }); r(v) }).observe({type:'layout-shift',buffered:true}) })` after full page load | measured CLS score |
+| G5 | **LCP (Largest Contentful Paint) < 2.5s** on the live deployed URL | `mcp__chrome-devtools__new_page(url=live_url)` → `mcp__chrome-devtools__performance_start_trace(reload=true, autoStop=true)` → `mcp__chrome-devtools__performance_stop_trace()` — read `LCP` from returned trace metrics. (Fallback when chrome-devtools-mcp unavailable: `mcp__puppeteer__puppeteer_evaluate` with PerformanceObserver — less accurate, no throttling.) | measured LCP value in ms |
+| G6 | **CLS (Cumulative Layout Shift) < 0.1** on the live deployed URL | Same chrome-devtools trace as G5 — read `CLS` from returned metrics. (Fallback puppeteer evaluate available but inaccurate without full load wait.) | measured CLS score |
 
 ---
 
