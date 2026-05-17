@@ -38,7 +38,7 @@ Valid industries: `trades` `beauty` `health` `automotive` `hospitality` `fitness
 SUPABASE_PROJECT_ID: nstpbwflegwmknwcmsey
 SUPABASE_FUNCTIONS_URL: https://nstpbwflegwmknwcmsey.supabase.co/functions/v1
 NOTION_GROWLOCAL_PAGE_ID: 32b116e8bef281689583cc30ca681bb0
-NOTION_TOKEN: REDACTED_NOTION_INTERNAL_TOKEN
+NOTION_TOKEN: read from env var NOTION_INTERNAL_TOKEN
 PREVIEW_BASE_URL: https://growlocal-flax.vercel.app/s
 ```
 
@@ -268,9 +268,9 @@ If it fails: log it and continue. Print the email body to terminal as a fallback
 Search for a child page titled "Clients" under the GrowLocal Notion page (`32b116e8bef281689583cc30ca681bb0`).
 
 ```python
-import urllib.request, json
+import urllib.request, json, os
 
-TOKEN = 'REDACTED_NOTION_INTERNAL_TOKEN'
+TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
     'Notion-Version': '2022-06-28',

@@ -1,6 +1,6 @@
 import json, urllib.request, urllib.error, time, os, re
 
-TOKEN = 'REDACTED_NOTION_INTERNAL_TOKEN'
+TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 NOTION_VERSION = '2022-06-28'
 BASE = 'https://api.notion.com/v1'
 
@@ -240,7 +240,7 @@ cats_skill = [
 
 sblocks = [
     h1(f'Skills Library ({len(data["skills"])} total)'),
-    para('Last updated: 2026-04-28  |  Source: github.com/Mrsavage92/skills-library'),
+    para('Last updated: 2026-04-28  |  Source: github.com/Mrsavage92/claude-config'),
     divider(),
 ]
 

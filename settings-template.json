@@ -1,7 +1,8 @@
 {
   "env": {
     "CLOUDFLARE_ACCOUNT_ID": "e15a9c89ed8482988bd304bef49ceb07",
-    "CLOUDFLARE_EMAIL": "adamsavage6@hotmail.co.uk"
+    "CLOUDFLARE_EMAIL": "adamsavage6@hotmail.co.uk",
+    "NOTION_INTERNAL_TOKEN": "YOUR_NOTION_INTERNAL_TOKEN_HERE"
   },
   "permissions": {
     "allow": [

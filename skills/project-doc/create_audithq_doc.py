@@ -1,7 +1,7 @@
-import urllib.request, json
+import urllib.request, json, os
 from datetime import datetime
 
-TOKEN = 'REDACTED_NOTION_INTERNAL_TOKEN'
+TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
     'Notion-Version': '2022-06-28',

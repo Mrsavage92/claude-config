@@ -35,7 +35,9 @@ then create the doc as a child of that project. Never create project docs at the
 ## API Setup
 
 ```python
-TOKEN = 'REDACTED_NOTION_INTERNAL_TOKEN'
+import os
+
+TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
     'Notion-Version': '2022-06-28',

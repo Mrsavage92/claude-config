@@ -13,7 +13,7 @@ Shared source of truth for Claude Code configuration across all machines.
 - `sync.ps1` — Windows sync script
 - `manifest.json` — auto-generated hash index, counts updated on every sync
 
-Skills library: https://github.com/Mrsavage92/skills-library
+Canonical repo: https://github.com/Mrsavage92/claude-config
 
 ## First-time setup on a new machine
 
@@ -31,7 +31,7 @@ cd "$env:USERPROFILE\Documents\Git\claude-config"
 .\sync.ps1
 ```
 
-After first run, edit `~/.claude/settings.json` and replace `YOUR_NOTION_TOKEN_HERE` with the real token.
+After first run, edit `~/.claude/settings.json` and set `env.NOTION_INTERNAL_TOKEN` to your current Notion internal integration token.
 
 ## Keeping in sync
 

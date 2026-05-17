@@ -90,7 +90,7 @@ Run these checks:
 - `git push origin main`
 
 **Step 4 — Update Notion via REST API**
-- Token: `REDACTED_NOTION_INTERNAL_TOKEN`
+- Token: read from env var `NOTION_INTERNAL_TOKEN` (configured in `~/.claude/settings.json`). NEVER hardcode. If unset, HALT and tell the user to set it.
 - Notion hub page ID: `32a116e8-bef2-8030-a0f6-d0be522bf917`
 - Child pages: Agents (`32a116e8-bef2-815d-8b38-f37eaa467ec5`), Slash Commands (`32a116e8-bef2-8118-9f49-e6d790a56bd1`), Skills Library (`32a116e8-bef2-8196-b2d3-e630d645984a`)
 - Clear all blocks then rewrite each page completely (do not append — always full rewrite)

@@ -32,7 +32,7 @@ Or with optional custom domain:
 ```
 SUPABASE_PROJECT_ID: nstpbwflegwmknwcmsey
 SUPABASE_FUNCTIONS_URL: https://nstpbwflegwmknwcmsey.supabase.co/functions/v1
-NOTION_TOKEN: REDACTED_NOTION_INTERNAL_TOKEN
+NOTION_TOKEN: read from env var NOTION_INTERNAL_TOKEN
 PREVIEW_BASE_URL: https://growlocal-flax.vercel.app/s
 ```
 
@@ -151,9 +151,9 @@ except Exception as e:
 Find the client's Notion page by searching for a page titled `[business_name] - [suburb]` under the Clients page.
 
 ```python
-import urllib.request, json
+import urllib.request, json, os
 
-TOKEN = 'REDACTED_NOTION_INTERNAL_TOKEN'
+TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
     'Notion-Version': '2022-06-28',
