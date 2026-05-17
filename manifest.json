@@ -295,7 +295,6 @@
     "web-animations",
     "web-component",
     "web-deploy",
-    "web-design-guidelines",
     "web-design-research",
     "web-email",
     "web-evolve",
@@ -321,6 +320,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 179
+    "skills": 178
   }
 }

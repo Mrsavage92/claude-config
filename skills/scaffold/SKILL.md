@@ -1,5 +1,7 @@
 Scaffold a new project, feature, or module with production-ready structure.
 
+**Web projects → use `/web-scaffold` instead.** This skill is the generic fallback for non-web stacks (Python, Go, Node CLIs, FastAPI services, etc.). For React + Vite + Tailwind + Supabase projects, `/web-scaffold` reads `SCOPE.md` + Design DNA and produces a tighter, suite-aware setup.
+
 ## Phase 0.0 — Product Validation Gate (MANDATORY for new PRODUCTS only)
 
 Before scaffolding a new PRODUCT (a whole SaaS, site, or standalone tool), HALT unless a fresh BUILD verdict exists at `~/Documents/Claude/outputs/product-validation-{slug}.md`.

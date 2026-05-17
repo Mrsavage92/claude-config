@@ -104,6 +104,29 @@ Before building any dashboard, analytics view, monitoring screen, or data manage
 
 ---
 
+## `/web-review` vs `/audit` — which one to fire
+
+Both score quality, but they serve different stages of the build pipeline. They are NOT interchangeable.
+
+| Dimension | `/web-review` | `/audit` |
+|---|---|---|
+| Scope | The whole web project (every page, every component, design system compliance) | One area at a time — feature / page / component |
+| Score scale | 0–40 across 40 dimensions (Design 10 / Visual 10 / a11y 10 / perf 10) | 0–4 per dimension across 5 dimensions (a11y / perf / theming / responsive / anti-patterns) |
+| Fixes? | **YES — auto-fixes** inside the `/saas-build` fix-loop until ≥ 38/40 | **NO — report only.** Other commands address the findings |
+| Anchored to | `CONTEXT.md` (Locked Decisions, Anti-Goals) + Design DNA + `tokens.lock.json` if replication mode | `mcp__chrome-devtools__lighthouse_audit` + live perf trace |
+| Required before | `/web-deploy` in greenfield (the tier-95 gate) | Nothing — standalone health check |
+| Reads `/premium-website` quality bar | YES — its 38/40 IS the tier-95 threshold | NO — produces severity ratings (P0–P3), not tier scores |
+| Fires `/impeccable teach` | NO (Skill('project-context') instead) | YES (mandatory preparation step) |
+
+**When to fire which:**
+- **Building or shipping a web project** → `/web-review` (the suite's pre-deploy gate, anchored to the canonical tier system).
+- **Diagnosing a specific page/component without fixing** → `/audit` (broad technical health check, severity-ranked report).
+- **Brownfield iteration on an already-deployed site** → `/web-evolve`. It runs `/critique` + `Skill('a11y-audit')` + `Skill('seo-strategy')` itself at target ≥ 95 — neither `/web-review` nor `/audit` is the right entry point.
+
+**Do not fire both.** They'll produce overlapping but non-comparable scores and the fix loop won't know which one to satisfy.
+
+---
+
 ## Skill Trigger Guide
 
 | Use | When |
