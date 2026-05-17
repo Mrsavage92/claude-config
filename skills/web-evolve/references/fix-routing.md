@@ -4,6 +4,24 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
 
 ---
 
+## Refinement-Contract Integration (READ FIRST — Principle 7)
+
+Every entry below where `fix_skill` is in `{typeset, colorize, layout, animate, polish, optimize, adapt, clarify, overdrive, delight, calibrate-amplitude, impeccable}` is governed by `~/.claude/skills/shared/refinement-contract.md`. The orchestrator MUST pass a `sources` bundle (from `.evolution/refinement-sources.json` — built once at start of Phase C) in every iter args. Refinement skills HALT without a source.
+
+**Source bundle priority** (orchestrator builds in this order, takes first available):
+1. `tokens.lock.json` at project root (if `/style-mirror` has run)
+2. `.evolution/extracts/<slug>.json` files for SCOPE.md `## References` URLs (auto-fired by Phase A.5)
+3. `memorable_choice` from Phase A.4 (always present after Principle 8)
+4. `taste_section` pointers (specific Section 3.x / 4.x / 8.x from taste-skill)
+
+If steps 1-3 all return empty → HALT with `"Refinement source bundle empty — Phase A.5 did not produce extracts and Phase A.4 did not lock a memorable_choice. Cannot run refinement without a source (Principle 7)."`
+
+**Legacy `/web-fix` is removed.** All previous `fix_skill: web-fix` entries are now `fix_skill: impeccable`. The orchestrator builds an `impeccable craft` invocation for these — same source-mandate applies. Tiny code-quality fixes (a11y attribute add, key={index} → key={item.id}, etc.) that were trivial Edits should be promoted to `edit_direct: true` if they truly don't need craft-level work. Anything else: craft.
+
+**Amplitude trio merged.** Previous `bolder`/`distill`/`quieter` entries (if any existed in older versions of this file) → `fix_skill: calibrate-amplitude` with `dial_value` in meta (0.0=quietest, 0.3=distill, 0.7=mild-bold, 1.0=boldest).
+
+---
+
 ## SKILL_LOOKUP (machine-readable — orchestrator reads this block, not the tables below)
 
 ```json
@@ -21,11 +39,11 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "A11": {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
   "B1":  {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
   "B2":  {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
-  "B3":  {"fix_skill": "web-fix",    "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null,  "edit_direct": false},
+  "B3":  {"fix_skill": "impeccable",    "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null,  "edit_direct": false},
   "B4":  {"fix_skill": "web-design-research", "prereq": null,                               "secondary": null,      "edit_direct": false},
   "B5":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
   "B7":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
-  "B8":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "B8":  {"fix_skill": "impeccable",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "B9":  {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": null, "edit_direct": false},
   "C1":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "C2":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
@@ -40,9 +58,9 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "D3":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "D4":  {"fix_skill": "animate",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "D5":  {"fix_skill": "overdrive",  "prereq": null,                                        "secondary": "animate", "edit_direct": false},
-  "D6":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "D6":  {"fix_skill": "impeccable",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "E1":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
-  "E2":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "E2":  {"fix_skill": "impeccable",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "E3":  {"fix_skill": "web-component", "prereq": "mcp__magic__logo_search", "secondary": "mcp__magic__21st_magic_component_inspiration", "edit_direct": false},
   "E4":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
   "E5":  {"fix_skill": "web-component", "prereq": null,                                     "secondary": null,      "edit_direct": false},
@@ -57,10 +75,10 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "F6":  {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "web-component", "edit_direct": false},
   "G1":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
   "G2":  {"fix_skill": null,          "prereq": null,                                        "secondary": null,      "edit_direct": true},
-  "G3":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "G3":  {"fix_skill": "impeccable",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "G4":  {"fix_skill": "optimize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "G5":  {"fix_skill": "optimize",   "prereq": null,                                        "secondary": null,      "edit_direct": false},
-  "G6":  {"fix_skill": "web-fix",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
+  "G6":  {"fix_skill": "impeccable",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "I1":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "I2":  {"fix_skill": "typeset",    "prereq": null,                                        "secondary": null,      "edit_direct": false},
   "I3":  {"fix_skill": "polish",     "prereq": null,                                        "secondary": null,      "edit_direct": false},
@@ -88,12 +106,12 @@ When `Skill('web-evolve')` finds a failed check, this table is the authority for
   "WC2": {"fix_skill": "animate",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Lenis not installed/wired. Phase G should have handled this; if loop reached here, re-run Phase G.3 manually."},
   "WC3": {"fix_skill": "animate",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "GSAP + ScrollTrigger not registered OR no active ScrollTrigger pin. Add ≥1 scroll-pinned section."},
   "WC4": {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "polish", "edit_direct": false, "meta": "Custom cursor missing OR data-magnetic not on primary CTAs. Use Motion <Cursor> or hand-rolled with Lenis velocity."},
-  "WC5": {"fix_skill": "web-fix",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "View Transitions API not wired. Add meta tag + viewTransitionName on shared elements + CSS @view-transition rules + reduced-motion guard."},
+  "WC5": {"fix_skill": "impeccable",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "View Transitions API not wired. Add meta tag + viewTransitionName on shared elements + CSS @view-transition rules + reduced-motion guard."},
   "WC6": {"fix_skill": "typeset",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Typography uses default Inter from Google. Replace with foundry choice: Geist (free, npm i geist), or paid Söhne/Calibre. Animate ≥1 variable axis on hover or scroll."},
   "WC7": {"fix_skill": "colorize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Color tokens use shadcn defaults (slate/zinc/neutral) or HSL. Convert to OKLCH. 1 brand accent + 2 neutrals + 1 surface."},
   "WC8": {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_builder",     "secondary": "web-component", "edit_direct": false, "meta": "Hero lacks real product UI. Replace gradient blob with: product screenshot/video, R3F scene visualising the product, or live product mockup using actual product primitives."},
   "WC9": {"fix_skill": "optimize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Performance below world-class gate (LCP<2.0, INP<150, CLS<0.05). Read perf-trace.json insights, target the specific culprit (image, font, third-party, render-blocking)."},
-  "WC10":{"fix_skill": "web-fix",    "prereq": null,                                          "secondary": null,      "edit_direct": true,  "meta": "prefers-reduced-motion not respected. Wrap motion in @media (prefers-reduced-motion: reduce) { /* disable */ }. Lenis: lenis.stop() when reduce. View Transitions: skipTransition()."}
+  "WC10":{"fix_skill": "impeccable",    "prereq": null,                                          "secondary": null,      "edit_direct": true,  "meta": "prefers-reduced-motion not respected. Wrap motion in @media (prefers-reduced-motion: reduce) { /* disable */ }. Lenis: lenis.stop() when reduce. View Transitions: skipTransition()."}
 }
 ```
 

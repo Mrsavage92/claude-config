@@ -10,6 +10,92 @@ tools: Read, Write, Edit, Bash, mcp__chrome-devtools__new_page, mcp__chrome-devt
 
 # Skill: /style-mirror
 
+## Two modes — extract (PRIMARY) and apply
+
+This skill now operates in two modes, picked by args:
+
+- **`extract`-mode** (PRIMARY since 2026-05-17) — Just extract reference tokens to a JSON file. No diff, no apply. Used by `/web-evolve` Phase A.5 and `/web-scaffold` Step 0.7 to build the `refinement-sources` bundle (refinement-contract.md §1). Invoked as:
+  ```
+  Skill('style-mirror', args='extract | urls: [<url1>, <url2>, ...] | save_to_slug: <project-slug> | <optional brand_accent>')
+  ```
+  Output: writes to `.evolution/extracts/<slug>.json` (per-URL files in a folder) + an aggregated `tokens.lock.json` at project root if exactly ONE URL is passed. Returns the file paths.
+
+- **`apply`-mode** (legacy / direct-invocation) — Full extract → diff → confirm → apply pipeline. Same Cardinal Rules as before. Invoked when user says "make it look like X" without `extract` flag.
+
+**Auto-cache + staleness rule** (extract-mode only):
+- If `.evolution/extracts/<slug>.json` exists AND its `captured_at` timestamp is < 7 days old AND the URL matches → use cached, skip re-extraction.
+- If stale (> 7 days) OR URL changed → re-extract.
+- Cache busting: pass `--force-extract` to ignore cache.
+
+**Refinement-source schema** (the JSON written to `.evolution/extracts/<slug>.json` — refinement skills consume this):
+
+```json
+{
+  "reference_url": "https://linear.app",
+  "captured_at": "2026-05-17T12:34:56Z",
+  "slug": "linear-app",
+  "color": {
+    "body_bg": "oklch(...)",
+    "card_bg": "oklch(...)",
+    "text_primary": "oklch(...)",
+    "text_secondary": "oklch(...)",
+    "border": "oklch(...)",
+    "brand_accent": "oklch(...)",
+    "cta_bg": "oklch(...)",
+    "cta_text": "oklch(...)",
+    "raw_hex": { ... },
+    "hue_inferred": "blue-purple"
+  },
+  "typography": {
+    "heading_family": "...",
+    "heading_weights": [400, 600, 700],
+    "heading_h1_size": "clamp(...)",
+    "heading_letter_spacing": "...",
+    "body_family": "...",
+    "body_weight": 400,
+    "body_size": "...",
+    "mono_family": "...",
+    "axis_animation_detected": false
+  },
+  "motion": {
+    "lenis_detected": false,
+    "gsap_detected": false,
+    "framer_motion_detected": false,
+    "rive_detected": false,
+    "css_smooth_scroll": false,
+    "view_transitions_detected": false,
+    "easing_curves_seen": ["cubic-bezier(...)"]
+  },
+  "layout": {
+    "hero": "centered | split | full-bleed | overlay",
+    "above_fold_order": ["nav", "headline", ...],
+    "product_visual": "above | below | inline | none",
+    "density": "sparse | dense",
+    "section_padding_top": "...",
+    "max_content_width": "..."
+  },
+  "spacing": {
+    "scale_ratio": 1.25,
+    "section_padding_top": "...",
+    "cta_border_radius": "..."
+  },
+  "icons": {
+    "family": "lucide | octicons | phosphor | custom",
+    "stroke_width": "..."
+  },
+  "forbidden_additions": [
+    "gradient_mesh", "grain_texture", "border_glow", "glassmorphism",
+    "grid_lines", "gradient_text", "lucide_icons", "framer_motion_entrances"
+  ]
+}
+```
+
+Refinement skills slice this schema by domain (typeset reads `typography.*`, colorize reads `color.*`, animate reads `motion.*`, etc.).
+
+**Schema version: 2** (May 2026). Schema v1 (legacy `apply`-mode `tokens.lock.json`) is still supported for backward compatibility but new extractions write v2.
+
+---
+
 ## Why this skill exists
 
 "Make it look like X" fails catastrophically when the implementation:

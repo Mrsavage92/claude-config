@@ -70,6 +70,29 @@ The two paths produce different file trees. Do NOT mix `app/` (Next.js App Route
 
 ---
 
+### Step 0.7 — Extract reference tokens via /style-mirror (MANDATORY before any code gen)
+
+`tokens.lock.json` is the design system, NOT "premium SaaS defaults". This step is the lever that prevents the "every scaffold looks the same" failure mode.
+
+1. Read `SCOPE.md` `## References` section (produced by `/web-scope`). Expect 2–3 URLs.
+2. If missing → HALT with: `"SCOPE.md is missing the ## References section. Run /web-scope first — references are mandatory at scope time, not optional (refinement-contract.md §1)."`
+3. Pick the **primary** reference (the first URL or one tagged `— primary`).
+4. Fire:
+   ```
+   Skill('style-mirror', args='extract | urls: [<primary-url>] | save_to_slug: {project-slug}')
+   ```
+   This writes `.evolution/extracts/{primary-slug}.json` AND `tokens.lock.json` at project root (because exactly one URL is passed — see /style-mirror schema).
+5. For secondary/tertiary references, fire additional `extract` calls in parallel — each writes `.evolution/extracts/{slug}.json` (no tokens.lock.json since not primary).
+6. Verify `tokens.lock.json` exists at project root before proceeding. If extraction failed (unreachable URL, etc.) → HALT, ask user to pick a different reference.
+
+**Effect on Step 1 onward:** `tokens.lock.json` at project root activates replication mode in the impeccable Context Gathering Protocol AND in every refinement skill. All subsequent Step 4 templates (Tailwind v4 `@theme {}`, foundry font picks, motion stack initialization) consume the extracted tokens rather than the suite's default values.
+
+**Skip this step ONLY if:**
+- `tokens.lock.json` already exists at project root (someone already ran `/style-mirror` apply-mode OR a prior scaffold).
+- SCOPE.md explicitly opts out via `references_skip: true` (rare — only for truly net-new design directions where extraction would be misleading; surface this to user as a warning before accepting).
+
+---
+
 ### Step 1 — Read Design DNA + Scope
 
 **TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root, replication mode is active. Generate `index.css`, `tailwind.config.ts`, font @imports, and the design-token system from the lock — not from `web-system-prompt.md` defaults. Do NOT scaffold the standard shadcn HSL variable set if the lock specifies different colors/space/radius. Do NOT install Framer Motion or add Visual Signature Elements unless the lock proves the reference uses them. After scaffolding, the generated `index.css` must round-trip back to the lock.

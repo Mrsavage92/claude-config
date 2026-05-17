@@ -16,7 +16,9 @@ If your args contain `output_format: json` OR `mode: web-evolve` OR a `checklist
     - `routes: [/route1, /route2, ...]` — matching route slugs (one per screenshot).
     - `tier: 90 | 95 | 98 | 100` — target tier for floor calculation.
     - `checklist: sales-page-10` (or inline 10-rule list) — see Sales-Page Checklist below.
-    - `mode: per-route-baseline | per-iter-delta | exit-aggregate` — what kind of run.
+    - `mode: per-route-baseline | per-iter-delta | exit-aggregate | vq-compare | memorable-delivery` — what kind of run. See "Mode reference" below.
+    - For `mode: vq-compare`: also pass `baseline_screenshot: <path>` and `post_run_screenshot: <path>` — returns `vq_delta` field.
+    - For `mode: memorable-delivery`: also pass `memorable_choice: <string>` — returns `delivered: true | false` axis.
 3. **For each screenshot, run THREE assessments in sequence:**
     - **(a) Sales-page checklist** (NEW, 10 rules — see below) — count FAILs, list them by rule name.
     - **(b) Nielsen heuristics** (existing — Step 2 Assessment A logic) — score 0–4 per heuristic, sum 0–40.
@@ -71,6 +73,82 @@ Score each route against these 10 rules. Each is binary PASS/FAIL.
 10. **`mobile_parity`** — Rules 1–9 above all pass at 375px viewport, 768px tall above-the-fold. If primary CTA or WHAT YOU DO disappears at mobile = FAIL.
 
 **This checklist is mandatory in Web-evolve Targeted Mode.** It is NOT used in interactive `/critique` invocations (those keep the Nielsen-only flow below).
+
+---
+
+## Mode reference (Web-evolve Targeted)
+
+| Mode | When fired | Required args | Returns |
+|---|---|---|---|
+| `per-route-baseline` | Phase A.1.5 — initial per-route audit | `screenshots[]`, `routes[]`, `tier`, `checklist: sales-page-10` | Per-route `verdict` (REBUILD/REFINE/KEEP) + `rebuild_brief` |
+| `per-iter-delta` | Phase C — every iter, post-Edit | `screenshot_before`, `screenshot_after`, `route` | `visible_delta_0_to_5` + `ssim_estimate` |
+| `vq-compare` | Phase A.7.5 (baseline) + Phase D (post-deploy) | `baseline_screenshot`, `post_run_screenshot`, `tier`, `dimensions` | Aggregate `vq_baseline`, `vq_post_run`, `vq_delta` |
+| `memorable-delivery` | Phase F — exit gate (Principle 8) | `screenshot`, `route`, `memorable_choice` | `delivered: true \| false`, `evidence`, `gap_if_not_delivered` |
+| `exit-aggregate` | Phase F — overall run quality | All Phase D screenshots, `tier` | Awwwards 4-axis scores, gate verdict |
+
+### Canonical dimensions (sum to vq_aggregate, 0–5 scale each)
+
+The skill scores against THIS canonical set in every mode. Do not invent new dimensions per invocation.
+
+| Dimension | What it measures |
+|---|---|
+| `hero_impact` | Does the hero immediately establish what the site IS? Awwwards Design weight. |
+| `hierarchy` | Is there a clear primary-secondary-tertiary scan path? Nielsen visibility + match-real-world. |
+| `distinctiveness` | Could this be confused with 10 other AI-template sites? Non-genericity. |
+| `product_visibility` | Is the product itself shown (UI screenshot, R3F scene, real video) vs implied (gradient blob)? |
+| `motion` | Is motion present and purposeful (scroll choreography, micro-interactions) — OR appropriately absent? |
+| `typography` | Foundry-tier type with axis animation, or default-Inter template? Refinement-contract reflex-rejects list. |
+| `color` | OKLCH palette, brand-tinted neutrals — or shadcn defaults (slate/zinc/neutral)? |
+| `layout` | Grid-breaking, intentional asymmetry — or uniform card grid? |
+| `content_clarity` | Sales-page-10 alignment: WHO YOU ARE / WHAT YOU DO / WHO IT'S FOR clear above fold. |
+| `structural_integrity` | No broken pages, no fully-blank routes, no hydration errors. Hard floor — if 0, REBUILD verdict mandatory. |
+
+Modes that need fewer dimensions still pull from this list. `per-iter-delta` may use only `hero_impact + distinctiveness + motion` for speed; `exit-aggregate` uses all 10.
+
+### Memorable-delivery mode (NEW — Principle 8 enforcement)
+
+When `/web-evolve` Phase F fires `mode: memorable-delivery`, the skill checks whether the locked `memorable_choice` from Phase A.4 was actually delivered on the deployed site. Returns:
+
+```json
+{
+  "mode": "memorable-delivery",
+  "memorable_choice": "kinetic display headline that re-types on scroll",
+  "screenshot_path": "...",
+  "screenshot_sha256": "...",
+  "delivered": false,
+  "evidence": "Hero shows static H1 'AuditHQ - Audit Smarter'. No SplitText animation. No variable-axis morph. Memorable choice missing entirely.",
+  "gap_if_not_delivered": "Add SplitText character animation tied to scroll progress. Use Geist Mono with weight-axis animation 100→900 across scroll. Reference: vercel.com homepage scroll.",
+  "deliver_score_0_to_5": 0,
+  "route": "/"
+}
+```
+
+`delivered: false` triggers `deviation_count++` in `trajectory.failed_gates` (per /web-evolve Principle 6) AND status `memorable_choice_undelivered`. User-facing summary leads with `⚠️ Memorable choice was locked but not delivered — re-run required.`
+
+### vq-compare mode (formalized — replaces /web-evolve Rule 8 inline spec)
+
+```json
+{
+  "mode": "vq-compare",
+  "baseline_screenshot": { "path": "...", "sha256": "..." },
+  "post_run_screenshot": { "path": "...", "sha256": "..." },
+  "tier": 95,
+  "vq_baseline": 3.2,
+  "vq_post_run": 3.8,
+  "vq_delta": 0.6,
+  "required_delta_for_tier": 0.7,
+  "delta_floor_met": false,
+  "dimensions_baseline": { "hero_impact": 3.0, "hierarchy": 3.5, ... },
+  "dimensions_post_run": { "hero_impact": 3.5, "hierarchy": 4.0, ... },
+  "dimensions_with_negative_delta": []
+}
+```
+
+`delta_floor_met: false` → `/web-evolve` Phase D HALTs or marks status `vq_delta_below_floor` per Principle 6.
+
+### Native sha256 emission (hardened)
+
+Every mode that takes screenshot paths MUST compute sha256 of each file via `Get-FileHash` (Windows PowerShell) / `sha256sum` (POSIX) BEFORE scoring. Return the hash in `screenshot_sha256` (or `baseline_screenshot.sha256` / `post_run_screenshot.sha256` for vq-compare). `/web-evolve` verifies these against orchestrator-computed hashes to catch the failure mode where the skill returns generic scores without actually reading the file (originally caught by `/web-evolve` Cardinal Rule 8 / P10 — now native to critique).
 
 ---
 

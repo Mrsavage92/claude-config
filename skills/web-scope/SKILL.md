@@ -59,6 +59,22 @@ Read the user's product description. Extract:
   - Decide which: does this product ship a public landing/marketing page that needs SEO + perf-optimised first-paint? → nextjs. Pure logged-in app? → vite.
   - Write this to SCOPE.md `## Framework` section verbatim — `/web-scaffold` Step 0.5 reads it. If absent, scaffold halts and asks the question there.
 
+- **Reference URL picks (MANDATORY — 2-3 URLs pinned to SCOPE.md `## References`):**
+  - **Why this exists:** the refinement-contract (`~/.claude/skills/shared/refinement-contract.md`) requires every refinement skill invocation to receive a source. References picked at scope-time become the canonical source bundle for the whole project — `/web-scaffold` extracts tokens via `/style-mirror` BEFORE code generation, and `/web-evolve` Phase C builds `.evolution/refinement-sources.json` from these extracts. Without scope-time references the build defaults to "premium SaaS" generics, which is the failure mode this requirement closes.
+  - Ask the user (if not auto-decidable from DESIGN-BRIEF.md): **"Pick 2–3 specific reference URLs whose visual direction we should mirror. Not 'sites you like' — sites whose typography, color, layout, and motion this product should resemble at-tier. Examples: linear.app, stripe.com, vercel.com, resend.com, bruno-simon.com, oryzo.ai, godly.website picks."**
+  - Validate each pick by reachability (`curl -s -o /dev/null -w "%{http_code}"`) before accepting. Reject dead URLs.
+  - Write to SCOPE.md `## References` section with one URL per line:
+    ```markdown
+    ## References
+
+    - `https://linear.app` — primary (typography + restraint + motion discipline)
+    - `https://resend.com` — secondary (foundry variable font signature)
+    - `https://godly.website/picks/{slug}` — tertiary (one-memorable-thing anchor)
+    ```
+  - `/web-scaffold` Step 0.7 (NEW) will fire `Skill('style-mirror', args='extract | urls: [...]')` against these to produce `.evolution/extracts/{slug}.json` files BEFORE generating any code.
+  - `/web-evolve` Phase A.5 reads these on every run and rebuilds the extracts if stale (> 7 days).
+  - **For replication-mode projects** (those with an existing `tokens.lock.json`): References can still be set but extraction is skipped — the lock IS the canonical source.
+
 ### Step 2 — Design Brief (decide all of these before touching CSS)
 
 **2a. Enterprise or Expressive?**
