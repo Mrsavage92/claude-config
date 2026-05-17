@@ -221,14 +221,28 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
     **Per-iter contract (Phase C.iter):**
 
-    1. **Pre-iter screenshot** of the affected route (use chrome-devtools, save to `.evolution/iter-{n}-before.png`).
+    1. **Pre-iter snapshot** of the affected route:
+       - `mcp__chrome-devtools__navigate_page(url={route_url}, type="url")` (or `new_page` if no tab)
+       - `mcp__chrome-devtools__take_screenshot(filePath=".evolution/iter-{n}-before.png")`
+       - `mcp__chrome-devtools__list_console_messages(types=["error","warn"])` → save as `.evolution/iter-{n}-before.console.json`
+       - `mcp__chrome-devtools__list_network_requests()` → save as `.evolution/iter-{n}-before.network.json` (record failed requests = status ≥ 400)
     2. **Apply the iter** via the chosen Skill().
-    3. **Post-iter screenshot** to `.evolution/iter-{n}-after.png`.
-    4. **Compare.** Either (a) compute SSIM via Bash `python -c "from PIL import Image; ..."` if Pillow available, OR (b) fire `Skill('critique', args='compare iter-{n}-before vs iter-{n}-after | output: visible_delta_verdict_0_to_5 | screenshots: [before, after]')`. Compare is REQUIRED. Skipping = VOID by default.
-    5. **VOID if:** SSIM > 0.985 OR critique visible_delta_verdict < 1.0. Run `git reset --hard HEAD~1`. Log `void_reason: invisible_change` in `trajectory.real_iterations_detail[n]`. Iter does NOT count toward refinement-skill floor (Rule 11.7).
-    6. **KEEP if:** SSIM ≤ 0.985 AND critique visible_delta_verdict ≥ 1.0. Commit stays, count increments.
+    3. **Post-iter snapshot** (same as pre, but `iter-{n}-after.*`):
+       - `mcp__chrome-devtools__navigate_page(type="reload", ignoreCache=true)` to flush HMR caching artifacts
+       - `mcp__chrome-devtools__take_screenshot(filePath=".evolution/iter-{n}-after.png")`
+       - `mcp__chrome-devtools__list_console_messages(types=["error","warn"])` → `.evolution/iter-{n}-after.console.json`
+       - `mcp__chrome-devtools__list_network_requests()` → `.evolution/iter-{n}-after.network.json`
+    4. **Compare visual.** Either (a) compute SSIM via Bash `python -c "from PIL import Image; ..."` if Pillow available, OR (b) fire `Skill('critique', args='compare iter-{n}-before vs iter-{n}-after | output: visible_delta_verdict_0_to_5 | screenshots: [before, after]')`. Compare is REQUIRED. Skipping = VOID by default.
+    5. **Compare behavioural (NEW — Rule 30.1):** diff the console + network captures:
+       - **New console errors** (errors in after that weren't in before) → REGRESSION. VOID + `git reset --hard HEAD~1`. Log `void_reason: introduced_console_errors | new_errors: [...]`.
+       - **New failed network requests** (status ≥ 400 in after that weren't in before, excluding analytics/3p) → REGRESSION. VOID + revert. Log `void_reason: introduced_failed_requests | new_failures: [...]`.
+       - **Same or fewer errors/failures** → continue to step 6.
+    6. **VOID if:** SSIM > 0.985 OR critique visible_delta_verdict < 1.0. Run `git reset --hard HEAD~1`. Log `void_reason: invisible_change`. Iter does NOT count toward refinement-skill floor (Rule 11.7).
+    7. **KEEP if:** SSIM ≤ 0.985 AND critique visible_delta_verdict ≥ 1.0 AND no new console/network regressions. Commit stays, count increments.
 
-    **Exception:** code-quality-only iters (B-series checks, fix-routing changes, lazy-init bug fixes) are exempt from Rule 30 — they're allowed to produce zero pixel delta. Flag them `iter_class: code_quality` in trajectory and exclude from refinement-floor count.
+    **Exception:** code-quality-only iters (B-series checks, fix-routing changes, lazy-init bug fixes) are exempt from Rule 30's visible-delta check but NOT from Rule 30.1's behavioural-regression check — a "code quality" iter that introduces a runtime error is still a regression. Flag them `iter_class: code_quality` in trajectory and exclude from refinement-floor count.
+
+    **Why behavioural diff matters:** the visual diff catches "nothing changed". The behavioural diff catches "looks fine, behaves broken" — a refactor that throws at runtime, a hover that 404s an asset, a broken import path Vite served as 200 but the browser rejected. Pre-2026-05-17 the loop only saw what its screenshots showed; this rule closes that hole.
 
     **Why:** Run #3 (2026-05-17) gamed the 6-iter refinement floor with three iters that produced SSIM ≥ 0.99: iter 5 (border-white/8 → border-gl-border, same visual color), iter 6 (alpha 0.85 → 0.72, near-imperceptible), iter 7 (hex literal → token of same value, by-construction zero delta). The floor was met by counting, not by producing visible improvement. User verdict: "you literally add a few words, a shitty animation or two — nothing has evolved." **Added 2026-05-17.**
 
@@ -387,12 +401,14 @@ These rules supersede their generic versions when world-class mode is active. Fu
 
 ## Target tier table
 
+**Canonical source:** `~/.claude/skills/premium-website/references/quality-bar.md`. The table below is the brownfield-runtime view of the same tier definitions. If they disagree, `/premium-website` wins.
+
 | `target_score` | Tier label | What it gates | Phase R / G run? |
 |---|---|---|---|
-| 90 | Premium SaaS | Generic high-quality SaaS landing | No |
-| 95 | Stripe / Linear quality | Disciplined design system, real motion, mobile parity, a11y/SEO pass | No |
-| 98 | **Awwwards SOTD candidate** | Awwwards 4-dimension avg ≥ 8.0, all per-dim minima, WC1–WC10 PASS, chrome-devtools-mcp perf trace ≥ 90 | **YES** |
-| 100 | **Awwwards SOTM candidate** | Avg ≥ 8.5, Creativity ≥ 9.0, real Chrome trace ≥ 95, 60fps motion, foundry typography, custom cursor, View Transitions | **YES + stricter gates** |
+| 90 | Premium SaaS | Generic high-quality SaaS landing. Disciplined tokens, no AI-template tells, mobile parity. | No |
+| 95 | Stripe / Linear quality | Real motion, a11y/SEO pass, /critique scored. **Same threshold as `/web-review` ≥ 38/40 in greenfield.** | No |
+| 98 | **Awwwards SOTD candidate** | Awwwards 4-dimension avg ≥ 8.0, all per-dim minima, WC1–WC10 PASS, chrome-devtools-mcp perf trace ≥ 90. **Unreachable from `/saas-build` alone — requires `/web-evolve` Phase R + G.** | **YES** |
+| 100 | **Awwwards SOTM candidate** | Avg ≥ 8.5, Creativity ≥ 9.0, real Chrome trace ≥ 95, 60fps motion, foundry typography, View Transitions on every route. | **YES + stricter gates** |
 
 `--world-class` auto-sets target=98. `--world-class --target=100` enters SOTM mode.
 
@@ -479,16 +495,19 @@ elif trajectory.json exists AND last_run.status == "halted_needs_human":
     
 elif trajectory.json missing OR --fresh:
     mode = "fresh"
-    # Will determine target from visual_quality_score in Step A.0.5 after puppeteer probe
+    # Will determine target from visual_quality_score in Step A.0.5 after chrome-devtools probe (puppeteer fallback)
     new_target = null  # to be set
 ```
 
-**Step A.0.5 — For `fresh` mode only: visual_quality_score puppeteer probe:**
+**Step A.0.5 — For `fresh` mode only: visual_quality_score chrome-devtools probe:**
 
 ```
-mcp__puppeteer__puppeteer_navigate(url={live_url})
-mcp__puppeteer__puppeteer_screenshot(path={project_path}/.evolution/baseline/probe-1440.png, viewport={width:1440,height:900})
+mcp__chrome-devtools__new_page(url={live_url})
+mcp__chrome-devtools__resize_page(width=1440, height=900)
+mcp__chrome-devtools__take_screenshot(filePath={project_path}/.evolution/baseline/probe-1440.png)
 ```
+
+(Puppeteer fallback: `mcp__puppeteer__puppeteer_navigate(url={live_url})` + `mcp__puppeteer__puppeteer_screenshot(path=..., viewport={width:1440,height:900})`.)
 
 Visually assess on the 1–5 scale (4 axes: hero impact, hierarchy, distinctiveness, product visibility — same as Phase A.7.5). Compute `visual_quality_score`.
 
@@ -501,7 +520,7 @@ Apply the decision table from `multi-run-orchestration.md` Branch 3:
 | 3.0–3.99 | yes OR yes | — | 98 |
 | 3.0–3.99 | no AND no | — | 95 |
 | ≥ 4.0 | any | any | 98 |
-| ≥ 4.5 + custom hero detected (canvas/three/gsap globals via puppeteer_evaluate) | yes | yes | 100 |
+| ≥ 4.5 + custom hero detected (canvas/three/gsap globals via chrome-devtools evaluate_script — puppeteer_evaluate fallback) | yes | yes | 100 |
 
 Set `new_target` accordingly.
 
@@ -688,9 +707,10 @@ Aggregate into `.evolution/world-class-references.json` — deduplicate by URL, 
 
 For each top-6 reference (by relevance), run:
 ```
-mcp__puppeteer__puppeteer_navigate(url={reference.url})
-mcp__puppeteer__puppeteer_screenshot(path={path}, viewport={width:1440,height:900})
-mcp__puppeteer__puppeteer_evaluate(script=`
+mcp__chrome-devtools__new_page(url={reference.url})
+mcp__chrome-devtools__resize_page(width=1440, height=900)
+mcp__chrome-devtools__take_screenshot(filePath={path})
+mcp__chrome-devtools__evaluate_script(function=`() => {
   return {
     has_three_js: typeof THREE !== 'undefined' || !!document.querySelector('canvas[data-engine="three.js"]'),
     has_lenis: typeof Lenis !== 'undefined' || !!document.documentElement.dataset.lenisPrevent,
@@ -704,7 +724,7 @@ mcp__puppeteer__puppeteer_evaluate(script=`
     font_families: Array.from(new Set(Array.from(document.querySelectorAll('h1,h2,p,button')).map(el => getComputedStyle(el).fontFamily))),
     fps_estimate: 'see chrome-devtools-mcp trace'
   };
-`)
+}`)
 ```
 
 Record the live signature per reference in the JSON.
@@ -947,7 +967,7 @@ This phase exists because scoring against generic premium-SaaS criteria produces
 
 **Run all reads in parallel (single message):**
 
-1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/CONTEXT.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`, `~/.claude/web-system-prompt.md` (**Design DNA** — token system, typography scale, color discipline, visual signatures. Cardinal Rule 13 — loaded once, re-cited in every Skill() args block), `~/.claude/skills/premium-website/SKILL.md` (cross-check contract — Phase F diffs against this), `~/.claude/skills/premium-website/references/component-registry.md` (21st.dev registry — used by Step 3 Case B for builder pipeline)
+1. Read simultaneously: `{project_path}/CLAUDE.md`, `{project_path}/CONTEXT.md`, `{project_path}/DESIGN-BRIEF.md`, `{project_path}/SCOPE.md`, `{project_path}/BUILD-LOG.md`, `~/.claude/web-system-prompt.md` (**Design DNA** — token system, typography scale, color discipline, visual signatures. Cardinal Rule 13 — loaded once, re-cited in every Skill() args block), **`~/.claude/skills/premium-website/SKILL.md` (CANONICAL CONTRACT** — single source of truth for: skills registry, refinement-skill trigger table, anti-patterns, tier definitions 90/95/98/100, and the legacy `/web-review` 38/40 → tier-95 mapping. Phase F Cardinal Rule 14 diffs against this. If a rule appears here AND in `/premium-website`, that's a duplication bug — `/premium-website` wins**), `~/.claude/skills/premium-website/references/quality-bar.md` (canonical tier table + `/web-review` 38/40 → target_score mapping), `~/.claude/skills/premium-website/references/component-registry.md` (21st.dev registry — used by Step 3 Case B for builder pipeline)
 
 1.5 **Apply target-tier behaviour (auto from Phase A.0) — MANDATED, not "enabled":**
 
@@ -1053,20 +1073,13 @@ This phase exists because scoring against generic premium-SaaS criteria produces
 
    **Step 7.5.a — Capture baseline screenshot to mandated path (P11):**
    ```
-   mcp__puppeteer__puppeteer_navigate(url={live_url})
-   mcp__puppeteer__puppeteer_screenshot(
-     name="baseline-1440",
-     width=1440, height=900,
-     # Save to canonical path so Cardinal Rule 8 post-run comparison can find it
-   )
+   mcp__chrome-devtools__new_page(url={live_url})
+   mcp__chrome-devtools__resize_page(width=1440, height=900)
+   mcp__chrome-devtools__take_screenshot(filePath="${PROJECT_PATH}/.evolution/baseline/probe-1440.png")
    ```
-   The screenshot MUST be saved to `${PROJECT_PATH}/.evolution/baseline/probe-1440.png` (Puppeteer MCP saves to its own path; orchestrator copies to canonical location). Cardinal Rule 8 reads this exact path at exit-attempt — without it, post-run VQ comparison has no anchor.
+   The screenshot MUST be saved to `${PROJECT_PATH}/.evolution/baseline/probe-1440.png` (chrome-devtools writes the file directly to `filePath` — no copy step needed). Cardinal Rule 8 reads this exact path at exit-attempt — without it, post-run VQ comparison has no anchor.
 
-   ```bash
-   # After Puppeteer screenshot, copy to canonical baseline path:
-   mkdir -p "${PROJECT_PATH}/.evolution/baseline"
-   cp <puppeteer_screenshot_path> "${PROJECT_PATH}/.evolution/baseline/probe-1440.png"
-   ```
+   (Puppeteer fallback if chrome-devtools unavailable: `mcp__puppeteer__puppeteer_navigate` + `puppeteer_screenshot` → then `cp <puppeteer_path> "${PROJECT_PATH}/.evolution/baseline/probe-1440.png"`.)
 
    **Step 7.5.b — Compute baseline VQ via `Skill('critique')` (NOT orchestrator self-score):**
 
@@ -1103,8 +1116,8 @@ This phase exists because scoring against generic premium-SaaS criteria produces
 
    **Step 8b — live DOM verification** (catches runtime-generated IDs grep misses):
    ```
-   mcp__puppeteer__puppeteer_navigate(url={dev_server_url or live_url})
-   mcp__puppeteer__puppeteer_evaluate(script=`
+   mcp__chrome-devtools__navigate_page(url={dev_server_url or live_url}, type="url")
+   mcp__chrome-devtools__evaluate_script(function=`() => {
      const ids = Array.from(document.querySelectorAll('[id]')).map(el => ({
        id: el.id,
        tag: el.tagName.toLowerCase(),
@@ -2130,7 +2143,7 @@ The orchestrator MUST measure `post_run_vq` via Puppeteer screenshot + 4-axis as
 
 ---
 
-## Phase E — Post-deploy verification (puppeteer-driven, not curl)
+## Phase E — Post-deploy verification (chrome-devtools-driven, not curl)
 
 **Step E.1 — Status code:**
 ```bash
@@ -2138,42 +2151,41 @@ curl -s -o /dev/null -w "%{http_code}" "{live_url}"
 ```
 HALT if not 200.
 
-**Step E.2 — Hydration + font + console error sweep (puppeteer):**
+**Step E.2 — Hydration + font + DOM sweep (chrome-devtools):**
 ```
-mcp__puppeteer__puppeteer_navigate(url={live_url})
-mcp__puppeteer__puppeteer_evaluate(script=`
-  const result = {
+mcp__chrome-devtools__new_page(url={live_url})
+mcp__chrome-devtools__evaluate_script(function=`async () => {
+  await document.fonts.ready;
+  return {
     title: document.title,
     h1_text: document.querySelector('h1')?.textContent || null,
     has_react_root: !!document.querySelector('#__next, #root, [data-reactroot]'),
     hydration_complete: !document.querySelector('[data-react-loading]'),
-    fonts_loaded: document.fonts.ready.then(() => Array.from(document.fonts).map(f => ({family: f.family, status: f.status}))),
-    failed_requests: performance.getEntriesByType('resource').filter(r => r.responseStatus >= 400).map(r => r.name),
+    fonts_loaded: Array.from(document.fonts).map(f => ({family: f.family, status: f.status})),
     css_var_root_color: getComputedStyle(document.documentElement).getPropertyValue('--background'),
     section_count: document.querySelectorAll('section').length,
     images_with_alt: Array.from(document.querySelectorAll('img')).map(i => ({src: i.src, alt: i.alt, loaded: i.complete && i.naturalHeight !== 0}))
   };
-  return JSON.stringify(result);
-`)
+}`)
 ```
 
 Parse the result. HALT NEEDS_HUMAN if any:
 - `h1_text` does NOT contain the expected hero text from CONTEXT.md (deploy is showing stale content)
 - `has_react_root` is false
 - `fonts_loaded` includes any font with `status: 'error'` or `status: 'unloaded'`
-- `failed_requests` is non-empty
 - `css_var_root_color` is empty string (token system not loaded)
 - `section_count` differs from local-build expected count by >1
 - Any image has `loaded: false`
 
-**Step E.3 — Console error capture:**
+**Step E.3 — Console + network capture (native chrome-devtools, no JS hack):**
 ```
-mcp__puppeteer__puppeteer_evaluate(script=`
-  // Capture console errors that occurred since navigation
-  return JSON.stringify(window.__pp_console_errors || []);
-`)
+mcp__chrome-devtools__list_console_messages(types=["error","warn"])
+mcp__chrome-devtools__list_network_requests()
 ```
-If non-empty → log to EVOLUTION-LOG.md and flag as deploy_warning (do not HALT — sometimes 3rd-party scripts log harmlessly).
+For console: if non-empty, log to EVOLUTION-LOG.md as deploy_warning. Same-origin errors (not 3rd-party analytics) → HALT NEEDS_HUMAN.
+For network: filter to status ≥ 400, exclude analytics/3p; any same-origin failure = HALT NEEDS_HUMAN with the failed URL list.
+
+(Puppeteer fallback if chrome-devtools unavailable: previous JS-hack snippet using `window.__pp_console_errors` and `performance.getEntriesByType('resource').filter(r => r.responseStatus >= 400)`.)
 
 **Step E.4 — Re-run perf trace on the deployed URL:**
 - World-class: `mcp__chrome-devtools__performance_start_trace` on live_url, compare to Phase B `.evolution/perf-trace.json`

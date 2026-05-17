@@ -212,13 +212,26 @@ Full 33-item pre-deploy checklist, performance requirements, bundle size rules, 
 
 ---
 
-## Quality Bar
+## Quality Bar (canonical — both `/saas-build` and `/web-evolve` read this)
 
-- **Pass threshold**: score >= 38/40 AND pre-deploy checklist fully green
-- **Fix loop**: for each failure, run `/web-fix` targeting the exact failure, commit, re-run `/web-review`
-- **Hard stop**: after 5 iterations with score still < 38 — log `STUCK` and STOP. Do not proceed to deploy.
+The suite uses a **single tier system: 90 / 95 / 98 / 100**. `/web-review`'s 0–40 score is one expression of it (38/40 = tier 95). `/web-evolve`'s `target_score` is the same scale at a different name.
 
-Full quality gate loop, page type detection table, dashboard page rules, skill trigger guide, and context refresh rule:
+| Tier | Greenfield exit (`/saas-build`) | Brownfield target (`/web-evolve`) |
+|---|---|---|
+| **90** — Premium SaaS | `/web-review` ≥ 36/40 if `--target=90` | Run #1 default when site is mid-template |
+| **95** — Stripe/Linear quality | **DEFAULT** — `/web-review` ≥ 38/40 + pre-deploy green | Common advance from 90 |
+| **98** — Awwwards SOTD | Not reachable greenfield — requires `/web-evolve` Phase R/G | Awwwards 4-dim ≥ 8.0 + WC1–WC10 PASS |
+| **100** — Awwwards SOTM | Not reachable greenfield | Awwwards 4-dim ≥ 8.5 + Creativity ≥ 9.0 |
+
+**Greenfield ceiling**: `/saas-build` does NOT push above tier 95. To reach tier 98/100, run `/web-evolve` after deploy.
+
+**Fix loop** (greenfield): for each `/web-review` failure, run `Skill('web-fix')` targeting the exact failure, commit, re-run `Skill('web-review')`.
+
+**Hard stop** (greenfield): after 5 iterations with score still < 38 — log `STUCK` and STOP. Do not proceed to deploy.
+
+**Brownfield gates** (`/web-evolve` Phase F Cardinal Rule 14): exit requires all of — Gate A (≥ 1 refinement-skill invocation), Gate B (VQ delta ≥ tier floor 0.5/0.7/1.0/1.5), Gate C (refinement-skill floor 1/3/6/8). Score alone is not enough.
+
+Full tier mapping, fix-loop semantics, page type detection table, dashboard rules, skill trigger guide, and context refresh rule:
 → Read `references/quality-bar.md`
 
 ---

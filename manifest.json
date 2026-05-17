@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-16",
+  "last_updated": "2026-05-17",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -156,6 +156,7 @@
     "clarify",
     "codebase-untangler",
     "colorize",
+    "cost-report",
     "critique",
     "dashboard-design",
     "delight",
@@ -172,6 +173,7 @@
     "finance",
     "financial-health",
     "find-skills",
+    "findings-review",
     "full-audit",
     "full-audit-report-pdf",
     "full-audit-synthesis",
@@ -279,6 +281,7 @@
     "stock-photos",
     "style-mirror",
     "sync-knowledge-base",
+    "taste-skill",
     "techaudit",
     "techaudit-accessibility",
     "techaudit-audit",
@@ -318,6 +321,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 176
+    "skills": 179
   }
 }
