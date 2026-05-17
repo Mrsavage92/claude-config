@@ -1,6 +1,25 @@
 # Skill Authoring Standard
 
-Rules for writing and maintaining skills in this config. Adapted from alirezarezvani/claude-skills patterns, customised for Adam's setup.
+Rules for writing and maintaining skills in this config. Adapted from alirezarezvani/claude-skills patterns and Anthropic's official `skill-creator` workflow.
+
+---
+
+## 0. Authoring Path — MANDATORY
+
+**Do not freehand a new SKILL.md.** Freehanding is what produced `/web-evolve` (scored 4/100 by `/skill-forge`). Burned credits, wasted Adam's time.
+
+The required path:
+
+| Task | Tool | Why |
+|---|---|---|
+| **Create a new skill** | `Skill('skill-creator')` | Spec interview → draft → dual-run benchmark (WITH vs WITHOUT skill) → assertion grading → variance analysis → HTML viewer for human review → iterate |
+| **Audit an existing skill** | `Skill('skill-forge', mode: 'review')` | Independent scoring agent grades the artifact, not the SKILL.md prose |
+| **Rebuild a broken skill** | `Skill('skill-forge', mode: 'forge')` | review → external sourcing (≥3 implementations) → rebuild → re-verify |
+| **Modify an existing skill** | `Skill('skill-creator')` (it handles edit + re-eval) | Snapshot old version → eval against snapshot as baseline → confirm delta is positive before shipping |
+
+**The gate (load-bearing):** every new or modified skill must produce a `benchmark.json` showing the with-skill pass rate > baseline pass rate before merging to `main`. No benchmark = no merge. The `aggregate_benchmark.py` script in `skill-creator/scripts/` produces this automatically.
+
+Skill-creator lives at `~/.claude/skills/skill-creator/`. Sourced from `github.com/anthropics/skills`. Do not reinvent — use it.
 
 ---
 
