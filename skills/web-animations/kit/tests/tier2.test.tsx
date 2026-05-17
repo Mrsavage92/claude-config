@@ -56,7 +56,7 @@ describe('Tier 2 — Escalation micro-interactions', () => {
     expect(screen.getByLabelText('hi')).toBeInTheDocument()
   })
 
-  it('Marquee renders children twice for seamless loop', () => {
+  it('Marquee renders children twice so the loop wraps without a visible cut', () => {
     render(
       <Marquee>
         <span>logo</span>

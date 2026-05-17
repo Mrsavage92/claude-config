@@ -1,0 +1,130 @@
+{
+  "project": "C:\\Users\\Adam\\.claude\\skills\\web-animations\\kit",
+  "scannedAt": "2026-05-17T09:08:00.887Z",
+  "siteProfile": null,
+  "totalFiles": 22,
+  "markers": [
+    {
+      "file": "src/tier1/FadeUp.tsx",
+      "tier": 1,
+      "pattern": "T1.1 FadeUp"
+    },
+    {
+      "file": "src/tier1/StaggerContainer.tsx",
+      "tier": 1,
+      "pattern": "T1.3 StaggerContainer"
+    },
+    {
+      "file": "src/tier2/AnimatedModal.tsx",
+      "tier": 2,
+      "pattern": "T2.6 AnimatedModal"
+    },
+    {
+      "file": "src/tier2/MagneticButton.tsx",
+      "tier": 2,
+      "pattern": "T2.2 MagneticButton"
+    },
+    {
+      "file": "src/tier2/Marquee.tsx",
+      "tier": 2,
+      "pattern": "T2.5 Marquee"
+    },
+    {
+      "file": "src/tier2/NumberTicker.tsx",
+      "tier": 2,
+      "pattern": "T2.3 NumberTicker"
+    },
+    {
+      "file": "src/tier2/SharedLayoutCard.tsx",
+      "tier": 2,
+      "pattern": "T2.7 SharedLayoutCard / layoutId"
+    },
+    {
+      "file": "src/tier2/SplitReveal.tsx",
+      "tier": 2,
+      "pattern": "T2.4 SplitReveal"
+    },
+    {
+      "file": "src/tier2/SpringButton.tsx",
+      "tier": 2,
+      "pattern": "T2.1 SpringButton"
+    },
+    {
+      "file": "src/tier3/CardStack.tsx",
+      "tier": 3,
+      "pattern": "T3.7 CardStack - sticky-reveal scroll stack"
+    },
+    {
+      "file": "src/tier3/ClipReveal.tsx",
+      "tier": 3,
+      "pattern": "T3.5 ClipReveal"
+    },
+    {
+      "file": "src/tier3/CSSScrollProgress.tsx",
+      "tier": 3,
+      "pattern": "T3.11 CSSScrollProgress - zero-JS reading progress bar"
+    },
+    {
+      "file": "src/tier3/CSSScrollReveal.tsx",
+      "tier": 3,
+      "pattern": "T3.10 CSSScrollReveal - zero-JS scroll reveal"
+    },
+    {
+      "file": "src/tier3/CursorParallax.tsx",
+      "tier": 3,
+      "pattern": "T3.6 CursorParallax"
+    },
+    {
+      "file": "src/tier3/PinnedSection.tsx",
+      "tier": 3,
+      "pattern": "T3.1 PinnedSection - GSAP ScrollTrigger"
+    },
+    {
+      "file": "src/tier3/SmoothScroll.tsx",
+      "tier": 3,
+      "pattern": "T3.2 SmoothScroll - Lenis + GSAP integration"
+    },
+    {
+      "file": "src/tier3/StickyHeader.tsx",
+      "tier": 3,
+      "pattern": "T3.9 StickyHeader - scroll-collapse via class toggle"
+    },
+    {
+      "file": "src/tier3/TiltCard.tsx",
+      "tier": 3,
+      "pattern": "T3.8 TiltCard - 3D mouse-position tilt"
+    },
+    {
+      "file": "src/tier3/ViewTransition.tsx",
+      "tier": 3,
+      "pattern": "T3.12 ViewTransition - zero-library route transitions"
+    }
+  ],
+  "unmarkedMotionFiles": [],
+  "tier3FilesMissingReducedMotionGuard": [],
+  "tier3GsapFilesMissingDualBranch": [],
+  "vestibularTriggersWithoutGuards": [],
+  "tierExceedingSiteMax": [],
+  "tierBreakdown": {
+    "1": 2,
+    "2": 7,
+    "3": 10,
+    "4": 0
+  },
+  "summary": {
+    "totalFilesScanned": 22,
+    "filesWithMarkers": 19,
+    "filesUsingMotionWithoutMarker": 0,
+    "tier3FilesMissingReducedMotionGuard": 0,
+    "tier3GsapFilesMissingDualBranch": 0,
+    "vestibularTriggersWithoutGuards": 0,
+    "tierExceedingSiteMax": 0,
+    "tierBreakdown": {
+      "1": 2,
+      "2": 7,
+      "3": 10,
+      "4": 0
+    },
+    "siteProfileLoaded": false
+  }
+}

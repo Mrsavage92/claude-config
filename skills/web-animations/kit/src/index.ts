@@ -20,6 +20,9 @@ export { CursorParallax } from './tier3/CursorParallax'
 export { CardStack } from './tier3/CardStack'
 export { TiltCard } from './tier3/TiltCard'
 export { StickyHeader } from './tier3/StickyHeader'
+export { CSSScrollReveal } from './tier3/CSSScrollReveal'
+export { CSSScrollProgress } from './tier3/CSSScrollProgress'
+export { TransitionLink, startTransition } from './tier3/ViewTransition'
 
 // Utilities
 export { easings, springs } from './utils/easings'
