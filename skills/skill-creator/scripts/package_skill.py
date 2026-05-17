@@ -14,7 +14,21 @@ import fnmatch
 import sys
 import zipfile
 from pathlib import Path
-from scripts.quick_validate import validate_skill
+
+# Force UTF-8 stdout/stderr on Windows so emoji prints don't crash cp1252 console
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
+# Support both direct (`python package_skill.py`) and module (`python -m scripts.package_skill`) invocation
+try:
+    from scripts.quick_validate import validate_skill
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from quick_validate import validate_skill
 
 # Patterns to exclude when packaging skills.
 EXCLUDE_DIRS = {"__pycache__", "node_modules"}

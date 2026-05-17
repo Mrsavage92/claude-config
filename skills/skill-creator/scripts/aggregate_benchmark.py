@@ -41,6 +41,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Force UTF-8 stdout/stderr on Windows so summary output (which contains ±) doesn't crash cp1252 console
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 
 def calculate_stats(values: list[float]) -> dict:
     """Calculate mean, stddev, min, max for a list of values."""
@@ -366,6 +374,19 @@ def main():
         print(f"Directory not found: {args.benchmark_dir}")
         sys.exit(1)
 
+    # Warn loudly when caller omitted identifying args — benchmark.json will ship literal placeholders otherwise
+    missing_metadata = []
+    if not args.skill_name:
+        missing_metadata.append("--skill-name")
+    if not args.skill_path:
+        missing_metadata.append("--skill-path")
+    if missing_metadata:
+        print(
+            f"WARNING: {', '.join(missing_metadata)} not provided. "
+            f"benchmark.json will contain placeholder strings like '<path/to/skill>' for these fields.",
+            file=sys.stderr,
+        )
+
     # Generate benchmark
     benchmark = generate_benchmark(args.benchmark_dir, args.skill_name, args.skill_path)
 
@@ -374,13 +395,13 @@ def main():
     output_md = output_json.with_suffix(".md")
 
     # Write benchmark.json
-    with open(output_json, "w") as f:
-        json.dump(benchmark, f, indent=2)
+    with open(output_json, "w", encoding="utf-8") as f:
+        json.dump(benchmark, f, indent=2, ensure_ascii=False)
     print(f"Generated: {output_json}")
 
-    # Write benchmark.md
+    # Write benchmark.md (UTF-8 — contains ± and other non-ASCII)
     markdown = generate_markdown(benchmark)
-    with open(output_md, "w") as f:
+    with open(output_md, "w", encoding="utf-8") as f:
         f.write(markdown)
     print(f"Generated: {output_md}")
 

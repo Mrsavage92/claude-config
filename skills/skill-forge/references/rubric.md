@@ -44,7 +44,10 @@ Read `.forge-sources.md`. For each external pattern documented there, check if t
 
 **Evidence required**: per pattern, cite source URL, then artifact excerpt showing it applied.
 
-If `.forge-sources.md` does not exist or has <5 sources → **HALT scoring**. Return `{"verdict": "FAIL", "blocking_issues": ["external sourcing missing or insufficient"]}`. Do not score; this is a Phase 3 failure, not a skill quality measurement.
+**Mode handling:**
+
+- **`mode: forge`** — If `.forge-sources.md` does not exist or has <5 sources → **HALT scoring**. Return `{"verdict": "FAIL", "blocking_issues": ["external sourcing missing or insufficient"]}`. Do not score; this is a Phase 3 failure, not a skill quality measurement.
+- **`mode: review`** — Phase 3 is intentionally skipped (per skill-forge SKILL.md). Score this dimension as **0/20 with note "external sourcing not required in review mode"**. Do NOT HALT — continue scoring all other dimensions. The reviewer can still return PASS if the remaining 80 points clear the target.
 
 ### 4. Anti-pattern absence (max 15)
 
