@@ -151,8 +151,8 @@
     "animate",
     "audit",
     "autopilot",
-    "bolder",
     "c-level-advisor",
+    "calibrate-amplitude",
     "clarify",
     "codebase-untangler",
     "colorize",
@@ -160,7 +160,6 @@
     "critique",
     "dashboard-design",
     "delight",
-    "distill",
     "employer",
     "employer-audit",
     "employer-careers",
@@ -245,7 +244,6 @@
     "project-manager",
     "project-refresh",
     "project-review",
-    "quieter",
     "ra-qm-team",
     "refine",
     "remotion",
@@ -260,7 +258,6 @@
     "saas-health",
     "saas-improve",
     "saas-validator",
-    "scaffold",
     "security",
     "security-audit",
     "security-email",
@@ -273,6 +270,7 @@
     "senior-qa",
     "seo-strategy",
     "shape",
+    "skill-forge",
     "social-audit",
     "social-report-pdf",
     "sprint-plan",
@@ -298,7 +296,6 @@
     "web-design-research",
     "web-email",
     "web-evolve",
-    "web-fix",
     "web-legal",
     "web-oauth",
     "web-onboarding",
@@ -320,6 +317,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 178
+    "skills": 175
   }
 }

@@ -1,158 +1,100 @@
 ---
 name: colorize
-description: Add strategic color to features that are too monochromatic or lack visual interest, making interfaces more engaging and expressive. Use when the user mentions the design looking gray, dull, lacking warmth, needing more color, or wanting a more vibrant or expressive palette.
-version: 2.1.1
+description: Reference-anchored color refinement. Builds a craft invocation that produces a complete OKLCH token system rewrite from extracted reference colors + taste-skill Section 3.2 + memorable_choice. Generic palettes are BANNED — must receive a source.
+version: 3.0.0
 user-invocable: true
-argument-hint: "[target]"
+argument-hint: "reference:<url> | extract:<path> | taste_section:<id> | memorable_choice:<str>"
 ---
 
-Strategically introduce color to designs that are too monochromatic, gray, or lacking in visual warmth and personality.
+# /colorize (v3.0)
 
-## Web-evolve Targeted Mode
+Follows the shared **Refinement Skill Contract** — read `~/.claude/skills/shared/refinement-contract.md` first.
 
-If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
-
-1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is in args.
-2. **Parse args**: leading text = fix_context. `checks:` = check IDs. `fail_proof:` = exact failure evidence.
-3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
-4. **Do not ask questions** — all context is in args.
-5. **Output** one sentence: which file changed and what changed.
-6. **Refuse invisible diffs (web-evolve Cardinal Rule 30).** Before returning, check if your edit changes a rendered pixel. If you're only swapping a token for an identical-value token (e.g. `#21262d` → `bg-card` when `bg-card` resolves to `#21262d`), shifting alpha by < 0.1, or making a structural change with no visible impact, return `INVISIBLE_DIFF: <reason>` instead of committing. The orchestrator will VOID the iter and re-pick with a bolder skill.
-
-Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
+**Domain:** color tokens only. Palette construction, OKLCH math, brand-hue tinting of neutrals, contrast ratios, semantic token assignment. Does NOT touch typography, layout, or motion.
 
 ---
 
-## MANDATORY PREPARATION
+## Args contract (HALT if none provided)
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first. Additionally gather: existing brand colors.
+Must receive at least ONE of:
+
+- `reference: <url>` — live URL whose palette to extract
+- `extract: <path>` — pre-extracted `color.*` tokens
+- `taste_section: 3.2` (color bias-correction)
+- `memorable_choice: <string>` — usually constrains the palette ("one signature acid green")
+
+No source → HALT: `"colorize requires reference / extract / taste_section / memorable_choice. Generic palettes are banned."`
 
 ---
 
-## Assess Color Opportunity
+## Reflex-rejects (auto-FAIL unless source contains them)
 
-Analyze the current state and identify opportunities:
+- shadcn defaults: `slate`, `zinc`, `neutral`, `stone`, `gray` (the AI-template signature)
+- Cyan-on-dark (#22d3ee on dark navy) — Stripe-clone tell
+- Purple-to-blue gradient backgrounds — Vercel-clone tell
+- Neon accents on dark backgrounds — generic "cyberpunk" tell
+- Pure black (#000) or pure white (#fff) — never appears in nature
+- Gray text on colored backgrounds — washed out
+- Gradient text via `background-clip: text` — see /impeccable absolute_bans
+- Border-left 3-4px colored stripe — see /impeccable absolute_bans
+- Multi-hue brand palettes (3+ unrelated accent colors) — pick ONE accent
 
-1. **Understand current state**:
-   - **Color absence**: Pure grayscale? Limited neutrals? One timid accent?
-   - **Missed opportunities**: Where could color add meaning, hierarchy, or delight?
-   - **Context**: What's appropriate for this domain and audience?
-   - **Brand**: Are there existing brand colors we should use?
+---
 
-2. **Identify where color adds value**:
-   - **Semantic meaning**: Success (green), error (red), warning (yellow/orange), info (blue)
-   - **Hierarchy**: Drawing attention to important elements
-   - **Categorization**: Different sections, types, or states
-   - **Emotional tone**: Warmth, energy, trust, creativity
-   - **Wayfinding**: Helping users navigate and understand structure
-   - **Delight**: Moments of visual interest and personality
+## What this skill PRODUCES
 
-If any of these are unclear from the codebase, ask the user directly to clarify what you cannot infer.
+A craft invocation, not a file edit.
 
-**CRITICAL**: More color ≠ better. Strategic color beats rainbow vomit every time. Every color should have a purpose.
+```
+Skill('impeccable', args='
+  craft color-system
+  | target_files: {globals.css OR app/globals.css + any component with hardcoded color}
+  | reference_tokens: {color section of extract OR extracted now from reference URL via /style-mirror}
+  | taste_directives: {first 600 chars of taste-skill Section 3.2}
+  | memorable_choice: {locked value}
+  | bold_execution: yes
+  | reflex_rejects: slate/zinc/neutral/stone/gray defaults, cyan-on-dark, purple-blue-gradient, neon-on-dark, #000, #fff, gradient-text, border-stripes
+  | output_contract:
+      - OKLCH format only (not HSL, not hex)
+      - 1 brand accent + 2 neutrals + 1 surface — period
+      - Neutrals tinted toward brand hue (chroma 0.005-0.015) for subconscious cohesion
+      - REDUCE chroma at extreme lightness (light tints want lower chroma)
+      - Contrast: AAA (7:1) for body, AA (4.5:1) min for all other text
+      - Tokens emit via @theme inline {} on Tailwind v4 OR :root vars on legacy
+      - // SOURCE: comments at top of every file changed
+      - Visible at 1440x900 — token rename with identical resolved value = INVISIBLE_DIFF
+')
+```
 
-## Plan Color Strategy
+---
 
-Create a purposeful color introduction plan:
+## Web-evolve targeted mode
 
-- **Color palette**: What colors match the brand/context? (Choose 2-4 colors max beyond neutrals)
-- **Dominant color**: Which color owns 60% of colored elements?
-- **Accent colors**: Which colors provide contrast and highlights? (30% and 10%)
-- **Application strategy**: Where does each color appear and why?
+Same pattern as /typeset: skip context gathering, validate source present, build craft prompt, invoke /impeccable, refuse invisible diffs (Rule 30).
 
-**IMPORTANT**: Color should enhance hierarchy and meaning, not create chaos. Less is more when it matters more.
+---
 
-## Introduce Color Strategically
+## Direct-invocation mode
 
-Add color systematically across these dimensions:
+Prompt for source if missing:
+```
+"Pick one — I won't generate a generic palette:
+  1. Reference URL whose palette to mirror
+  2. tokens.lock.json or extract path
+  3. taste-skill Section 3.2
+  4. The project's memorable_choice if it constrains color"
+```
 
-### Semantic Color
-- **State indicators**:
-  - Success: Green tones (emerald, forest, mint)
-  - Error: Red/pink tones (rose, crimson, coral)
-  - Warning: Orange/amber tones
-  - Info: Blue tones (sky, ocean, indigo)
-  - Neutral: Gray/slate for inactive states
+---
 
-- **Status badges**: Colored backgrounds or borders for states (active, pending, completed, etc.)
-- **Progress indicators**: Colored bars, rings, or charts showing completion or health
+## Theme decision (light vs dark) — derived, not defaulted
 
-### Accent Color Application
-- **Primary actions**: Color the most important buttons/CTAs
-- **Links**: Add color to clickable text (maintain accessibility)
-- **Icons**: Colorize key icons for recognition and personality
-- **Headers/titles**: Add color to section headers or key labels
-- **Hover states**: Introduce color on interaction
+Theme is NOT a default. Decide from audience + viewing context (DEX/trading/SRE/late-music → dark; hospital/children/wedding/food → light). Defaulting to either "to play it safe" or "to look cool" is auto-FAIL. See taste-skill's `<theme_selection>` for the canonical guidance.
 
-### Background & Surfaces
-- **Tinted backgrounds**: Replace pure gray (`#f5f5f5`) with warm neutrals (`oklch(97% 0.01 60)`) or cool tints (`oklch(97% 0.01 250)`)
-- **Colored sections**: Use subtle background colors to separate areas
-- **Gradient backgrounds**: Add depth with subtle, intentional gradients (not generic purple-blue)
-- **Cards & surfaces**: Tint cards or surfaces slightly for warmth
+---
 
-**Use OKLCH for color**: It's perceptually uniform, meaning equal steps in lightness *look* equal. Great for generating harmonious scales.
+## When NOT to call /colorize
 
-### Data Visualization
-- **Charts & graphs**: Use color to encode categories or values
-- **Heatmaps**: Color intensity shows density or importance
-- **Comparison**: Color coding for different datasets or timeframes
-
-### Borders & Accents
-- **Accent borders**: Add colored left/top borders to cards or sections
-- **Underlines**: Color underlines for emphasis or active states
-- **Dividers**: Subtle colored dividers instead of gray lines
-- **Focus rings**: Colored focus indicators matching brand
-
-### Typography Color
-- **Colored headings**: Use brand colors for section headings (maintain contrast)
-- **Highlight text**: Color for emphasis or categories
-- **Labels & tags**: Small colored labels for metadata or categories
-
-### Decorative Elements
-- **Illustrations**: Add colored illustrations or icons
-- **Shapes**: Geometric shapes in brand colors as background elements
-- **Gradients**: Colorful gradient overlays or mesh backgrounds
-- **Blobs/organic shapes**: Soft colored shapes for visual interest
-
-## Balance & Refinement
-
-Ensure color addition improves rather than overwhelms:
-
-### Maintain Hierarchy
-- **Dominant color** (60%): Primary brand color or most used accent
-- **Secondary color** (30%): Supporting color for variety
-- **Accent color** (10%): High contrast for key moments
-- **Neutrals** (remaining): Gray/black/white for structure
-
-### Accessibility
-- **Contrast ratios**: Ensure WCAG compliance (4.5:1 for text, 3:1 for UI components)
-- **Don't rely on color alone**: Use icons, labels, or patterns alongside color
-- **Test for color blindness**: Verify red/green combinations work for all users
-
-### Cohesion
-- **Consistent palette**: Use colors from defined palette, not arbitrary choices
-- **Systematic application**: Same color meanings throughout (green always = success)
-- **Temperature consistency**: Warm palette stays warm, cool stays cool
-
-**NEVER**:
-- Use every color in the rainbow (choose 2-4 colors beyond neutrals)
-- Apply color randomly without semantic meaning
-- Put gray text on colored backgrounds—it looks washed out; use a darker shade of the background color or transparency instead
-- Use pure gray for neutrals—add subtle color tint (warm or cool) for sophistication
-- Use pure black (`#000`) or pure white (`#fff`) for large areas
-- Violate WCAG contrast requirements
-- Use color as the only indicator (accessibility issue)
-- Make everything colorful (defeats the purpose)
-- Default to purple-blue gradients (AI slop aesthetic)
-
-## Verify Color Addition
-
-Test that colorization improves the experience:
-
-- **Better hierarchy**: Does color guide attention appropriately?
-- **Clearer meaning**: Does color help users understand states/categories?
-- **More engaging**: Does the interface feel warmer and more inviting?
-- **Still accessible**: Do all color combinations meet WCAG standards?
-- **Not overwhelming**: Is color balanced and purposeful?
-
-Remember: Color is emotional and powerful. Use it to create warmth, guide attention, communicate meaning, and express personality. But restraint and strategy matter more than saturation and variety. Be colorful, but be intentional.
+- Headings need a different font weight → `/typeset`
+- The whole site is wrong palette for the brand → call `/style-mirror` first to extract from a reference, then `/colorize` against the extract
+- Replication-mode project (`tokens.lock.json` present) — colorize REPLICATES the lock, never overrides

@@ -37,6 +37,26 @@ Phase F writes `.evolution/next-run-priorities.json` with `{priorities: [{route,
 ### Principle 6 — Honest framing > spec-compliance theatre
 "Logged honestly" is necessary, not sufficient. Each run tracks `deviation_count`. **Hard cap: 3 deviations → HALT** with `status: deviation_cap_exceeded`. Each deviation in `trajectory.failed_gates` requires `corrective_action_for_next_run` populated. Soft-degrades from the original Cardinal Rule 28 dispatch table (moved to `references/soft-degrades.md`) remain available but each counts as 1 deviation. Run #1 + #3 + #4 each shipped with 3+ silent gate failures wrapped in retro prose — this principle makes that path mechanically capped.
 
+### Principle 7 — Refinement skills are craft-prompt builders, not advice generators. Sources are mandatory.
+Every Phase C iter that routes to a refinement skill (`typeset` / `colorize` / `layout` / `animate` / `polish` / `optimize` / `adapt` / `clarify` / `overdrive` / `delight` / `calibrate-amplitude`) MUST pass at least ONE of: `reference: <url>`, `extract: <path>`, `taste_section: <id>`, `memorable_choice: <str>`. Generic-mode refinement (no source) is **banned at the orchestrator level**, not just at the skill level. The full contract is `~/.claude/skills/shared/refinement-contract.md` — read it once per run, cache in `.evolution/refinement-contract.md`, pass the relevant section as a marker in every Phase C Skill invocation.
+
+**Mechanical enforcement:**
+- Orchestrator builds the source bundle ONCE at start of Phase C (using Phase A's `tokens.lock.json` if present, OR the user's reference picks from SCOPE.md `## References`, OR a fresh `/style-mirror extract` invocation, OR the locked `memorable_choice` from Phase A.4 below).
+- The bundle is `.evolution/refinement-sources.json` — every Phase C iter args includes `sources: {bundle}`.
+- Refinement skill output MUST contain `// SOURCE:` comments (Reach Test, refinement-contract §3). Diff scanner verifies — no `// SOURCE:` → iter VOIDed, reverted, `deviation_count++`.
+- Refinement skills internally route through `Skill('impeccable', args='craft ... ')` — they don't `Edit` directly. Direct `Edit` from a refinement skill = phase failure (orchestrator-level enforcement, not just hook-level).
+
+**Why this principle exists:** Runs #1–#4 produced commodity output because the refinement skills they invoked were advice generators. The orchestrator turned advice into Edits and the Edits applied the model's reflex picks (Geist + dark navy + bento + Lucide squares). The contract makes the source mandatory and the production engine (`/impeccable craft`) unified — refinement skills become specialist prompt-builders for craft, not autonomous Edit-makers.
+
+### Principle 8 — Every run locks a "one memorable thing" at Phase A.4. Every iter cites it.
+Before any iteration runs, Phase A.4 asks (or auto-picks from `taste-skill` Section 8 if `--autopilot`): **"What's the ONE thing about this site that no other site has?"** The answer is written to `trajectory.runs[current].memorable_choice` and inherited by every Phase C iter args.
+
+This applies at ALL tiers (90/95/98/100), not just 98+. The previous version of Phase R only forced signature commitment at tier 98+; tier 90/95 ran without a memorable spine, which is exactly the path to "competent template" output. Tier 90 requires ONE memorable element (kinetic headline OR scroll-revealed product UI OR magnetic micro-physics surface). Tier 95 requires two. Tier 98+ keeps the full Phase R hero-signature commitment additionally.
+
+**Phase F exit check:** orchestrator runs `Skill('critique', args='does the deployed site deliver the memorable_choice "{locked value}"? per-route verdict')`. If critique returns `delivered: false` for the route that should carry the memorable element → status `memorable_choice_undelivered`, `deviation_count++`, surface to user.
+
+Cardinal Rule 26 ("One memorable choice" at exit) is superseded by this principle — the check moves to the START of the run, not the END.
+
 ---
 
 ## Reference paths

@@ -1,131 +1,120 @@
 ---
 name: typeset
-description: Improves typography by fixing font choices, hierarchy, sizing, weight, and readability so text feels intentional. Use when the user mentions fonts, type, readability, text hierarchy, sizing looks off, or wants more polished, intentional typography.
-version: 2.1.1
+description: Reference-anchored typography refinement. Builds a craft invocation that produces a complete type system rewrite from extracted reference tokens + taste-skill Section 3.1/8.6 + memorable_choice. Use when fonts/scale/hierarchy/weight are off. Generic-mode is BANNED — must receive a source.
+version: 3.0.0
 user-invocable: true
-argument-hint: "[target]"
+argument-hint: "reference:<url> | extract:<path> | taste_section:<id> | memorable_choice:<str>"
 ---
 
-Assess and improve typography that feels generic, inconsistent, or poorly structured — turning default-looking text into intentional, well-crafted type.
+# /typeset (v3.0)
 
-## Web-evolve Targeted Mode
+This skill follows the shared **Refinement Skill Contract**: `~/.claude/skills/shared/refinement-contract.md`. Read it first. The contract is load-bearing — it changed what refinement skills DO (they build craft prompts; they don't write code or advice themselves).
 
-If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
-
-1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is already in args.
-2. **Parse args**: leading text before `|` = fix_context. `checks:` = check IDs to resolve. `fail_proof:` = exact failure evidence.
-3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
-4. **Do not ask the user questions** — all context is in args.
-5. **Output** one sentence: which file changed and what changed.
-6. **Refuse invisible diffs (web-evolve Cardinal Rule 30).** Before returning, check if your edit changes a rendered pixel. If you're only swapping a token for an identical-value token (e.g. `#21262d` → `bg-card` when `bg-card` resolves to `#21262d`), shifting alpha by < 0.1, or making a structural change with no visible impact, return `INVISIBLE_DIFF: <reason>` instead of committing. The orchestrator will VOID the iter and re-pick with a bolder skill.
-
-Jump directly to the implementation steps below. Skip MANDATORY PREPARATION.
+**Domain:** typography only. Font picks, scale, hierarchy, weight, line-height, line-length, optical sizing, variable-axis animation.
 
 ---
 
-## MANDATORY PREPARATION
+## Args contract (HALT if none provided)
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first.
+Must receive at least ONE of:
+
+- `reference: <url>` — live URL whose typography to mirror
+- `extract: <path>` — pre-extracted `typography.*` tokens from `tokens.lock.json` or `.evolution/extracts/<slug>.json`
+- `taste_section: 3.1` (typography bias-correction) OR `taste_section: 8.6` (kinetic typography arsenal)
+- `memorable_choice: <string>` — locked at run-start by `/web-evolve` Phase A.4
+
+No source → HALT: `"typeset requires reference / extract / taste_section / memorable_choice. Generic typography is banned (refinement-contract §1)."`
 
 ---
 
-## Assess Current Typography
+## Reflex-rejects (auto-FAIL unless source explicitly contains them)
 
-Analyze what's weak or generic about the current type:
+- Inter from Google Fonts
+- DM Sans, Plus Jakarta Sans, Outfit, Instrument Sans
+- IBM Plex family (overused as "technical" default)
+- Fraunces, Newsreader, Playfair Display, Cormorant (overused as "elegant" default)
+- Monospace as lazy shorthand for "developer/technical" vibe
+- Flat hierarchy (sizes within 1.1× ratio)
+- Body text > 80ch line length
+- ALL CAPS on body passages
+- Identical line-height for all sizes
 
-1. **Font choices**:
-   - Are we using invisible defaults? (Inter, Roboto, Arial, Open Sans, system defaults)
-   - Does the font match the brand personality? (A playful brand shouldn't use a corporate typeface)
-   - Are there too many font families? (More than 2-3 is almost always a mess)
+If the source contains one of these (e.g. `tokens.lock.json` extracts Inter from the reference), replication wins — use it. Otherwise these are auto-FAIL.
 
-2. **Hierarchy**:
-   - Can you tell headings from body from captions at a glance?
-   - Are font sizes too close together? (14px, 15px, 16px = muddy hierarchy)
-   - Are weight contrasts strong enough? (Medium vs Regular is barely visible)
+---
 
-3. **Sizing & scale**:
-   - Is there a consistent type scale, or are sizes arbitrary?
-   - Does body text meet minimum readability? (16px+)
-   - Is the sizing strategy appropriate for the context? (Fixed `rem` scales for app UIs; fluid `clamp()` for marketing/content page headings)
+## What this skill PRODUCES
 
-4. **Readability**:
-   - Are line lengths comfortable? (45-75 characters ideal)
-   - Is line-height appropriate for the font and context?
-   - Is there enough contrast between text and background?
+A craft invocation, not a file edit. The skill's output is a `Skill('impeccable', args='craft type-system | ...')` call with structured args.
 
-5. **Consistency**:
-   - Are the same elements styled the same way throughout?
-   - Are font weights used consistently? (Not bold in one section, semibold in another for the same role)
-   - Is letter-spacing intentional or default everywhere?
+**Build the craft prompt:**
 
-**CRITICAL**: The goal isn't to make text "fancier" — it's to make it clearer, more readable, and more intentional. Good typography is invisible; bad typography is distracting.
+```
+Skill('impeccable', args='
+  craft type-system
+  | target_files: {discovered list of files that handle type — page.tsx, globals.css, font-config}
+  | reference_tokens: {typography section of extract OR extracted now from reference URL}
+  | taste_directives: {first 600 chars of taste-skill Section {taste_section}}
+  | memorable_choice: {locked value}
+  | bold_execution: yes
+  | reflex_rejects: Inter, DM Sans, Plus Jakarta, Outfit, IBM Plex, Fraunces, Newsreader, Playfair, Cormorant, monospace-as-lazy-technical, flat-hierarchy, ALL-CAPS-body
+  | output_contract:
+      - Pick ONE foundry display + ONE refined body OR ONE variable family with 2 axes used
+      - Modular scale ≥ 1.25 ratio across at least 5 steps
+      - Animate one variable axis (weight/width/slant/optical-size) on hover OR scroll
+      - Body line-length capped at 65-75ch
+      - // SOURCE: comments at top of every file changed (refinement-contract §3)
+      - Visible at 1440x900 before/after — line-height alone is NOT enough
+')
+```
 
-## Plan Typography Improvements
+---
 
-Consult the [typography reference](reference/typography.md) from the impeccable skill for detailed guidance on scales, pairing, and loading strategies.
+## Web-evolve targeted mode (when called from /web-evolve Phase C)
 
-Create a systematic plan:
+Args from orchestrator always include `bold_execution: yes`, `iter_id`, `route`, optionally `current_problems` (from per-route page-baselines).
 
-- **Font selection**: Do fonts need replacing? What fits the brand/context?
-- **Type scale**: Establish a modular scale (e.g., 1.25 ratio) with clear hierarchy
-- **Weight strategy**: Which weights serve which roles? (Regular for body, Semibold for labels, Bold for headings — or whatever fits)
-- **Spacing**: Line-heights, letter-spacing, and margins between typographic elements
+1. Skip context gathering — orchestrator passes context in args
+2. Validate at least one source is present — HALT if not
+3. Build craft prompt per above
+4. Invoke `Skill('impeccable', ...)` with the craft prompt
+5. Wait for craft to return the rewrite
+6. Return the diff path + the SOURCE comment list — orchestrator handles commit + Reach Test verification + SSIM check
 
-## Improve Typography Systematically
+Refuse invisible diffs (web-evolve Cardinal Rule 30): before returning, verify the change is visible at 1440×900. Pure token swaps with identical resolved values → return `INVISIBLE_DIFF: <reason>` instead of committing.
 
-### Font Selection
+---
 
-If fonts need replacing:
-- Choose fonts that reflect the brand personality
-- Pair with genuine contrast (serif + sans, geometric + humanist) — or use a single family in multiple weights
-- Ensure web font loading doesn't cause layout shift (`font-display: swap`, metric-matched fallbacks)
+## Direct-invocation mode (when called by a human, not /web-evolve)
 
-### Establish Hierarchy
+If the user invokes `/typeset` directly (not via /web-evolve), prompt for the missing source:
 
-Build a clear type scale:
-- **5 sizes cover most needs**: caption, secondary, body, subheading, heading
-- **Use a consistent ratio** between levels (1.25, 1.333, or 1.5)
-- **Combine dimensions**: Size + weight + color + space for strong hierarchy — don't rely on size alone
-- **App UIs**: Use a fixed `rem`-based type scale, optionally adjusted at 1-2 breakpoints. Fluid sizing undermines the spatial predictability that dense, container-based layouts need
-- **Marketing / content pages**: Use fluid sizing via `clamp(min, preferred, max)` for headings and display text. Keep body text fixed
+```
+"Pick one — I won't produce generic typography:
+  1. A reference URL whose typography to mirror
+  2. A path to a tokens.lock.json or extract file
+  3. A taste-skill section pointer (3.1 or 8.6)
+  4. The project's memorable_choice if /web-evolve Phase A.4 has locked one"
+```
 
-### Fix Readability
+Wait for answer. Then proceed as targeted mode.
 
-- Set `max-width` on text containers using `ch` units (`max-width: 65ch`)
-- Adjust line-height per context: tighter for headings (1.1-1.2), looser for body (1.5-1.7)
-- Increase line-height slightly for light-on-dark text
-- Ensure body text is at least 16px / 1rem
+---
 
-### Refine Details
+## Anti-patterns specific to typography refinement
 
-- Use `tabular-nums` for data tables and numbers that should align
-- Apply proper `letter-spacing`: slightly open for small caps and uppercase, default or tight for large display text
-- Use semantic token names (`--text-body`, `--text-heading`), not value names (`--font-16`)
-- Set `font-kerning: normal` and consider OpenType features where appropriate
+- "Switch from Inter to Geist" as the entire fix — Geist is its own AI-default tell (memory: feedback_taste_calibration). Pick something further afield unless the brand is Vercel-adjacent.
+- "Add `clamp()` for fluid sizing" as the entire fix — fluid sizing alone doesn't change hierarchy.
+- "Use a display font for h1" as the entire fix — display font choice without scale + weight + axis-animation is incomplete.
+- Recommending a foundry font WITHOUT the licensing path — Söhne/Calibre/GT America are paid; if the project can't license, propose Geist + Geist Mono OR a Velvetyne / Pangram free-with-license-care alternative.
 
-### Weight Consistency
+A typeset iter passes when: foundry pick made, scale set with ratio ≥ 1.25, hierarchy is 5+ steps, one variable axis animates, line-length capped, body and display are distinct families OR distinct axis settings of one variable family.
 
-- Define clear roles for each weight and stick to them
-- Don't use more than 3-4 weights (Regular, Medium, Semibold, Bold is plenty)
-- Load only the weights you actually use (each weight adds to page load)
+---
 
-**NEVER**:
-- Use more than 2-3 font families
-- Pick sizes arbitrarily — commit to a scale
-- Set body text below 16px
-- Use decorative/display fonts for body text
-- Disable browser zoom (`user-scalable=no`)
-- Use `px` for font sizes — use `rem` to respect user settings
-- Default to Inter/Roboto/Open Sans when personality matters
-- Pair fonts that are similar but not identical (two geometric sans-serifs)
+## When NOT to call /typeset
 
-## Verify Typography Improvements
-
-- **Hierarchy**: Can you identify heading vs body vs caption instantly?
-- **Readability**: Is body text comfortable to read in long passages?
-- **Consistency**: Are same-role elements styled identically throughout?
-- **Personality**: Does the typography reflect the brand?
-- **Performance**: Are web fonts loading efficiently without layout shift?
-- **Accessibility**: Does text meet WCAG contrast ratios? Is it zoomable to 200%?
-
-Remember: Typography is the foundation of interface design — it carries the majority of information. Getting it right is the highest-leverage improvement you can make.
+- The site has no typography to refine (true blank state) — call `/web-page` for a full build.
+- The fix is "the color of headings is wrong" — that's `/colorize`.
+- The fix is "headings entrance is missing motion" — that's `/animate`.
+- The whole page is structurally broken (sales-page checklist ≥ 2 FAILs) — `/web-evolve` Phase C will route through `/web-page` REBUILD, not refinement.
