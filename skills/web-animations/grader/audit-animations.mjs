@@ -27,7 +27,8 @@ const cssScrollTimelineRe = /animation-timeline\s*:\s*(view|scroll)\s*\(/
 
 // Vestibular trigger heuristics
 const triggerSignatures = [
-  { name: 'parallax', re: /useScroll|scrollYProgress|Lenis|gsap\.scrollTo|ScrollTrigger\.create.*pin/, category: 3 },
+  // Word-boundary on useScroll to avoid matching `useScrollReveal` and similar IO-based hooks
+  { name: 'parallax', re: /\buseScroll\b|scrollYProgress|Lenis|gsap\.scrollTo|ScrollTrigger\.create.*pin/, category: 3 },
   { name: 'spin', re: /rotate:\s*[0-9].*?[0-9]{2,}|rotation:\s*[0-9]{3,}/, category: 2 },
   { name: 'large-scale', re: /scale:\s*\[?\s*[01]\.?\d*\s*,\s*([2-9]|1\.[5-9])/, category: 1 },
   { name: 'animated-blur', re: /filter:\s*['"`]?blur\(.*animate|animate.*filter:\s*['"`]?blur/, category: 6 },
