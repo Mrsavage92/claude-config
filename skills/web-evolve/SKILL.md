@@ -17,14 +17,16 @@ The skill never audits inline. The skill never edits inline. **Skills do the wor
 
 These compress the previous 36 cardinal rules. They are the LAW of the skill. Mechanical enforcement is in `~/.claude/hooks/web-evolve-guard.ps1`. Procedural enforcement is in the phase contracts below.
 
+> **Principle 0 — Load `Skill('taste-skill')` BEFORE any other phase.** The orchestrator's default aesthetic reaches ARE the AI-generic aesthetic — that's exactly what taste-skill exists to override. It is the canonical authority for: dial values (`DESIGN_VARIANCE`/`MOTION_INTENSITY`/`VISUAL_DENSITY`), forbidden patterns (Section 7 — banned fonts/colors/content), design directives (Section 3 — typography/color/layout/materiality), creative arsenal (Section 8 — high-end inspiration patterns), motion-engine bento (Section 9), and the final pre-flight checklist (Section 10). Every downstream phase (A.1.5 critique, Phase R signature pick, every Phase C refinement-skill call, Phase F exit pre-flight) MUST receive taste-skill rules in its args. Phase 0 below caches the rules to `.evolution/taste-rules.md`; subsequent phases read from that cache. **Skipping taste-skill = guaranteed AI-generic output.** Run #1 + #2 + #3 + #4 all skipped it and shipped mid-2024-SaaS-template aesthetics (Geist, dark navy + gold, dashboard mockup, bento grid, Lucide-tinted-squares, GSAP pinned scroll as default). This is the loophole that prevents Principles 1–6 from working.
+
 ### Principle 1 — Verify outcome, not surface
-Score deltas and HTTP 200s do not prove improvement. `Skill('critique')` is the only valid visual-quality signal. Self-rating by the orchestrator (`"this looks epic"`, `"dramatically better"`, `"production-grade"`) is banned. Per-iter visible delta is verified by Puppeteer pre/post + critique compare, not by orchestrator inspection. Compile-pass ≠ deploy-success ≠ live-content-correct: each requires its own check.
+Score deltas and HTTP 200s do not prove improvement. `Skill('critique')` is the only valid visual-quality signal. Self-rating by the orchestrator (`"this looks epic"`, `"dramatically better"`, `"production-grade"`) is banned. Per-iter visible delta is verified by Puppeteer pre/post + critique compare, not by orchestrator inspection. Compile-pass ≠ deploy-success ≠ live-content-correct: each requires its own check. **Critique args MUST include taste-skill rules** (loaded in Phase 0 — see below) so the per-iter verdict is anchored against the same banned-pattern list Phase 0 enforced upfront.
 
 ### Principle 2 — Skills are the only execution path. Direct Edit is for declared lookups.
 `SKILL_LOOKUP[check_id].edit_direct === true` (the closed list A10, B5, E1, G1, G2 in `references/fix-routing.md`) is the ONLY whitelist for direct `Edit`/`Write`/`MultiEdit`. Anything else routes through `Skill(fix_skill)`. Orchestrator self-justification ("the fix is small enough", "I need tight control of framing", "Skill might lose context") is a phase failure — not an exception. Enforced mechanically by `web-evolve-guard.ps1` PreToolUse hook: hook blocks any Edit/Write on a file under an active iter (loop-state.iteration > 0) where `current_checks` contains an `edit_direct:false` check.
 
 ### Principle 3 — Default verdict is REBUILD. Refinement only after page clears tier floor.
-Phase A.1.5 enumerates EVERY public route (sitemap + crawl, cap 20). Each route is scored against the sales-page-10 checklist. `≥ 2 FAILs` → REBUILD → `Skill('web-page')` only. `1 FAIL` → REFINE → refinement skill. `0 FAILs + tier-floor cleared` → KEEP. Refinement skills (`impeccable / overdrive / animate / typeset / colorize / polish / bolder / delight / layout / distill / clarify / adapt`) are BANNED on REBUILD verdicts. Polish-as-evolution is the failure mode this principle exists to prevent.
+Phase A.1.5 enumerates EVERY public route (sitemap + crawl, cap 20). Each route is scored against the sales-page-10 checklist AND the taste-skill Section 7 banned-patterns list (loaded in Phase 0). `≥ 2 FAILs` OR `≥ 1 taste-skill banned pattern` → REBUILD → `Skill('web-page')` only. `1 FAIL + 0 taste violations` → REFINE → refinement skill. `0 FAILs + 0 taste violations + tier-floor cleared` → KEEP. Refinement skills (`impeccable / overdrive / animate / typeset / colorize / polish / bolder / delight / layout / distill / clarify / adapt`) are BANNED on REBUILD verdicts. Polish-as-evolution is the failure mode this principle exists to prevent.
 
 ### Principle 4 — One scope commitment per run. AskUserQuestion limit = 1.
 Phase A.0 either auto-decides scope or asks ONCE. After that single question, scope is locked. Mid-run AskUserQuestion is mechanically blocked by `web-evolve-guard.ps1`. Context-budget exhaustion forces honest HALT, not silent scope degradation. Run #4 silently degraded 8→4 iters mid-run with a "context budget" rationalization — this principle closes that hole.
@@ -40,6 +42,7 @@ Phase F writes `.evolution/next-run-priorities.json` with `{priorities: [{route,
 ## Reference paths
 
 ```
+taste-skill:             ~/.claude/skills/taste-skill/SKILL.md                            (Principle 0 — canonical bias-correction authority)
 checklist:               ~/.claude/skills/shared/landing-page-checklist.md
 sales-page-checklist:    ~/.claude/skills/web-evolve/references/sales-page-checklist.md   (Rule 35, 10 rules)
 fix-routing:             ~/.claude/skills/web-evolve/references/fix-routing.md            (SKILL_LOOKUP, edit_direct flags)
@@ -59,6 +62,48 @@ decisions:               ~/.claude/skills/web-evolve/references/decisions.md    
 | 95 | Stripe/Linear | Disciplined design system, real motion, mobile parity, a11y/SEO pass | No |
 | 98 | Awwwards SOTD candidate | 4-axis avg ≥ 8.0, real Chrome perf trace, world-class motion stack | **Yes** |
 | 100 | Awwwards SOTM candidate | Avg ≥ 8.5, Creativity ≥ 9, foundry typography, View Transitions | **Yes (stricter)** |
+
+---
+
+## Phase 0 — Load taste-skill (MANDATORY, runs BEFORE Phase A.0 — Principle 0)
+
+This phase loads the canonical bias-correction authority into a project-local cache that every downstream phase reads. **Skipped Phase 0 = guaranteed AI-generic output** (Run #1–#4 each shipped mid-2024-SaaS template aesthetics because they never loaded taste-skill at all).
+
+**Step 0.1 — Check cache freshness:**
+```bash
+TASTE_CACHE="${PROJECT_PATH}/.evolution/taste-rules.md"
+if [ -f "$TASTE_CACHE" ]; then
+  AGE_DAYS=$(( ($(date +%s) - $(stat -c %Y "$TASTE_CACHE")) / 86400 ))
+  if [ "$AGE_DAYS" -lt 30 ]; then
+    echo "Phase 0: taste-rules.md cached (${AGE_DAYS}d old), skipping reload"
+    exit 0
+  fi
+fi
+```
+
+**Step 0.2 — Fire taste-skill if cache missing or stale:**
+```
+Skill('taste-skill', args='mode: load-for-web-evolve |
+  project_path: ${PROJECT_PATH} |
+  output_format: markdown |
+  output_path: ${PROJECT_PATH}/.evolution/taste-rules.md |
+  required_sections: [
+    "1. Active Baseline Configuration (dial values)",
+    "3. Design Engineering Directives (typography, color, layout, materiality, interactive states, forms)",
+    "5. Performance Guardrails",
+    "7. AI Tells — Forbidden Patterns (banned fonts, banned colors, banned content, banned external resources)",
+    "8. Creative Arsenal (50+ high-end inspiration concepts by category)",
+    "9. Motion-Engine Bento Paradigm (5-card archetypes)",
+    "10. Final Pre-Flight Check (7-item checklist)"
+  ]')
+```
+
+The skill writes a project-local markdown distillation of its rules. Subsequent phases read from this file.
+
+**Step 0.3 — Hard gate:** Phase A.0 cannot proceed without `taste-rules.md` existing. If `Skill('taste-skill')` is unavailable, HALT NEEDS_HUMAN (do NOT continue to Phase A.0). Cardinal Rule 0 deviation count = max severity, run aborts.
+
+**Step 0.4 — Cross-run trajectory taste-check (Principle 5 + taste integration):**
+Before Phase A.0, scan `trajectory.json` across ALL prior /web-evolve projects on this machine. Build `prior_signatures: [{project, font_pairing, palette, hero_pattern}]`. If the current project's CONTEXT.md or DESIGN-BRIEF.md proposes a signature that matches any prior project by ≥ 2 dimensions → flag `cross_project_collision` and surface in Phase A.0 echo. Visual sameness across projects is the AI failure mode this checks for.
 
 ---
 
@@ -123,14 +168,16 @@ mcp__puppeteer__puppeteer_screenshot(name=baseline-<slug>, width=1440, height=90
 # Save to .evolution/baseline/<slug>.png via Write tool (base64 decode if needed)
 ```
 
-Then ONE batched critique invocation:
+Then ONE batched critique invocation, with taste-rules threaded in (Principle 0):
 ```
 Skill('critique', args='mode: web-evolve | run_mode: per-route-baseline | output_format: json |
-  checklist: sales-page-10 | screenshots: [<path1>, <path2>, ...] | routes: [<route1>, ...] |
+  checklist: sales-page-10 |
+  taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md (apply Section 7 banned patterns + Section 10 pre-flight per route) |
+  screenshots: [<path1>, <path2>, ...] | routes: [<route1>, ...] |
   tier: {target}')
 ```
 
-Critique returns per-route `{verdict: REBUILD|REFINE|KEEP, checklist_fails: [...], blocking_issues: [...], rebuild_brief: "...", recommended_skill: "web-page|clarify|...", aggregate_vq: 0.0-5.0}`.
+Critique returns per-route `{verdict: REBUILD|REFINE|KEEP, checklist_fails: [...], taste_violations: [...], blocking_issues: [...], rebuild_brief: "...", recommended_skill: "web-page|clarify|...", aggregate_vq: 0.0-5.0}`. A route with ≥ 1 `taste_violations` entry is REBUILD regardless of checklist score (Principle 3 + taste integration).
 
 **Step A.1.5.3 — Write `.evolution/page-baselines.json`** with one entry per route. This is the truth that Phase R reads.
 
@@ -172,9 +219,11 @@ This populates the field the hook reads to enforce Principle 2.
 Puppeteer screenshot of affected route, save to `.evolution/iter-{n}-before-<slug>.png`.
 
 ### Step C.2 — Apply fix via correct route
+Every Skill() invocation in this step MUST include `taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md` in args so the called skill respects banned patterns + dial values at generation time.
+
 - `edit_direct: true` → direct Edit (whitelisted in SKILL_LOOKUP)
-- `edit_direct: false` → `Skill(fix_skill, args=...)` — the hook will block direct Edit attempts
-- REBUILD verdict route → `Skill('web-page')` only
+- `edit_direct: false` → `Skill(fix_skill, args='... | taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md | design_dna_tokens: hsl tokens only | bold_execution: yes')` — the hook will block direct Edit attempts
+- REBUILD verdict route → `Skill('web-page', args='... | taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md | checklist_fails: [...] | tier: {target}')` only
 
 ### Step C.3 — Post-iter screenshot + re-audit (NEW, fixes Run #4 self-validation gap)
 ```
@@ -259,7 +308,18 @@ git commit -m "evolveN phase-F: retro + Run #{N+1} handoff"
 git push
 ```
 
-**Step F.6 — Final echo to user:** facts only (no quality claims about own output). Score delta, iter count, deviation count, what next run should focus on. State which `Skill()` invocations fired vs were bypassed. State whether preview-verify was a real gate or a soft-degrade.
+**Step F.6 — Final pre-flight via taste-skill Section 10 (Principle 0 exit gate):**
+Before writing Step F.7's final echo, fire taste-skill against the deployed URL:
+```
+Skill('taste-skill', args='mode: pre-flight-check |
+  url: <live_url> |
+  taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md (Section 10 7-item checklist) |
+  screenshots: [<post-run screenshots from Phase D verify>] |
+  output_format: json')
+```
+Returns `{section_10_pass: true|false, taste_violations: [...], memorable_choice_identified: "..." | null}`. If `section_10_pass: false` OR `memorable_choice_identified: null` → trajectory.failed_gates appends `taste_pre_flight_failed` (deviation_count++). The run completes but the user-facing summary leads with "⚠️ taste pre-flight FAILED — {violations}; re-run required."
+
+**Step F.7 — Final echo to user:** facts only (no quality claims about own output). Score delta, iter count, deviation count, taste pre-flight verdict, what next run should focus on. State which `Skill()` invocations fired vs were bypassed. State whether preview-verify was a real gate or a soft-degrade.
 
 ---
 

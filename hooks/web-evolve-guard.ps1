@@ -74,6 +74,20 @@ if ($toolName -in @("Edit","Write","MultiEdit")) {
         exit 0
     }
 
+    # PRINCIPLE 0 GATE: taste-rules.md must exist before any source-file edit during an iter.
+    # The orchestrator must have fired Skill('taste-skill') in Phase 0 to cache the rules.
+    # Missing taste-rules.md = web-evolve never loaded its bias-correction authority -> block.
+    $tasteCache = Join-Path $ls.Root ".evolution\taste-rules.md"
+    if (-not (Test-Path -LiteralPath $tasteCache)) {
+        [Console]::Error.WriteLine(
+            "BLOCKED by web-evolve-guard: .evolution/taste-rules.md is missing. " +
+            "Phase 0 must fire Skill('taste-skill') to cache bias-correction rules BEFORE any iter starts. " +
+            "Without taste-rules.md, downstream Skill() calls produce AI-generic output. " +
+            "(Principle 0 — Load taste-skill before any other phase.)"
+        )
+        exit 2
+    }
+
     $lookup = Get-EditDirectLookup
     if (-not $lookup) { exit 0 }
 
