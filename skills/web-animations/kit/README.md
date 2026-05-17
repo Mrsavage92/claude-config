@@ -17,17 +17,46 @@ Peer dependencies in the consuming project:
 npm install motion gsap lenis
 ```
 
-## Use
+## Use — three integration paths
 
-Either copy individual components into your project's `src/components/` directory, or wire the kit as a local file dependency:
+### Path A: copy individual files (simplest, works in any project)
+
+```bash
+# From inside the consuming project, after npm install motion gsap lenis
+SRC="$HOME/.claude/skills/web-animations/kit/src"
+DEST="./src/components/motion"
+
+mkdir -p "$DEST"
+cp "$SRC/tier1/FadeUp.tsx" "$DEST/"
+cp "$SRC/tier1/StaggerContainer.tsx" "$DEST/"
+cp "$SRC/tier1/variants.ts" "$DEST/"
+cp "$SRC/utils/easings.ts" "$DEST/"
+
+# Add more components as needed — preserve the `// web-animations: Tier N` marker
+```
+
+Then in your project:
+
+```tsx
+import { FadeUp } from './components/motion/FadeUp'
+import { StaggerContainer } from './components/motion/StaggerContainer'
+```
+
+Path A is the recommended adoption pattern for `web-scaffold` / `web-page` downstream skills — the markers travel with the file, the grader sees them, no peer-dep negotiation.
+
+### Path B: local file dependency (kit lives in-tree)
 
 ```jsonc
-// In consuming project's package.json
+// Consuming project's package.json
 {
   "dependencies": {
     "@adam/web-animations-kit": "file:../path/to/skills/web-animations/kit"
   }
 }
+```
+
+```bash
+npm install
 ```
 
 Then import:
@@ -36,6 +65,35 @@ Then import:
 import { FadeUp, StaggerContainer, MagneticButton, NumberTicker } from '@adam/web-animations-kit'
 import { PinnedSection, SmoothScroll, ClipReveal } from '@adam/web-animations-kit'
 ```
+
+Path B keeps the kit as a single canonical copy. Trade-off: a project move breaks the file path; the kit's own peerDeps must align with the project's React + motion versions.
+
+### Path C: monorepo workspace
+
+If your project is in a workspace (turborepo, pnpm workspaces, nx):
+
+```jsonc
+// Root package.json
+{
+  "workspaces": ["apps/*", "packages/*", "skills/web-animations/kit"]
+}
+```
+
+Then symlink or include the kit as a workspace package. Same import as Path B.
+
+## Required peerDeps in the consuming project
+
+```bash
+# Tier 1–2
+npm install motion
+
+# Add for Tier 3 JS-driven
+npm install gsap lenis
+
+# Already pinned in kit's peerDependencies; consuming project supplies the versions
+```
+
+If using the zero-JS Tier 3 components (`CSSScrollReveal`, `CSSScrollProgress`, `TransitionLink`), no extra deps — only `react` and `react-dom`.
 
 ## Tier reference
 

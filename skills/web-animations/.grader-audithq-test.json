@@ -1,0 +1,115 @@
+{
+  "project": "C:\\Users\\Adam\\audit-genius",
+  "scannedAt": "2026-05-17T09:20:29.926Z",
+  "siteProfile": null,
+  "totalFiles": 273,
+  "markers": [],
+  "unmarkedMotionFiles": [
+    "src/components/audit/SuiteLoadingCard.tsx",
+    "src/components/audit-report/PdfRevealCard.tsx",
+    "src/components/audit-report/ScoreRing.tsx",
+    "src/components/audit-report/SuiteSection.tsx",
+    "src/components/audits/ChecksList.tsx",
+    "src/components/audits/SampleFinding.tsx",
+    "src/components/audits/ScrollProgress.tsx",
+    "src/components/audits/SuiteConstellation.tsx",
+    "src/components/audits/SuiteCTA.tsx",
+    "src/components/audits/SuiteFAQ.tsx",
+    "src/components/audits/SuiteGrid.tsx",
+    "src/components/audits/SuiteHero.tsx",
+    "src/components/audits/SuiteHeroIllustration.tsx",
+    "src/components/audits/WhyItMatters.tsx",
+    "src/components/dashboard/AccountCards.tsx",
+    "src/components/dashboard/AuditList.tsx",
+    "src/components/dashboard/ClientList.tsx",
+    "src/components/dashboard/EmptyDashboard.tsx",
+    "src/components/dashboard/SuitesOverview.tsx",
+    "src/components/FaqDotBackdrop.tsx",
+    "src/components/landing/AudienceSplitSection.tsx",
+    "src/components/landing/Comparison.tsx",
+    "src/components/landing/FinalCTA.tsx",
+    "src/components/landing/HeroQuickScan.tsx",
+    "src/components/landing/HowItWorks.tsx",
+    "src/components/landing/LiveDemoStrip.tsx",
+    "src/components/landing/PlatformLoopSection.tsx",
+    "src/components/landing/PlatformRoadmapSection.tsx",
+    "src/components/landing/SamplePdfDownloadGate.tsx",
+    "src/components/landing/SamplePdfShowcase.tsx",
+    "src/components/landing/StatsSection.tsx",
+    "src/components/landing/SuitesSection.tsx",
+    "src/components/landing/TestimonialsSection.tsx",
+    "src/components/PricingCards.tsx",
+    "src/components/ui/animated-counter.tsx",
+    "src/components/ui/animated-group.tsx",
+    "src/components/ui/aurora-background.tsx",
+    "src/components/ui/digit-roller.tsx",
+    "src/components/ui/gemini-beams.tsx",
+    "src/components/ui/infinite-slider.tsx",
+    "src/components/ui/lamp.tsx",
+    "src/components/ui/motion-footer.tsx",
+    "src/components/ui/score-ring.tsx",
+    "src/components/ui/sparkles.tsx",
+    "src/components/ui/text-effect.tsx",
+    "src/hooks/use-scroll-reveal.tsx",
+    "src/pages/AuditNew.tsx",
+    "src/pages/AuditReport.tsx",
+    "src/pages/AuditsIndex.tsx",
+    "src/pages/AuditStatus.tsx",
+    "src/pages/CheckoutSuccess.tsx",
+    "src/pages/ClientDetail.tsx",
+    "src/pages/Clients.tsx",
+    "src/pages/Dashboard.tsx",
+    "src/pages/ProjectDetail.tsx",
+    "src/pages/Projects.tsx",
+    "src/pages/QuickScanResult.tsx",
+    "src/pages/Setup.tsx",
+    "src/pages/UseCasePage.tsx",
+    "src/test/SuiteLoadingCard.test.tsx"
+  ],
+  "tier3FilesMissingReducedMotionGuard": [
+    "src/components/ui/motion-footer.tsx"
+  ],
+  "tier3GsapFilesMissingDualBranch": [
+    "src/components/ui/motion-footer.tsx"
+  ],
+  "vestibularTriggersWithoutGuards": [
+    {
+      "file": "src/components/audit/SuiteLoadingCard.tsx",
+      "trigger": "spin",
+      "category": 2
+    },
+    {
+      "file": "src/components/audits/ScrollProgress.tsx",
+      "trigger": "parallax",
+      "category": 3
+    },
+    {
+      "file": "src/hooks/use-scroll-reveal.tsx",
+      "trigger": "parallax",
+      "category": 3
+    }
+  ],
+  "tierExceedingSiteMax": [],
+  "tierBreakdown": {
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0
+  },
+  "summary": {
+    "totalFilesScanned": 273,
+    "filesWithMarkers": 0,
+    "filesUsingMotionWithoutMarker": 60,
+    "tier3FilesMissingReducedMotionGuard": 1,
+    "tier3GsapFilesMissingDualBranch": 1,
+    "vestibularTriggersWithoutGuards": 3,
+    "tierExceedingSiteMax": 0,
+    "tierBreakdown": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    "siteProfileLoaded": false
+  }
+}

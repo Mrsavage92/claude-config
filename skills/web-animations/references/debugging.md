@@ -54,3 +54,68 @@ These are Phase 5d grader upgrade scope.
 - The kit's `useReducedMotion` returns `null` on first render (motion library default). Treat `null` as "loading" — most components fall through to the animated path because `null !== true`. This is intentional; the alternative (default-on) would flash motion before the hook resolved.
 - `gsap.context()` scope MUST be passed as the second argument (`useEffect(() => { const ctx = gsap.context(..., root.current) ... }, [])`) for selectors to resolve correctly inside the ref.
 - `Lenis` v1.1 + GSAP integration needs `gsap.ticker.lagSmoothing(0)` after `gsap.ticker.add` — otherwise Lenis stutters on tab-switch.
+
+---
+
+## SSR pitfalls (Next.js App Router, Remix, Astro)
+
+### CSSScrollReveal + CSSScrollProgress inject styles at runtime
+
+Both components call `document.createElement('style')` inside `useEffect` to mount the keyframes + `animation-timeline` rules. This runs CLIENT-SIDE ONLY. SSR consequence:
+
+- First server-rendered paint shows the content WITHOUT the reveal animation
+- Hydration adds the styles, then the animation runs from "0%" → end if the user is still above the trigger range
+- This produces a brief visible "snap" on hydration for elements already in view at first paint
+
+**Fix when shipping these on a server-rendered route:**
+
+Move the keyframes + `animation-timeline` declarations to a global stylesheet (e.g. `app/globals.css`), import once at the root layout, and remove the `useEffect`-based injection.
+
+```css
+/* globals.css — server-renderable, no JS injection */
+@supports (animation-timeline: view()) {
+  .web-anim-css-reveal {
+    animation: web-anim-fade-up linear both;
+    animation-timeline: view();
+    animation-range: var(--web-anim-range, entry 0% cover 30%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .web-anim-css-reveal { animation: none; opacity: 1; transform: none; }
+  }
+}
+@keyframes web-anim-fade-up {
+  from { opacity: 0; transform: translateY(var(--web-anim-from-y, 24px)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+```
+
+The kit's runtime-injection version is fine for CSR-only projects (Vite + SPA), Storybook, and codesandbox previews — but not for `next start` or SSR-first deploys.
+
+### `'use client'` directive — already present on every Tier 2/3 component
+
+Every kit component above Tier 1 starts with `'use client'`. Next.js App Router compiles them as Client Components. Importing into a Server Component is allowed (children stay server-rendered) but the component itself hydrates.
+
+For Server Component-only routes (most marketing pages), `FadeUp` Tier 1 and the variants are the only kit pieces that ship without `'use client'` boundary cost. Use them deliberately on the highest-leverage routes.
+
+### View Transitions in Next.js App Router
+
+`TransitionLink` works in Pages Router and external routers. In App Router, prefer `unstable_ViewTransition` from `next` (15.2+) — it integrates with the App Router's transition machinery. The kit's `TransitionLink` is a generic fallback for routers that don't have a native wrapper.
+
+---
+
+## Node version requirement for the grader
+
+`grader/audit-animations.mjs` uses `readdir(dir, { withFileTypes: true, recursive: true })` and top-level `await`. Requires:
+
+- **Node ≥ 20.x** (recursive readdir landed in 20.1)
+- **ESM** project (`"type": "module"` in package.json) OR call with `.mjs` extension (the script already uses `.mjs`)
+
+If Node < 20:
+
+```
+TypeError: readdir(...) doesn't take 'recursive' option
+```
+
+…and the grader crashes silently from a CI perspective (exit code 1 looks like a violation, not a runtime fault).
+
+**Recommended**: every CI workflow that invokes the grader pins `node-version: 20` or higher in the setup step. The grader does NOT yet self-check Node version at startup. Open follow-up.

@@ -40,9 +40,11 @@ export function PinnedSection({
       })
 
       slideEls.forEach((_, i) => {
-        if (i === slideEls.length - 1) return
-        tl.to(slideEls[i], { autoAlpha: 0, scale: 0.92 })
-          .from(slideEls[i + 1], { autoAlpha: 0, scale: 1.08 }, '<')
+        const current = slideEls[i]
+        const next = slideEls[i + 1]
+        if (!current || !next) return
+        tl.to(current, { autoAlpha: 0, scale: 0.92 })
+          .from(next, { autoAlpha: 0, scale: 1.08 }, '<')
       })
     }, root)
 

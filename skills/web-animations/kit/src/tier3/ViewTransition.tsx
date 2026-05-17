@@ -7,19 +7,13 @@
 
 import type { MouseEvent, ReactNode } from 'react'
 
-type StartViewTransition = (
-  callback: () => void | Promise<void>
-) => { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> }
-
 interface NavigatorEventLike {
   hasUAVisualTransition?: boolean
 }
 
-declare global {
-  interface Document {
-    startViewTransition?: StartViewTransition
-  }
-}
+// Document.startViewTransition is in lib.dom.d.ts on TS 5.7+; we rely on the
+// optional-chain `document.startViewTransition?.(...)` at call sites and let
+// the runtime feature-detect on older environments.
 
 interface NavigateOpts {
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void

@@ -34,7 +34,7 @@ interface StackedCardProps {
   children: ReactNode
   index: number
   total: number
-  containerRef: RefObject<HTMLDivElement>
+  containerRef: RefObject<HTMLDivElement | null>
   topOffset: string
 }
 
