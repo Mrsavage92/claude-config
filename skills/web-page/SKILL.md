@@ -1,11 +1,30 @@
 # /web-page
 
-Build one complete, production-quality page with a per-page review loop before moving on.
+Build one complete, production-quality page with a per-page review loop before moving on. Supports both **Next.js 15 App Router** (writes to `app/{route}/page.tsx`) and **Vite + React Router 7** (writes to `src/pages/{Name}.tsx`) — read `SCOPE.md` `framework:` field first.
 
 ## When to Use
 - Building any page in an existing scaffolded project
 - Called per-page by /saas-build — not all pages at once
 - **Called by /web-evolve in REBUILD mode** when a route's critique verdict is `REBUILD` — see Web-evolve Targeted Mode below
+
+## Framework awareness (MANDATORY — read SCOPE.md first)
+
+Before scaffolding ANY page file:
+
+1. Read `SCOPE.md` `## Framework` section.
+2. If `framework: nextjs`:
+   - Write page to `app/{route-group}/{slug}/page.tsx` — public routes go under `(marketing)/`, auth-gated under `(app)/`.
+   - Components are RSC by default. Add `"use client"` only on components needing interactivity / state.
+   - Data fetching: prefer Server Components + Server Actions over TanStack Query for marketing routes; TanStack stays for client-state in `(app)/` route group.
+   - Per-page OG: drop `opengraph-image.tsx` next to `page.tsx`.
+   - Per-page metadata: export `metadata` (typed `Metadata`) and `viewport` (typed `Viewport`) — never use `useSeo` hook on this path.
+3. If `framework: vite`:
+   - Write page to `src/pages/{Name}.tsx`. Register lazy route in `src/App.tsx`.
+   - Call `useSeo(...)` hook in every page (no Next.js metadata API on Vite).
+   - Data via TanStack Query everywhere.
+   - Per-page OG: handled by `api/og.tsx` Edge Function with route-prop pass-through.
+
+If `SCOPE.md` is missing or has no `framework:` field — HALT and ask: `"SCOPE.md is missing the framework decision. Run /web-scope first or pass framework=nextjs|vite as an arg."`
 
 ## Critical Rule
 **One page at a time. Build it. Review it. Fix it. Only then move to the next.**
@@ -250,14 +269,42 @@ Never just download buttons. Always show live data preview at the top:
 
 Write components following these rules:
 - All colors via CSS variables — never hardcoded hex/rgb
-- EmptyState from `src/components/ui/EmptyState.tsx` — never write inline empty states. If `src/components/ui/EmptyState.tsx` does not exist: create it now (accepts `{ title: string, description: string, action?: { label: string, href: string } }`, renders a centered container with icon, text, and optional CTA button) before building the page.
-- Loading states use skeleton divs at the same dimensions as real content
+- EmptyState from `src/components/ui/EmptyState.tsx` (Vite) or `components/ui/EmptyState.tsx` (Next.js) — never write inline empty states. If it does not exist: create it now (accepts `{ title: string, description: string, action?: { label: string, href: string } }`, renders a centered container with icon, text, and optional CTA button) before building the page.
+- Loading states use skeleton divs at the same dimensions as real content. On Next.js, prefer `loading.tsx` (App Router Suspense boundary) over inline skeletons where possible.
 - Status indicators: muted colored dot (`before:content-['•']` with text-[color]) + text label — never full colored badge fills
-- framer-motion whileInView + viewport={{ once: true }} on all major sections
-- Named exports only, max 150 lines per file
+- `motion` (v12, `from 'motion/react'`) whileInView + viewport={{ once: true }} on all major sections. Never revert to `framer-motion`.
+- Named exports only, max 150 lines per file.
 
-### Step 6 — Add Route to App.tsx
-Add the new page to App.tsx with React.lazy + Suspense immediately. Never leave routes unregistered.
+### Step 5.5 — Hero / feature imagery (MANDATORY for landing + feature pages)
+
+Gradient blobs and generic stock photography are banned (auto-FAIL at tier ≥ 95). For any page that needs hero or feature imagery:
+
+1. Fire `Skill('ai-image-generation', args='hero | project: {project_path} | brief: {DESIGN-BRIEF.md hero direction} | style_tokens: {OKLCH palette + personality from DESIGN-BRIEF} | aspect: 16:9 | model: flux.1-pro')` for the hero shot.
+2. For per-feature illustrations: `Skill('ai-image-generation', args='feature | brief: {feature description} | style_tokens: {tokens} | aspect: 1:1 | model: seedream-3')`.
+3. Save outputs to `public/images/generated/` (Vite) or `public/og/` + `public/images/` (Next.js).
+4. Reference via `<Image>` (Next.js) or `<img>` with explicit `width`/`height` (Vite — prevents CLS).
+
+Skip this step ONLY if the project's DESIGN-BRIEF.md says `hero_style: real-product-ui` (R3F hero) or `hero_style: kinetic-typography` — those world-class signatures replace imagery.
+
+### Step 5.6 — Per-page OG image (MANDATORY for public routes)
+
+Every public route needs a dynamic Open Graph image. Path depends on framework:
+
+- **Next.js path**: drop `opengraph-image.tsx` next to `page.tsx`. Template inherits brand tokens from the root `app/opengraph-image.tsx`. Override the title/subtitle for this route.
+- **Vite path**: add a route entry to `api/og.tsx` Edge Function with the title/subtitle props for this URL.
+
+Reference template lives in `~/.claude/skills/web-scaffold/references/nextjs-templates.md` under "app/opengraph-image.tsx". Use the design-system OKLCH palette and Geist (or the project's foundry font) — no Inter fallbacks.
+
+### Step 5.7 — Content humanizer pass (MANDATORY before commit on any AI-written copy)
+
+If any copy on this page was AI-generated (hero headline, feature descriptions, FAQ answers, CTA text), fire `Skill('content-humanizer', args='target_files: {list of components with copy} | preserve: brand-voice from CLAUDE.md')` as the final step before Step 6.
+
+The humanizer pass strips perplexity-lowering tells: banned words (`delve`, `leverage`, `robust`, `seamless`, `unlock`, `unprecedented`), em-dash overuse, sentence-length uniformity, "in today's fast-paced world"-style filler. Skipping it ships AI-template copy and fails the sales-page-10 checklist on rules 2 (WHAT YOU DO clarity) and 4 (OUTCOME-not-process).
+
+### Step 6 — Register the route
+
+- **Next.js path**: route registers automatically from file path (`app/{group}/{slug}/page.tsx` → live route). Nothing to do.
+- **Vite path**: add the new page to `src/App.tsx` with `React.lazy` + `<Suspense>` immediately. Never leave routes unregistered.
 
 ### Step 6b — Cross-Page Component Dedup Check
 

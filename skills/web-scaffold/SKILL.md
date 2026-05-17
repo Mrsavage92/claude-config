@@ -1,6 +1,6 @@
 # /web-scaffold
 
-Bootstrap a production-ready React web application with enterprise-quality design from the ground up.
+Bootstrap a production-ready React web application with enterprise-quality design from the ground up. Supports two framework paths: **Next.js 15 App Router** (default for marketing-led SaaS — see Step 0.5) and **Vite 6 + React Router 7** (for app-shell-first products without a marketing site).
 
 ## Phase 0.0 — Product Validation Gate (MANDATORY for new products)
 
@@ -28,12 +28,45 @@ This gate exists because Tender Writer was scaffolded 6 days before validator ca
 
 ## Process Overview
 
+0.5. **Framework choice** (Next.js App Router vs Vite + React Router 7) — MANDATORY first step
 1. Read Design DNA + Scope
 2. Design Brief (if no SCOPE.md)
 3. Document Design System Decisions
-4. Generate all foundation files
-5. Install dependencies + shadcn init
+4. Generate all foundation files (framework-specific templates)
+5. Install dependencies + shadcn init (v4 with `registry:base`)
 6. Output summary
+
+---
+
+### Step 0.5 — Framework choice (MANDATORY — answer before any code is generated)
+
+Read `SCOPE.md` if present — if it contains `framework: nextjs` or `framework: vite`, USE THAT and skip the question. Otherwise ask:
+
+```
+Framework choice for this build:
+
+  [A] Next.js 15 App Router  (RECOMMENDED for marketing-led SaaS)
+      - Marketing site + app shell in one codebase
+      - PPR (Partial Prerendering) default in Next.js 16
+      - Native @vercel/og, next/font foundry loaders, RSC streaming
+      - First-class Speculation Rules + cross-doc View Transitions
+      - Pick this if the product ships a public marketing page
+
+  [B] Vite 6 + React Router 7  (for app-shell-first products)
+      - Faster HMR, full bundle control, no RSC overhead
+      - Pick this if the product is a dashboard / data tool / SPA-only
+      - No public marketing surface
+```
+
+Default to **[A] Next.js** unless the user explicitly picks Vite, or SCOPE.md says `app-shell-first: true`.
+
+Write the choice to `SCOPE.md` under `framework: nextjs | vite`. Every downstream skill reads this — `/web-page`, `/web-supabase`, `/web-deploy`, `/web-evolve` all branch on it.
+
+**Path-specific templates:**
+- **Next.js path** → read `references/nextjs-templates.md` for file templates, install commands, `app/` structure, `next/font` config, OG generation, Speculation Rules + cross-doc View Transitions setup.
+- **Vite path** → read `references/file-templates.md` for `vite.config.ts`, `src/App.tsx` lazy routing, `vercel.json` SPA rewrites, `src/pages/` structure.
+
+The two paths produce different file trees. Do NOT mix `app/` (Next.js App Router) with `src/pages/` (Vite SPA) — pick one, stick with it.
 
 ---
 
@@ -71,23 +104,42 @@ Write these to CLAUDE.md before generating any component:
 
 ### Step 4 — Generate All Files
 
-Generate all foundation files using the templates below. Read reference files for exact code.
+Generate all foundation files using the templates below. Path depends on Step 0.5 choice — read the right reference file.
 
-**File templates** — Read `references/file-templates.md` for:
+**Next.js path** (`framework: nextjs`) — Read `references/nextjs-templates.md` for:
+- `package.json` (Next.js 15, React 19, Tailwind v4, motion, lenis, gsap, shadcn v4 CLI)
+- `tsconfig.json` + `next.config.ts` (PPR experimental flag, image domains, foundry font loader)
+- `tailwind.config.ts` is GONE in v4 — config lives in `app/globals.css` under `@theme {}`
+- `app/layout.tsx` (foundry `next/font` setup, `viewport` export, Speculation Rules `<script type="speculationrules">`, cross-doc View Transitions meta + CSS `@view-transition { navigation: auto; }`)
+- `app/globals.css` (`@import "tailwindcss"` + `@theme inline { --color-* OKLCH tokens }`)
+- `app/(marketing)/page.tsx` + `app/(marketing)/layout.tsx` (landing route group)
+- `app/(app)/layout.tsx` (auth-gated route group with AppLayout + TrialBanner)
+- `app/opengraph-image.tsx` (`@vercel/og` template at root, per-route overrides)
+- `app/robots.ts` + `app/sitemap.ts`
+- `app/manifest.ts` (typed PWA manifest)
+- `instrumentation.ts` (Sentry init + RSC error capture)
+- `middleware.ts` (auth gate, redirects)
+- `registry.json` (shadcn `registry:base` payload — design system as portable resource)
+- `CLAUDE.md` (design system snapshot + `framework: nextjs` marker)
+
+**Vite path** (`framework: vite`) — Read `references/file-templates.md` for:
 - `package.json` (core deps + optional Supabase/TanStack Query)
 - `tsconfig.json` + `tsconfig.node.json`
 - `vite.config.ts` (always with manualChunks)
 - `postcss.config.js`
-- `tailwind.config.ts` + `src/styles/index.css`
+- `app/globals.css` with `@import "tailwindcss"` + `@theme {}` (Tailwind v4 even on Vite path)
 - `src/lib/utils.ts`, `src/lib/query-client.ts`, `src/hooks/use-theme.ts`
-- `src/App.tsx` (lazy-loaded routes, landing + auth + app routes)
-- `CLAUDE.md` (design system snapshot)
+- `src/App.tsx` (lazy-loaded React Router 7 routes, landing + auth + app routes)
 - `vercel.json` (SPA rewrites — generate at project root, do not defer)
-- `.env.example`
-- `vitest.config.ts` + `src/tests/setup.ts`
+- `index.html` head: Speculation Rules `<script type="speculationrules">` for client-side prefetch
 - `src/components/layout/AppLayout.tsx` (skip-nav + TrialBanner)
 - `src/components/ui/EmptyState.tsx`
+- `api/og.tsx` Vercel Edge Function for OG generation (since no `next/og`)
 - Landing page build sequence (`src/components/landing/` + `src/pages/Landing.tsx`)
+
+**Both paths** (path-agnostic):
+- `.env.example`
+- `vitest.config.ts` + `src/tests/setup.ts` (or `__tests__/` for Next.js)
 
 **Component templates** — Read `references/component-templates.md` for:
 - `src/components/layout/TrialBanner.tsx` (SaaS with auth — mandatory)
@@ -114,14 +166,34 @@ After running shadcn init, check `src/styles/index.css` for the string `oklch(`.
 
 **Tests directory is created at scaffold time, not after pages are built.**
 
+**Next.js path:**
 ```bash
-npm install
+npx create-next-app@latest {project-slug} --typescript --tailwind --app --no-src-dir --import-alias "@/*"
+cd {project-slug}
+npm install motion lenis gsap @vercel/og
+npm install --save-dev @types/node
 npx shadcn@latest init
-npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea
+npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea spinner kbd button-group input-group field item empty
+# Emit registry.json (registry:base) so the design system is portable + MCP-accessible
+npx shadcn@latest registry build
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom
+```
+
+**Vite path:**
+```bash
+npm create vite@latest {project-slug} -- --template react-ts
+cd {project-slug}
+npm install
+npm install react-router@latest motion lenis gsap
+npm install -D tailwindcss@latest postcss autoprefixer @tailwindcss/postcss
+npx tailwindcss init -p
+npx shadcn@latest init
+npx shadcn@latest add button input label card dialog dropdown-menu sheet toast sonner separator badge skeleton avatar tabs table select textarea spinner kbd button-group input-group field item empty
+npx shadcn@latest registry build
 npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
 ```
 
-The `src/tests/` directory is the home for all test files written in Phase 4.5. Create it now so the path exists.
+**Both paths:** the test directory home for files written in Phase 4.5 — `__tests__/` (Next.js) or `src/tests/` (Vite). Create at scaffold time so the path exists.
 
 ---
 

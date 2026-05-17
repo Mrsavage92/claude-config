@@ -130,16 +130,26 @@ Library: prefer Motion's `<Cursor>` primitive (motion.dev/docs/cursor) or hand-r
 
 ## View Transitions API (mandatory at target ≥ 98)
 
-- Same-document transitions on every route change inside the SPA
-- `viewTransitionName: '<unique-id>'` on shared elements (hero image → product image, logo, nav anchor)
+**Same-document** (SPA route changes — applies to Vite + React Router 7 and Next.js client navigation):
+- Triggered on every route change
+- `view-transition-name: '<unique-id>'` (CSS) or `viewTransitionName` (React 19 inline style) on shared elements (hero image → product image, logo, nav anchor)
 - Reduced-motion query respected: skip transitions if `(prefers-reduced-motion: reduce)`
-- Cross-document support enabled via meta tag for Chromium/WebKit:
-  ```html
-  <meta name="view-transition" content="same-origin">
+
+**Cross-document** (full page nav between Next.js routes — Chrome 126+, Safari 18.5+, Firefox 146+ partial):
+- Opt-in via CSS: `@view-transition { navigation: auto; }` in `globals.css`
+- Opt-in via meta for Chromium/WebKit cross-origin restriction: `<meta name="view-transition" content="same-origin">`
+- Named slots persist across documents — declare in `globals.css`:
+  ```css
+  .hero-image { view-transition-name: hero-image; }
+  .product-logo { view-transition-name: product-logo; }
   ```
 - Firefox fallback: progressive enhancement, no transition fires — page still works
 
-Reference: Astro view transitions docs, the View Transitions Chrome example gallery.
+**Tier mapping:**
+- Tier 95: same-doc only is acceptable (most projects are SPA or use Next.js client navigation)
+- Tier 98+: cross-doc REQUIRED if the project ships multi-page Next.js routes (marketing pages: `/`, `/pricing`, `/about`). WC5 check verifies both.
+
+Reference: Astro view transitions docs, Next.js `experimental.viewTransition`, Chrome cross-doc View Transitions guide.
 
 ---
 

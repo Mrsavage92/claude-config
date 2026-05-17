@@ -4,18 +4,33 @@ AI integration skill for the web-* suite. Covers Anthropic Claude API via Supaba
 
 **Call this skill when:** any page needs an AI chat interface, AI-powered analysis, streaming output, or per-user cost tracking.
 
-**Stack:** Anthropic SDK → Supabase Edge Function (proxy, keeps key server-side) → React streaming hooks → shadcn/ui chat primitives.
+**Stack (May 2026):** Anthropic SDK → Supabase Edge Function (proxy, keeps key server-side) → **Vercel AI SDK 6 `Agent` abstraction** for streaming + tool-use orchestration → React Server Components (Next.js) or React streaming hooks (Vite) → shadcn/ui chat primitives.
+
+**Why Vercel AI SDK 6 (2026):** The `Agent` abstraction replaces the SDK 4/5 manual `useChat` + tool-handler pattern. Reusable agent definitions, type-safe `streamUI` for streaming React components (not just text), built-in tool-use lifecycle, runs equivalently on Node / Edge / Bun. The legacy `experimental_streamText` patterns from SDK 4 are deprecated — do not scaffold new code with them.
+
+---
+
+## Framework awareness (MANDATORY — read SCOPE.md first)
+
+Read `SCOPE.md` `## Framework` field:
+
+- **`framework: nextjs`** — Vercel AI SDK 6 `Agent` lives in a Server Action or Route Handler (`app/api/chat/route.ts`). Stream UI via `streamUI` directly to React Server Components. Supabase Edge Function proxy is still used to keep the Anthropic key server-side; the Agent calls it.
+- **`framework: vite`** — AI SDK 6 client patterns (`useChat`, `streamText`) talk to the Supabase Edge Function. No RSC streaming available; use the React streaming hook pattern in Phase 2.
+
+The Edge Function proxy is framework-agnostic (Phase 1). The hook layer (Phase 2) and the chat UI (Phase 3) branch on framework.
 
 ---
 
 ## Phase 0 — Pre-checks
 
 Read SCOPE.md. Answer:
-- Which feature requires AI? (chat, analysis, generation, classification)
-- Is the output streamed or one-shot?
+- **Framework**: nextjs or vite (read `framework:` field — Phase 2/3 branch on it)
+- Which feature requires AI? (chat, analysis, generation, classification, agentic-tool-use)
+- Is the output streamed or one-shot? (Agent abstraction handles both)
 - Is there a per-user token budget or cost cap?
-- What models are in play? (default: claude-haiku-4-5-20251001 for fast/cheap, claude-sonnet-4-6 for quality)
+- What models are in play? (default: `claude-haiku-4-5-20251001` for fast/cheap, `claude-sonnet-4-6` for quality, `claude-opus-4-7` for high-judgment one-shots)
 - Are prompt templates parameterised per user context?
+- **Agent or single-call?** Anything with tools or multi-step reasoning → use AI SDK 6 `Agent`. Single completion with no tools → `streamText` is still fine.
 
 ---
 

@@ -72,7 +72,26 @@ app.add_middleware(CORSMiddleware, allow_origins=_allowed_origins, allow_credent
 ```
 Set `FRONTEND_URL` to the Vercel production URL in your backend hosting platform's env vars.
 
-### Step 4 — Vercel Deploy
+### Step 4 — Vercel Deploy (default) or Cloudflare Pages+Workers
+
+**Hosting choice — defaults to Vercel. Switch to Cloudflare in these cases:**
+
+| Signal | Choose Cloudflare |
+|---|---|
+| Projected egress > 1 TB/month | Yes — Vercel: $0.40/GB after free tier vs Cloudflare: $0. 5TB/mo = $1,900 Vercel vs $53 Cloudflare. |
+| Audience > 30% in Asia/LATAM/Africa | Cloudflare's 300+ PoPs beat Vercel's footprint in those regions. |
+| Heavy WebSocket / long-lived connections | Cloudflare Workers + Durable Objects > Vercel Functions (limited execution time). |
+| Need sub-5ms cold starts globally | Cloudflare V8 isolates win. |
+| Project is Vite + React Router (not Next.js) | Either works. Cloudflare Pages is cheaper at scale. |
+| Project is Next.js with PPR / RSC streaming / @vercel/og | **Stick with Vercel** — framework-native integration is materially better. Cloudflare's Next.js support is `@cloudflare/next-on-pages` (works but trails Vercel features by 1–2 quarters). |
+
+**Most $0-MRR projects: use Vercel.** Migrate to Cloudflare when the bandwidth crossover is real (typically post-$5K MRR with media-heavy traffic). Don't pre-optimize hosting.
+
+**Supabase compatibility:** both platforms work. Supabase ships a standard `(Request) => Response` handler that runs on Vercel Functions, Cloudflare Workers, Deno, and Bun. See `https://developers.cloudflare.com/workers/databases/third-party-integrations/supabase/`.
+
+**Below: Vercel path (default).** Cloudflare path: substitute `wrangler deploy` for `vercel deploy`, configure `wrangler.toml` instead of `vercel.json`, set env vars via `wrangler secret put`. Smoke tests (Step 7) and bundle audit (Step 8) are framework-agnostic.
+
+---
 
 **Step 4a — Confirm Vercel project exists (required before any deploy).**
 Via Vercel MCP: check whether a project named `[product-slug]` already exists. If it does NOT exist: create it now before deploying. Never skip this check — deploying to a non-existent project produces an orphaned deployment with no custom domain, no env vars, and no GitHub connection.

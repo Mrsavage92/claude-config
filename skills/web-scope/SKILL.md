@@ -53,6 +53,11 @@ Read the user's product description. Extract:
 - **Trial model** (decide if not stated): `free-trial-no-card` | `free-trial-card-required` | `freemium` | `paid-only`. Default to `free-trial-no-card` if unclear.
 - **Onboarding data**: what information must the user provide before they can use the product? (e.g. business name, industry, location — product-specific). List the fields.
 - **Dashboard gate**: what must be true before a user can reach the dashboard? (e.g. onboarding complete + plan selected, or just onboarding complete for trial)
+- **Framework decision** (MANDATORY — pinned to SCOPE.md, every downstream skill reads it):
+  - `framework: nextjs` — default for marketing-led SaaS (public marketing site + app shell in one codebase). Next.js 15 App Router, PPR, RSC streaming, native OG / Speculation Rules / cross-doc View Transitions.
+  - `framework: vite` — for app-shell-first products without a public marketing surface (pure dashboards, internal tools, SPAs).
+  - Decide which: does this product ship a public landing/marketing page that needs SEO + perf-optimised first-paint? → nextjs. Pure logged-in app? → vite.
+  - Write this to SCOPE.md `## Framework` section verbatim — `/web-scaffold` Step 0.5 reads it. If absent, scaffold halts and asks the question there.
 
 ### Step 2 — Design Brief (decide all of these before touching CSS)
 
