@@ -9,6 +9,10 @@ Motion patterns for the web-* skill suite. **Pick a tier before writing code.** 
 
 **Package (2026):** Framer Motion v12 is now `motion`. Install: `npm install motion`. Import: `from 'motion/react'`. The legacy `framer-motion` package is a shim — never use it in new code.
 
+**Runnable kit:** `~/.claude/skills/web-animations/kit/` ships every component below as a tested `.tsx`. `web-scaffold` and `web-page` COPY from there instead of regenerating snippets. Unit tests via `npm test`, reduced-motion compliance via `npm run test:e2e`. See `kit/README.md`.
+
+**Grader:** `node ~/.claude/skills/web-animations/grader/audit-animations.mjs <project>` audits any project for tier markers + reduced-motion guards on Tier 3 code. Exit code non-zero on violations. Wire into `/web-evolve` Phase A.
+
 ---
 
 ## Tier Decision Matrix — read first
@@ -27,6 +31,48 @@ Motion patterns for the web-* skill suite. **Pick a tier before writing code.** 
 - Animating EVERYTHING on a page (chaos beats stillness)
 
 **Rule of one:** every page gets ONE signature animation moment. Everything else is Tier 1 supporting reveals. Lifting all elements to "signature" tier flattens the page.
+
+---
+
+## Skill Routing Matrix — when to use which
+
+| Task | Use | Don't use |
+|---|---|---|
+| Build new motion for a new component/page | `/web-animations` (this skill) + `/web-scaffold` or `/web-page` | `/animate`, `/polish` |
+| Review an existing component's animation quality | `/animate` | `/web-animations` |
+| Add polish/micro-interactions to a working feature | `/polish` or `/delight` | `/web-animations` (Tier 1/2 patterns are already here — `/polish` calls them) |
+| 3D, shaders, particles, R3F, Rive, Lottie | `/overdrive` | This skill — stops at Tier 3 |
+| Score a route's animation tier compliance | grader script + `/web-evolve` | Manual review |
+| Mirror another site's motion vocabulary | `/style-mirror` first (extracts), then `/web-animations` to implement | Either alone |
+
+`/web-animations` is the **build-time** reference and component source. `/animate` is the **review-time** equivalent.  `/overdrive` is the **escalation** for anything beyond Tier 3. Don't pile them all into one prompt.
+
+---
+
+## Bundle Budget per Tier
+
+Bundle costs gzipped. Stack must fit the project's overall budget (`~/.claude/rules/web/performance.md`: <150kb landing pages, <300kb app pages).
+
+| Library | Gzipped | Tier required | Notes |
+|---|---|---|---|
+| `motion/react` (Framer Motion v12) | ~38kb | Tier 1+ | The base. Tree-shakeable — actual bundle smaller if you use only `motion`, `AnimatePresence`. |
+| `gsap` core | ~32kb | Tier 3 (T3.1) | Plus +12kb for `ScrollTrigger`. |
+| `gsap/ScrollTrigger` | ~12kb | Tier 3 (T3.1) | |
+| `lenis` | ~10kb | Tier 3 (T3.2) | Pair with GSAP. |
+| `three` (R3F minimum) | ~140kb | Tier 4 | + R3F + drei = ~180kb baseline. Lazy-load only. |
+| `@rive-app/canvas` | ~85kb | Tier 4 | Use for character/state-machine vector anims. |
+| `lottie-react` | ~60kb | Tier 4 | Prefer Rive — smaller, interactive. |
+
+**Budget audit:** if Tier 1+2 lands a marketing page over 150kb gzipped, something else is wrong — motion alone can't cause it. If Tier 3 lands over budget, lazy-load GSAP/Lenis on a `prefers-reduced-motion: no-preference` + scroll-near-target check.
+
+```ts
+// Lazy-load Tier 3 — fires only when user scrolls near
+const loadScrollytelling = () => import('./PinnedSection')
+
+const io = new IntersectionObserver(([entry]) => {
+  if (entry.isIntersecting) loadScrollytelling().then(/* mount */)
+}, { rootMargin: '50%' })
+```
 
 ---
 
@@ -584,6 +630,78 @@ Motion uses FLIP under the hood — measures before/after, animates the delta vi
 
 ---
 
+# Debugging — top 10 failure modes
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Hero stagger doesn't fire | Used `whileInView` on above-fold element while it's already in view at mount | Switch to `animate="visible"` (mount) for above-fold |
+| Animation replays every time element scrolls back into view | Missing `viewport={{ once: true }}` | Add `once: true` |
+| ScrollTrigger `pin` jumps at start | Missing `anticipatePin: 1` or content height shifts after mount | Add `anticipatePin: 1`; call `ScrollTrigger.refresh()` after async content loads |
+| Lenis fights iOS touch scroll | Lenis is hijacking native momentum | Disable Lenis on touch: skip init when `('ontouchstart' in window)` or use Lenis 1.1+ `prevent` API |
+| Motion stagger only animates first child | Children passed as fragment or component without `motion.*` wrapper | Each direct child of `StaggerContainer` MUST be `motion.div` (or kit `FadeUp`) — fragments break variant inheritance |
+| `layoutId` morph teleports instead of animates | Same `layoutId` used in two simultaneously-rendered components | Wrap with `AnimatePresence`; render only ONE at a time |
+| Number ticker jumps to final value, no animation | `useInView` triggers before content paints (server-render race) | Add `margin: '-80px'` or check `inView` after a `requestAnimationFrame` |
+| Custom cursor causes layout shift | Cursor element on `body` shifts when scrollbar appears | Position cursor `fixed` with `pointer-events: none`, `transform: translate3d()` not `top/left` |
+| GSAP ScrollTrigger memory leak on hot reload | Missing `gsap.context()` + `ctx.revert()` cleanup | Wrap every effect in `gsap.context(() => {...}, ref)` and return `ctx.revert()` |
+| Animation runs at 30fps on mobile | Animated property is not compositor-only (likely `width`/`height`/`top`) OR too many simultaneous animations | DevTools Performance → check for layout/paint frames; replace with `transform`/`opacity`; throttle simultaneous tweens to 3–5 |
+
+**Standard debugging steps:**
+1. DevTools Performance — record, look for red frames and layout/paint events
+2. DevTools Rendering panel → enable "Paint flashing" and "Layer borders" to see what's actually painting
+3. Emulate reduced motion + slow CPU 4x to expose perf bugs
+4. `document.getAnimations()` in console to list every running animation
+
+---
+
+## Accessibility — beyond reduced motion
+
+`prefers-reduced-motion` is necessary, not sufficient. Full a11y for motion:
+
+**1. Vestibular safety**
+- Reduced motion ALWAYS disables: parallax, autoplay video, infinite spinning, large-area motion, looping anims
+- Tier 3 features (`PinnedSection`, `SmoothScroll`, `CardStack`, `CursorParallax`) MUST early-return on `useReducedMotion()` — kit components do this
+- Test by toggling Settings → Display → Reduce motion (macOS) or Animations off (Windows)
+
+**2. Focus management on route/state transitions**
+- `AnimatePresence mode="wait"` exits old content before new mounts → focus is lost
+- Move focus to new page's `<h1>` (or first interactive element) on transition complete
+- Use `tabindex="-1"` on the heading and `.focus()` programmatically
+
+```tsx
+const headingRef = useRef<HTMLHeadingElement>(null)
+useEffect(() => { headingRef.current?.focus() }, [pathname])
+return <h1 ref={headingRef} tabIndex={-1}>...</h1>
+```
+
+**3. Screen reader announcements**
+- Number tickers, count-ups, value changes: WRAP visible content in `aria-hidden`, expose final value via `aria-label` on the parent (kit `NumberTicker` does this)
+- Live regions (`aria-live="polite"`) only for legitimate status changes, NOT for decorative animation triggers — verbose
+
+**4. Keyboard parity for hover-driven animations**
+- Anything triggered by `onMouseMove` (magnetic buttons, cursor parallax, tilt cards) MUST also have a keyboard equivalent or graceful fallback
+- Kit components use `(hover: hover)` media query — touch/keyboard users see the static version automatically
+
+**5. SplitText reveals**
+- Set `aria-label="full text"` on the parent
+- Set `aria-hidden` on each split word/character so screen readers don't read "H. e. l. l. o."
+- Test with VoiceOver (macOS), NVDA (Windows), or Chrome Lighthouse a11y audit
+
+**6. Modal focus traps**
+- Kit `AnimatedModal` handles Escape, but YOU must trap Tab inside the modal and restore focus on close
+- Use `react-focus-lock` or `@radix-ui/react-focus-scope` — don't hand-roll
+- Restore focus to the trigger element on close
+
+**7. Tab order doesn't change with animations**
+- An element being scaled, rotated, or off-stage visually is STILL in tab order
+- Hide truly-removed elements with `aria-hidden="true"` + `tab index="-1"` or remove from DOM via `AnimatePresence` exit
+
+**8. Lighthouse + axe in CI**
+- Reduced motion: emulate via Playwright `reducedMotion: 'reduce'` project
+- Run axe-playwright on key flows
+- Manual smoke: keyboard-only nav, screen reader pass on critical pages
+
+---
+
 # TIER 4 — Overdrive Territory
 
 When motion is the product. Hand off to `/overdrive`:
@@ -652,13 +770,34 @@ Banned: `ease-in` alone (drags), `linear` for anything not infinite/scroll-linke
 
 When another skill references this file:
 
-- "use Tier 1 staggered hero" → T1.3 verbatim
-- "add Tier 2 magnetic CTAs" → T2.2 wrapping primary CTA only
-- "Tier 3 pinned scrollytelling" → T3.1 + T3.2 (Lenis required for scrub smoothness)
-- "Tier 3 view transitions" → T3.4 wired into route navigation
+- "use Tier 1 staggered hero" → import `StaggerContainer` + `FadeUp` from the kit, NOT inline snippets
+- "add Tier 2 magnetic CTAs" → import `MagneticButton`, wrap primary CTA
+- "Tier 3 pinned scrollytelling" → import `PinnedSection` + `SmoothScroll`
+- "Tier 3 view transitions" → T3.4 wired into route navigation (no kit component — browser-native)
 - "Tier 4 hero" → STOP, invoke `Skill('overdrive')` instead
 
-Skills MUST declare the tier in their generated code as a comment: `// web-animations: Tier 2 (T2.2 MagneticButton)`. Makes audits and `/web-evolve` regrading trivial.
+**Marker requirement:** Generated code that uses kit components MUST keep the `// web-animations: Tier N (Tn.m Name)` marker (kit components include it). The grader script audits these markers + reduced-motion guards on Tier 3 imports.
+
+**Grader integration:**
+
+```bash
+# In CI or /web-evolve Phase A
+node ~/.claude/skills/web-animations/grader/audit-animations.mjs ./apps/marketing
+
+# Output (JSON to stdout):
+{
+  "summary": {
+    "totalFilesScanned": 42,
+    "filesWithMarkers": 8,
+    "filesUsingMotionWithoutMarker": 0,
+    "tier3FilesMissingReducedMotionGuard": 0,
+    "tierBreakdown": { "1": 4, "2": 3, "3": 1, "4": 0 }
+  }
+}
+# Non-zero exit if violations found
+```
+
+`/web-evolve` should call this after every iter and treat unmarked motion or missing reduced-motion guards as a P0 fix.
 
 ---
 
