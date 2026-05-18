@@ -1,190 +1,241 @@
 ---
 name: animate
 description: Review a feature and enhance it with purposeful animations, micro-interactions, and motion effects that improve usability and delight. Use when the user mentions adding animation, transitions, micro-interactions, motion design, hover effects, or making the UI feel more alive.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[target]"
+metadata:
+  version: 3.0.0
+  user-invocable: true
 ---
 
-Analyze a feature and strategically add animations and micro-interactions that enhance understanding, provide feedback, and create delight.
+# /animate
 
-## Web-evolve Targeted Mode
+Produce concrete `Edit`/`Write` proposals that add purposeful entrance, micro-interaction, state-transition, and feedback animations to a target file — within the host project's tier ceiling, with reduced-motion guards and ARIA-state replacements on every change.
 
-If your args contain `checks:` and `fail_proof:`, you are invoked from the **web-evolve** orchestrator. In this mode:
-
-1. **Skip MANDATORY PREPARATION** — do not invoke /impeccable. Project context is in args.
-2. **Parse args**: leading text = fix_context. `checks:` = check IDs. `fail_proof:` = exact failure evidence.
-3. **Apply targeted fix only** — fix exactly what fail_proof shows. Do not audit the whole codebase.
-4. **Do not ask questions** — all context is in args.
-5. **Output** one sentence: which file changed and what changed.
-6. **Refuse invisible diffs (web-evolve Cardinal Rule 30).** Before returning, check if your edit changes a rendered pixel. If you're only swapping a token for an identical-value token, shifting alpha by < 0.1, or making a structural change with no visible impact, return `INVISIBLE_DIFF: <reason>` instead of committing. Special case for `animate`: edits to scroll-driven timing/easing ARE visible but only in motion, not in static screenshots — return `INVISIBLE_STATIC_DIFF_VISIBLE_IN_MOTION` so the orchestrator flags the iter for video-capture comparison instead of viewport screenshot.
-
-Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
+The output is code, not advice. A `/animate` invocation that returns bullet-list suggestions has failed.
 
 ---
 
-## MANDATORY PREPARATION
+## Cardinal rules (load-bearing — non-negotiable)
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first. Additionally gather: performance constraints.
+1. **Output is code, not prose.** The artifact MUST contain ≥3 concrete before/after `Edit` proposals OR an explicit "no enhancement needed — page already at ceiling" finding. Bullet-list recommendations without diffs = phase failure. # source: feedback_skill_pipeline_no_self_synthesis
+2. **Respect the host project's site-profile.** Before any proposal, read `<project>/.evolution/site-profile.json` (or `.audit/site-profile.json`). Use the route's `motion_ceiling` as a hard cap. Proposing Tier N+1 on a Tier N-capped route = phase failure. # source: web-animations/references/site-types.md
+3. **`Skill('impeccable')` means LITERAL invocation, not Read on its SKILL.md.** The MANDATORY PREPARATION step below uses the Skill tool, not the Read tool. Paraphrasing /impeccable instead of running it = phase failure. # source: feedback_skill_pipeline_no_self_synthesis
+4. **`from 'motion/react'`, never `'framer-motion'`.** Framer Motion v12 renamed the package. Any `from 'framer-motion'` import in a proposal = phase failure. # source: motion.dev v12 docs
+5. **Every motion proposal includes both a reduced-motion guard AND, where the motion communicates state, an ARIA-state replacement.** Visual-state-only proposals without `aria-pressed` / `aria-expanded` / `aria-current` etc. = phase failure. # source: references/aria-state-replacements.md
+6. **One signature moment per route, not maximalism.** Designate exactly ONE hero animation; everything else is micro-interactions, feedback, or removal. # source: motion.dev best practices + Vercel/Linear/Stripe production patterns
+7. **Compositor-only properties.** Animate `transform`, `opacity`, `clip-path`, `filter` only. Never `width`/`height`/`top`/`left`/`margin`/`padding`/`font-size`. # source: web-animations/floor-rules.md Floor 5
+8. **`background-color` transitions are banned by default** — even on small surfaces. Floor 5 lists `background-color` outright. Replace with overlay-opacity or filter-brightness pattern; if a consumer genuinely needs a CSS color transition, the proposal MUST wrap it in `@media (prefers-reduced-motion: reduce) { .x { transition: none; } }` AND cite the floor-rules.md exception (none currently — escalate). # source: forge-score-v2 deduction
+9. **Cite Floor rule on every numeric threshold.** "Scale 0.985 is Tier 1" must cite the floor-rules.md line that defines the 1.015-delta threshold. # source: feedback_verify_from_source_of_truth
+---
+
+## When to use
+
+- User asks to "add animation", "make this feel alive", "add motion", "make it pop", "add transitions"
+- A feature lacks feedback on a critical action (button click, form submit, state change)
+- A page has zero entrance animation and feels static at load
+- An existing motion needs an upgrade (replace ad-hoc CSS with a kit component, fix reduced-motion gap)
+
+## When NOT to use
+
+- Building a brand-new component from scratch → use `Skill('web-page')` or `Skill('web-component')`; they import from the web-animations kit directly
+- Reviewing existing motion for COMPLIANCE only (no enhancement intent) → use the `/web-animations` grader instead
+- 3D / shaders / R3F / Rive / Lottie → escalate to `Skill('overdrive')` — out of scope here
+- Documentation / blog / legal pages → MAX_TIER 0 or 1 per role; usually NO animation needed
 
 ---
 
-## Assess Animation Opportunities
+## Web-evolve targeted mode
 
-Analyze where motion would improve the experience:
+If args contain `checks:` and `fail_proof:`, you are invoked by `web-evolve`. In this mode:
 
-1. **Identify static areas**:
-   - **Missing feedback**: Actions without visual acknowledgment (button clicks, form submission, etc.)
-   - **Jarring transitions**: Instant state changes that feel abrupt (show/hide, page loads, route changes)
-   - **Unclear relationships**: Spatial or hierarchical relationships that aren't obvious
-   - **Lack of delight**: Functional but joyless interactions
-   - **Missed guidance**: Opportunities to direct attention or explain behavior
+1. Skip MANDATORY PREPARATION (project context is in args).
+2. Parse args: leading text = fix_context; `checks:` = check IDs; `fail_proof:` = exact failure evidence.
+3. Apply ONE targeted fix that addresses `fail_proof` — do not audit the whole file.
+4. Do not ask questions — all context is in args.
+5. Output ONE sentence: which file changed and what changed.
+6. **Refuse invisible diffs (web-evolve Cardinal Rule 30).** Before returning, check if your edit changes a rendered pixel. If you're only swapping a token for an identical-value token, shifting alpha by < 0.1, or making a structural change with no visible impact, return `INVISIBLE_DIFF: <reason>` instead of committing. Special case: edits to scroll-driven timing/easing ARE visible but only in motion — return `INVISIBLE_STATIC_DIFF_VISIBLE_IN_MOTION` so the orchestrator flags the iter for video-capture comparison instead of viewport screenshot.
 
-2. **Understand the context**:
-   - What's the personality? (Playful vs serious, energetic vs calm)
-   - What's the performance budget? (Mobile-first? Complex page?)
-   - Who's the audience? (Motion-sensitive users? Power users who want speed?)
-   - What matters most? (One hero animation vs many micro-interactions?)
+Skip directly to Phase 4 (Implement Animations) below. Skip Phases 0–3.
 
-If any of these are unclear from the codebase, ask the user directly to clarify what you cannot infer.
+---
 
-**CRITICAL**: Respect `prefers-reduced-motion`. Always provide non-animated alternatives for users who need them.
+## Phase 0 — MANDATORY PREPARATION
 
-## Plan Animation Strategy
+Run BOTH calls. Do not paraphrase either.
 
-Create a purposeful animation plan:
-
-- **Hero moment**: What's the ONE signature animation? (Page load? Hero section? Key interaction?)
-- **Feedback layer**: Which interactions need acknowledgment?
-- **Transition layer**: Which state changes need smoothing?
-- **Delight layer**: Where can we surprise and delight?
-
-**IMPORTANT**: One well-orchestrated experience beats scattered animations everywhere. Focus on high-impact moments.
-
-## Implement Animations
-
-Add motion systematically across these categories:
-
-### Entrance Animations
-- **Page load choreography**: Stagger element reveals (100-150ms delays), fade + slide combinations
-- **Hero section**: Dramatic entrance for primary content (scale, parallax, or creative effects)
-- **Content reveals**: Scroll-triggered animations using intersection observer
-- **Modal/drawer entry**: Smooth slide + fade, backdrop fade, focus management
-
-### Micro-interactions
-- **Button feedback**:
-  - Hover: Subtle scale (1.02-1.05), color shift, shadow increase
-  - Click: Quick scale down then up (0.95 → 1), ripple effect
-  - Loading: Spinner or pulse state
-- **Form interactions**:
-  - Input focus: Border color transition, slight scale or glow
-  - Validation: Shake on error, check mark on success, smooth color transitions
-- **Toggle switches**: Smooth slide + color transition (200-300ms)
-- **Checkboxes/radio**: Check mark animation, ripple effect
-- **Like/favorite**: Scale + rotation, particle effects, color transition
-
-### State Transitions
-- **Show/hide**: Fade + slide (not instant), appropriate timing (200-300ms)
-- **Expand/collapse**: Height transition with overflow handling, icon rotation
-- **Loading states**: Skeleton screen fades, spinner animations, progress bars
-- **Success/error**: Color transitions, icon animations, gentle scale pulse
-- **Enable/disable**: Opacity transitions, cursor changes
-
-### Navigation & Flow
-- **Page transitions**: Crossfade between routes, shared element transitions
-- **Tab switching**: Slide indicator, content fade/slide
-- **Carousel/slider**: Smooth transforms, snap points, momentum
-- **Scroll effects**: Parallax layers, sticky headers with state changes, scroll progress indicators
-
-### Feedback & Guidance
-- **Hover hints**: Tooltip fade-ins, cursor changes, element highlights
-- **Drag & drop**: Lift effect (shadow + scale), drop zone highlights, smooth repositioning
-- **Copy/paste**: Brief highlight flash on paste, "copied" confirmation
-- **Focus flow**: Highlight path through form or workflow
-
-### Delight Moments
-- **Empty states**: Subtle floating animations on illustrations
-- **Completed actions**: Confetti, check mark flourish, success celebrations
-- **Easter eggs**: Hidden interactions for discovery
-- **Contextual animation**: Weather effects, time-of-day themes, seasonal touches
-
-## Technical Implementation
-
-Use appropriate techniques for each animation:
-
-### Timing & Easing
-
-**Durations by purpose:**
-- **100-150ms**: Instant feedback (button press, toggle)
-- **200-300ms**: State changes (hover, menu open)
-- **300-500ms**: Layout changes (accordion, modal)
-- **500-800ms**: Entrance animations (page load)
-
-**Easing curves (use these, not CSS defaults):**
-```css
-/* Recommended - natural deceleration */
---ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);    /* Smooth, refined */
---ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);   /* Slightly snappier */
---ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);     /* Confident, decisive */
-
-/* AVOID - feel dated and tacky */
-/* bounce: cubic-bezier(0.34, 1.56, 0.64, 1); */
-/* elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6); */
+```
+Skill('impeccable')
 ```
 
-**Exit animations are faster than entrances.** Use ~75% of enter duration.
+This loads design principles, anti-patterns, and the Context Gathering Protocol. If no design context exists yet, /impeccable will run its `teach` flow first.
 
-### CSS Animations
-```css
-/* Prefer for simple, declarative animations */
-- transitions for state changes
-- @keyframes for complex sequences
-- transform + opacity only (GPU-accelerated)
+Then read the host project's motion governance:
+
+- `<project>/.evolution/site-profile.json` — per-route MAX_TIER ceiling
+- `<project>/CLAUDE.md` (if present) — locked decisions
+- `~/.claude/skills/web-animations/SKILL.md` — tier system + floor rules
+- `~/.claude/skills/web-animations/references/floor-rules.md` — every threshold this skill cites must come from here
+- `references/per-role-recipes.md` (this skill's references/) — what's allowed per route role
+- `references/aria-state-replacements.md` (this skill's references/) — required when removing state-bearing motion
+
+If any of these files are absent in the host project, HALT with `NEEDS_HUMAN: project lacks motion governance — run /web-animations Phase 0 first`.
+
+---
+
+## Phase 1 — Read the target
+
+`<target>` is whichever file/path the user named (or "this page" / "the pricing flow" inferred from context).
+
+Read:
+- The target file in full.
+- Every component the target file imports from the project (one level deep).
+- Whatever currently animates in the target. Build a `Pre-existing motion` inventory with file:line citations.
+
+If the target has zero motion to enhance and the route ceiling is already met by current implementation, output an honest "no enhancement needed" finding — that IS a valid artifact under Cardinal Rule 1. Do not invent proposals.
+
+---
+
+## Phase 2 — Classify the target
+
+From `site-profile.json`, find the route's `role` (`pricing`, `dashboard-home`, `homepage-marketing`, etc.) and `motion_ceiling`.
+
+Open `references/per-role-recipes.md`. Find the matching row. Read:
+- `MAX_TIER` (hard cap)
+- `Allowed moves` (proposals must come from this set)
+- `Banned moves` (explicit exclusions — list these in the artifact's "What I deliberately did NOT propose")
+- `Hero moment` (the one signature place where motion concentrates)
+
+If the route doesn't match any row, HALT with `NEEDS_HUMAN: route role <X> not in per-role-recipes.md — define it before proposing motion`.
+
+---
+
+## Phase 2.5 — Enumerate Allowed moves NOT proposed (mandatory rationale)
+
+Before writing proposals, list EVERY entry in the recipe row's `Allowed moves` column. For each one, decide: PROPOSE or SKIP. Every SKIP must come with a one-sentence rationale.
+
+This prevents the skill from silently omitting moves the recipe authorises. A blocking gap surfaced in v2 review: SpringButton on plan CTA was an `Allowed move` and the artifact neither proposed nor explicitly skipped it — silent omission counts as a coverage gap.
+
+Format in the artifact:
+
+```markdown
+### Allowed-moves audit (per recipe row)
+- **FadeUp (rows mount only)**: PROPOSED (Proposal 1)
+- **SpringButton on plan CTA**: SKIPPED — reason: <one sentence>
+- ... (every Allowed move from the recipe row)
 ```
 
-### JavaScript Animation
-```javascript
-/* Use for complex, interactive animations */
-- Web Animations API for programmatic control
-- Framer Motion for React
-- GSAP for complex sequences
+Then proceed to Phase 3.
+
+---
+
+## Phase 3 — Plan (≤6 proposals, one of them is the hero)
+
+A `/animate` artifact is a small set of high-leverage changes, not a sweep. Pick:
+
+- **1 hero moment.** The signature animation per the recipe row.
+- **≤3 feedback / micro-interaction additions.** Where action lacks acknowledgement, where state-change is abrupt, where the route role's `Allowed moves` permit.
+- **≤2 removals.** If the target violates its tier ceiling, REMOVING motion is a valid proposal.
+
+≥6 total proposals on one route = artifact violates the "one signature moment" rule.
+
+---
+
+## Phase 4 — Write proposals
+
+For each proposal, the artifact MUST contain ALL of:
+
+1. **File path** (absolute)
+2. **Tier label** (`Tier 1 entrance`, `Tier 2 micro-interaction`, etc.) — must be ≤ route MAX_TIER
+3. **Before** code (verbatim from current file, ≥3 lines context)
+4. **After** code (the proposed change, complete and copy-pasteable)
+5. **Rationale** (one sentence — why this serves the route role's UX)
+6. **A11y** — explicit statement of:
+   - Reduced-motion handling (`useReducedMotion()` check OR `motion-reduce:` Tailwind variant OR explicit "no spatial motion — no guard needed")
+   - ARIA-state replacement when removing/replacing a state indicator (per `references/aria-state-replacements.md`)
+   - Focus management when relevant (modals, route transitions)
+7. **Floor citation** — for any threshold (scale delta, duration, y-offset, stagger), cite the floor-rules.md line that authorises it
+8. **Compositor check** — confirm the animation only touches `transform / opacity / clip-path / filter`
+
+Removal proposals must additionally include a **cascade check**: after the removal, are there orphaned imports, hooks, or state variables to clean up? If yes, propose those removals too.
+
+---
+
+## Phase 5 — Artifact format
+
+Save the artifact to `<project>/.review/animate-artifact.md` (or wherever the host workflow expects).
+
+```markdown
+### Target
+<file path>
+
+### Files read
+- (full list, one per line, real paths only)
+
+### Site profile findings
+- Route role: <X>
+- Route motion_ceiling: <N>
+- Allowed moves: <list from recipe row>
+- Banned moves: <list>
+- Hero moment per recipe: <description>
+
+### Pre-existing motion in target
+- <file:line>: <what's there> (Tier N — compliant / non-compliant)
+- ...
+
+### Proposals
+
+#### Proposal 1 — <name> (HERO)
+**File**: <path>
+**Type**: <Tier label>
+**Before**: <code>
+**After**: <code>
+**Rationale**: <one sentence>
+**A11y**: reduced-motion: <how>; ARIA-state: <if applicable>; focus: <if applicable>
+**Floor**: <citation>
+
+#### Proposal 2 — ... (micro-interaction)
+...
+
+#### Proposal N — ... (removal — if any)
+...
+
+### What I deliberately did NOT propose
+- <banned move 1 — why>
+- <banned move 2 — why>
+
+### Hero moment designation
+Proposal <N> is the single hero moment for this route. Other proposals are feedback or removal.
 ```
 
-### Performance
-- **GPU acceleration**: Use `transform` and `opacity`, avoid layout properties
-- **will-change**: Add sparingly for known expensive animations
-- **Reduce paint**: Minimize repaints, use `contain` where appropriate
-- **Monitor FPS**: Ensure 60fps on target devices
+---
 
-### Accessibility
-```css
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-```
+## Anti-patterns (do NOT do these)
 
-**NEVER**:
-- Use bounce or elastic easing curves—they feel dated and draw attention to the animation itself
-- Animate layout properties (width, height, top, left)—use transform instead
-- Use durations over 500ms for feedback—it feels laggy
-- Animate without purpose—every animation needs a reason
-- Ignore `prefers-reduced-motion`—this is an accessibility violation
-- Animate everything—animation fatigue makes interfaces feel exhausting
-- Block interaction during animations unless intentional
+1. **Returning prose bullets instead of code diffs.** "I recommend adding a fade-up to the hero" is a failure. The artifact must be edits.
+2. **Reading `/impeccable/SKILL.md` instead of calling `Skill('impeccable')`.** Paraphrasing a skill's content is the failure mode this skill explicitly bans.
+3. **Proposing Tier N+1 on a Tier N-capped route.** Read site-profile.json BEFORE choosing tier — not after.
+4. **Removing a layoutId or motion.span without adding the ARIA-state replacement.** Visual-only motion that communicated state needs `aria-pressed`/`aria-expanded`/`aria-current` when stripped.
+5. **Inventing edge cases.** If the target has no form, don't fabricate a form-submit proposal. Note "no form on this route — N/A" and move on.
+6. **Asserting numeric thresholds without floor-rules.md source.** "Scale 1.05 is OK" must cite the line that says so.
+7. **Importing `from 'framer-motion'`.** Use `'motion/react'` — Framer renamed the package in v12.
+8. **More than 6 proposals on one route.** Violates the one-signature-moment rule and produces motion noise.
 
-## Verify Quality
+---
 
-Test animations thoroughly:
+## Output artifacts
 
-- **Smooth at 60fps**: No jank on target devices
-- **Feels natural**: Easing curves feel organic, not robotic
-- **Appropriate timing**: Not too fast (jarring) or too slow (laggy)
-- **Reduced motion works**: Animations disabled or simplified appropriately
-- **Doesn't block**: Users can interact during/after animations
-- **Adds value**: Makes interface clearer or more delightful
+| File | Purpose |
+|---|---|
+| `<project>/.review/animate-artifact.md` | The concrete proposals from this run |
+| `references/per-role-recipes.md` | What's allowed per route role |
+| `references/aria-state-replacements.md` | ARIA equivalents when removing state-bearing motion |
 
-Remember: Motion should enhance understanding and provide feedback, not just add decoration. Animate with purpose, respect performance constraints, and always consider accessibility. Great animation is invisible - it just makes everything feel right.
+---
+
+## Related skills
+
+- `Skill('impeccable')` — design principles + context gathering (mandatory prep)
+- `Skill('web-animations')` — the tier system + kit + grader this skill obeys
+- `Skill('polish')` — smaller scope: micro-interactions only, no entrance choreography
+- `Skill('overdrive')` — escalation for Tier 4 (3D, shaders, Rive, Lottie)
+- `Skill('web-page')` — building a new page from scratch (imports from kit directly)
