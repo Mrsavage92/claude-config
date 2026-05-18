@@ -1,0 +1,19 @@
+/* fixture for theme_scope_lint.mjs — simulates the Orbit Digital invisible-nav bug */
+
+:root {
+  --brand-cream: 36 33% 97%;
+  --brand-charcoal: 16 13% 9%;
+  --brand-charcoal-mid: 17 12% 22%;
+}
+
+/* later in cascade — overrides without scope. THIS is the bug. */
+:root {
+  color-scheme: dark;
+  --brand-charcoal: 0 0% 100%;
+  --brand-charcoal-mid: 0 0% 88%;
+}
+
+body {
+  background-color: #0d1117;
+  color: #ffffff;
+}
