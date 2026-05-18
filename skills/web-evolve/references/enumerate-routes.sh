@@ -97,4 +97,19 @@ hd['files'] = files
 with open(hash_path, 'w') as f: json.dump(hd, f, indent=2)
 print(f"hash recorded: {h[:12]}")
 PYEOF
+
+# Update loop-state.next_phase so next-phase.sh dispatches Phase A.2 next
+python3 - "$EVOLUTION/loop-state.json" <<'PYEOF'
+import json, os, sys
+sp = sys.argv[1]
+if os.path.exists(sp):
+    with open(sp) as f: s = json.load(f)
+else:
+    s = {}
+s['next_phase'] = 'phase_a2_critique'
+tmp = sp + '.tmp'
+with open(tmp, 'w') as f: json.dump(s, f, indent=2)
+os.replace(tmp, sp)
+print("next_phase=phase_a2_critique")
+PYEOF
 exit 0

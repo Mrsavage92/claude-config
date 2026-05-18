@@ -192,7 +192,7 @@ REQUIRED_SCRIPTS=(
   parse-handoff.sh gate-checks.sh verify-live-html.sh verify-tool-use-id.sh
   enumerate-routes.sh rebuild-gate.sh iter-step.sh deploy-and-verify.sh
   append-retro.sh per-iter-gates.sh ssim-compare.py puppeteer-extract.mjs
-  vercel-parser-test.sh
+  vercel-parser-test.sh next-phase.sh
 )
 for script in "${REQUIRED_SCRIPTS[@]}"; do
   [ -f "$SKILL_PATH/references/$script" ] || fail 7 "Required script $script missing"

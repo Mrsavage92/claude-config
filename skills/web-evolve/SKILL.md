@@ -27,6 +27,19 @@ The previous version's 8 principles + Phase 0.4 cross-run check are archived in 
 
 ---
 
+## ENTRY PROTOCOL — read this first, every invocation
+
+`/web-evolve` is a stateful loop. The orchestrator does not memorize phases. On every invocation (including the user saying "continue"), do exactly these two steps:
+
+1. **Run boot gates** — `bash references/boot-gates.sh` — abort on any HALT.
+2. **Ask the dispatcher what's next** — `bash references/next-phase.sh` — it reads `.evolution/loop-state.json` and emits the exact next command + token estimate + what-comes-after. Follow that output literally. Do not improvise the next phase.
+
+After completing the dispatched phase, the phase script writes `loop-state.next_phase` for the next invocation. The user can keep saying "continue" or re-invoke `/web-evolve` and the loop advances one phase per turn until the dispatcher emits `complete`.
+
+This is the only entry protocol. The phase-by-phase spec below documents WHAT each phase does — but you are not running them in order from this document. You are running the one the dispatcher names.
+
+---
+
 ## Phase 0 — Boot gates (HALT-gated, runs before everything)
 
 ```bash

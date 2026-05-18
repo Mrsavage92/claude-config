@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase D — Deploy to evolve branch + preview-verify. NO SOFT-DEGRADE.
+# Phase D — Deploy to evolve branch + preview env gate. NO SOFT-DEGRADE.
 # Closes failure mode 5 from .forge-spec.md (Vercel preview per-branch trap).
 # Uses real `vercel --format json` parsing.
 
@@ -136,11 +136,18 @@ esac
 
 # Step 4: write preview URL to loop-state for the orchestrator's puppeteer-verify step
 python3 - "$STATE" "$DEPLOY_URL" <<'PYEOF'
-import json, sys
+import json, sys, os
 path, url = sys.argv[1], sys.argv[2]
 with open(path) as f:
     d = json.load(f)
 d['preview_url'] = ('https://' + url) if not url.startswith('http') else url
+d['phase_d_verified'] = True
+ev = os.path.dirname(path)
+def lines(p):
+    if not os.path.isfile(p): return 0
+    with open(p) as f: return sum(1 for x in f if x.strip())
+remaining = lines(os.path.join(ev, 'rebuild-queue.txt')) + lines(os.path.join(ev, 'refine-queue.txt'))
+d['next_phase'] = 'phase_c_next_iter' if remaining > 0 else 'phase_f_retro'
 with open(path, 'w') as f:
     json.dump(d, f, indent=2)
 PYEOF

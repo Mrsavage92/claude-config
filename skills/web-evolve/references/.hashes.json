@@ -2,12 +2,12 @@
   "scripts": [
     {
       "file": "append-retro.sh",
-      "sha256": "ae8639fc9fb4f88f6b3285737af9e6f6bdb871c500f89851e5fe5f947b762283",
+      "sha256": "a8bcddb4522e4e6766b34eae61c9a9c63e8b55a236da675370cce3bdde35608d",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
       "file": "boot-gates.sh",
-      "sha256": "5c15f1c3cdb7ed3415287cd283cab00f1f6854dfbfe97152d67d2a1b6e04e9d8",
+      "sha256": "3d33cc482cd60349e0451409f149bec95600559ece515b8619be911efbfded73",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
@@ -22,12 +22,12 @@
     },
     {
       "file": "deploy-and-verify.sh",
-      "sha256": "24a2054bec799166dd0fe222c6e036d7c00fafb7570d9240a7f70e12159f8ba8",
+      "sha256": "b510ad5697ddab4ccaa0057930324d2926365bd265273ee00a9423a4ee53ae9d",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
       "file": "enumerate-routes.sh",
-      "sha256": "3facb2b23d386a932f6fd17abf017e3a5010732c61f908f602b3aa193f5e344a",
+      "sha256": "ae48ab83784dca1a41b9100b7153e5b9182ba6be8fff5249f7dc8ddb0afc1b98",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "file": "iter-step.sh",
-      "sha256": "fb80275de1a20a7bed2f32a50d86f2c0ddaef641143a8c402ab4a778374f5cac",
+      "sha256": "3add626b5a02a77dfd29eb172fdca7299fcfda93ed4f625ca4ee19f0b44813e1",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
@@ -144,6 +144,11 @@
       "file": "verify-tool-use-id.sh",
       "sha256": "f696ba1e6e08884ac9e93f5ccef07b0cffc65f3861454af6e481dd3d9e353734",
       "recorded_at": "2026-05-18-skill-only-fix"
+    },
+    {
+      "file": "next-phase.sh",
+      "sha256": "4bc5813c7e85dee4b976b8c16f7b3767a148efc5ff6f758e2f7495ce53df530f",
+      "written_by": "skill-fix-handover"
     }
   ],
   "files": [

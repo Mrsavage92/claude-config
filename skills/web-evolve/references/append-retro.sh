@@ -102,6 +102,19 @@ files = [
 hd['files'] = files
 with open(hash_path, 'w') as f: json.dump(hd, f, indent=2)
 
+# Phase F successful — mark run complete in loop-state.json so next /web-evolve invocation
+# starts a fresh audit cycle. The dispatcher (next-phase.sh) reads next_phase == 'complete'
+# and emits a "fresh run" plan.
+state_path = os.path.join(os.path.dirname(traj_path), 'loop-state.json')
+if os.path.exists(state_path):
+    with open(state_path) as f: s = json.load(f)
+    s['next_phase'] = 'complete'
+    s['halt_flag'] = True
+    s['halt_reason'] = f'phase_f_retro_appended_run_{run_id}'
+    tmp = state_path + '.tmp'
+    with open(tmp, 'w') as f: json.dump(s, f, indent=2)
+    os.replace(tmp, state_path)
+
 print(f"OK:run={run_id} status={status} t_hash={t_hash[:12]} n_hash={n_hash[:12]}")
 sys.exit(0)
 PYEOF

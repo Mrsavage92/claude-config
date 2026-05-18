@@ -163,6 +163,14 @@ elif action == 'REVERT':
     state['real_iterations'] = state.get('real_iterations', 0) + 1
     state['last_iter_action'] = 'REVERT'
 
+# After any iter outcome, the next phase is Phase D (deploy/verify the commit)
+# UNLESS this was a VOID/REVERT (no commit landed → next is another iter or queue check)
+if action in ('KEEP', 'KEEP_REQUEUE_REFINE'):
+    state['next_phase'] = 'phase_d_deploy'
+    state['phase_d_verified'] = False  # this commit hasn't been deployed yet
+else:
+    state['next_phase'] = 'phase_c_next_iter'
+
 with open(sys.argv[1], 'w') as f: json.dump(state, f, indent=2)
 print(f"ACTION={action}")
 print(f"ITER={iter_n}")
