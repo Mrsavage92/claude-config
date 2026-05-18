@@ -1,0 +1,29 @@
+{
+  "$schema": "per-route-baseline-handoff",
+  "description": "Schema for one entry in page-baselines.json.routes[]. Used by parse-handoff.sh per-route-baseline.",
+  "required": [
+    "route",
+    "verdict",
+    "checklist_fails",
+    "taste_violations",
+    "vq_aggregate",
+    "tool_use_id_for_screenshot_read",
+    "extracted_strings"
+  ],
+  "enums": {
+    "verdict": ["PASS", "FAIL_REBUILD", "FAIL_REFINE", "FAIL_VOID", "INVALID"]
+  },
+  "field_types": {
+    "route": "string (must start with /)",
+    "verdict": "string (enum)",
+    "checklist_fails": "array of sales-page-10:rule_N strings",
+    "taste_violations": "array of section_N:pattern strings",
+    "vq_aggregate": "float 0.0–5.0",
+    "tool_use_id_for_screenshot_read": "string matching ^toolu_[A-Za-z0-9]+$",
+    "extracted_strings": {
+      "h1": "string or null (null = honest, agent could not read)",
+      "primary_cta": "string or null",
+      "visible_pricing": "array of strings, possibly empty"
+    }
+  }
+}

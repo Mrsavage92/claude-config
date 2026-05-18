@@ -1,0 +1,296 @@
+{
+  "scripts": [
+    {
+      "file": "append-retro.sh",
+      "sha256": "d760841fdfd9c697db4d8f68f0639c941541a450e90242919d891978cb93ce4c",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "boot-gates.sh",
+      "sha256": "408391ea2f7ba379a33229a3f3ef637fb8f13757822897d8c09d8fa974db8077",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "critique-brief.md",
+      "sha256": "0f8c909189d470b141df144d7ec95b4670e757369cd4fdd371283cba56fd4c87",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "decisions.md",
+      "sha256": "94851a3fbb3a78f9a3ade9db47a0ec04c6c9bbe7c668b12f4be543783474cdfe",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "deploy-and-verify.sh",
+      "sha256": "e259e09d45a136904bf5bbc851c82dbcc41499f61c37cf58bc92c497e5414edb",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "enumerate-routes.sh",
+      "sha256": "3562bd5089d17df06f14ff9c8043f4dd9f6497a5ba3ffc5b4e02bbfc7f0a56e6",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "fix-routing.md",
+      "sha256": "29ab29b670ff1299bcd512fd5ea07b778fdc5ecae0db4816d8b15a0a950183be",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "gate-checks.sh",
+      "sha256": "9aaac9306fafc96dc492e198744a8c7f4099220a84d1714e6183984b52961dda",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "iter-step.sh",
+      "sha256": "12ad06bcf5dafff7c02691b25d82b99c43fafedbfbe80b8cd7fda133dec2795a",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "loop-condition.sh",
+      "sha256": "27255902c4ef967a25e9992fa08305e80e7d55022a34cad6f36602b62bafb14f",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "multi-run-orchestration.md",
+      "sha256": "c05f023d1dad5402a9d011fc1351b13e1cbe1a181cf080e0b7499e87e84c8ff9",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "parse-handoff.sh",
+      "sha256": "20a4db4e63b552f0baf31b627b491ce9130d6a1f7db1b886c0cb59fe177f4d87",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "parse-verdict.sh",
+      "sha256": "e658a5d2dc675296169d71215c026f835016b5a1b2c1c256645d92affceb736e",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "per-iter-gates.sh",
+      "sha256": "d6fb2d66cdd491a4d3ad95ad344babf72ff5542162cfc67238289907a1980ab3",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "phase-protocols-c.md",
+      "sha256": "e7bfd63802bc3540d4c9da788faf9e633cc08944091c2c5f406b4edb13c477a4",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "phase-protocols-def.md",
+      "sha256": "9232050c2603339e9ad885a2c6c0d3db48fc3bf995242c00865d41cdb5d98c4b",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "phase-protocols.md",
+      "sha256": "d8b434f240cd4d08af707e61d45c9d0a8c35736928a68259f035ac78af37552b",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "puppeteer-extract.mjs",
+      "sha256": "e52a7db585af0a04105e150a8bc4831c5a3406752d3bc331e747685f2e160120",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "rebuild-gate.sh",
+      "sha256": "17aa782b9d269bd20693bb22d1d0f3b693bce7fdb1ac5d95f03de9970640f553",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "retro-agent-brief.md",
+      "sha256": "ae57ac576c9298ff90db8884ce818501b839a4713e8e4f7847581dab2989f79f",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "sales-page-checklist.md",
+      "sha256": "d77661c8bcaec9107af18ff8c26fc0f7e67f061a1ed4f8c16b57cce720a26a63",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "scoring-engine.md",
+      "sha256": "115de5fcf3fe015cbe8ae4ab3b594879fa46f96053880eed9d7b5c876288b662",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "smoke-test.sh",
+      "sha256": "cc733c47b946029f34ed4056b1105b4f552379fbd12acc55184700af4d3f7bbf",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "ssim-compare.py",
+      "sha256": "de7e0fcf84b4f17048078f86a949a44979af6117b65a280168c6512aeca509df",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "tier-contracts.md",
+      "sha256": "4ffd1f5e24204b074b2207bd57e8245254e0a35f9fa42779bfd7124bc0965b23",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "trajectory-schema.json",
+      "sha256": "3af255194773eece9fca3c57a101ca2d3af07cba8401be636b3fa0a52b26d7c5",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "vercel-parser-test.sh",
+      "sha256": "0d74588363205ca91eda36057172b4bab364be4d669791effe86269eb20171b5",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "verify-live-html.sh",
+      "sha256": "81dfc521fa1a3b735f575200e127e6d0141c6f8dabbebadd16e3b6a9655ae68f",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "verify-tool-use-id.sh",
+      "sha256": "f696ba1e6e08884ac9e93f5ccef07b0cffc65f3861454af6e481dd3d9e353734",
+      "recorded_at": "2026-05-17-iter6-final"
+    }
+  ],
+  "files": [
+    {
+      "file": "append-retro.sh",
+      "sha256": "d760841fdfd9c697db4d8f68f0639c941541a450e90242919d891978cb93ce4c",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "boot-gates.sh",
+      "sha256": "408391ea2f7ba379a33229a3f3ef637fb8f13757822897d8c09d8fa974db8077",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "critique-brief.md",
+      "sha256": "0f8c909189d470b141df144d7ec95b4670e757369cd4fdd371283cba56fd4c87",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "decisions.md",
+      "sha256": "94851a3fbb3a78f9a3ade9db47a0ec04c6c9bbe7c668b12f4be543783474cdfe",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "deploy-and-verify.sh",
+      "sha256": "e259e09d45a136904bf5bbc851c82dbcc41499f61c37cf58bc92c497e5414edb",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "enumerate-routes.sh",
+      "sha256": "3562bd5089d17df06f14ff9c8043f4dd9f6497a5ba3ffc5b4e02bbfc7f0a56e6",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "fix-routing.md",
+      "sha256": "29ab29b670ff1299bcd512fd5ea07b778fdc5ecae0db4816d8b15a0a950183be",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "gate-checks.sh",
+      "sha256": "9aaac9306fafc96dc492e198744a8c7f4099220a84d1714e6183984b52961dda",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "iter-step.sh",
+      "sha256": "12ad06bcf5dafff7c02691b25d82b99c43fafedbfbe80b8cd7fda133dec2795a",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "loop-condition.sh",
+      "sha256": "27255902c4ef967a25e9992fa08305e80e7d55022a34cad6f36602b62bafb14f",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "multi-run-orchestration.md",
+      "sha256": "c05f023d1dad5402a9d011fc1351b13e1cbe1a181cf080e0b7499e87e84c8ff9",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "parse-handoff.sh",
+      "sha256": "20a4db4e63b552f0baf31b627b491ce9130d6a1f7db1b886c0cb59fe177f4d87",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "parse-verdict.sh",
+      "sha256": "e658a5d2dc675296169d71215c026f835016b5a1b2c1c256645d92affceb736e",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "per-iter-gates.sh",
+      "sha256": "d6fb2d66cdd491a4d3ad95ad344babf72ff5542162cfc67238289907a1980ab3",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "phase-protocols-c.md",
+      "sha256": "e7bfd63802bc3540d4c9da788faf9e633cc08944091c2c5f406b4edb13c477a4",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "phase-protocols-def.md",
+      "sha256": "9232050c2603339e9ad885a2c6c0d3db48fc3bf995242c00865d41cdb5d98c4b",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "phase-protocols.md",
+      "sha256": "d8b434f240cd4d08af707e61d45c9d0a8c35736928a68259f035ac78af37552b",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "puppeteer-extract.mjs",
+      "sha256": "e52a7db585af0a04105e150a8bc4831c5a3406752d3bc331e747685f2e160120",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "rebuild-gate.sh",
+      "sha256": "17aa782b9d269bd20693bb22d1d0f3b693bce7fdb1ac5d95f03de9970640f553",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "retro-agent-brief.md",
+      "sha256": "ae57ac576c9298ff90db8884ce818501b839a4713e8e4f7847581dab2989f79f",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "sales-page-checklist.md",
+      "sha256": "d77661c8bcaec9107af18ff8c26fc0f7e67f061a1ed4f8c16b57cce720a26a63",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "scoring-engine.md",
+      "sha256": "115de5fcf3fe015cbe8ae4ab3b594879fa46f96053880eed9d7b5c876288b662",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "smoke-test.sh",
+      "sha256": "cc733c47b946029f34ed4056b1105b4f552379fbd12acc55184700af4d3f7bbf",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "ssim-compare.py",
+      "sha256": "de7e0fcf84b4f17048078f86a949a44979af6117b65a280168c6512aeca509df",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "tier-contracts.md",
+      "sha256": "4ffd1f5e24204b074b2207bd57e8245254e0a35f9fa42779bfd7124bc0965b23",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "trajectory-schema.json",
+      "sha256": "3af255194773eece9fca3c57a101ca2d3af07cba8401be636b3fa0a52b26d7c5",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "vercel-parser-test.sh",
+      "sha256": "0d74588363205ca91eda36057172b4bab364be4d669791effe86269eb20171b5",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "verify-live-html.sh",
+      "sha256": "81dfc521fa1a3b735f575200e127e6d0141c6f8dabbebadd16e3b6a9655ae68f",
+      "recorded_at": "2026-05-17-iter6-final"
+    },
+    {
+      "file": "verify-tool-use-id.sh",
+      "sha256": "f696ba1e6e08884ac9e93f5ccef07b0cffc65f3861454af6e481dd3d9e353734",
+      "recorded_at": "2026-05-17-iter6-final"
+    }
+  ]
+}

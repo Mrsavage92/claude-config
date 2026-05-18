@@ -1,0 +1,32 @@
+{
+  "$schema": "vercel-env-ls-fixture",
+  "description": "Fixture mimicking `vercel env ls preview --format json` and `vercel env ls production --format json` outputs. Used by boot-gates.sh Gate 11 to validate deploy-and-verify.sh's parsing logic without needing a live Vercel project.",
+  "fixtures": {
+    "preview_only_all_branches_scope": {
+      "description": "All required env vars present on Preview, scoped to all preview branches (target=['preview'], no gitBranch).",
+      "envs": [
+        {"key": "DATABASE_URL", "target": ["preview", "production"], "gitBranch": null},
+        {"key": "API_KEY", "target": ["preview", "production"], "gitBranch": null}
+      ],
+      "expected_parser_result": "OK"
+    },
+    "preview_branch_scoped_trap": {
+      "description": "Env vars exist on Preview but only for a single branch — the Run #4 failure mode. deploy-and-verify.sh must HALT.",
+      "envs": [
+        {"key": "DATABASE_URL", "target": ["preview"], "gitBranch": "evolve/2026-05-17-run4"},
+        {"key": "API_KEY", "target": ["preview"], "gitBranch": "evolve/2026-05-17-run4"}
+      ],
+      "expected_parser_result": "WRONG_BRANCH"
+    },
+    "preview_missing_vars": {
+      "description": "Production has vars that Preview doesn't. deploy-and-verify.sh must HALT.",
+      "envs": [],
+      "expected_parser_result": "MISSING"
+    }
+  },
+  "production_envs_for_comparison": [
+    {"key": "DATABASE_URL"},
+    {"key": "API_KEY"}
+  ],
+  "current_branch": "evolve/2026-05-17-run5"
+}

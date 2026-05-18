@@ -16,7 +16,7 @@ Every entry below where `fix_skill` is in `{typeset, colorize, layout, animate, 
 
 If steps 1-3 all return empty → HALT with `"Refinement source bundle empty — Phase A.5 did not produce extracts and Phase A.4 did not lock a memorable_choice. Cannot run refinement without a source (Principle 7)."`
 
-**Legacy `/web-fix` is removed.** All previous `fix_skill: web-fix` entries are now `fix_skill: impeccable`. The orchestrator builds an `impeccable craft` invocation for these — same source-mandate applies. Tiny code-quality fixes (a11y attribute add, key={index} → key={item.id}, etc.) that were trivial Edits should be promoted to `edit_direct: true` if they truly don't need craft-level work. Anything else: craft.
+**Legacy `/impeccable` is removed.** All previous `fix_skill: web-fix` entries are now `fix_skill: impeccable`. The orchestrator builds an `impeccable craft` invocation for these — same source-mandate applies. Tiny code-quality fixes (a11y attribute add, key={index} → key={item.id}, etc.) that were trivial Edits should be promoted to `edit_direct: true` if they truly don't need craft-level work. Anything else: craft.
 
 **Amplitude trio merged.** Previous `bolder`/`distill`/`quieter` entries (if any existed in older versions of this file) → `fix_skill: calibrate-amplitude` with `dial_value` in meta (0.0=quietest, 0.3=distill, 0.7=mild-bold, 1.0=boldest).
 
@@ -102,7 +102,7 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
   "H1":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — the fix was applied inline rather than via Skill(). No code fix needed; the process was wrong. Re-run the correct fix via the appropriate Skill() entry for the original check."},
   "H2":  {"fix_skill": null,         "prereq": null,                                        "secondary": null,        "edit_direct": false, "meta": "VOID current iteration — null-delta means the committed code produced no visible change. git revert HEAD --no-edit. Try a different fix_skill (use secondary if available) or mark WONTFIX after 3 attempts."},
 
-  "WC1": {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "animate", "edit_direct": false, "meta": "World-class hero signature missing. Build one of: WebGL/3D scene (R3F+drei+postprocessing), GSAP ScrollTrigger pinned narrative, or kinetic typography. Pick per DESIGN-BRIEF World-Class Anchor."},
+  "WC1": {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "animate", "edit_direct": false, "meta": "Top-tier hero signature missing. Build one of: WebGL/3D scene (R3F+drei+postprocessing), GSAP ScrollTrigger pinned narrative, or kinetic typography. Pick per DESIGN-BRIEF Top-Tier Anchor."},
   "WC2": {"fix_skill": "animate",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Lenis not installed/wired. Phase G should have handled this; if loop reached here, re-run Phase G.3 manually."},
   "WC3": {"fix_skill": "animate",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "GSAP + ScrollTrigger not registered OR no active ScrollTrigger pin. Add ≥1 scroll-pinned section."},
   "WC4": {"fix_skill": "web-component", "prereq": "mcp__magic__21st_magic_component_inspiration", "secondary": "polish", "edit_direct": false, "meta": "Custom cursor missing OR data-magnetic not on primary CTAs. Use Motion <Cursor> or hand-rolled with Lenis velocity."},
@@ -110,7 +110,7 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
   "WC6": {"fix_skill": "typeset",    "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Typography uses default Inter from Google. Replace with foundry choice: Geist (free, npm i geist), or paid Söhne/Calibre. Animate ≥1 variable axis on hover or scroll."},
   "WC7": {"fix_skill": "colorize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Color tokens use shadcn defaults (slate/zinc/neutral) or HSL. Convert to OKLCH. 1 brand accent + 2 neutrals + 1 surface."},
   "WC8": {"fix_skill": "overdrive",  "prereq": "mcp__magic__21st_magic_component_builder",     "secondary": "web-component", "edit_direct": false, "meta": "Hero lacks real product UI. Replace gradient blob with: product screenshot/video, R3F scene visualising the product, or live product mockup using actual product primitives."},
-  "WC9": {"fix_skill": "optimize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Performance below world-class gate (LCP<2.0, INP<150, CLS<0.05). Read perf-trace.json insights, target the specific culprit (image, font, third-party, render-blocking)."},
+  "WC9": {"fix_skill": "optimize",   "prereq": null,                                          "secondary": null,      "edit_direct": false, "meta": "Performance below top-tier gate (LCP<2.0, INP<150, CLS<0.05). Read perf-trace.json insights, target the specific culprit (image, font, third-party, render-blocking)."},
   "WC10":{"fix_skill": "impeccable",    "prereq": null,                                          "secondary": null,      "edit_direct": true,  "meta": "prefers-reduced-motion not respected. Wrap motion in @media (prefers-reduced-motion: reduce) { /* disable */ }. Lenis: lenis.stop() when reduce. View Transitions: skipTransition()."}
 }
 ```
@@ -161,12 +161,12 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
 |---|---|---|---|
 | B1 | Component Lock < 11 entries | `Skill('web-design-research')` step 6 to re-run all 11 MCP queries | only the design-research skill can populate the Lock table |
 | B2 | Component Lock has placeholder values | `Skill('web-design-research')` step 6 | same |
-| B3 | Section file missing 21st.dev source comment | `mcp__magic__21st_magic_component_inspiration` to confirm the source, then `Skill('web-fix')` to add the header comment | provenance is a one-line file edit. **If B3 passes (comment exists) but B9 fails (no real import) — escalate to B9 immediately. Comment-only provenance without actual component integration is B3 theatre.** |
+| B3 | Section file missing 21st.dev source comment | `mcp__magic__21st_magic_component_inspiration` to confirm the source, then `Skill('impeccable')` to add the header comment | provenance is a one-line file edit. **If B3 passes (comment exists) but B9 fails (no real import) — escalate to B9 immediately. Comment-only provenance without actual component integration is B3 theatre.** |
 | B4 | Transcript missing 11× MCP calls | This means design research was bypassed in the original build. Invoke `Skill('web-design-research')` to redo Phase 0.5 properly. | retroactive research |
 | B5 | No 21st.dev component_builder invocations | **If backfill mode: mark N/A** per mode-detection rule in `shared/landing-page-checklist.md` (section already exists — builder is for fresh installs). **If greenfield: invoke `mcp__magic__21st_magic_component_builder`** per customised section to codify builder usage. | backfill retrofits should not require builder calls — retro correction from AuditHQ v2 |
 | B6 | (merged into B3 — removed 2026-04-24 retro) | N/A — see B3 | redundant check removed |
 | B7 | Component pattern drifted from Lock | `Skill('web-component')` to re-source from Lock OR update DESIGN-BRIEF if the change was deliberate | reconcile |
-| B8 | New session lost 21st.dev citation | `Skill('web-fix')` to restore the comment from git history | undo accidental wipe |
+| B8 | New session lost 21st.dev citation | `Skill('impeccable')` to restore the comment from git history | undo accidental wipe |
 | B9 | Section files have provenance comments but no actual 21st.dev component imports (ratio of real imports < 60% of Lock rows) | `mcp__magic__21st_magic_component_inspiration` to find the correct component, then `mcp__magic__21st_magic_component_builder` (greenfield) OR `Skill('web-component')` (backfill retrofit) to actually install the component and replace the hand-built code | Real integration beats comment theatre. Added 2026-04-25 retro — AuditHQ v2 passed B3 on comments with zero actual 21st.dev components installed. |
 
 ---
@@ -204,7 +204,7 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
 | D3 | useReducedMotion not referenced | `Skill('animate')` (its checklist enforces it) |
 | D4 | Hero has no entrance animation | `Skill('animate')` with hero-stagger pattern |
 | D5 | Hero has no animated bg/svg/canvas | `Skill('overdrive')` first, fallback `Skill('animate')` |
-| D6 | Scroll-trigger doesn't fire | `Skill('web-fix')` to wire viewport observer correctly |
+| D6 | Scroll-trigger doesn't fire | `Skill('impeccable')` to wire viewport observer correctly |
 
 ---
 
@@ -212,8 +212,8 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
 
 | Check | Failure pattern | Fix skill |
 |---|---|---|
-| E1 | Missing skip-nav | `Skill('web-fix')` direct |
-| E2 | Hero not first child | `Skill('web-fix')` direct |
+| E1 | Missing skip-nav | `Skill('impeccable')` direct |
+| E2 | Hero not first child | `Skill('impeccable')` direct |
 | E3 | Logo cloud < 3 entries | `Skill('web-component')` to add LogoCloud component (sourced via `mcp__magic__21st_magic_component_inspiration` if not present) |
 | E4–E10 | Missing section / under-populated | `Skill('web-component')` to add — for new sections, `mcp__magic__21st_magic_component_inspiration` first |
 
@@ -235,12 +235,12 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
 
 | Check | Failure pattern | Fix skill |
 |---|---|---|
-| G1 | key={index} found | `Skill('web-fix')` direct |
-| G2 | Icon-only without aria-label | `Skill('web-fix')` direct (or `Skill('clarify')` for label wording) |
-| G3 | Build broken / tests failing | `Skill('web-fix')` direct |
+| G1 | key={index} found | `Skill('impeccable')` direct |
+| G2 | Icon-only without aria-label | `Skill('impeccable')` direct (or `Skill('clarify')` for label wording) |
+| G3 | Build broken / tests failing | `Skill('impeccable')` direct |
 | G4 | Chunk > 250KB | `Skill('optimize')` for bundle splitting |
 | G5 | LCP > 2.5s | `Skill('optimize')` — target: hero image `fetchpriority="high"`, eliminate render-blocking resources, preload critical font. Pass measured LCP value + waterfall as context. |
-| G6 | CLS > 0.1 | `Skill('web-fix')` — target: explicit width/height on all images, no dynamically injected content above fold, font `font-display: swap`. Pass measured CLS value as context. |
+| G6 | CLS > 0.1 | `Skill('impeccable')` — target: explicit width/height on all images, no dynamically injected content above fold, font `font-display: swap`. Pass measured CLS value as context. |
 
 ---
 
@@ -275,7 +275,7 @@ If steps 1-3 all return empty → HALT with `"Refinement source bundle empty —
 | J4 | Unsubstantiated superlatives without stat backup | `Skill('clarify')` — either remove the superlative OR replace with a specific stat from PRODUCT-CONTEXT.md | credibility |
 | J5 | Stats use vague quantifiers instead of numbers with units | `Skill('clarify')` — pass each vague stat + the real underlying data from PRODUCT-CONTEXT.md | specificity |
 | J6 | Testimonials are generic praise without named outcome | `Skill('clarify')` — rewrite testimonials to include before/after metric or named action. If no real testimonials exist, flag NEEDS_HUMAN — do not fabricate. | earned social proof |
-| J7 | AI-slop phrases found (transform/revolutionize/seamlessly/etc.) | `Skill('clarify')` — surgical replacement. Pass the exact phrase + surrounding context. Target: concrete replacement. | credibility + differentiation |
+| J7 | AI-slop phrases found (transform/revolutionize/smoothly-integrates/etc.) | `Skill('clarify')` — surgical replacement. Pass the exact phrase + surrounding context. Target: concrete replacement. | credibility + differentiation |
 | J8 | FAQ answers are deflecting or incomplete | `Skill('clarify')` — pass each failing Q+A pair. Rewrite to fully resolve the question. | user trust |
 
 **Batch rule for J-category:** All J-failures → one `Skill('clarify')` invocation passing the complete list of failing copy elements. Single iteration, single commit.

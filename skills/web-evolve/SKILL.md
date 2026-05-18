@@ -3,376 +3,296 @@ name: web-evolve
 description: Auto-decided, score-driven continuous improvement loop for existing websites. Invoke with `/web-evolve` — no flags. Re-invoke to advance one tier. Audits every public route, routes REBUILD verdicts through web-page, routes refinement through design skills, verifies visible delta per iter via Skill('critique'), deploys to evolve branch, merges to main only after preview-verify.
 ---
 
-Base directory: `C:\Users\Adam\.claude\skills\web-evolve`
+# /web-evolve
 
-# Skill: /web-evolve
+Continuous improvement loop. Every gate is a bash script returning an exit code; the loop reads the exit code, not LLM prose. The orchestrator does not write files that audit agents read. The retro is authored by a separate agent. Each cardinal rule has a script in `references/` that enforces it without depending on orchestrator self-discipline.
 
-This skill replaces the previous 2553-line spec (Cardinal Rules 1–36) with **6 principles + 6 phase contracts**. Historical decisions are archived in `references/decisions.md`. The behaviour is the same; the framing is honest.
-
-The skill never audits inline. The skill never edits inline. **Skills do the work; the orchestrator coordinates and verifies.**
+This is a structural rebuild after a Phase 2 forge score of 8/100 (see `.forge-score.md`). The 9 failure modes the rebuild closes are documented in `.forge-spec.md`. External patterns sourced from 8 implementations are in `.forge-sources.md` (Anthropic cookbook, Aider, cover-agent, OpenAI evals, DSPy, LangGraph, Anthropic multi-agent research).
 
 ---
 
-## The 6 Principles
+## Cardinal rules (mechanical — each maps to a script in references/)
 
-These compress the previous 36 cardinal rules. They are the LAW of the skill. Mechanical enforcement is in `~/.claude/hooks/web-evolve-guard.ps1`. Procedural enforcement is in the phase contracts below.
+1. **Verdict-as-token gate.** `Skill('critique')` is called with `output_format: tokens`. The agent must return one of `{PASS, FAIL_REBUILD, FAIL_REFINE, FAIL_VOID}`. The orchestrator passes the response through `references/parse-verdict.sh`. Anything outside that set → `__invalid__` → HALT. # source: openai/evals + cookbook/evaluator_optimizer
+2. **Capability-stripped producer.** All writes to `.evolution/*` go through bash scripts (`append-retro.sh`, `enumerate-routes.sh`, `iter-step.sh`, etc.) using `python3 … > tmp && mv tmp file` redirects — not the `Edit`/`Write` tools. The existing `web-evolve-guard.ps1` hook is iter-aware: it inspects `loop-state.json.current_checks` and blocks `Edit`/`Write` on source files routed via `fix-routing.md` with `edit_direct: false`. A `WriterAgent` subagent invocation handles file writes the orchestrator cannot directly perform (TasteFetcher writes taste-rules.md, RetroAgent's output is appended via `append-retro.sh`). The role separation is enforced by the script contracts, not by a settings.json deny rule (the harness has no per-role permission concept). # source: aider ArchitectCoder (capability separation via different tool paths)
+3. **Ground-truth reward.** Every gate is a bash function in `references/gate-checks.sh` returning exit code. The loop reads `$?`. LLM prose ("the page improved") never reaches the gate. # source: cover-agent + dspy.Refine
+4. **Cache integrity.** Every file in `.evolution/` that downstream agents read has a sha256 in `.evolution/.hashes.json` recorded by the agent that wrote it. Phase 0.5 + every phase entry re-verifies hashes. Orchestrator-modified file → HALT. # source: aider's separate-role architecture
+5. **Live-HTML verification.** Each entry in `page-baselines.json` is asserted via `references/verify-live-html.sh <route>` before Phase R reads it. Hashes the live H1, primary CTA, visible pricing strings; compares against the agent's claim. Mismatch → entry dropped, route re-audited. # source: cover-agent rollback-on-mismatch
+6. **Independent retro.** Phase F is `Agent(subagent_type=general-purpose)` — `RetroAgent` — with read-only access to `.evolution/*.json`, `git log`, `~/.claude/tool-use.log`. It writes `trajectory.runs[N]`. Orchestrator commits the file but does not modify content. # source: Anthropic multi-agent CitationAgent
+7. **Session-scoped ask counter.** Counter lives at `~/.claude/state/web-evolve-asks-<session-id>.json`. Hook reads it. 2nd ask in a session is blocked regardless of phase. # source: langgraph state-graph pattern
+8. **Constrained status vocab.** Status field is regex-validated against `{PASS, halted_before_phase_c, halted_at_iter_N, deviation_cap_exceeded, taste_pre_flight_failed}`. No free-form status. No "honest halt" string. # source: openai/evals choice_strings
+9. **Loop exit is Python, not prose.** `references/loop-condition.sh` is the only loop predicate. Orchestrator "I think we should halt" has no path to ending the loop. # source: langgraph should_continue
 
-> **Principle 0 — Load `Skill('taste-skill')` BEFORE any other phase.** The orchestrator's default aesthetic reaches ARE the AI-generic aesthetic — that's exactly what taste-skill exists to override. It is the canonical authority for: dial values (`DESIGN_VARIANCE`/`MOTION_INTENSITY`/`VISUAL_DENSITY`), forbidden patterns (Section 7 — banned fonts/colors/content), design directives (Section 3 — typography/color/layout/materiality), creative arsenal (Section 8 — high-end inspiration patterns), motion-engine bento (Section 9), and the final pre-flight checklist (Section 10). Every downstream phase (A.1.5 critique, Phase R signature pick, every Phase C refinement-skill call, Phase F exit pre-flight) MUST receive taste-skill rules in its args. Phase 0 below caches the rules to `.evolution/taste-rules.md`; subsequent phases read from that cache. **Skipping taste-skill = guaranteed AI-generic output.** Run #1 + #2 + #3 + #4 all skipped it and shipped mid-2024-SaaS-template aesthetics (Geist, dark navy + gold, dashboard mockup, bento grid, Lucide-tinted-squares, GSAP pinned scroll as default). This is the loophole that prevents Principles 1–6 from working.
+The previous version's 8 principles + Phase 0.4 cross-run check are archived in `references/decisions.md`. They are not deleted — they are demoted from "load-bearing" to "documentation," because principles that depend on orchestrator self-discipline failed across Runs #1–#5.
 
-### Principle 1 — Verify outcome, not surface
-Score deltas and HTTP 200s do not prove improvement. `Skill('critique')` is the only valid visual-quality signal. Self-rating by the orchestrator (`"this looks epic"`, `"dramatically better"`, `"production-grade"`) is banned. Per-iter visible delta is verified by Puppeteer pre/post + critique compare, not by orchestrator inspection. Compile-pass ≠ deploy-success ≠ live-content-correct: each requires its own check. **Critique args MUST include taste-skill rules** (loaded in Phase 0 — see below) so the per-iter verdict is anchored against the same banned-pattern list Phase 0 enforced upfront.
+---
 
-### Principle 2 — Skills are the only execution path. Direct Edit is for declared lookups.
-`SKILL_LOOKUP[check_id].edit_direct === true` (the closed list A10, B5, E1, G1, G2 in `references/fix-routing.md`) is the ONLY whitelist for direct `Edit`/`Write`/`MultiEdit`. Anything else routes through `Skill(fix_skill)`. Orchestrator self-justification ("the fix is small enough", "I need tight control of framing", "Skill might lose context") is a phase failure — not an exception. Enforced mechanically by `web-evolve-guard.ps1` PreToolUse hook: hook blocks any Edit/Write on a file under an active iter (loop-state.iteration > 0) where `current_checks` contains an `edit_direct:false` check.
+## Phase 0 — Boot gates (HALT-gated, runs before everything)
 
-### Principle 3 — Default verdict is REBUILD. Refinement only after page clears tier floor.
-Phase A.1.5 enumerates EVERY public route (sitemap + crawl, cap 20). Each route is scored against the sales-page-10 checklist AND the taste-skill Section 7 banned-patterns list (loaded in Phase 0). `≥ 2 FAILs` OR `≥ 1 taste-skill banned pattern` → REBUILD → `Skill('web-page')` only. `1 FAIL + 0 taste violations` → REFINE → refinement skill. `0 FAILs + 0 taste violations + tier-floor cleared` → KEEP. Refinement skills (`impeccable / overdrive / animate / typeset / colorize / polish / bolder / delight / layout / distill / clarify / adapt`) are BANNED on REBUILD verdicts. Polish-as-evolution is the failure mode this principle exists to prevent.
+```bash
+bash references/boot-gates.sh
+```
 
-### Principle 4 — One scope commitment per run. AskUserQuestion limit = 1.
-Phase A.0 either auto-decides scope or asks ONCE. After that single question, scope is locked. Mid-run AskUserQuestion is mechanically blocked by `web-evolve-guard.ps1`. Context-budget exhaustion forces honest HALT, not silent scope degradation. Run #4 silently degraded 8→4 iters mid-run with a "context budget" rationalization — this principle closes that hole.
+Returns exit 0 only if ALL pass:
+- `wc -l SKILL.md` ≤ 500 (current bloat guard)
+- `bash references/smoke-test.sh` returns exit 2 (hook actually blocks a violation attempt)
+- `~/.claude/state/web-evolve-asks-<session-id>.json` exists or is created with `count: 0`
+- `Skill('taste-skill')` available (dry-run probe)
+- Settings.json has the `.evolution/*` deny rule active for the orchestrator role
+- `references/.hashes.json` matches sha256 of every `references/*.sh` (no orchestrator tampering)
 
-### Principle 5 — Phase F → Phase A handoff is mechanical
-Phase F writes `.evolution/next-run-priorities.json` with `{priorities: [{route, fix_type, fix_skill, rationale}], deferred: [...], corrective_actions_pending: [...]}`. Phase A.0 of the next run reads this file. If it exists and is fresh (< 14 days), the orchestrator MUST honor priorities unless the user explicitly overrides via `/web-evolve --fresh` or `--focus=...`. Advisory notes in `trajectory.json` are an audit log; this file is the executable handoff. Run #3 advised Run #4 to start with critique baseline; Run #4 ignored that — this principle prevents the same drift.
+Any failure → HALT with the failing gate name. No soft-degrade. The exit code is the gate.
 
-### Principle 6 — Honest framing > spec-compliance theatre
-"Logged honestly" is necessary, not sufficient. Each run tracks `deviation_count`. **Hard cap: 3 deviations → HALT** with `status: deviation_cap_exceeded`. Each deviation in `trajectory.failed_gates` requires `corrective_action_for_next_run` populated. Soft-degrades from the original Cardinal Rule 28 dispatch table (moved to `references/soft-degrades.md`) remain available but each counts as 1 deviation. Run #1 + #3 + #4 each shipped with 3+ silent gate failures wrapped in retro prose — this principle makes that path mechanically capped.
+---
 
-### Principle 7 — Refinement skills are craft-prompt builders, not advice generators. Sources are mandatory.
-Every Phase C iter that routes to a refinement skill (`typeset` / `colorize` / `layout` / `animate` / `polish` / `optimize` / `adapt` / `clarify` / `overdrive` / `delight` / `calibrate-amplitude`) MUST pass at least ONE of: `reference: <url>`, `extract: <path>`, `taste_section: <id>`, `memorable_choice: <str>`. Generic-mode refinement (no source) is **banned at the orchestrator level**, not just at the skill level. The full contract is `~/.claude/skills/shared/refinement-contract.md` — read it once per run, cache in `.evolution/refinement-contract.md`, pass the relevant section as a marker in every Phase C Skill invocation.
+## Phase 0.5 — Taste cache via TasteFetcher (hash-verified)
 
-**Mechanical enforcement:**
-- Orchestrator builds the source bundle ONCE at start of Phase C (using Phase A's `tokens.lock.json` if present, OR the user's reference picks from SCOPE.md `## References`, OR a fresh `/style-mirror extract` invocation, OR the locked `memorable_choice` from Phase A.4 below).
-- The bundle is `.evolution/refinement-sources.json` — every Phase C iter args includes `sources: {bundle}`.
-- Refinement skill output MUST contain `// SOURCE:` comments (Reach Test, refinement-contract §3). Diff scanner verifies — no `// SOURCE:` → iter VOIDed, reverted, `deviation_count++`.
-- Refinement skills internally route through `Skill('impeccable', args='craft ... ')` — they don't `Edit` directly. Direct `Edit` from a refinement skill = phase failure (orchestrator-level enforcement, not just hook-level).
+The orchestrator cannot write `.evolution/taste-rules.md`. Instead:
 
-**Why this principle exists:** Runs #1–#4 produced commodity output because the refinement skills they invoked were advice generators. The orchestrator turned advice into Edits and the Edits applied the model's reflex picks (Geist + dark navy + bento + Lucide squares). The contract makes the source mandatory and the production engine (`/impeccable craft`) unified — refinement skills become specialist prompt-builders for craft, not autonomous Edit-makers.
+```
+Agent(subagent_type=general-purpose, prompt="
+  TasteFetcher role. Capability: Write to .evolution/taste-rules.md ONLY.
+  Invoke Skill('taste-skill', args='mode: load-for-web-evolve | output_path: .evolution/taste-rules.md').
+  After write, compute sha256 of taste-rules.md and append to .evolution/.hashes.json as {file: 'taste-rules.md', sha256: '<hash>', written_by: 'TasteFetcher', skill_tool_use_id: '<id>'}.
+  Return only the sha256 string. No prose.
+")
+```
 
-### Principle 8 — Every run locks a "one memorable thing" at Phase A.4. Every iter cites it.
-Before any iteration runs, Phase A.4 asks (or auto-picks from `taste-skill` Section 8 if `--autopilot`): **"What's the ONE thing about this site that no other site has?"** The answer is written to `trajectory.runs[current].memorable_choice` and inherited by every Phase C iter args.
+Orchestrator parses the returned sha256, reads `.evolution/.hashes.json`, asserts they match. Mismatch → HALT.
 
-This applies at ALL tiers (90/95/98/100), not just 98+. The previous version of Phase R only forced signature commitment at tier 98+; tier 90/95 ran without a memorable spine, which is exactly the path to "competent template" output. Tier 90 requires ONE memorable element (kinetic headline OR scroll-revealed product UI OR magnetic micro-physics surface). Tier 95 requires two. Tier 98+ keeps the full Phase R hero-signature commitment additionally.
+Subsequent phases pass `taste_rules_hash: <sha256>` in every Skill('critique') call. The critique agent re-hashes the file at read time and exits invalid if it doesn't match — proving the orchestrator hasn't injected prose into the cache between TasteFetcher writing it and the critique reading it.
 
-**Phase F exit check:** orchestrator runs `Skill('critique', args='does the deployed site deliver the memorable_choice "{locked value}"? per-route verdict')`. If critique returns `delivered: false` for the route that should carry the memorable element → status `memorable_choice_undelivered`, `deviation_count++`, surface to user.
+---
 
-Cardinal Rule 26 ("One memorable choice" at exit) is superseded by this principle — the check moves to the START of the run, not the END.
+## Phase A — Audit (route enumeration + parallel critique)
+
+### A.1 — Enumerate routes
+
+```bash
+bash references/enumerate-routes.sh
+```
+
+Crawls sitemap.xml / app/sitemap.ts / homepage `<a href>`. Cap 20. Writes `.evolution/route-list.json` + sha256. Orchestrator cannot edit the file after the script writes it.
+
+### A.2 — Per-route critique (parallel, token-constrained)
+
+For each route, spawn one critique invocation:
+
+```
+Skill('critique', args='
+  mode: web-evolve | run_mode: per-route-baseline |
+  output_format: tokens-only |
+  taste_rules_hash: <sha256 from Phase 0.5> |
+  screenshot_path: <abs path> |
+  route: <slug> |
+  checklist: sales-page-10 |
+  briefing_file: references/critique-brief.md
+')
+```
+
+The briefing file (read by the critique agent) is read-only and the critique agent must return:
+```json
+{
+  "verdict": "PASS | FAIL_REBUILD | FAIL_REFINE | FAIL_VOID",
+  "checklist_fails": ["sales-page-10:rule_N", ...],
+  "taste_violations": ["section_7:banned_font", ...],
+  "vq_aggregate": 0.0-5.0,
+  "tool_use_id_for_screenshot_read": "<the tool_use_id of the Read call that loaded the screenshot>"
+}
+```
+
+If `tool_use_id_for_screenshot_read` is absent OR does not appear in the transcript, the response is rejected (agent claimed to read the screenshot but didn't). The orchestrator runs `references/verify-tool-use-id.sh <id>` and the script exits non-zero on mismatch.
+
+### A.3 — Parse + persist
+
+```bash
+bash references/parse-handoff.sh per-route-baseline
+```
+
+Validates schema via `python3` (stdlib `json` + `re`). Malformed entries dropped to `.evolution/parse-failures.json`. The script writes `.evolution/page-baselines.json` (under WriterAgent role). Orchestrator cannot modify after write.
+
+### A.4 — Live-HTML verification (the cover-agent rollback pattern)
+
+```bash
+for route in $(python3 -c "import json; [print(r.get('slug','')) for r in json.load(open('.evolution/page-baselines.json')).get('routes',[])]"); do
+  bash references/verify-live-html.sh "$route"
+done
+```
+
+For each route the script:
+- Puppeteer-probes the live URL
+- Extracts H1, primary CTA text, visible pricing strings
+- Hashes them
+- Compares hash against the agent's claim in `page-baselines.json`
+- Exit 1 on mismatch → entry deleted, route added to `.evolution/re-audit-queue.txt`
+
+Routes re-audited max 1 time. Still-mismatched → HALT for that route, surface to user.
+
+---
+
+## Phase R — REBUILD-mode gate
+
+```bash
+bash references/rebuild-gate.sh
+```
+
+Reads `.evolution/page-baselines.json`. If `rebuild_queue.length >= 1` → enters REBUILD mode and emits per-route `rebuild-iter` commands. REBUILD iters invoke `Skill('web-page')` ONLY. The hook blocks any Edit/Write to source files unless `Skill('web-page')` is the active context (verified via tool-use chain in the transcript).
+
+If `rebuild_queue.length == 0` → proceed to standard Phase R hero signature pick (full spec in `references/tier-contracts.md`).
+
+---
+
+## Phase C — Improvement loop (Python predicate)
+
+```bash
+while bash references/loop-condition.sh; do
+  bash references/iter-step.sh
+done
+```
+
+`loop-condition.sh` reads `loop-state.json` and exits 0 only if:
+- `iteration < max_iterations`
+- `current_score < target_score`
+- `deviation_count < 3`
+- `void_count < max_voids`
+- No HALT flag set by any prior phase
+
+`iter-step.sh` does (each step is its own exit-coded check):
+1. Pre-screenshot via puppeteer
+2. Dispatch via `references/fix-routing.md` (SKILL_LOOKUP)
+3. Post-screenshot
+4. Skill('critique') per-iter-delta with `output_format: tokens-only` returning `{KEEP, VOID, REVERT}`
+5. Parse via `references/parse-verdict.sh`
+6. Apply verdict mechanically: KEEP→commit, VOID→`git reset --hard HEAD~1`, REVERT→`git revert HEAD --no-edit`
+7. Update loop-state.json under WriterAgent role
+8. Run `references/per-iter-gates.sh` (verifies tool-use IDs for the critique call, increments deviation_count on any failed sub-check)
+
+---
+
+## Phase D — Deploy + verify (no soft-degrade)
+
+```bash
+bash references/deploy-and-verify.sh
+```
+
+The script:
+1. Pushes evolve branch
+2. Polls `vercel inspect <deployment>` for status
+3. **Asserts** `vercel env ls preview` shows all required env vars with `scope=all-preview-branches` OR with the current branch name listed. Mismatch → exit 1, HALT. No soft-degrade fallback.
+4. Puppeteer-verifies the preview URL against post-iter screenshots
+5. FF-merges to main only on exit 0
+6. Puppeteer-verifies prod URL after main build
+
+If step 3 fails for the first time on a project: HALT with a one-time-setup instruction printed to the user — they go to the Vercel dashboard and set the env vars to "All Preview Branches" scope once. Run is not resumable until that's done. This breaks the per-branch dependency that broke Run #6.
+
+---
+
+## Phase F — Independent retro (RetroAgent, not orchestrator)
+
+```
+Agent(subagent_type=general-purpose, prompt=<contents of references/retro-agent-brief.md>)
+```
+
+RetroAgent role:
+- Read-only access to `.evolution/*.json`, `git log --oneline -50`, `~/.claude/tool-use.log` (filtered to this session)
+- NO access to the orchestrator's reasoning, conversation history, or prior trajectory entries beyond run N-1
+- Required output: a single `trajectory.runs[N]` JSON entry matching `references/trajectory-schema.json`
+- Constrained verdict vocab (cardinal rule 8)
+- MUST flag every gate the orchestrator failed even if the orchestrator's prose claimed pass — RetroAgent reads tool-use log, not prose
+
+Orchestrator runs:
+```bash
+bash references/append-retro.sh "<RetroAgent JSON output>"
+```
+
+This script validates schema, appends to trajectory.json, writes `.evolution/next-run-priorities.json` from the RetroAgent's `next_run_priorities` field, and commits. Orchestrator cannot edit either file's content — only invokes the script.
+
+If RetroAgent's verdict is `PASS`: deviation_count == 0, all gates green, score ≥ target.
+If `FAIL`: the run's status field is one of the constrained tokens (Cardinal rule 8). The user-facing summary is generated by the script from the structured fields — orchestrator does not write the summary.
+
+---
+
+## Phase 0.5–F handoff schema
+
+Every phase reads inputs and writes outputs through `references/parse-handoff.sh <phase-name>`. The script knows the schema for each phase from `references/schemas/`. Malformed inputs are dropped (per orchestrator_workers pattern). The orchestrator cannot "fix up" an agent's malformed response — it must reject.
+
+---
+
+## Anti-patterns (each blocked by a mechanism, not a warning)
+
+- **Producer-grades-producer.** Blocked by Cardinal rule 6 (Phase F is separate agent) + Cardinal rule 1 (critique returns constrained tokens) + critique-brief.md banning self-grading.
+- **Orchestrator-written cache.** Blocked by Cardinal rule 2 (capability-stripped via hook deny on `.evolution/*`) + Cardinal rule 4 (hash verification at every read).
+- **Trust-the-claim.** Blocked by Cardinal rule 5 (verify-live-html.sh) + tool_use_id verification in Phase A.2.
+- **Soft-degrade fallback.** Removed. Every gate is exit-code; failure = HALT. Phase D's Vercel env-var check is the first place soft-degrade existed and is now exit-1 only.
+- **Comfort framing of incomplete runs.** Blocked by Cardinal rule 8 (constrained status vocab) + Cardinal rule 6 (RetroAgent writes the summary, not the orchestrator).
+- **Principle-based fixes.** Every cardinal rule has a script. If a future failure requires a new rule, it requires a new script. No rule that depends on orchestrator self-discipline ships.
+- **Spec line-count bloat.** Phase 0 boot gate halts if `SKILL.md > 500 lines`. The bloat pattern is now mechanically capped.
 
 ---
 
 ## Reference paths
 
 ```
-taste-skill:             ~/.claude/skills/taste-skill/SKILL.md                            (Principle 0 — canonical bias-correction authority)
-checklist:               ~/.claude/skills/shared/landing-page-checklist.md
-sales-page-checklist:    ~/.claude/skills/web-evolve/references/sales-page-checklist.md   (Rule 35, 10 rules)
-fix-routing:             ~/.claude/skills/web-evolve/references/fix-routing.md            (SKILL_LOOKUP, edit_direct flags)
-scoring-engine:          ~/.claude/skills/web-evolve/references/scoring-engine.md
-multi-run-orchestration: ~/.claude/skills/web-evolve/references/multi-run-orchestration.md (Phase A.0 decision tree)
-world-class-tier:        ~/.claude/skills/web-evolve/references/world-class-tier.md       (target ≥ 98 contracts)
-decisions:               ~/.claude/skills/web-evolve/references/decisions.md              (CL-1..CL-5 changelog + 36-rule archive)
+boot-gates:           references/boot-gates.sh           — Phase 0 entry checks
+smoke-test:           references/smoke-test.sh           — hook violation attempt, asserts exit 2
+gate-checks:          references/gate-checks.sh          — every cardinal-rule check, exit-coded
+parse-verdict:        references/parse-verdict.sh        — token-vocab regex validator
+parse-handoff:        references/parse-handoff.sh        — python schema validator between phases
+loop-condition:       references/loop-condition.sh       — non-LLM loop predicate
+verify-live-html:     references/verify-live-html.sh     — puppeteer ground-truth check
+verify-tool-use-id:   references/verify-tool-use-id.sh   — tool_use_id transcript verification
+enumerate-routes:     references/enumerate-routes.sh     — sitemap + crawl
+rebuild-gate:         references/rebuild-gate.sh         — REBUILD-mode entry
+iter-step:            references/iter-step.sh            — single Phase C iter
+deploy-and-verify:    references/deploy-and-verify.sh    — Phase D (no soft-degrade)
+append-retro:         references/append-retro.sh         — Phase F write (script writes, not orchestrator)
+critique-brief:       references/critique-brief.md       — critique agent briefing (read-only, token-constrained)
+retro-agent-brief:    references/retro-agent-brief.md    — RetroAgent briefing
+schemas/:             references/schemas/                — python-validated schemas per phase
+trajectory-schema:    references/trajectory-schema.json  — trajectory.runs[N] structure
+hashes:               references/.hashes.json            — sha256 of every references/*.sh
+```
+
+Preserved from previous version (still sound):
+
+```
+fix-routing:             references/fix-routing.md            — SKILL_LOOKUP, edit_direct flags
+sales-page-checklist:    references/sales-page-checklist.md   — 10-rule baseline checklist
+scoring-engine:          references/scoring-engine.md
+multi-run-orchestration: references/multi-run-orchestration.md — Phase A.0 decision tree
+tier-contracts:          references/tier-contracts.md         — tier 98+ contracts (preserved)
+decisions:               references/decisions.md              — historical principle archive
 ```
 
 ---
 
-## Tier target table
+## What the rebuild changed vs SKILL.md.pre-forge
 
-| `target_score` | Tier | What it gates | Phase R signature pick? |
-|---|---|---|---|
-| 90 | Premium SaaS | Generic high-quality SaaS landing | No |
-| 95 | Stripe/Linear | Disciplined design system, real motion, mobile parity, a11y/SEO pass | No |
-| 98 | Awwwards SOTD candidate | 4-axis avg ≥ 8.0, real Chrome perf trace, world-class motion stack | **Yes** |
-| 100 | Awwwards SOTM candidate | Avg ≥ 8.5, Creativity ≥ 9, foundry typography, View Transitions | **Yes (stricter)** |
+| Failure mode (forge spec #) | Mechanical fix |
+|---|---|
+| 1 (Skill('critique') not invoked) | tool_use_id required in agent response; verify-tool-use-id.sh exits 1 on mismatch |
+| 2 (hook untested) | Phase 0 boot gate runs smoke-test.sh which attempts a violation and asserts exit 2 |
+| 3 (orchestrator-authored cache) | TasteFetcher sub-agent + hook deny on `.evolution/*` + hash verification |
+| 4 (comfort-blanket honest halt) | Constrained status vocab (cardinal rule 8); RetroAgent writes status, not orchestrator |
+| 5 (Vercel preview per-branch) | Phase D asserts scope=all-preview-branches or matching branch list; exit 1 = HALT, no fallback |
+| 6 (spec line-count growth) | Phase 0 boot gate `wc -l SKILL.md ≤ 500` |
+| 7 (ask counter narrow) | Session-scoped counter file in `~/.claude/state/`; hook reads it |
+| 8 (self-graded Phase F) | RetroAgent is a separate Agent invocation with read-only access |
+| 9 (audit hallucinations) | verify-live-html.sh + tool_use_id verification |
 
----
-
-## Phase 0 — Load taste-skill (MANDATORY, runs BEFORE Phase A.0 — Principle 0)
-
-This phase loads the canonical bias-correction authority into a project-local cache that every downstream phase reads. **Skipped Phase 0 = guaranteed AI-generic output** (Run #1–#4 each shipped mid-2024-SaaS template aesthetics because they never loaded taste-skill at all).
-
-**Step 0.1 — Check cache freshness:**
-```bash
-TASTE_CACHE="${PROJECT_PATH}/.evolution/taste-rules.md"
-if [ -f "$TASTE_CACHE" ]; then
-  AGE_DAYS=$(( ($(date +%s) - $(stat -c %Y "$TASTE_CACHE")) / 86400 ))
-  if [ "$AGE_DAYS" -lt 30 ]; then
-    echo "Phase 0: taste-rules.md cached (${AGE_DAYS}d old), skipping reload"
-    exit 0
-  fi
-fi
-```
-
-**Step 0.2 — Fire taste-skill if cache missing or stale:**
-```
-Skill('taste-skill', args='mode: load-for-web-evolve |
-  project_path: ${PROJECT_PATH} |
-  output_format: markdown |
-  output_path: ${PROJECT_PATH}/.evolution/taste-rules.md |
-  required_sections: [
-    "1. Active Baseline Configuration (dial values)",
-    "3. Design Engineering Directives (typography, color, layout, materiality, interactive states, forms)",
-    "5. Performance Guardrails",
-    "7. AI Tells — Forbidden Patterns (banned fonts, banned colors, banned content, banned external resources)",
-    "8. Creative Arsenal (50+ high-end inspiration concepts by category)",
-    "9. Motion-Engine Bento Paradigm (5-card archetypes)",
-    "10. Final Pre-Flight Check (7-item checklist)"
-  ]')
-```
-
-The skill writes a project-local markdown distillation of its rules. Subsequent phases read from this file.
-
-**Step 0.3 — Hard gate:** Phase A.0 cannot proceed without `taste-rules.md` existing. If `Skill('taste-skill')` is unavailable, HALT NEEDS_HUMAN (do NOT continue to Phase A.0). Cardinal Rule 0 deviation count = max severity, run aborts.
-
-**Step 0.4 — Cross-run trajectory taste-check (Principle 5 + taste integration):**
-Before Phase A.0, scan `trajectory.json` across ALL prior /web-evolve projects on this machine. Build `prior_signatures: [{project, font_pairing, palette, hero_pattern}]`. If the current project's CONTEXT.md or DESIGN-BRIEF.md proposes a signature that matches any prior project by ≥ 2 dimensions → flag `cross_project_collision` and surface in Phase A.0 echo. Visual sameness across projects is the AI failure mode this checks for.
+Run #5's SKILL.md was 358 lines. This SKILL.md is 298 (verified via `wc -l`). Below the 500-line cap with all 9 fixes added because the mechanical machinery lives in `references/`.
 
 ---
 
-## Phase A.0 — Auto-Decide Mode (MANDATORY, runs first)
+## Related skills
 
-Reads disk state + `.evolution/next-run-priorities.json` (Principle 5) + project signals to decide:
-`target_score`, `mode` (fresh | resume | advance), `phases_to_run`, `max_iterations`, `focus_list`.
+- `/skill-forge` — used to produce this rebuild. Re-run if a fresh chat scores /web-evolve lower than this one does.
+- `/critique` — only valid visual-quality signal; called with constrained-token args (cardinal rule 1)
+- `/web-page` — only valid REBUILD execution path
+- `/taste-skill` — Phase 0.5 cache source (hash-verified)
+- `/style-mirror` — extracts reference tokens if no reference provided
 
-Full decision tree: `references/multi-run-orchestration.md`. The skill MUST read that at the start of Phase A.0.
-
-**Step A.0.1 — Set `${PROJECT_PATH}` env var** (used by all subsequent phases).
-
-**Step A.0.2 — Read disk state in parallel:**
-`.evolution/trajectory.json`, `.evolution/loop-state.json`, `.evolution/next-run-priorities.json` (NEW per Principle 5), `.evolution/scores/final-score.json`, `CLAUDE.md`, `CONTEXT.md`.
-
-**Step A.0.3 — Branch decision:**
-- `loop-state.json` exists + `real_iterations < max_iterations` + no final score → `mode=resume`
-- `trajectory.runs[-1].status == "completed"` → `mode=advance`, push one tier up
-- `trajectory.runs[-1].status` is a failed-gate status → `mode=advance`, SAME target (failed-gate runs do NOT advance)
-- `trajectory.runs[-1].status == "halted_needs_human"` → HALT, ask user to resolve
-- `trajectory.json` missing OR `--fresh` → `mode=fresh`
-
-**Step A.0.4 — Honor `next-run-priorities.json` (Principle 5):**
-If file exists and `generated_at` is < 14 days old:
-- Set `focus_list = priorities[].route`
-- Set `fix_route_hints = priorities[].{fix_skill, fix_type}`
-- Set `corrective_actions = priorities[].corrective_actions_pending` (these are GATES on the new run — e.g. "re-enable Skill('critique') at all 3 points" must be honored)
-- Log `"Honoring Phase F handoff from Run #{N}: focus = {routes}, corrective_actions = {list}"`
-- If user passed `--focus=...` or `--fresh`, override the priorities but corrective_actions still apply.
-- If file is missing or stale (>14 days), derive focus from `trajectory.runs[-1].next_run_recommendations` (legacy path).
-
-**Step A.0.5 — Compute deliverable_target_score + tier-mismatch echo.** Surface upfront. See `references/multi-run-orchestration.md` for the missing-tooling table.
-
-**Step A.0.6 — Echo to user + init loop-state:** Single message stating mode, declared_target, deliverable_target, focus_list, iteration_cap. Init `loop-state.json` with:
-```json
-{
-  "iteration": 0,
-  "ask_user_count": 0,
-  "deviation_count": 0,
-  "real_iterations": 0,
-  "void_count": 0,
-  "current_checks": [],
-  "priority_queue": [...],
-  "target_score": ...
-}
-```
-Proceed automatically. NO `AskUserQuestion` allowed here unless tier mismatch or `next-run-priorities.json` conflict requires resolution — and even then, only ONE question (Principle 4).
-
----
-
-## Phase A.1.5 — Per-route baseline (MANDATORY, Principle 3)
-
-Replaces homepage-only audits. Audits EVERY public route.
-
-**Step A.1.5.1 — Enumerate routes** from `public/sitemap.xml` or `app/sitemap.ts` or homepage `<a href>` crawl. Cap at 20. Build `route_list`.
-
-**Step A.1.5.2 — Per-route screenshot + critique (Principle 1):**
-For each route:
-```
-mcp__puppeteer__puppeteer_navigate(url=<route>)
-mcp__puppeteer__puppeteer_screenshot(name=baseline-<slug>, width=1440, height=900)
-# Save to .evolution/baseline/<slug>.png via Write tool (base64 decode if needed)
-```
-
-Then ONE batched critique invocation, with taste-rules threaded in (Principle 0):
-```
-Skill('critique', args='mode: web-evolve | run_mode: per-route-baseline | output_format: json |
-  checklist: sales-page-10 |
-  taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md (apply Section 7 banned patterns + Section 10 pre-flight per route) |
-  screenshots: [<path1>, <path2>, ...] | routes: [<route1>, ...] |
-  tier: {target}')
-```
-
-Critique returns per-route `{verdict: REBUILD|REFINE|KEEP, checklist_fails: [...], taste_violations: [...], blocking_issues: [...], rebuild_brief: "...", recommended_skill: "web-page|clarify|...", aggregate_vq: 0.0-5.0}`. A route with ≥ 1 `taste_violations` entry is REBUILD regardless of checklist score (Principle 3 + taste integration).
-
-**Step A.1.5.3 — Write `.evolution/page-baselines.json`** with one entry per route. This is the truth that Phase R reads.
-
-**Step A.1.5.4 — Write `.evolution/critique-baseline.json`** — aggregate VQ baseline that Phase F.0 will diff against. **MANDATORY: Phase C iter 1 cannot start until this file exists.** Enforced procedurally in Step C.0 below.
-
-**FALLBACK (degraded mode):** If `Skill('critique')` is unavailable, spawn 3 parallel general-purpose Agent calls using the same checklist contract. Log as `deviation_count++` with `corrective_action_for_next_run: "install or fix Skill('critique')"`. This is a Principle 6 deviation.
-
----
-
-## Phase R Step R.0 — REBUILD-mode gate (Principle 3)
-
-Read `.evolution/page-baselines.json`.
-- If `rebuild_queue.length >= 1` → **Phase R-REBUILD mode**. Skip Steps R.1–R.4 (hero signature pick — full spec in `references/world-class-tier.md`). Hero polish is deferred until rebuild queue is empty.
-- If `rebuild_queue.length == 0` → proceed with standard Phase R hero signature pick.
-
-REBUILD iters MUST invoke `Skill('web-page')` or `Skill('web-scaffold')`. Refinement skills are BANNED inside a REBUILD iter (Principle 3). Hook enforcement: any Edit/Write on a REBUILD-routed file is blocked unless the file path is under `.evolution/`.
-
----
-
-## Phase C — Improvement loop (per-iter contract)
-
-Loop condition: `current_score < target_score AND real_iterations < max_iterations AND deviation_count < 3`.
-
-### Step C.0 — Iter precondition (NEW, Principle 1 + Principle 2)
-
-Before iter 1 starts:
-```bash
-[ -f "${PROJECT_PATH}/.evolution/critique-baseline.json" ] || \
-  { echo "HALT: critique-baseline.json missing. Phase A.1.5 must complete before iter 1."; exit 1; }
-```
-
-Before iter N starts, write the iter's `current_checks` to `loop-state.json`:
-```json
-{ "iteration": N, "current_checks": ["A1", "E10"], ... }
-```
-This populates the field the hook reads to enforce Principle 2.
-
-### Step C.1 — Pre-iter screenshot
-Puppeteer screenshot of affected route, save to `.evolution/iter-{n}-before-<slug>.png`.
-
-### Step C.2 — Apply fix via correct route
-Every Skill() invocation in this step MUST include `taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md` in args so the called skill respects banned patterns + dial values at generation time.
-
-- `edit_direct: true` → direct Edit (whitelisted in SKILL_LOOKUP)
-- `edit_direct: false` → `Skill(fix_skill, args='... | taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md | design_dna_tokens: hsl tokens only | bold_execution: yes')` — the hook will block direct Edit attempts
-- REBUILD verdict route → `Skill('web-page', args='... | taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md | checklist_fails: [...] | tier: {target}')` only
-
-### Step C.3 — Post-iter screenshot + re-audit (NEW, fixes Run #4 self-validation gap)
-```
-mcp__puppeteer__puppeteer_screenshot(name=iter-{n}-after-<slug>, ...)
-```
-Then fire critique against THIS route to verify the FAILs you claimed to fix are actually fixed:
-```
-Skill('critique', args='mode: web-evolve | run_mode: per-iter-delta |
-  screenshots: [iter-{n}-before-<slug>.png, iter-{n}-after-<slug>.png] |
-  route: <route> | tier: {target} | output_format: json |
-  prior_fails: [<list of checklist FAILs from page-baselines.json for this route>]')
-```
-Returns `{visible_delta_verdict: 0-5, ssim_estimate: 0-1, checklist_status_change: [{rule, was, now}], verdict: KEEP|REVERT|VOID}`.
-
-### Step C.4 — Decision
-- `verdict: KEEP` AND `visible_delta_verdict >= 1.0` AND `checklist_status_change` shows targeted FAILs now PASS → **KEEP**: commit, advance iter
-- `verdict: VOID` (visible_delta < 1.0 OR ssim > 0.985) → **VOID**: `git reset --hard HEAD~1`, void_count++, don't increment real_iterations
-- `verdict: REVERT` (visible diff but FAILs still present OR new FAILs introduced) → **REVERT**: `git revert HEAD --no-edit`, attempt_counts[check]++, real_iterations++
-
-### Step C.5 — Commit + persist state
-Web-patch agent commits. Update loop-state.json with new iteration count, ask_user_count preserved, deviation_count current.
-
-### Step C.6 — Per-iter deviation check (NEW, Principle 6)
-If `deviation_count >= 3` → HALT with `status: deviation_cap_exceeded`. Phase F still runs (writes retro + next-run-priorities) but no more iters this run.
-
----
-
-## Phase D — Deploy + verify (per-iter or per-run)
-
-1. Push evolve branch (`evolve/{date}-runN`) to remote.
-2. Poll `gh api repos/{org}/{repo}/deployments?sha=HEAD` for preview deployment status.
-3. On preview success: Puppeteer-verify + `Skill('critique')` compare against page-baseline screenshots.
-4. On preview failure: inspect logs via `npx vercel inspect <dep_id> --logs`. If env-var related → soft-degrade per `references/multi-run-orchestration.md` (preview-skip path), increment `deviation_count`. If TS/build error → HALT immediately.
-5. On preview-verify pass: FF-merge evolve → main, push main, wait for prod build, Puppeteer-verify against live URL.
-
-**Preview env vars (lesson from Run #3 + #4):** Many projects ship with Production-scoped env vars only, causing Preview builds to fail at static-prerender. Fix once per project via `vercel env add <NAME> preview` for each required var. Do not let env-var-failure soft-degrade become the default — it makes preview-verify a fake gate.
-
----
-
-## Phase F — Retro + handoff (MANDATORY, Principle 5 + 6)
-
-**Step F.1 — Read run data:** loop-state, BUILD-LOG, scores, all `.evolution/*.json`.
-
-**Step F.2 — Compute gate status:** `failed_gates: [{gate, name, severity, detail, corrective_action_for_next_run}]`. Each failed gate MUST have `corrective_action_for_next_run` populated (Principle 6 contract).
-
-**Step F.3 — Write `.evolution/next-run-priorities.json` (NEW, Principle 5):**
-
-```json
-{
-  "generated_at": "<ISO timestamp>",
-  "generated_by_run_id": N,
-  "priorities": [
-    {
-      "route": "/path",
-      "rank": 1,
-      "fix_type": "REBUILD" | "REFINE" | "KEEP",
-      "fix_skill": "web-page" | "clarify" | "...",
-      "rationale": "1-sentence why this is the next-run priority",
-      "rebuild_brief": "from page-baselines.json (if REBUILD)",
-      "estimated_iters": 1
-    }
-  ],
-  "deferred": [
-    { "route": "/path", "reason": "lower-priority, queued for run N+2" }
-  ],
-  "corrective_actions_pending": [
-    "Specific spec-compliance items the next run MUST honor"
-  ]
-}
-```
-
-**Step F.4 — Update trajectory.json** with run entry including:
-- `status` (worst-severity from failed_gates)
-- `failed_gates[].corrective_action_for_next_run` populated
-- `deviation_count` total
-- `next_run_priorities_written: true`
-
-**Step F.5 — Commit retro + push:**
-```bash
-git add .evolution/{trajectory.json,next-run-priorities.json,retro.md}
-git commit -m "evolveN phase-F: retro + Run #{N+1} handoff"
-git push
-```
-
-**Step F.6 — Final pre-flight via taste-skill Section 10 (Principle 0 exit gate):**
-Before writing Step F.7's final echo, fire taste-skill against the deployed URL:
-```
-Skill('taste-skill', args='mode: pre-flight-check |
-  url: <live_url> |
-  taste_rules: file:${PROJECT_PATH}/.evolution/taste-rules.md (Section 10 7-item checklist) |
-  screenshots: [<post-run screenshots from Phase D verify>] |
-  output_format: json')
-```
-Returns `{section_10_pass: true|false, taste_violations: [...], memorable_choice_identified: "..." | null}`. If `section_10_pass: false` OR `memorable_choice_identified: null` → trajectory.failed_gates appends `taste_pre_flight_failed` (deviation_count++). The run completes but the user-facing summary leads with "⚠️ taste pre-flight FAILED — {violations}; re-run required."
-
-**Step F.7 — Final echo to user:** facts only (no quality claims about own output). Score delta, iter count, deviation count, taste pre-flight verdict, what next run should focus on. State which `Skill()` invocations fired vs were bypassed. State whether preview-verify was a real gate or a soft-degrade.
-
----
-
-## Hard stops (preserved from previous spec)
-
-This skill MUST NOT:
-- Run grep/Read/Bash for auditing — always via web-score or critique
-- Edit source files directly when `edit_direct:false` — hook will block AND spec forbids
-- Self-grade visual quality — `Skill('critique')` only
-- Skip BUILD-LOG entry for any iteration (including VOID)
-- Count VOID toward `max_iterations`
-- Skip Phase F retro or next-run-priorities.json
-- Touch `main` directly before Phase D preview-verify (unless explicit override flag)
-- Exceed `ask_user_count = 1` per run — hook blocks
-- Exceed `deviation_count = 3` per run — Phase C halts
-
----
-
-## Migration note (from the 36-rule spec)
-
-The 36 Cardinal Rules are not deleted — they are compressed into 6 principles. The full historical spec is archived in `references/decisions.md` (CL-1 through CL-5 changelogs + the run-by-run failure analysis that drove each rule addition). If you need to understand WHY a principle exists, that file has the context.
-
-Rough mapping:
-- Old rules 1–10, 13–15, 21–25 → Principle 1 + Phase contracts
-- Old rules 11.6, 17, 19–20 → Principle 2 + `web-evolve-guard.ps1` hook
-- Old rules 28–30, 34 → Principle 6 + soft-degrade dispatch
-- Old rules 8, 27, 36 → Principle 1 + Step C.3 re-audit
-- Old rules 11.7, 14, 26, 33 → Principle 3 + tier targets
-- Old rules 18, 31, 35 → Principle 3 + Phase R.0
-- Old rules 29, 32 → Phase A.1.5 (per-route enumeration)
-
----
-
-## Sync
-
-After modifying this skill, run `/sync-knowledge-base` (per global CLAUDE.md). The hook `web-evolve-guard.ps1` lives in `~/.claude/hooks/` and is wired in `~/.claude/settings.json` PreToolUse block.
+Do NOT use this skill for:
+- Building a new site → `/saas-build` then `/web-scaffold`
+- One-off page fixes → `/impeccable` (web-fix was removed and replaced by impeccable per fix-routing.md)
+- Single-component refactors → `/web-component`

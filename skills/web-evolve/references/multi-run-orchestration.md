@@ -47,8 +47,8 @@ If `trajectory.json` exists AND `trajectory.runs[-1].status == "completed"`:
 - New `target_score`:
   - Last final ≥ 99 → target = 100 (hold + polish — likely already at ceiling)
   - Last final ≥ 95 → target = 100 (push to SOTM)
-  - Last final ≥ 90 → target = 98 (push to world-class)
-  - Last final ≥ 80 → target = 95 (push to premium)
+  - Last final ≥ 90 → target = 98 (push to top-tier)
+  - Last final ≥ 80 → target = 95 (push to high-tier)
   - Else → target = `min(95, last_final + 8)` (keep climbing 8 points at a time)
 - **Skip Phase R if completed in any prior run** (references locked in DESIGN-BRIEF.md)
 - **Skip Phase G if motion stack already installed** (check `package.json` for lenis + gsap)
@@ -65,11 +65,11 @@ If `.evolution/` is empty or missing:
 
 | visual_q | Client work? | Revenue critical? | → target | Tier |
 |---|---|---|---|---|
-| < 2.0 | any | any | 90 | Premium SaaS (climb the floor first) |
+| < 2.0 | any | any | 90 | High-tier SaaS (climb the floor first) |
 | 2.0–2.99 | any | any | 95 | Stripe/Linear quality |
 | 3.0–3.99 | yes OR | yes OR | 98 | Awwwards SOTD candidate |
 | 3.0–3.99 | no | no | 95 | Stripe/Linear (no need to overreach personal projects) |
-| ≥ 4.0 | any | any | 98 | SOTD (already good, push to world-class) |
+| ≥ 4.0 | any | any | 98 | SOTD (already good, push to top-tier) |
 | ≥ 4.5 + custom hero detected | yes | yes | 100 | SOTM (already exceptional, attempt the ceiling) |
 
 - Phase R runs if target ≥ 98
@@ -114,7 +114,7 @@ Single source of truth across runs. Written at the end of Phase F every run.
       "completed_at": "2026-05-16T11:34:00Z",
       "status": "completed",
       "target_score": 95,
-      "tier": "premium-saas",
+      "tier": "high-tier-saas",
       "baseline_score": 47,
       "final_score": 88,
       "real_iterations": 12,

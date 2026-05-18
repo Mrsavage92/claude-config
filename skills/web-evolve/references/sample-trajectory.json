@@ -1,0 +1,89 @@
+{
+  "_description": "Sample trajectory.json showing the shape /web-evolve writes to a project's .evolution/ directory across successive runs. This file demonstrates the 'continuous improvement loop' claim made in the skill frontmatter — each new invocation reads this state and advances one tier (per Cardinal Rule: Phase A.0 picks target based on current_score + history). The real trajectory.json lives in {project_path}/.evolution/trajectory.json, NOT inside this skill folder. This sample is for reviewers and new users to see the expected shape.",
+  "_emitted_by": "iter-step.sh + append-retro.sh (script-only writes per Cardinal Rule 2)",
+  "_purpose": "demonstrate the loop is real, not just SKILL.md prose",
+  "project": "example-project",
+  "runs": [
+    {
+      "run_id": 1,
+      "started_at": "2026-05-15T08:00:00Z",
+      "target_score": 90,
+      "tier_label": "high_tier_saas",
+      "baseline_score": 60,
+      "final_score": 88,
+      "delta": "+28",
+      "iter_count": 8,
+      "refinement_skills_fired": ["impeccable", "typeset", "colorize", "polish", "animate"],
+      "vq_delta": "+1.4",
+      "phase_f_status": "complete",
+      "gate_results": {
+        "gate_a_route_around": "PASS — 5 refinement skills fired",
+        "gate_b_vq_floor": "PASS — vq_delta +1.4 ≥ floor +1.0 for tier 90",
+        "gate_c_refinement_floor": "PASS — 8 iters ≥ floor 6 for tier 90"
+      },
+      "deploy": {
+        "branch": "evolve/2026-05-15-run1",
+        "preview_url": "https://example-evolve-abc123.vercel.app",
+        "preview_verified": true,
+        "merged_to_main": true
+      }
+    },
+    {
+      "run_id": 2,
+      "started_at": "2026-05-16T08:00:00Z",
+      "target_score": 95,
+      "tier_label": "stripe_linear",
+      "baseline_score": 88,
+      "final_score": 94,
+      "delta": "+6",
+      "iter_count": 6,
+      "refinement_skills_fired": ["impeccable", "animate", "polish", "calibrate-amplitude", "overdrive"],
+      "vq_delta": "+0.9",
+      "phase_f_status": "complete",
+      "gate_results": {
+        "gate_a_route_around": "PASS",
+        "gate_b_vq_floor": "PASS — vq_delta +0.9 ≥ floor +0.5 for tier 95",
+        "gate_c_refinement_floor": "PASS"
+      },
+      "deploy": {
+        "branch": "evolve/2026-05-16-run2",
+        "preview_url": "https://example-evolve-def456.vercel.app",
+        "preview_verified": true,
+        "merged_to_main": true
+      }
+    },
+    {
+      "run_id": 3,
+      "started_at": "2026-05-17T08:00:00Z",
+      "target_score": 98,
+      "tier_label": "awwwards_sotd",
+      "baseline_score": 94,
+      "final_score": 92,
+      "delta": "-2",
+      "iter_count": 4,
+      "refinement_skills_fired": ["overdrive", "animate"],
+      "vq_delta": "-0.3",
+      "phase_f_status": "halted",
+      "halt_reason": "void_count: 3 invisible iters caught by per-iter-gates ssim threshold (0.985)",
+      "gate_results": {
+        "gate_a_route_around": "FAIL — only 2 refinement skills fired; tier 98 requires ≥6",
+        "gate_b_vq_floor": "FAIL — vq_delta -0.3 < floor +0.3 for tier 98",
+        "gate_c_refinement_floor": "FAIL — 4 iters < floor 8 for tier 98"
+      },
+      "deploy": {
+        "branch": "evolve/2026-05-17-run3-aborted",
+        "preview_url": null,
+        "preview_verified": false,
+        "merged_to_main": false
+      },
+      "retro_action": "Run #4 will revert run #3 commits + retry with reduced target (95) or different signature direction"
+    }
+  ],
+  "_invariants": [
+    "Each run advances one tier from the previous final_score, OR re-attempts the same tier on a failed run",
+    "phase_f_status is one of: complete, halted_before_phase_c, halted_phase_a, halted_phase_b, halted_phase_c",
+    "All three gates (A/B/C) must PASS for merged_to_main: true",
+    "void_count >= 3 in any single run triggers HALT (per Cardinal Rule 9)",
+    "writer attribution recorded in .hashes.json proves orchestrator did not author trajectory.json directly"
+  ]
+}

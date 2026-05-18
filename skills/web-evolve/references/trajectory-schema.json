@@ -1,0 +1,50 @@
+{
+  "$schema": "trajectory-runs[N]-schema",
+  "description": "Required structure for trajectory.runs[N] entries. RetroAgent writes this; orchestrator does not modify.",
+  "required": [
+    "run_id",
+    "run_started_at",
+    "run_ended_at",
+    "status",
+    "score_delta",
+    "real_iterations",
+    "void_count",
+    "deviation_count",
+    "violated_rules",
+    "verified_gates",
+    "tool_use_evidence",
+    "hash_mismatches",
+    "next_run_priorities",
+    "corrective_actions_pending"
+  ],
+  "enums": {
+    "status": ["PASS", "halted_before_phase_c", "deviation_cap_exceeded", "taste_pre_flight_failed"]
+  },
+  "field_types": {
+    "run_id": "integer",
+    "run_started_at": "ISO8601",
+    "run_ended_at": "ISO8601",
+    "status": "string (enum)",
+    "score_delta": {"before": "integer", "after": "integer"},
+    "real_iterations": "integer",
+    "void_count": "integer",
+    "deviation_count": "integer (max 3)",
+    "violated_rules": "array of RULE_N_VIOLATED strings",
+    "verified_gates": "array of RULE_N_VERIFIED strings",
+    "tool_use_evidence": {
+      "skill_critique_calls_found": "integer",
+      "skill_critique_calls_expected": "integer",
+      "writer_agent_writes": "integer",
+      "verify_live_html_calls": "integer",
+      "loop_condition_exits": "integer"
+    },
+    "hash_mismatches": "array of {file, expected, actual}",
+    "next_run_priorities": "array of {route, rank, fix_skill, rationale}",
+    "corrective_actions_pending": "array of strings"
+  },
+  "additional_constraints": {
+    "violated_rules_RULE_N_pattern": "^RULE_[0-9]+_(VIOLATED|UNVERIFIABLE)$",
+    "verified_gates_pattern": "^RULE_[0-9]+_VERIFIED$",
+    "writer": "Must be append-retro.sh — orchestrator-written entries are rejected by the hashes check"
+  }
+}

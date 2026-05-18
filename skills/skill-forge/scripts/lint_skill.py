@@ -190,8 +190,15 @@ def lint(skill_path: Path) -> dict[str, Any]:
                     referenced.add(name)
 
         broken = referenced - available - {skill_path.name}
-        # Soft-allowlist: skills with hyphens that might be in plugin-namespaced form, common command names
-        soft_allow = {"help", "clear", "compact", "memory", "config", "model", "init", "review", "security-review"}
+        # Soft-allowlist: built-in CLI commands + common web route names that look like skill refs in prose
+        soft_allow = {
+            # Built-in Claude Code commands
+            "help", "clear", "compact", "memory", "config", "model", "init", "review", "security-review",
+            # Common web page route names (false positives when web-* skills mention them in prose)
+            "about", "index", "pricing", "services", "home", "contact", "blog", "docs",
+            "login", "signup", "dashboard", "settings", "account", "profile", "auth",
+            "tmp", "var", "etc", "usr", "bin",  # path-like fragments
+        }
         broken -= soft_allow
         for b in sorted(broken):
             findings["warnings"].append({

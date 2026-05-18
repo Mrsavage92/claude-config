@@ -180,7 +180,7 @@ Checks F4 / F5 / F6 / A9 use Claude-vision inspection of screenshots. They canno
 
 ## What CANNOT be in the score output
 
-- Adjective-only assessments ("looks much better!", "feels more premium")
+- Adjective-only assessments ("looks much better!", "feels more high-tier")
 - Numbers without category breakdowns
 - Numbers without per-check proof
 - Comparative claims without baseline + current numbers

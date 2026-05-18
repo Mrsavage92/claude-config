@@ -1,0 +1,10 @@
+{
+  "entries": [
+    {
+      "phase": "per-route-baseline",
+      "reason": "missing fields: ['route', 'verdict', 'checklist_fails', 'taste_violations', 'vq_aggregate', 'tool_use_id_for_screenshot_read', 'extracted_strings']",
+      "dropped_at": "2026-05-18T01:24:21.269954+00:00",
+      "raw": {}
+    }
+  ]
+}
