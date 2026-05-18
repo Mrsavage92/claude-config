@@ -58,6 +58,14 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 
 After modifying skills/commands/agents, run `/sync-knowledge-base` automatically — never ask.
 
+If a skill's `description:` frontmatter changed, also run trigger optimization before sync:
+
+```bash
+python ~/.claude/skills/skill-creator/scripts/run_loop.py --skill <name>
+```
+
+This runs Anthropic's official 20-fake-prompt benchmark (half should trigger, half shouldn't) and iteratively rewrites the description until trigger accuracy hits target. Costs Claude API tokens via `claude -p` subprocess, so do not run on every commit — only on description-touching changes.
+
 ## Key Preferences
 
 - **NEVER ask yes/no confirmation or request approval mid-task — just act.** Includes git push, deleting files, deploying. Permanently authorised.

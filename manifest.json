@@ -1,6 +1,5 @@
 {
   "last_updated": "2026-05-19",
-  "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
     "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
@@ -147,7 +146,6 @@
     "animate",
     "audit",
     "autopilot",
-    "c-level-advisor",
     "calibrate-amplitude",
     "clarify",
     "codebase-untangler",
@@ -159,9 +157,7 @@
     "employer",
     "employer-audit",
     "employer-social",
-    "engineering",
     "enhance-prompt",
-    "finance",
     "financial-health",
     "find-skills",
     "findings-review",
@@ -195,7 +191,6 @@
     "market-report",
     "market-seo",
     "market-social",
-    "marketing-skill",
     "mulesoft",
     "mulesoft-bdr",
     "mulesoft-connector",
@@ -218,15 +213,12 @@
     "premium-website",
     "privacy",
     "privacy-audit",
-    "product-team",
     "product-validator",
     "project-context",
     "project-doc",
-    "project-management",
     "project-manager",
     "project-refresh",
     "project-review",
-    "ra-qm-team",
     "refine",
     "remotion",
     "reputation",
@@ -294,6 +286,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 152
+    "skills": 145
   }
 }
