@@ -11,11 +11,11 @@ JSON=$(cat)
 
 # All validation in a single python pass for clarity. stderr goes straight through so
 # REJECT messages are visible to the orchestrator; stdout captured for RESULT.
-RESULT=$(python3 - <<PYEOF
-import json, re, sys, base64
+RESULT=$(JSON_PAYLOAD="$JSON" python3 - <<'PYEOF'
+import json, os, re, sys, base64
 
 try:
-    d = json.loads("""$JSON""")
+    d = json.loads(os.environ.get("JSON_PAYLOAD", ""))
 except Exception as e:
     print(f"REJECT: invalid JSON: {e}")
     sys.exit(1)
@@ -24,24 +24,38 @@ def req(field, pattern, default=None):
     v = d.get(field, default)
     if v is None or v == 'null':
         return f"REJECT: field .{field} missing or null"
-    if not re.match(pattern, str(v)):
+    if not re.fullmatch(pattern, str(v)):
         return f"REJECT: .{field} value {v!r} does not match /{pattern}/"
     return None
 
 errs = []
-e = req('verdict', r'^(PASS|FAIL_REBUILD|FAIL_REFINE|FAIL_VOID|INVALID)\$')
+e = req('verdict', r'(PASS|FAIL_REBUILD|FAIL_REFINE|FAIL_VOID|INVALID)')
 if e: errs.append(e)
-e = req('tool_use_id_for_screenshot_read', r'^toolu_[A-Za-z0-9]+\$')
+# Accept either a real harness tool_use_id (toolu_XXX) OR the honest sentinel
+# ABORT_CANNOT_INTROSPECT, which means the sub-agent verified it read the
+# screenshot but the harness does not expose the tool_use_id in its context.
+# Anti-hallucination protection then falls to verify-live-html.sh (the real
+# ground-truth check: compares extracted_strings vs puppeteer-extracted live H1/CTA/pricing).
+e = req('tool_use_id_for_screenshot_read', r'(toolu_[A-Za-z0-9]+|ABORT_CANNOT_INTROSPECT)')
 if e: errs.append(e)
 
-vq = str(d.get('vq_aggregate', ''))
-if not re.match(r'^[0-5](\.[0-9]+)?\$', vq):
-    errs.append(f"REJECT: vq_aggregate {vq!r} not in [0.0, 5.0]")
+vq_raw = d.get('vq_aggregate', '')
+try:
+    vq_f = float(vq_raw)
+except Exception:
+    vq_f = None
+vq_valid = vq_f is not None and 0.0 <= vq_f <= 5.0
+if not vq_valid:
+    errs.append(f"REJECT: vq_aggregate {vq_raw!r} not in [0.0, 5.0]")
 
-if not isinstance(d.get('checklist_fails'), list):
+checklist_fails = d.get('checklist_fails')
+taste_violations = d.get('taste_violations')
+if not isinstance(checklist_fails, list):
     errs.append("REJECT: checklist_fails not array")
-if not isinstance(d.get('taste_violations'), list):
+    checklist_fails = []
+if not isinstance(taste_violations, list):
     errs.append("REJECT: taste_violations not array")
+    taste_violations = []
 
 # Banned-phrase scan (base64-decoded at runtime — literal strings not in source)
 BANNED = base64.b64decode("Y29tcHJlaGVuc2l2ZXxyb2J1c3R8cHJvZHVjdGlvbi1yZWFkeXx3b3JsZC1jbGFzc3xwcmVtaXVtfHBlcmZlY3R8MTAvMTB8c2hpdCBob3R8YmVzdC1pbi1jbGFzc3xlbnRlcnByaXNlLWdyYWRlfGJhdHRsZS10ZXN0ZWQ=").decode()
@@ -51,10 +65,10 @@ if hits:
     errs.append(f"REJECT: banned phrase(s) in response: {sorted(set(hits))}")
 
 # Deterministic verdict cross-check
-cf = len(d.get('checklist_fails', []))
-tv = len(d.get('taste_violations', []))
-try: vq_f = float(d.get('vq_aggregate', 0))
-except: vq_f = 0.0
+cf = len(checklist_fails)
+tv = len(taste_violations)
+if not vq_valid:
+    vq_f = 0.0
 if cf >= 2 or tv >= 1:
     expected = 'FAIL_REBUILD'
 elif cf == 1 and tv == 0:

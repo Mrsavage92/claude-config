@@ -10,12 +10,30 @@ PROJECT_PATH="${PROJECT_PATH:-$(pwd)}"
 STATE="$PROJECT_PATH/.evolution/loop-state.json"
 SMOKE_FILE="$PROJECT_PATH/.evolution/.smoke-target.txt"
 
-# Set loop-state to a state the hook should block: iteration > 0 with a check that has edit_direct:false
+# NON-DESTRUCTIVE: back up the REAL state, write a stub for the hook test,
+# restore the real state on exit. The previous implementation overwrote
+# loop-state.json every boot-gates run and never restored — silently wiping
+# iteration/queue/next_phase from the project on every invocation.
 mkdir -p "$PROJECT_PATH/.evolution"
-cat > "$STATE.smoke-backup" <<EOF
+REAL_STATE_BACKUP=""
+if [ -f "$STATE" ]; then
+  REAL_STATE_BACKUP="$STATE.real-backup-$$"
+  cp "$STATE" "$REAL_STATE_BACKUP"
+fi
+
+# Always restore real state on script exit (success or failure)
+restore_state() {
+  if [ -n "$REAL_STATE_BACKUP" ] && [ -f "$REAL_STATE_BACKUP" ]; then
+    mv "$REAL_STATE_BACKUP" "$STATE"
+  fi
+  rm -f "$SMOKE_FILE"
+}
+trap restore_state EXIT
+
+# Write the stub state for the smoke-test contract
+cat > "$STATE" <<EOF
 {"iteration": 1, "current_checks": ["A1"], "ask_user_count": 0, "deviation_count": 0, "void_count": 0, "max_iterations": 5, "target_score": 90, "halt_flag": false}
 EOF
-cp "$STATE.smoke-backup" "$STATE" 2>/dev/null || true
 
 # Touch a fake source file the hook should protect
 touch "$SMOKE_FILE"

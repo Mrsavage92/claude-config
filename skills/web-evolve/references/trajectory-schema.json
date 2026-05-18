@@ -19,9 +19,8 @@
     "agent_role",
     "agent_tool_use_id"
   ],
-  "enums": {
-    "status": ["PASS", "halted_before_phase_c", "deviation_cap_exceeded", "taste_pre_flight_failed"]
-  },
+  "status_regex": "^(PASS|halted_before_phase_c|halted_at_iter_\\d+|deviation_cap_exceeded|taste_pre_flight_failed)$",
+  "status_examples": ["PASS", "halted_before_phase_c", "halted_at_iter_2", "deviation_cap_exceeded", "taste_pre_flight_failed"],
   "field_types": {
     "run_id": "integer",
     "run_started_at": "ISO8601",

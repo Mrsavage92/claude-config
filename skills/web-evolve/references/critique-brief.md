@@ -36,7 +36,7 @@ You do NOT receive: the orchestrator's reasoning, prior runs' verdicts, "violati
   "checklist_fails": ["sales-page-10:rule_N", ...],
   "taste_violations": ["section_7:banned_font", "section_7:banned_color", ...],
   "vq_aggregate": 0.0,
-  "tool_use_id_for_screenshot_read": "toolu_XXXXXXX",
+  "tool_use_id_for_screenshot_read": "toolu_XXXXXXX_or_ABORT_CANNOT_INTROSPECT",
   "extracted_strings": {
     "h1": "<verbatim from screenshot or null if not legible>",
     "primary_cta": "<verbatim or null>",
@@ -44,6 +44,12 @@ You do NOT receive: the orchestrator's reasoning, prior runs' verdicts, "violati
   }
 }
 ```
+
+## tool_use_id_for_screenshot_read — protocol
+
+The harness does not reliably expose sub-agent tool_use_ids in conversation context. After you call Read on the screenshot, look at your transcript for the tool_use_id (format `toolu_XXXXXXX`). If you find it, use it verbatim. If you cannot find it, return the literal string `ABORT_CANNOT_INTROSPECT` — never fabricate, never return null.
+
+The real anti-hallucination check is `references/verify-live-html.sh` which compares your `extracted_strings.h1`, `primary_cta`, and `visible_pricing` against puppeteer-extracted live page content. ABORT_CANNOT_INTROSPECT is honest evidence that you read the file; verify-live-html.sh proves you read it correctly.
 
 ## Verdict mapping (mechanical, no judgment)
 

@@ -12,7 +12,7 @@
     },
     {
       "file": "critique-brief.md",
-      "sha256": "0f8c909189d470b141df144d7ec95b4670e757369cd4fdd371283cba56fd4c87",
+      "sha256": "c217fa8a7e10501e583fe81f11af63b9ee2dbc4772323f84bbf15bb50f24fc1c",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
@@ -62,7 +62,7 @@
     },
     {
       "file": "parse-verdict.sh",
-      "sha256": "3e0cdee61feced0fdcf8fe65996666c6ac3f40048feeec7d20c2ed1057d061ed",
+      "sha256": "6e853a84d4cd44888a547069988361333d29287e09b6deff801ada9174ae64ee",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
@@ -112,7 +112,7 @@
     },
     {
       "file": "smoke-test.sh",
-      "sha256": "cc733c47b946029f34ed4056b1105b4f552379fbd12acc55184700af4d3f7bbf",
+      "sha256": "731d45b81496db44f72541859848b956742da8460063bc4e0feb9458aa6ce560",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
@@ -127,7 +127,7 @@
     },
     {
       "file": "trajectory-schema.json",
-      "sha256": "280651555e6632825913bc8daa04280f86af1626463b8846610038f2f71c8c27",
+      "sha256": "d0ed3448e5f1709414528db07b63fae6019e97ba54be380536538e095c5be2b8",
       "recorded_at": "2026-05-18-skill-only-fix"
     },
     {
