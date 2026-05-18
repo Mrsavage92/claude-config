@@ -21,7 +21,11 @@ const srcRoot = existsSync(srcCandidate) ? srcCandidate : projectRoot
 const SCAN_EXTS = new Set(['.tsx', '.jsx', '.ts'])
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.next', '.vercel', 'coverage'])
 
-const motionMarkerRe = /\/\/\s*web-animations:\s*Tier\s*([1-4])\s*\(([^)]+)\)/
+// Tier 0 is a valid annotation meaning "I read this file and verified it
+// imports motion symbols but does NOT animate" — common when useReducedMotion
+// is imported only to forward the preference to child components, or when a
+// test mocks 'motion/react'. Marker still satisfies the audit trail.
+const motionMarkerRe = /\/\/\s*web-animations:\s*Tier\s*([0-4])\s*\(([^)]+)\)/
 const motionUsageRe = /\b(motion\.|useMotionValue|useSpring|useTransform|useInView|useScroll|useReducedMotion|AnimatePresence|animate\()/
 const gsapUsageRe = /\b(gsap\.|ScrollTrigger\.|gsap\(|new\s+ScrollTrigger)/
 const lenisUsageRe = /\b(new\s+Lenis|lenis\.)/
@@ -104,7 +108,7 @@ const report = {
   tier3GsapFilesMissingDualBranch: [],
   vestibularTriggersWithoutGuards: [],
   tierExceedingSiteMax: [],
-  tierBreakdown: { 1: 0, 2: 0, 3: 0, 4: 0 },
+  tierBreakdown: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
 }
 
 for await (const file of walk(srcRoot)) {
@@ -128,7 +132,7 @@ for await (const file of walk(srcRoot)) {
   if (markerMatch) {
     const tier = Number(markerMatch[1])
     report.markers.push({ file: rel, tier, pattern: markerMatch[2] })
-    if (tier >= 1 && tier <= 4) report.tierBreakdown[tier]++
+    if (tier >= 0 && tier <= 4) report.tierBreakdown[tier] = (report.tierBreakdown[tier] || 0) + 1
 
     if (siteMaxTier !== null && tier > siteMaxTier) {
       report.tierExceedingSiteMax.push({
