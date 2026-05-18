@@ -32,9 +32,10 @@ CMD="${1:-pre}"
 case "$CMD" in
   pre)
     # Pop next priority. Update loop-state. Emit screenshot path for orchestrator.
-    RESULT=$(python3 - "$STATE" "$EVOLUTION" <<'PYEOF'
-import json, os, sys
+RESULT=$(python3 - "$STATE" "$EVOLUTION" <<'PYEOF'
+import json, os, subprocess, sys
 state_path, evolution = sys.argv[1], sys.argv[2]
+project_path = os.path.dirname(evolution)
 with open(state_path) as f: d = json.load(f)
 
 rebuild_q = os.path.join(evolution, 'rebuild-queue.txt')
@@ -72,10 +73,19 @@ if not route:
 
 iter_n = int(d.get('iteration', 0)) + 1
 slug = route.replace('/', '-').strip('-') or 'home'
+try:
+    base_head = subprocess.check_output(
+        ['git', '-C', project_path, 'rev-parse', 'HEAD'],
+        text=True,
+        stderr=subprocess.DEVNULL,
+    ).strip()
+except Exception:
+    base_head = ''
 d['iteration'] = iter_n
 d['current_route'] = route
 d['current_fix_type'] = fix_type
 d['current_fix_skill'] = fix_skill
+d['current_base_head'] = base_head
 d['current_pre_screenshot'] = os.path.join(evolution, f'iter-{iter_n}-before-{slug}.png')
 d['current_post_screenshot'] = os.path.join(evolution, f'iter-{iter_n}-after-{slug}.png')
 with open(state_path, 'w') as f: json.dump(d, f, indent=2)
@@ -119,10 +129,20 @@ verdict = verdict_doc.get('verdict', '')
 iter_n = state.get('iteration', 0)
 route = state.get('current_route', '')
 
-# Map critique tokens to action tokens
+# Map critique tokens to action tokens.
+# An iter that resolved prior violations on its way to a lower-severity verdict
+# is improvement, not failure — KEEP the work and requeue at the new tier.
+# Otherwise apply strict rollback (cover-agent pattern).
+prior_resolved = len(verdict_doc.get('prior_violations_resolved', []) or [])
+new_regressions = len(verdict_doc.get('regressions_introduced', []) or [])
+
 if verdict == 'PASS':
     action = 'KEEP'
+elif verdict == 'FAIL_REFINE' and prior_resolved >= 1 and new_regressions == 0:
+    # iter took the route from FAIL_REBUILD-tier to FAIL_REFINE-tier — that IS the improvement
+    action = 'KEEP_REQUEUE_REFINE'
 elif verdict in ('FAIL_REBUILD', 'FAIL_REFINE'):
+    # no prior violations resolved, or new regressions introduced — strict rollback
     action = 'REVERT'
 elif verdict == 'FAIL_VOID':
     action = 'VOID'
@@ -132,6 +152,10 @@ else:
 if action == 'KEEP':
     state['real_iterations'] = state.get('real_iterations', 0) + 1
     state['last_iter_action'] = 'KEEP'
+elif action == 'KEEP_REQUEUE_REFINE':
+    state['real_iterations'] = state.get('real_iterations', 0) + 1
+    state['last_iter_action'] = 'KEEP_REQUEUE_REFINE'
+    state['last_iter_requeued_to'] = 'refine-queue'
 elif action == 'VOID':
     state['void_count'] = state.get('void_count', 0) + 1
     state['last_iter_action'] = 'VOID'
@@ -152,14 +176,59 @@ PYEOF
         # Orchestrator should commit; bash emits instruction
         echo "ORCHESTRATOR_DO: git commit -am 'iter $(python3 -c "import json; print(json.load(open(r'$STATE')).get('iteration',0))") KEEP route=$(python3 -c "import json; print(json.load(open(r'$STATE')).get('current_route',''))")'"
         ;;
+      KEEP_REQUEUE_REFINE)
+        # Iter resolved prior violations -> keep + move route to refine-queue for follow-up polish
+        ROUTE_NOW=$(python3 -c "import json; print(json.load(open(r'$STATE')).get('current_route',''))")
+        ITER_N=$(python3 -c "import json; print(json.load(open(r'$STATE')).get('iteration',0))")
+        python3 - "$EVOLUTION" "$ROUTE_NOW" <<'PYEOF'
+import os, sys
+evolution, route = sys.argv[1], sys.argv[2]
+refine_path = os.path.join(evolution, 'refine-queue.txt')
+existing = []
+if os.path.exists(refine_path):
+    with open(refine_path) as f: existing = [l.strip() for l in f if l.strip()]
+if route and route not in existing:
+    existing.insert(0, route)
+    with open(refine_path, 'w') as f: f.write('\n'.join(existing) + '\n')
+    print(f"REQUEUED: {route} -> refine-queue")
+else:
+    print(f"NOOP: {route} already in refine-queue or empty")
+PYEOF
+        echo "ORCHESTRATOR_DO: git commit -am 'iter $ITER_N KEEP_REQUEUE_REFINE route=$ROUTE_NOW'"
+        ;;
       VOID)
-        # Auto-revert the last commit
-        cd "$PROJECT_PATH" && git reset --hard HEAD~1 2>&1 | head -3
-        echo "BASH_DID: git reset --hard HEAD~1 (VOID)"
+        BASE_HEAD=$(python3 -c "import json; print(json.load(open(r'$STATE')).get('current_base_head',''))")
+        [ -n "$BASE_HEAD" ] || { echo "REJECT: current_base_head missing; refusing destructive rollback" >&2; exit 1; }
+        cd "$PROJECT_PATH"
+        HEAD_NOW=$(git rev-parse HEAD)
+        if [ "$HEAD_NOW" = "$BASE_HEAD" ]; then
+          echo "REJECT: no iteration commit found after base $BASE_HEAD; refusing reset" >&2
+          exit 1
+        fi
+        PARENT_NOW=$(git rev-parse HEAD^ 2>/dev/null || true)
+        if [ "$PARENT_NOW" != "$BASE_HEAD" ]; then
+          echo "REJECT: HEAD is not a single iteration commit on top of base $BASE_HEAD; refusing reset" >&2
+          exit 1
+        fi
+        git reset --hard "$BASE_HEAD" 2>&1 | head -3
+        echo "BASH_DID: git reset --hard $BASE_HEAD (VOID)"
         ;;
       REVERT)
-        cd "$PROJECT_PATH" && git revert HEAD --no-edit 2>&1 | head -3
-        echo "BASH_DID: git revert HEAD --no-edit (REVERT)"
+        BASE_HEAD=$(python3 -c "import json; print(json.load(open(r'$STATE')).get('current_base_head',''))")
+        [ -n "$BASE_HEAD" ] || { echo "REJECT: current_base_head missing; refusing revert" >&2; exit 1; }
+        cd "$PROJECT_PATH"
+        HEAD_NOW=$(git rev-parse HEAD)
+        if [ "$HEAD_NOW" = "$BASE_HEAD" ]; then
+          echo "REJECT: no iteration commit found after base $BASE_HEAD; refusing revert" >&2
+          exit 1
+        fi
+        PARENT_NOW=$(git rev-parse HEAD^ 2>/dev/null || true)
+        if [ "$PARENT_NOW" != "$BASE_HEAD" ]; then
+          echo "REJECT: HEAD is not a single iteration commit on top of base $BASE_HEAD; refusing revert" >&2
+          exit 1
+        fi
+        git revert "$HEAD_NOW" --no-edit 2>&1 | head -3
+        echo "BASH_DID: git revert $HEAD_NOW --no-edit (REVERT)"
         ;;
     esac
     exit 0

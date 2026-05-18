@@ -34,7 +34,7 @@ import json, sys
 baseline_path, route = sys.argv[1], sys.argv[2]
 with open(baseline_path) as f:
     d = json.load(f)
-entry = next((r for r in d.get('routes', []) if r.get('route') == route), None)
+entry = next((r for r in d.get('routes', []) if (r.get('route') or r.get('slug')) == route), None)
 if not entry:
     print('::NO_ENTRY::')
     sys.exit(0)

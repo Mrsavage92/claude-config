@@ -23,6 +23,23 @@ SKILL_PATH="$USER_HOME/.claude/skills/web-evolve"
 SESSION_ID="${CLAUDE_SESSION_ID:-no-session}"
 STATE_DIR="$USER_HOME/.claude/state"
 
+to_windows_path() {
+  local path="$1"
+  if command -v wslpath >/dev/null 2>&1 && [[ "$path" == /mnt/* ]]; then
+    wslpath -w "$path"
+  else
+    echo "$path"
+  fi
+}
+
+if command -v powershell >/dev/null 2>&1; then
+  POWERSHELL_BIN="powershell"
+elif command -v powershell.exe >/dev/null 2>&1; then
+  POWERSHELL_BIN="powershell.exe"
+else
+  POWERSHELL_BIN=""
+fi
+
 fail() {
   local code="$1"; shift
   echo "BOOT_GATE_FAIL[$code]: $*" >&2
@@ -40,10 +57,43 @@ grep -q "\.evolution" "$GUARD" || fail 2 "Hook script does not reference .evolut
 # Confirm the hook BLOCKS .evolution/* writes (not exits 0 as the pre-fix version did)
 grep -qE 'BLOCK.*\.evolution|exit 2.*evolution|evolution.*exit 2' "$GUARD" || fail 2 "Hook does not BLOCK .evolution writes — Cardinal Rule 2 inverted"
 
+# Gate 2b — settings.json must actually register the guard for the tools it protects.
+SETTINGS="$USER_HOME/.claude/settings.json"
+[ -f "$SETTINGS" ] || fail 2 "settings.json missing — web-evolve-guard.ps1 may exist but is not registered"
+SETTINGS_CHECK=$(python3 - "$SETTINGS" <<'PYEOF'
+import json, re, sys
+path = sys.argv[1]
+try:
+    with open(path, encoding="utf-8") as f:
+        settings = json.load(f)
+except Exception as e:
+    print(f"PARSE_FAIL:{e}")
+    sys.exit(0)
+
+for entry in settings.get("hooks", {}).get("PreToolUse", []):
+    matcher = entry.get("matcher", "")
+    commands = " ".join(
+        hook.get("command", "")
+        for hook in entry.get("hooks", [])
+        if isinstance(hook, dict)
+    )
+    if "web-evolve-guard.ps1" not in commands:
+        continue
+    required = {"Write", "Edit", "MultiEdit", "AskUserQuestion"}
+    present = {token for token in required if re.search(rf"(^|\|){re.escape(token)}($|\|)", matcher)}
+    if present == required:
+        print("OK")
+        break
+else:
+    print("MISSING_REGISTRATION")
+PYEOF
+)
+[ "$SETTINGS_CHECK" = "OK" ] || fail 2 "web-evolve-guard.ps1 not registered for Write|Edit|MultiEdit|AskUserQuestion in settings.json ($SETTINGS_CHECK)"
+
 # Gate 3 — Hook RUNTIME test (not just contract). Directly invoke the PowerShell hook
 # with a synthesized payload that simulates an Edit to .evolution/* during an active iter,
 # and assert the hook returns exit 2 with the BLOCKED message.
-[ -x "$SKILL_PATH/references/smoke-test.sh" ] || fail 3 "smoke-test.sh missing or not executable"
+[ -f "$SKILL_PATH/references/smoke-test.sh" ] || fail 3 "smoke-test.sh missing"
 
 # Build a transient fixture project for the hook to walk up from.
 # Use a Windows-style path under the user's home so PowerShell doesn't see MSYS /tmp paths.
@@ -54,9 +104,13 @@ echo '{"iteration":1,"current_checks":["A1"],"ask_user_count":0,"deviation_count
 # Hook also checks for taste-rules.md presence — provide a stub so it doesn't bail on Principle 0
 echo '# stub' > "$HOOK_TEST_DIR/.evolution/taste-rules.md"
 
-# Already a Windows path; just normalize
-HOOK_TEST_DIR_WIN="$HOOK_TEST_DIR"
-TARGET_FILE="$HOOK_TEST_DIR_WIN/.evolution/test-target.json"
+HOOK_TEST_DIR_WIN="$(to_windows_path "$HOOK_TEST_DIR")"
+GUARD_WIN="$(to_windows_path "$GUARD")"
+if [[ "$HOOK_TEST_DIR_WIN" =~ ^[A-Za-z]:\\ ]]; then
+  TARGET_FILE="${HOOK_TEST_DIR_WIN}\\.evolution\\test-target.json"
+else
+  TARGET_FILE="$HOOK_TEST_DIR_WIN/.evolution/test-target.json"
+fi
 
 # Synthesize hook payload: Edit on .evolution/ file during iter > 0 → must exit 2
 HOOK_PAYLOAD=$(python3 -c "
@@ -69,7 +123,8 @@ print(json.dumps({
 ")
 
 set +e
-HOOK_OUTPUT=$(echo "$HOOK_PAYLOAD" | powershell -NonInteractive -ExecutionPolicy Bypass -File "$GUARD" 2>&1)
+[ -n "$POWERSHELL_BIN" ] || fail 3 "PowerShell not found — cannot runtime-test web-evolve-guard.ps1"
+HOOK_OUTPUT=$(echo "$HOOK_PAYLOAD" | "$POWERSHELL_BIN" -NonInteractive -ExecutionPolicy Bypass -File "$GUARD_WIN" 2>&1)
 HOOK_RC=$?
 set -e
 rm -rf "$HOOK_TEST_DIR"
@@ -82,7 +137,7 @@ if ! echo "$HOOK_OUTPUT" | grep -q "BLOCKED"; then
 fi
 
 # Also run the contract-emit smoke-test.sh script to keep the dual signal
-SMOKE_OUT=$("$SKILL_PATH/references/smoke-test.sh" 2>&1) || fail 3 "smoke-test.sh non-zero exit"
+SMOKE_OUT=$(bash "$SKILL_PATH/references/smoke-test.sh" 2>&1) || fail 3 "smoke-test.sh non-zero exit"
 echo "$SMOKE_OUT" | grep -q "EXPECTED_EXIT_CODE=2" || fail 3 "smoke-test.sh did not emit expected contract"
 
 # Gate 4 — Session-scoped ask counter file (cardinal rule 7)
@@ -152,9 +207,53 @@ command -v python3 >/dev/null 2>&1 || fail 8 "python3 not on PATH — required b
 # Gate 9 — PIL available (required by ssim-compare.py)
 python3 -c "from PIL import Image" 2>/dev/null || fail 9 "PIL/Pillow not installed — required by ssim-compare.py"
 
-# Gate 10 — puppeteer-core cache initialised (required by puppeteer-extract.mjs)
+# Gate 10 — puppeteer-core cache initialised AND module entry resolvable
 PUP_CACHE="${WEB_EVOLVE_PUPPETEER_CACHE:-$USER_HOME/.cache/web-evolve-puppeteer}"
-[ -d "$PUP_CACHE/node_modules/puppeteer-core" ] || fail 10 "puppeteer-core not installed at $PUP_CACHE — run: cd $PUP_CACHE && npm install puppeteer-core"
+PUP_ENTRY_NEW="$PUP_CACHE/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js"
+PUP_ENTRY_OLD="$PUP_CACHE/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js"
+if [ ! -f "$PUP_ENTRY_NEW" ] && [ ! -f "$PUP_ENTRY_OLD" ]; then
+  fail 10 "puppeteer-core entry not resolvable at $PUP_CACHE — run:
+    mkdir -p \"$PUP_CACHE\" && cd \"$PUP_CACHE\" &&
+    echo '{\"name\":\"web-evolve-puppeteer-cache\",\"private\":true,\"version\":\"1.0.0\",\"type\":\"module\"}' > package.json &&
+    PUPPETEER_SKIP_DOWNLOAD=true npm install puppeteer-core"
+fi
+
+# Gate 12 — Prior-run Phase D status. If a project trajectory exists and the most
+# recent run did NOT pass Phase D, this run must Phase D before starting new iters.
+# Prevents the failure mode where Run N+1 plows ahead while Run N's commits are
+# unpushed/undeployed and the user sees no live change.
+if [ -d "$PROJECT_PATH/.evolution" ] && [ -f "$PROJECT_PATH/.evolution/trajectory.json" ]; then
+  set +e
+  PHASE_D_CHECK=$(python3 - "$PROJECT_PATH/.evolution/trajectory.json" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f: t = json.load(f)
+runs = t.get('runs', [])
+if not runs:
+    print('OK:no-prior-runs'); sys.exit(0)
+last = runs[-1]
+real_iters = int(last.get('real_iterations', 0) or 0)
+# If the last run did any real iters, it must record verified_gates including RULE_PHASE_D_VERIFIED
+# or include 'phase_d_verified: true'. Absent => carryover deploy debt.
+deploy_verified = (
+    last.get('phase_d_verified') is True
+    or 'RULE_PHASE_D_VERIFIED' in (last.get('verified_gates') or [])
+)
+if real_iters > 0 and not deploy_verified:
+    print(f"WARN:run_id={last.get('run_id')} had {real_iters} iters but no Phase D verification recorded"); sys.exit(1)
+print('OK:phase-d-current'); sys.exit(0)
+PYEOF
+  )
+  PHASE_D_RC=$?
+  set -e
+  if [ $PHASE_D_RC -ne 0 ]; then
+    # WARNING not HALT — carryover deploy debt is a user decision (they may have deployed
+    # manually outside the skill). Surface it loudly but do not block resumption.
+    echo "BOOT_WARN_12: $PHASE_D_CHECK" >&2
+    echo "  Prior run committed iter work but Phase D verification was not recorded." >&2
+    echo "  If the commit is unpushed/undeployed, the live site does not reflect it." >&2
+    echo "  Run: bash $SKILL_PATH/references/deploy-and-verify.sh   (or push manually + re-run)" >&2
+  fi
+fi
 
 echo "BOOT_GATES_OK: lines=$LINES asks=$COUNT scripts_present=${#REQUIRED_SCRIPTS[@]} hashes=verified"
 exit 0

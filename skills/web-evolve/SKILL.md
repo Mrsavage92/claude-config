@@ -40,8 +40,12 @@ Returns exit 0 only if ALL pass:
 - `Skill('taste-skill')` available (dry-run probe)
 - Settings.json has the `.evolution/*` deny rule active for the orchestrator role
 - `references/.hashes.json` matches sha256 of every `references/*.sh` (no orchestrator tampering)
+- puppeteer-core resolvable at `~/.cache/web-evolve-puppeteer/node_modules/puppeteer-core/lib/(esm/)?puppeteer/puppeteer-core.js` (Gate 10)
+- Gate 12 warns if prior trajectory entry had iters without recorded Phase D verification
 
-Any failure → HALT with the failing gate name. No soft-degrade. The exit code is the gate.
+Any failure → HALT with the failing gate name. No soft-degrade. The exit code is the gate. Gate 12 is a WARN not a halt.
+
+**Resume protocol.** Phase C iters are heavy (~100–200k tokens for one `Skill('web-page')` invocation). A typical `/web-evolve` session executes 0–2 iters and exits. State persists in `.evolution/`. Re-invoking `/web-evolve` in a fresh session reads `loop-state.json` and continues from the next queued route. The previous run's retro (validated by `append-retro.sh`) provides `next_run_priorities.json` which orders the queue. If a prior iter committed but did not run Phase D, Gate 12 warns — push + verify before starting new iters.
 
 ---
 
@@ -53,7 +57,19 @@ The orchestrator cannot write `.evolution/taste-rules.md`. Instead:
 Agent(subagent_type=general-purpose, prompt="
   TasteFetcher role. Capability: Write to .evolution/taste-rules.md ONLY.
   Invoke Skill('taste-skill', args='mode: load-for-web-evolve | output_path: .evolution/taste-rules.md').
-  After write, compute sha256 of taste-rules.md and append to .evolution/.hashes.json as {file: 'taste-rules.md', sha256: '<hash>', written_by: 'TasteFetcher', skill_tool_use_id: '<id>'}.
+  After write, compute sha256 of taste-rules.md and APPEND an entry to .evolution/.hashes.json.
+
+  CANONICAL SHAPE for .evolution/.hashes.json (this is the wrapper, not a flat array):
+    {
+      \"files\": [
+        {\"file\": \"taste-rules.md\", \"sha256\": \"<hash>\", \"written_by\": \"TasteFetcher\", \"skill_tool_use_id\": \"<id>\"}
+      ]
+    }
+
+  If .hashes.json does not exist: create it with the wrapper above.
+  If it exists as a flat list (legacy from older runs): convert it to {files: <existing>} then append the new entry.
+  If it exists as the wrapper: push the new entry onto .files.
+
   Return only the sha256 string. No prose.
 ")
 ```
@@ -84,7 +100,7 @@ Skill('critique', args='
   output_format: tokens-only |
   taste_rules_hash: <sha256 from Phase 0.5> |
   screenshot_path: <abs path> |
-  route: <slug> |
+  route: <route-path-starting-with-/> |
   checklist: sales-page-10 |
   briefing_file: references/critique-brief.md
 ')
@@ -114,7 +130,7 @@ Validates schema via `python3` (stdlib `json` + `re`). Malformed entries dropped
 ### A.4 — Live-HTML verification (the cover-agent rollback pattern)
 
 ```bash
-for route in $(python3 -c "import json; [print(r.get('slug','')) for r in json.load(open('.evolution/page-baselines.json')).get('routes',[])]"); do
+for route in $(python3 -c "import json; [print(r.get('route') or r.get('slug') or '') for r in json.load(open('.evolution/page-baselines.json')).get('routes',[])]"); do
   bash references/verify-live-html.sh "$route"
 done
 ```
@@ -150,6 +166,14 @@ while bash references/loop-condition.sh; do
 done
 ```
 
+**Iter pacing reality.** `Skill('web-page')` typically consumes 100k–200k tokens per invocation (multi-phase: read existing code → plan → write → typecheck → build). One iter through to commit + critique runs ~150k. Five iters in a single Phase C loop = ~750k tokens — not realistic in one conversation. **A normal Phase C run executes 1–2 iters per session and resumes across sessions.** State is on disk in `loop-state.json` + `rebuild-queue.txt` + `refine-queue.txt`. Boot gates check prior-run Phase D status (Gate 12) and warn if a previous run committed iter work that was never deployed.
+
+**Per-iter outcomes** drive `iter-step.sh apply-verdict`:
+- `PASS` → KEEP (commit, advance to next route)
+- `FAIL_REFINE` with `prior_violations_resolved >= 1` and `regressions_introduced == 0` → KEEP_REQUEUE_REFINE (commit + move route from rebuild-queue → refine-queue for follow-up polish iter)
+- `FAIL_REBUILD`, or `FAIL_REFINE` without prior_resolved → REVERT (`git revert HEAD --no-edit`, route stays in queue)
+- `FAIL_VOID` → VOID (`git reset --hard HEAD~1`, requires `current_base_head` recorded in loop-state)
+
 `loop-condition.sh` reads `loop-state.json` and exits 0 only if:
 - `iteration < max_iterations`
 - `current_score < target_score`
@@ -179,9 +203,10 @@ The script:
 1. Pushes evolve branch
 2. Polls `vercel inspect <deployment>` for status
 3. **Asserts** `vercel env ls preview` shows all required env vars with `scope=all-preview-branches` OR with the current branch name listed. Mismatch → exit 1, HALT. No soft-degrade fallback.
-4. Puppeteer-verifies the preview URL against post-iter screenshots
-5. FF-merges to main only on exit 0
-6. Puppeteer-verifies prod URL after main build
+4. Writes the preview URL to `.evolution/loop-state.json`
+5. Opens the merge gate only after preview env scope is verified
+
+After the script exits 0, the orchestrator must Puppeteer-verify the preview URL against post-iter screenshots before any merge. Main is not touched by `deploy-and-verify.sh`; a separate merge step may run only after preview verification passes.
 
 If step 3 fails for the first time on a project: HALT with a one-time-setup instruction printed to the user — they go to the Vercel dashboard and set the env vars to "All Preview Branches" scope once. Run is not resumable until that's done. This breaks the per-branch dependency that broke Run #6.
 

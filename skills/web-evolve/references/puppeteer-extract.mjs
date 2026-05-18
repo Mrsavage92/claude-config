@@ -7,17 +7,28 @@
 import path from 'node:path';
 import { existsSync } from 'node:fs';
 
-// puppeteer-core lives in user-level cache to keep the skill repo small
+// puppeteer-core lives in user-level cache to keep the skill repo small.
+// Modern puppeteer-core (v22+) ships only lib/puppeteer/puppeteer-core.js (no lib/esm/).
+// Older versions had lib/esm/puppeteer/puppeteer-core.js — try both for compatibility.
 const CACHE_DIR = process.env.WEB_EVOLVE_PUPPETEER_CACHE
   || path.join(process.env.HOME || process.env.USERPROFILE, '.cache', 'web-evolve-puppeteer');
-const moduleUrl = new URL(`file:///${path.join(CACHE_DIR, 'node_modules', 'puppeteer-core', 'lib', 'esm', 'puppeteer', 'puppeteer-core.js').replace(/\\/g, '/')}`);
+const CANDIDATE_ENTRIES = [
+  path.join(CACHE_DIR, 'node_modules', 'puppeteer-core', 'lib', 'puppeteer', 'puppeteer-core.js'),
+  path.join(CACHE_DIR, 'node_modules', 'puppeteer-core', 'lib', 'esm', 'puppeteer', 'puppeteer-core.js'),
+];
+const entryPath = CANDIDATE_ENTRIES.find(p => existsSync(p));
+if (!entryPath) {
+  console.error(`PUPPETEER_CORE_MISSING: install with:\n  cd ${CACHE_DIR}\n  echo '{"name":"web-evolve-puppeteer-cache","private":true,"version":"1.0.0","type":"module"}' > package.json\n  PUPPETEER_SKIP_DOWNLOAD=true npm install puppeteer-core`);
+  process.exit(1);
+}
+const moduleUrl = new URL(`file:///${entryPath.replace(/\\/g, '/')}`);
 
 let puppeteer;
 try {
   const mod = await import(moduleUrl.href);
   puppeteer = mod.default || mod;
 } catch (e) {
-  console.error(`PUPPETEER_CORE_MISSING: install with: cd ${CACHE_DIR} && npm install puppeteer-core`);
+  console.error(`PUPPETEER_CORE_IMPORT_FAIL: ${e.message}\nTried: ${entryPath}`);
   process.exit(1);
 }
 

@@ -15,7 +15,9 @@
     "tool_use_evidence",
     "hash_mismatches",
     "next_run_priorities",
-    "corrective_actions_pending"
+    "corrective_actions_pending",
+    "agent_role",
+    "agent_tool_use_id"
   ],
   "enums": {
     "status": ["PASS", "halted_before_phase_c", "deviation_cap_exceeded", "taste_pre_flight_failed"]
@@ -40,7 +42,9 @@
     },
     "hash_mismatches": "array of {file, expected, actual}",
     "next_run_priorities": "array of {route, rank, fix_skill, rationale}",
-    "corrective_actions_pending": "array of strings"
+    "corrective_actions_pending": "array of strings",
+    "agent_role": "string (must be 'RetroAgent')",
+    "agent_tool_use_id": "string (agent-id returned by the Agent tool when RetroAgent was dispatched; pattern ^a[A-Za-z0-9]{6,}$)"
   },
   "additional_constraints": {
     "violated_rules_RULE_N_pattern": "^RULE_[0-9]+_(VIOLATED|UNVERIFIABLE)$",

@@ -83,9 +83,13 @@ For every gate that the spec requires, find the ground-truth evidence:
   },
   "hash_mismatches": [{"file": "...", "expected": "...", "actual": "..."}],
   "next_run_priorities": [{"route": "...", "rank": <int>, "fix_skill": "...", "rationale": "..."}],
-  "corrective_actions_pending": ["..."]
+  "corrective_actions_pending": ["..."],
+  "agent_role": "RetroAgent",
+  "agent_tool_use_id": "<your-agent-id, e.g. a7c9b3b27a1722ce4>"
 }
 ```
+
+The `agent_role` and `agent_tool_use_id` fields are **load-bearing for Cardinal Rule 6**. The orchestrator's `append-retro.sh` validator rejects any retro that does not declare `agent_role: "RetroAgent"` with a valid agent_tool_use_id matching `^a[A-Za-z0-9]{6,}$`. The agent_tool_use_id is the agent-id the harness returned when the orchestrator dispatched you via the Agent tool — look for it in your invocation context. If you cannot identify it, abort and return `NEEDS_HUMAN: agent_tool_use_id unavailable` — do not fabricate.
 
 ## What you do NOT do
 

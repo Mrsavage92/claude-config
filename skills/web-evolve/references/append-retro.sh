@@ -41,6 +41,18 @@ status = retro.get('status', '')
 if not re.match(r'^(PASS|halted_before_phase_c|halted_at_iter_\d+|deviation_cap_exceeded|taste_pre_flight_failed)$', status):
     print(f"REJECT:status {status!r} not in constrained vocab"); sys.exit(1)
 
+# Cardinal Rule 6 declarative enforcement.
+# The retro MUST come from a separate Agent dispatch (RetroAgent), not the orchestrator.
+# Without a tool-use.log signal we cannot cryptographically verify the agent identity,
+# but we require declarative fields so an orchestrator that bypasses Phase F must lie
+# explicitly. Lies are visible in the trajectory record and accumulate as audit evidence.
+agent_role = retro.get('agent_role', '')
+agent_tool_use_id = retro.get('agent_tool_use_id', '')
+if agent_role != 'RetroAgent':
+    print(f"REJECT:agent_role must be 'RetroAgent' (got {agent_role!r}). Phase F retro must be written by a separate Agent(subagent_type=general-purpose) dispatch — see references/retro-agent-brief.md. Cardinal Rule 6."); sys.exit(1)
+if not re.match(r'^a[a-zA-Z0-9]{6,}$', agent_tool_use_id):
+    print(f"REJECT:agent_tool_use_id {agent_tool_use_id!r} does not match RetroAgent agent_id pattern (e.g. 'a7c9b3b27a1722ce4'). Must be the agent-id returned by Agent tool when RetroAgent was dispatched."); sys.exit(1)
+
 # Banned-phrase scan
 BANNED = base64.b64decode("Y29tcHJlaGVuc2l2ZXxyb2J1c3R8cHJvZHVjdGlvbi1yZWFkeXx3b3JsZC1jbGFzc3xwcmVtaXVtfHBlcmZlY3R8MTAvMTB8c2hpdCBob3R8YmVzdC1pbi1jbGFzc3xlbnRlcnByaXNlLWdyYWRlfGJhdHRsZS10ZXN0ZWQ=").decode()
 text = json.dumps(retro)

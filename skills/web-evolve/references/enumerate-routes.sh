@@ -63,7 +63,9 @@ if not routes:
 
 routes = routes[:cap]
 out = {
-    'routes': [{'slug': r, 'rank': i} for i, r in enumerate(routes)],
+    # Canonical field name is `route` (matches per-route-baseline schema).
+    # `slug` kept as alias to avoid breaking any older readers.
+    'routes': [{'route': r, 'slug': r, 'rank': i} for i, r in enumerate(routes)],
     'count': len(routes), 'capped_at': cap, 'source': source or 'none',
 }
 with open(out_path, 'w') as f: json.dump(out, f, indent=2)
@@ -76,7 +78,16 @@ import json, hashlib, sys, os
 routes_path, hash_path = sys.argv[1], sys.argv[2]
 with open(routes_path, 'rb') as f: h = hashlib.sha256(f.read()).hexdigest()
 if os.path.exists(hash_path):
-    with open(hash_path) as f: hd = json.load(f)
+    with open(hash_path) as f: raw = json.load(f)
+    # Defensive normalize: TasteFetcher prose was historically ambiguous about wrapper vs flat array.
+    # Accept either shape on read; always write the wrapper.
+    if isinstance(raw, list):
+        hd = {'files': raw}
+    elif isinstance(raw, dict):
+        hd = raw
+        if 'files' not in hd: hd['files'] = []
+    else:
+        hd = {'files': []}
 else:
     hd = {'files': []}
 files = hd.get('files', [])
