@@ -17,7 +17,7 @@ DO NOT TRIGGER when: user explicitly asks to "improve", "fix gaps", "make it pro
 
 ## Core Rules (non-negotiable)
 
-1. **Scan everything.** Glob all files. Read every component, route, hook, config, and style file. Do not intentionally sample or skip. If context limits force an early stop, list all unread files as UNREVIEWED in the report — never claim a file was reviewed that was not read. See Step 1 for priority read order.
+1. **Scan everything — full coverage is non-negotiable.** Glob all files. Read every component, route, hook, config, and style file. Do not intentionally sample or skip. For projects ≤ 50 files: single agent reads all. For projects > 50 files: divide into batches and spawn one parallel reviewer agent per batch — every file must be opened by exactly one agent. Listing files as UNREVIEWED is only acceptable when a file genuinely cannot be opened (permission denied, binary, > 1 MB single file). Never use "context limits" or "context pressure" as a reason to skip — the batching pattern in Step 3 is designed to defeat that loophole.
 2. **Score is math, not mood.** Score = 100 - (P0x10 + P1x5 + P2x2 + P3x1). A "fix" only raises the score if the specific file:line is verified changed.
 3. **Never claim fixed without verifying.** After any fix, re-read the exact file and line. If it's still there, it counts.
 4. **Log every finding.** Every issue gets a file:line reference, severity, and a 1-line description. If you found 40 issues, report 40 issues.
@@ -73,7 +73,9 @@ State the inventory count upfront: "X components, X pages, X hooks, X Python fil
 
 This inventory is the contract. Every file in it gets reviewed. The review cannot close with unreviewed files.
 
-**Priority read order for large projects (> 50 files):** auth handlers → payment/webhook handlers → API routes → custom hooks → page components → shared components → utilities → config files. If context pressure forces stopping before all files are read, list remaining files as UNREVIEWED in the final report. Never claim a file was reviewed that was not read.
+**For projects > 50 files: the main thread does NOT run passes directly.** Instead, it computes the file inventory, divides into batches, spawns one general-purpose Agent per batch in parallel (see Step 3), and aggregates findings. A single-agent run on a 273-file project produces a partial review with most files unread — that is a review failure, not an acceptable trade-off. Listing files as UNREVIEWED is allowed ONLY when a specific file fails to open at the OS level (permissions, binary, > 1 MB), never as a context-budget escape hatch.
+
+**Priority order WITHIN A BATCH (when an agent reads its assigned files):** auth handlers → payment/webhook handlers → API routes → custom hooks → page components → shared components → utilities → config files. This ordering only affects READING ORDER inside a single agent's batch — it does not authorise dropping files from the batch.
 
 ---
 
@@ -118,6 +120,85 @@ Do not proceed to Step 3 until tool output is captured.
 ### Step 3 — Run All Review Passes
 
 Run these passes. Each is independent. Do all of them. Passes that do not apply to the target type must be listed as N/A in the report — not skipped silently and not reported as clean. Only passes that actually ran against the target and found nothing may be called clean.
+
+---
+
+#### Step 3a — Coverage strategy (mandatory choice based on inventory size)
+
+**If total source files ≤ 50:** main thread runs all passes against all files itself. No batching needed.
+
+**If total source files > 50:** main thread does NOT run passes itself. It computes batches, spawns one general-purpose Agent per batch in parallel, and aggregates findings. This is the only way to honestly review a large codebase — single-agent reviews of 200+ files always leave the majority unread.
+
+##### Batching algorithm (deterministic, do not improvise)
+
+Compute the source inventory from Step 1. Split into batches by area:
+
+1. **Pages**: `src/pages/**/*.tsx` — batch size cap 25 files per agent. If 45 pages: 2 batches.
+2. **Components — by subfolder**: `src/components/audit-report/**`, `src/components/audit/**`, `src/components/billing/**`, `src/components/dashboard/**`, `src/components/landing/**`, `src/components/ui/**`, `src/components/*.tsx` (root). One agent per subfolder (or merge small ones up to 40-file cap).
+3. **Hooks + Lib**: `src/hooks/**` + `src/lib/**` — one agent (cap 50).
+4. **Tests**: `src/test/**` or `src/tests/**` — one agent.
+5. **Config files** (vite.config, tailwind.config, eslint.config, vercel.json, index.html, package.json): main thread reads these directly — they're already covered in Step 1.
+
+A 273-file project typically lands at 6–10 batches. Spawn them in PARALLEL (single message, multiple Agent tool calls).
+
+##### Batch agent briefing template (mandatory — do not paraphrase)
+
+```
+You are reviewing a SPECIFIC batch of source files from a larger project.
+
+Project: <path>
+Batch name: <pages-A | components-audit-report | hooks-and-lib | tests | etc.>
+Files in this batch (exact list — you MUST open every one):
+- <abs path>
+- <abs path>
+- ...
+
+For each file in your batch, run the applicable passes from this list:
+[paste the relevant Pass A-H or I-L checklists from SKILL.md]
+
+HARD RULES:
+1. You MUST call the Read tool on every file in your batch. If a file fails to open
+   at the OS level (permission denied, binary, >1 MB), log it as UNREADABLE — but
+   never skip silently for "context budget" reasons. Your batch is sized so context
+   IS sufficient.
+2. List the files you actually opened at the top of your response. The count MUST
+   match the batch size.
+3. Cite every finding with file:line. Default skepticism. Do not invent function
+   or component names — read first, claim second.
+4. Banned phrases in your output: comprehensive, robust, production-ready,
+   world-class, premium, perfect, best-in-class, enterprise-grade, battle-tested,
+   seamless, cutting-edge.
+5. Tool baseline is clean (tsc/eslint/audit pass, tests pass) — do not re-run
+   tooling. Focus on what tools cannot detect.
+
+Return findings as a single markdown block:
+
+### Files opened (must equal batch size)
+- <abs path>
+- ...
+
+### Findings
+[P0|P1|P2|P3] [Pass A-H] <file:line> — <one-line description>
+P0/P1 also include: Blast radius: <one line>
+
+### Files I could not open (rare — OS-level failures only)
+- <abs path> — <reason>
+
+Stop. Return only the markdown block above. No prose preamble.
+```
+
+##### Aggregation (main thread after all agents return)
+
+1. Verify each agent's "Files opened" list equals its assigned batch. If any file is missing, flag the agent's report as incomplete and either re-spawn for the missing files or list them as UNREVIEWED-due-to-agent-failure.
+2. Concatenate all findings. Sort by severity (P0 → P3).
+3. Compute total file coverage: `files_actually_reviewed / total_source_files`. Report this number in the final score.
+4. Run Steps 4-8 as normal against the aggregated findings.
+
+**Coverage threshold:** if `files_actually_reviewed / total_source_files < 0.95`, the review verdict cannot be SHIP regardless of score. Coverage gap is itself a P1 finding.
+
+---
+
+#### The eight review passes (run by single agent OR by each batch agent against their batch):
 
 #### Pass A — Security (OWASP-grounded)
 
