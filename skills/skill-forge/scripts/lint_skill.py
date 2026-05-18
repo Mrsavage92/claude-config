@@ -138,15 +138,28 @@ def lint(skill_path: Path) -> dict[str, Any]:
         if sub_path.exists():
             files_to_scan.extend(sorted(sub_path.glob("*.md")))
 
+    # The skill-forge skill itself has to LIST the banned phrases as part of its job.
+    # Exempt it from its own banned-phrase scan.
+    is_self_exempt = skill_path.name == "skill-forge"
+
+    # Skip lines that are clearly meta-discussion of the banned-phrase rule rather than
+    # self-praise usage. Trigger words: ban / banned / bans / banning / forbidden / forbid /
+    # do not use / self-flattery / self-praise / banlist.
+    skip_pattern = re.compile(
+        r"\b(ban|banned|bans|banning|forbidden|forbid|self-flattery|self-praise|banlist)\b|do not use",
+        re.IGNORECASE,
+    )
+
     for f in files_to_scan:
+        if is_self_exempt:
+            break
         try:
             text = f.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
         for line_no, line in enumerate(text.splitlines(), start=1):
             for match in phrase_pattern.finditer(line):
-                # Skip matches inside code blocks that are obviously displaying banned content as examples
-                if "banned" in line.lower() or "do not use" in line.lower() or "forbidden" in line.lower():
+                if skip_pattern.search(line):
                     continue
                 rel = f.relative_to(skill_path)
                 findings["errors"].append({

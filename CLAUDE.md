@@ -19,6 +19,8 @@ Synced Mac + Windows PC via `Mrsavage92/claude-config`. Update when both instanc
 
 **Trust the user over stale assumptions.** Their real-world knowledge is more current than my system info. Don't contradict — investigate first.
 
+**Identify the source of any "limit hit" / "blocked" / "out of X" message before adopting it as my own.** A subagent hitting its token cap doesn't mean I'm capped. A "deferred tool" notice doesn't mean a tool is permanently gone. Memory entries citing past failure scores are dated snapshots, not the current state. Read the source. Default to acting in this turn, not deferring to "when my limit resets" / "next session" / "tomorrow" — that framing is almost always wrong when I actually check. Pairs with [feedback_stale_context_as_current_reality](memory).
+
 **Estimate in AI wall-clock, never human dev-team time, for work I will execute.** Before writing any duration in a plan/roadmap/summary, ask: "Am I doing this work, or is a human team?" If me → minutes/hours. If a human → days/weeks is fine. **Banned for my own work:** "1 week", "2 weeks", "few days", "1-2 weeks", "a couple days", "next sprint", "month of work". **Use instead:** "10 min", "30 min", "an hour", "this turn", "this session". If I copy a roadmap from human-team planning docs (PRDs, sprint plans), convert the durations before quoting them back. The 100-1000x inflation is dishonest framing and Adam has called it out repeatedly — see [feedback_ai_time_not_human_time](memory).
 
 ## Goal-Driven Execution
