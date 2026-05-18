@@ -383,6 +383,20 @@ def main():
         type=Path,
         help="Output path for benchmark.json (default: <benchmark_dir>/benchmark.json)"
     )
+    parser.add_argument(
+        "--pass-threshold",
+        type=float,
+        default=None,
+        help="Absolute pass-rate threshold for ship gate (0.0-1.0). When set, the run "
+             "PASSes only if with_skill.pass_rate >= threshold AND delta > 0. Prevents "
+             "shipping skills that improved by +2pp but are still bad (e.g. 4%% → 6%%)."
+    )
+    parser.add_argument(
+        "--require-positive-delta",
+        action="store_true",
+        help="Require positive pass-rate delta vs baseline. Use with --pass-threshold "
+             "to enforce both direction and absolute quality."
+    )
 
     args = parser.parse_args()
 
@@ -432,6 +446,43 @@ def main():
         label = config.replace("_", " ").title()
         print(f"  {label}: {pr*100:.1f}% pass rate")
     print(f"  Delta:         {delta.get('pass_rate', '—')}")
+
+    # Ship-gate evaluation — only fires when --pass-threshold or --require-positive-delta is set.
+    # Prevents the failure mode "v2 > v1 by +2pp but both are garbage".
+    if args.pass_threshold is not None or args.require_positive_delta:
+        # Identify the "with_skill" / "primary" config — prefer one called with_skill, else first config
+        primary_config = next((c for c in configs if "with_skill" in c.lower()), configs[0] if configs else None)
+        if primary_config is None:
+            print("\nGATE: SKIPPED — no benchmark configurations found.", file=sys.stderr)
+            sys.exit(2)
+
+        primary_pr = run_summary[primary_config]["pass_rate"]["mean"]
+        delta_str = delta.get("pass_rate", "+0.00")
+        # delta_str is formatted like "+0.20" or "-0.10" — strip leading sign for parsing
+        try:
+            delta_value = float(delta_str.replace("+", ""))
+        except (ValueError, AttributeError):
+            delta_value = 0.0
+
+        gate_failures = []
+        if args.pass_threshold is not None and primary_pr < args.pass_threshold:
+            gate_failures.append(
+                f"absolute pass_rate {primary_pr*100:.1f}% < threshold {args.pass_threshold*100:.1f}%"
+            )
+        if args.require_positive_delta and delta_value <= 0:
+            gate_failures.append(
+                f"delta {delta_str} not positive vs baseline"
+            )
+
+        print("\n=== SHIP GATE ===")
+        if gate_failures:
+            print(f"GATE: FAIL — {'; '.join(gate_failures)}")
+            print("Do not ship this version. Iterate further or rebuild via /skill-forge mode: forge.")
+            sys.exit(2)
+        else:
+            print(f"GATE: PASS — pass_rate {primary_pr*100:.1f}% (delta {delta_str})")
+            if args.pass_threshold is not None:
+                print(f"        threshold met: ≥ {args.pass_threshold*100:.1f}%")
 
 
 if __name__ == "__main__":

@@ -10,12 +10,20 @@ Rules for writing and maintaining skills in this config. Adapted from alirezarez
 
 The required path:
 
-| Task | Tool | Why |
-|---|---|---|
-| **Create a new skill** | `Skill('skill-creator')` | Spec interview → draft → dual-run benchmark (WITH vs WITHOUT skill) → assertion grading → variance analysis → HTML viewer for human review → iterate |
-| **Audit an existing skill** | `Skill('skill-forge', mode: 'review')` | Independent scoring agent grades the artifact, not the SKILL.md prose |
-| **Rebuild a broken skill** | `Skill('skill-forge', mode: 'forge')` | review → external sourcing (≥3 implementations) → rebuild → re-verify |
-| **Modify an existing skill** | `Skill('skill-creator')` (it handles edit + re-eval) | Snapshot old version → eval against snapshot as baseline → confirm delta is positive before shipping |
+| Tier | Task | Tool | Cost | Why |
+|---|---|---|---|---|
+| **0 (free)** | Lint any skill before spending money | `python ~/.claude/skills/skill-forge/scripts/lint_skill.py <path>` | ~1 sec | Catches frontmatter errors, banned phrases, broken `Skill('X')` references, oversized files. Gates every tier below. |
+| **1 (cheap)** | Audit an existing skill | `Skill('skill-forge', mode: 'review')` | ~5-10 min, 1 agent | Independent scoring agent grades the artifact, not the SKILL.md prose. |
+| **1 (cheap)** | Rebuild a broken skill from external patterns | `Skill('skill-forge', mode: 'forge')` | ~30 min, 2-3 agents | review → external sourcing (≥3 implementations) → rebuild → re-verify. Max 3 cycles. |
+| **2 (paid)** | Create a new skill | `Skill('skill-creator')` | ~30-60 min, 6-18 paid `claude -p` runs | Spec interview → draft → dual-run benchmark (WITH vs WITHOUT) → assertion grading → variance analysis → HTML viewer → iterate. |
+| **2 (paid)** | Modify a skill and prove improvement | `Skill('skill-creator')` (edit mode) | ~30-60 min, 6-18 paid runs | Snapshot old → eval against snapshot as baseline → confirm `pass_rate_delta > 0 AND pass_rate >= threshold` (run `aggregate_benchmark.py --pass-threshold 0.7 --require-positive-delta`). |
+| **NEVER** | Freehand a SKILL.md | — | — | Produced `/web-evolve` at 4/100. |
+
+**Reviewer-prompt linter — MANDATORY before spawning any independent reviewer agent:**
+```bash
+python ~/.claude/skills/skill-forge/scripts/lint_reviewer_prompt.py --string "<prompt>"
+```
+Exits 1 if it detects priming language ("re-verification", "after fixes", "credit improvements", etc.). Caught a real false-PASS on 2026-05-17 — without this, primed reviewers confirm what the requester wants. See `~/.claude/projects/.../memory/feedback_never_prime_reviewers.md`.
 
 **The gate (load-bearing):** every new or modified skill must produce a `benchmark.json` showing the with-skill pass rate > baseline pass rate before merging to `main`. No benchmark = no merge. The `aggregate_benchmark.py` script in `skill-creator/scripts/` produces this automatically.
 

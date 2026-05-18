@@ -48,7 +48,21 @@ Default: `forge`. Review-only is `mode: review`.
 
 ---
 
-## Phase 0 — Spec capture (mandatory, blocks everything)
+## Phase 0 — Free lint pass (mandatory, blocks everything; cost: ~1 second)
+
+Before spending money on the independent reviewer or rebuild loop, run the free lint tier:
+
+```bash
+python ~/.claude/skills/skill-forge/scripts/lint_skill.py <path-to-skill>
+```
+
+This catches the ~80% of issues that don't need an LLM: invalid frontmatter, banned-phrase hits (forces FAIL per rubric anyway), broken `Skill('X')` references, oversized SKILL.md, weak description triggers. Exit codes: 0 = clean, 1 = warnings, 2 = blocking errors.
+
+**If exit 2 (errors):** STOP. Fix the errors first. There's no point spawning an expensive scoring agent against a skill that fails structural checks — the agent will deduct for the same things and you'll have paid for the privilege.
+
+**If exit 1 (warnings) or 0:** continue to Phase 0.5.
+
+## Phase 0.5 — Spec capture (mandatory, blocks everything)
 
 Before any review or rebuild, capture from the user:
 
@@ -73,6 +87,14 @@ The skill is reviewed by what it produces, not what it says.
 ---
 
 ## Phase 2 — Independent scoring (the load-bearing anti-cheat)
+
+**Before spawning the agent**, lint your prompt with:
+
+```bash
+python ~/.claude/skills/skill-forge/scripts/lint_reviewer_prompt.py --string "<your full prompt>"
+```
+
+If the linter exits 1 (priming detected), rewrite the prompt. Phrases like "re-verification after fixes", "credit demonstrated improvements", or "should now PASS" bias the reviewer to confirm the outcome you want. See [[feedback_never_prime_reviewers]] — this rule exists because priming a reviewer on 2026-05-17 produced a false 95/PASS verdict when the cold truth was 56/FAIL with 3 unfound showstoppers.
 
 Spawn a `general-purpose` Agent with this exact briefing pattern. The agent receives:
 
