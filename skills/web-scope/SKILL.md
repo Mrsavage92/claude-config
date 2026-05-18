@@ -1,3 +1,8 @@
+---
+name: web-scope
+description: Plan a new web project — pages, framework choice, design references, data dependencies — before writing any code. Produces SCOPE.md, the build contract that /web-scaffold, /web-page, and /web-evolve all read. Use when starting any new website or web app, when the user describes what they want to build but no code exists yet, or as the first step of /saas-build. Halts unless a fresh product validation verdict exists. Triggers — /web-scope, plan a new site, scope a web project, map out the pages, start a website, kick off a new build.
+---
+
 # /web-scope
 
 Map every page, design decision, and data dependency before writing a single line of code. Produces SCOPE.md — the build contract that all other /web-* skills read.
@@ -60,7 +65,7 @@ Read the user's product description. Extract:
   - Write this to SCOPE.md `## Framework` section verbatim — `/web-scaffold` Step 0.5 reads it. If absent, scaffold halts and asks the question there.
 
 - **Reference URL picks (MANDATORY — 2-3 URLs pinned to SCOPE.md `## References`):**
-  - **Why this exists:** the refinement-contract (`~/.claude/skills/shared/refinement-contract.md`) requires every refinement skill invocation to receive a source. References picked at scope-time become the canonical source bundle for the whole project — `/web-scaffold` extracts tokens via `/style-mirror` BEFORE code generation, and `/web-evolve` Phase C builds `.evolution/refinement-sources.json` from these extracts. Without scope-time references the build defaults to "premium SaaS" generics, which is the failure mode this requirement closes.
+  - **Why this exists:** the refinement-contract (`~/.claude/skills/shared/refinement-contract.md`) requires every refinement skill invocation to receive a source. References picked at scope-time become the canonical source bundle for the whole project — `/web-scaffold` extracts tokens via `/style-mirror` BEFORE code generation, and `/web-evolve` Phase C builds `.evolution/refinement-sources.json` from these extracts. Without scope-time references the build defaults to the banned generic-SaaS look, which is the failure mode this requirement closes.
   - Ask the user (if not auto-decidable from DESIGN-BRIEF.md): **"Pick 2–3 specific reference URLs whose visual direction we should mirror. Not 'sites you like' — sites whose typography, color, layout, and motion this product should resemble at-tier. Examples: linear.app, stripe.com, vercel.com, resend.com, bruno-simon.com, oryzo.ai, godly.website picks."**
   - Validate each pick by reachability (`curl -s -o /dev/null -w "%{http_code}"`) before accepting. Reject dead URLs.
   - Write to SCOPE.md `## References` section with one URL per line:

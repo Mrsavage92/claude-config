@@ -1,6 +1,11 @@
+---
+name: web-page
+description: Build one full page in an existing scaffolded project, with a per-page review loop before moving to the next. Reads SCOPE.md for framework choice (Next.js or Vite). Called per-page by /saas-build and per-route by /web-evolve when a critique verdict is REBUILD. Use when adding a single page to a scoped project, when /web-evolve flags a route for rebuild, or when the user asks to build a specific page like /pricing, /about, /services, /contact. Not for initial project scaffolding — that's /web-scaffold. Triggers — /web-page, build a page, rebuild this route, add a new page, page-by-page build.
+---
+
 # /web-page
 
-Build one complete, production-quality page with a per-page review loop before moving on. Supports both **Next.js 15 App Router** (writes to `app/{route}/page.tsx`) and **Vite + React Router 7** (writes to `src/pages/{Name}.tsx`) — read `SCOPE.md` `framework:` field first.
+Build one full page with a per-page review loop before moving on. Supports both **Next.js 15 App Router** (writes to `app/{route}/page.tsx`) and **Vite + React Router 7** (writes to `src/pages/{Name}.tsx`) — read `SCOPE.md` `framework:` field first.
 
 ## When to Use
 - Building any page in an existing scaffolded project
@@ -284,7 +289,7 @@ Gradient blobs and generic stock photography are banned (auto-FAIL at tier ≥ 9
 3. Save outputs to `public/images/generated/` (Vite) or `public/og/` + `public/images/` (Next.js).
 4. Reference via `<Image>` (Next.js) or `<img>` with explicit `width`/`height` (Vite — prevents CLS).
 
-Skip this step ONLY if the project's DESIGN-BRIEF.md says `hero_style: real-product-ui` (R3F hero) or `hero_style: kinetic-typography` — those world-class signatures replace imagery.
+Skip this step ONLY if the project's DESIGN-BRIEF.md says `hero_style: real-product-ui` (R3F hero) or `hero_style: kinetic-typography` — those signature treatments replace imagery.
 
 ### Step 5.6 — Per-page OG image (MANDATORY for public routes)
 

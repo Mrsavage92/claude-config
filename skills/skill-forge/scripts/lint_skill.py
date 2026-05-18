@@ -197,6 +197,8 @@ def lint(skill_path: Path) -> dict[str, Any]:
             # Common web page route names (false positives when web-* skills mention them in prose)
             "about", "index", "pricing", "services", "home", "contact", "blog", "docs",
             "login", "signup", "dashboard", "settings", "account", "profile", "auth",
+            "onboarding", "setup", "analytics", "monitor", "overview", "billing",
+            "checkout", "cart", "search", "support", "faq", "terms", "privacy",
             "tmp", "var", "etc", "usr", "bin",  # path-like fragments
         }
         broken -= soft_allow

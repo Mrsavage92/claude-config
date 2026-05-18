@@ -7,7 +7,7 @@ App icons and OG images are AI-generated using the `ai-image-generation` skill p
 Run at scaffold time or after design brief is confirmed. You need:
 - Product name
 - Signature color (HSL from design brief)
-- Tone (enterprise / expressive / playful / premium)
+- Tone (corporate / expressive / playful / luxurious)
 
 ## Required Outputs
 

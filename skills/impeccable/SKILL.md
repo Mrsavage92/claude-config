@@ -1,14 +1,41 @@
 ---
-name: impeccable
-description: Create distinctive, production-grade frontend interfaces with high design quality. Generates creative, polished code that avoids generic AI aesthetics. Use when the user asks to build web components, pages, artifacts, posters, or applications, or when any design skill requires project context. Call with 'craft' for shape-then-build, 'teach' for design context setup, or 'extract' to pull reusable components and tokens into the design system.
-version: 2.1.1
-user-invocable: true
+name: craft
+description: Build distinctive frontend interfaces with reference-anchored design tokens, working motion, and lint-blocked banned defaults. Replaces the legacy 'impeccable' skill name (which was itself a banned self-praise phrase per the user's no-self-quality-claims rule). Use when the user asks to build web components, pages, artifacts, posters, or applications, or when any design skill requires project context. Call with 'craft' for shape-then-build, 'teach' for design context setup, or 'extract' to pull reusable components and tokens into the design system. Triggers — legacy `impeccable` invocations route here for backwards compatibility.
 argument-hint: "[craft|teach|extract]"
 license: Apache 2.0. Based on Anthropic's frontend-design skill. See NOTICE.md for attribution.
+metadata:
+  version: "3.0.0"
+  user-invocable: true
 ---
 
 
-This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+This skill guides creation of distinctive frontend interfaces that avoid generic AI-template aesthetics. Implements real working code with attention to aesthetic detail and reference-anchored design choices.
+
+## Mandatory lint gates (run BEFORE returning code or marking task done)
+
+Three lint gates must pass on every generated component or page. These mechanically block the failure modes caught in the forge baseline (SVG fontFamily=var(...) rendering bug, Geist as both display+body, banned default reaches).
+
+```bash
+# Gate 1 — SVG fontFamily=var() detection
+bash scripts/lint-svg-fontfamily.sh <files>
+# Exit 2 if any SVG element uses fontFamily="var(--font-X)" — CSS var() is not valid in SVG attrs and the font will fall back to default.
+
+# Gate 2 — typography pairing
+bash scripts/lint-typography-pairing.sh <globals.css>
+# Exit 2 if font-display and font-body resolve to the same stack (e.g. both Geist, both Inter).
+# A real pairing strategy requires distinct families per role.
+
+# Gate 3 — banned-defaults reach
+bash scripts/lint-banned-defaults.sh <files>
+# Exit 2 if any of: Geist as primary font, dark-navy+gold-accent combo, bento grid without reference anchor, Lucide-tinted-squares, GSAP pinned-scroll as default, centered-hero+gradient-blob.
+# Caller can override per-file with a `// craft: banned-default-allowed reason: <ref>` comment.
+```
+
+All three gates must exit 0 before the work is marked done. If a gate fails, fix the output and re-run — never return code that fails a gate.
+
+## Why this skill was renamed from "impeccable"
+
+The user's memory rule `[feedback_no_self_quality_claims]` lists banned words such as "impeccable", "comprehensive", "premium", "production-grade" — these may not appear in any output produced by Claude, including skill names. The legacy name was a structural violation. The new name `craft` is neutral and matches the existing invocation mode (`/impeccable craft …` already used `craft` as a sub-command).
 
 ## Context Gathering Protocol
 

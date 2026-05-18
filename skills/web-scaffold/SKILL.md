@@ -1,6 +1,11 @@
+---
+name: web-scaffold
+description: Bootstrap a new React or Next.js web application from a SCOPE.md contract. Sets up framework choice (Next.js 15 App Router or Vite 6 + React Router 7), design tokens, theming, base components, routing, and folder structure. Use when starting a brand-new project after /web-scope has produced SCOPE.md, when the user asks to scaffold or bootstrap a new web app from scratch, or when /saas-build dispatches the initial build phase. Not for adding pages to an existing project — that's /web-page. Triggers — /web-scaffold, scaffold a new site, bootstrap a React app, start a new web project, kick off the build, initialise a Next.js project.
+---
+
 # /web-scaffold
 
-Bootstrap a production-ready React web application with enterprise-quality design from the ground up. Supports two framework paths: **Next.js 15 App Router** (default for marketing-led SaaS — see Step 0.5) and **Vite 6 + React Router 7** (for app-shell-first products without a marketing site).
+Bootstrap a new React web application from a SCOPE.md contract. Supports two framework paths: **Next.js 15 App Router** (default for marketing-led SaaS — see Step 0.5) and **Vite 6 + React Router 7** (for app-shell-first products without a marketing site).
 
 ## Phase 0.0 — Product Validation Gate (MANDATORY for new products)
 
@@ -72,7 +77,7 @@ The two paths produce different file trees. Do NOT mix `app/` (Next.js App Route
 
 ### Step 0.7 — Extract reference tokens via /style-mirror (MANDATORY before any code gen)
 
-`tokens.lock.json` is the design system, NOT "premium SaaS defaults". This step is the lever that prevents the "every scaffold looks the same" failure mode.
+`tokens.lock.json` is the design system, NOT a banned generic-SaaS default. This step is the lever that prevents the "every scaffold looks the same" failure mode.
 
 1. Read `SCOPE.md` `## References` section (produced by `/web-scope`). Expect 2–3 URLs.
 2. If missing → HALT with: `"SCOPE.md is missing the ## References section. Run /web-scope first — references are mandatory at scope time, not optional (refinement-contract.md §1)."`
@@ -106,7 +111,7 @@ If no SCOPE.md: run /web-scope first, then return here.
 Decide all of these yourself if the user says "just build it":
 
 1. **Enterprise or expressive?** Professional/B2B tool = enterprise defaults (neutral palette, restrained color). Consumer/creative = expressive defaults.
-2. **Tone:** Bold/Confident | Calm/Trustworthy | Playful/Modern | Premium | Technical
+2. **Tone:** Bold/Confident | Calm/Trustworthy | Playful/Modern | Luxurious/High-end | Technical
 3. **Reference site:** pick ONE (linear.app | vercel.com | stripe.com | resend.com | clerk.com)
 4. **Color:** For enterprise — near-neutral primary (deep slate/indigo). For expressive — vivid signature hue.
 5. **Color job (critical):** "The primary color is used ONLY for [primary CTA buttons] and [active nav indicator]. Nothing else."
