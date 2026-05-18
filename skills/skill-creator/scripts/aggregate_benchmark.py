@@ -157,8 +157,16 @@ def load_run_results(benchmark_dir: Path) -> dict:
                 # Extract metrics if available
                 metrics = grading.get("execution_metrics", {})
                 result["tool_calls"] = metrics.get("total_tool_calls", 0)
-                if not result.get("tokens"):
+                # Track the source of the "tokens" value so the markdown output can
+                # disclose when it's a fallback (output_chars proxy) vs real token count.
+                if "tokens" in result and result["tokens"]:
+                    result["tokens_source"] = "tokens"
+                elif metrics.get("output_chars"):
                     result["tokens"] = metrics.get("output_chars", 0)
+                    result["tokens_source"] = "output_chars"
+                else:
+                    result["tokens"] = 0
+                    result["tokens_source"] = "tokens"
                 result["errors"] = metrics.get("errors_encountered", 0)
 
                 # Extract expectations — viewer requires fields: text, passed, evidence
@@ -254,6 +262,7 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
                     "total": result["total"],
                     "time_seconds": result["time_seconds"],
                     "tokens": result.get("tokens", 0),
+                    "tokens_source": result.get("tokens_source", "tokens"),
                     "tool_calls": result.get("tool_calls", 0),
                     "errors": result.get("errors", 0)
                 },
@@ -325,10 +334,17 @@ def generate_markdown(benchmark: dict) -> str:
     b_time = b_summary.get("time_seconds", {})
     lines.append(f"| Time | {a_time.get('mean', 0):.1f}s ± {a_time.get('stddev', 0):.1f}s | {b_time.get('mean', 0):.1f}s ± {b_time.get('stddev', 0):.1f}s | {delta.get('time_seconds', '—')}s |")
 
-    # Format tokens
+    # Format tokens — disclose source when it's a fallback proxy (output_chars) rather than real token count
     a_tokens = a_summary.get("tokens", {})
     b_tokens = b_summary.get("tokens", {})
-    lines.append(f"| Tokens | {a_tokens.get('mean', 0):.0f} ± {a_tokens.get('stddev', 0):.0f} | {b_tokens.get('mean', 0):.0f} ± {b_tokens.get('stddev', 0):.0f} | {delta.get('tokens', '—')} |")
+    # Inspect the underlying runs to detect whether any series uses the output_chars fallback
+    runs = benchmark.get("runs", [])
+    a_sources = {r.get("result", {}).get("tokens_source", "tokens") for r in runs if r.get("configuration") == config_a}
+    b_sources = {r.get("result", {}).get("tokens_source", "tokens") for r in runs if r.get("configuration") == config_b}
+    tokens_label = "Tokens"
+    if "output_chars" in a_sources or "output_chars" in b_sources:
+        tokens_label = "Tokens (proxy: output_chars when timing.json absent)"
+    lines.append(f"| {tokens_label} | {a_tokens.get('mean', 0):.0f} ± {a_tokens.get('stddev', 0):.0f} | {b_tokens.get('mean', 0):.0f} ± {b_tokens.get('stddev', 0):.0f} | {delta.get('tokens', '—')} |")
 
     # Notes section
     if benchmark.get("notes"):

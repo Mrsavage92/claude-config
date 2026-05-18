@@ -8,13 +8,28 @@ for a set of queries. Outputs results as JSON.
 import argparse
 import json
 import os
-import select
+import queue as _queue
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+
+
+def _enqueue_lines(stream, q):
+    """Reader thread: pump lines from a subprocess stdout into a queue.
+
+    Replaces select.select on pipes which is Unix-only — Windows select only supports sockets.
+    """
+    try:
+        for line in stream:
+            q.put(line)
+    except Exception:
+        pass
+    finally:
+        q.put(None)  # EOF sentinel
 
 from scripts.utils import parse_skill_md
 
@@ -88,43 +103,51 @@ def run_single_query(
             stderr=subprocess.DEVNULL,
             cwd=project_root,
             env=env,
+            text=True,
+            bufsize=1,
+            encoding="utf-8",
+            errors="replace",
         )
 
         triggered = False
         start_time = time.time()
-        buffer = ""
         # Track state for stream event detection
         pending_tool_name = None
         accumulated_json = ""
 
+        # Cross-platform line reader: thread + queue replaces select.select on pipes
+        line_queue: _queue.Queue = _queue.Queue()
+        reader_thread = threading.Thread(
+            target=_enqueue_lines, args=(process.stdout, line_queue), daemon=True
+        )
+        reader_thread.start()
+
         try:
             while time.time() - start_time < timeout:
-                if process.poll() is not None:
-                    remaining = process.stdout.read()
-                    if remaining:
-                        buffer += remaining.decode("utf-8", errors="replace")
-                    break
-
-                ready, _, _ = select.select([process.stdout], [], [], 1.0)
-                if not ready:
+                try:
+                    line = line_queue.get(timeout=1.0)
+                except _queue.Empty:
+                    if process.poll() is not None:
+                        # Process exited and reader thread has drained the pipe
+                        if reader_thread.is_alive():
+                            continue
+                        break
                     continue
 
-                chunk = os.read(process.stdout.fileno(), 8192)
-                if not chunk:
+                if line is None:
+                    # EOF sentinel from reader thread
                     break
-                buffer += chunk.decode("utf-8", errors="replace")
 
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    line = line.strip()
-                    if not line:
-                        continue
+                line = line.strip()
+                if not line:
+                    continue
 
-                    try:
-                        event = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
 
+                if True:  # preserve original indentation for the event-handling block below
                     # Early detection via stream events
                     if event.get("type") == "stream_event":
                         se = event.get("event", {})

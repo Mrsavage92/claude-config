@@ -61,7 +61,7 @@ Score instruction following 1-10 and note specific issues.
 Determine what made the winner better:
 - Clearer instructions that led to better behavior?
 - Better scripts/tools that produced better output?
-- More comprehensive examples that guided edge cases?
+- Richer examples that guided edge cases?
 - Better error handling guidance?
 
 Be specific. Quote from skills/transcripts where relevant.

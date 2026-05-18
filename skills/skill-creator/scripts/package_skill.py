@@ -31,11 +31,12 @@ except ImportError:
     from quick_validate import validate_skill
 
 # Patterns to exclude when packaging skills.
-EXCLUDE_DIRS = {"__pycache__", "node_modules"}
-EXCLUDE_GLOBS = {"*.pyc"}
-EXCLUDE_FILES = {".DS_Store"}
+EXCLUDE_DIRS = {"__pycache__", "node_modules", ".git", ".venv", "venv"}
+# Glob patterns: prior packages, reviewer artifacts, OS junk
+EXCLUDE_GLOBS = {"*.pyc", ".forge-*", "*.skill", ".forge-*.md", ".forge-*.html", ".forge-*.json"}
+EXCLUDE_FILES = {".DS_Store", "Thumbs.db", ".env", ".env.local"}
 # Directories excluded only at the skill root (not when nested deeper).
-ROOT_EXCLUDE_DIRS = {"evals"}
+ROOT_EXCLUDE_DIRS = {"evals", "tests", "test", "node_modules", "__pycache__"}
 
 
 def should_exclude(rel_path: Path) -> bool:
@@ -122,13 +123,22 @@ def package_skill(skill_path, output_dir=None):
         return None
 
 
+USAGE = (
+    "Usage: python -m scripts.package_skill <path/to/skill-folder> [output-directory]\n\n"
+    "Example:\n"
+    "  python -m scripts.package_skill skills/public/my-skill\n"
+    "  python -m scripts.package_skill skills/public/my-skill ./dist\n\n"
+    "Excludes from the packaged .skill archive:\n"
+    "  - dirs: __pycache__, node_modules, .git, .venv, venv, evals/tests at root\n"
+    "  - files: *.pyc, .forge-*, *.skill, .DS_Store, Thumbs.db, .env*"
+)
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]")
-        print("\nExample:")
-        print("  python utils/package_skill.py skills/public/my-skill")
-        print("  python utils/package_skill.py skills/public/my-skill ./dist")
-        sys.exit(1)
+    # Handle --help / -h explicitly so they aren't interpreted as a skill path
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+        print(USAGE)
+        sys.exit(0 if len(sys.argv) >= 2 else 1)
 
     skill_path = sys.argv[1]
     output_dir = sys.argv[2] if len(sys.argv) > 2 else None

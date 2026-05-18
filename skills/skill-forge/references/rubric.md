@@ -14,9 +14,16 @@ Do not invent context. Do not assume the skill "probably handles X." Score what 
 
 Every point must be earned with cited evidence. Unjustified points are deductions.
 
+## Mode-dependent maximum
+
+- **`mode: forge`** — all 7 dimensions in scope. Maximum = 100. PASS target is set by spec (default 95).
+- **`mode: review`** — external-pattern alignment (§3, 20 pts) is intentionally excluded. **Maximum = 80**. PASS target in review mode = spec target × 0.80 (e.g. spec target 95 → review-mode target 76; spec target 100 → review-mode target 80). The user's spec target represents forge-mode quality; review mode caps at 80% of that.
+
+Always state in the verdict whether the score is review-mode (max 80) or forge-mode (max 100).
+
 ---
 
-## 7 dimensions, 100 points total
+## 7 dimensions, 100 points total (80 in review mode)
 
 ### 1. Output existence (max 10)
 
