@@ -22,33 +22,54 @@ export function PinnedSection({
 
   useEffect(() => {
     if (!root.current) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const ctx = gsap.context(() => {
-      const slideEls = gsap.utils.toArray<HTMLElement>('.pinned-slide', root.current)
-      if (slideEls.length < 2) return
+    // gsap.matchMedia() dual-branch — Floor 4. Both code paths live and tested.
+    const mm = gsap.matchMedia()
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: root.current,
-          start: 'top top',
-          end: `+=${slideEls.length * pinDurationPerSlide}%`,
-          pin: true,
-          scrub: 1,
-          anticipatePin: 1,
-        },
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      const ctx = gsap.context(() => {
+        const slideEls = gsap.utils.toArray<HTMLElement>('.pinned-slide', root.current)
+        if (slideEls.length < 2) return
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: root.current,
+            start: 'top top',
+            end: `+=${slideEls.length * pinDurationPerSlide}%`,
+            pin: true,
+            scrub: 1,
+            anticipatePin: 1,
+          },
+        })
+
+        slideEls.forEach((_, i) => {
+          const current = slideEls[i]
+          const next = slideEls[i + 1]
+          if (!current || !next) return
+          tl.to(current, { autoAlpha: 0, scale: 0.92 })
+            .from(next, { autoAlpha: 0, scale: 1.08 }, '<')
+        })
+      }, root)
+      return () => ctx.revert()
+    })
+
+    mm.add('(prefers-reduced-motion: reduce)', () => {
+      // Static stack: render all slides visible in flow, no pinning, no scrub.
+      const slideEls = root.current
+        ? Array.from(root.current.querySelectorAll<HTMLElement>('.pinned-slide'))
+        : []
+      slideEls.forEach((el) => {
+        el.style.position = 'relative'
+        el.style.opacity = '1'
+        el.style.transform = 'none'
       })
+      if (root.current) {
+        root.current.style.height = 'auto'
+        root.current.style.overflow = 'visible'
+      }
+    })
 
-      slideEls.forEach((_, i) => {
-        const current = slideEls[i]
-        const next = slideEls[i + 1]
-        if (!current || !next) return
-        tl.to(current, { autoAlpha: 0, scale: 0.92 })
-          .from(next, { autoAlpha: 0, scale: 1.08 }, '<')
-      })
-    }, root)
-
-    return () => ctx.revert()
+    return () => mm.revert()
   }, [slides.length, pinDurationPerSlide])
 
   return (

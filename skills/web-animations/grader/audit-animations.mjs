@@ -8,10 +8,15 @@
 // Hook:   wire into /web-evolve Phase A after grading visible-delta.
 
 import { readdir, readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { extname, join, resolve, relative } from 'node:path'
 
 const projectRoot = resolve(process.argv[2] || '.')
-const srcRoot = join(projectRoot, 'src')
+// Fall back to projectRoot when src/ is absent (Next.js App Router projects
+// with top-level app/ or pages/ never have src/). Otherwise the grader
+// silently scans zero files and exits 0 — a false green.
+const srcCandidate = join(projectRoot, 'src')
+const srcRoot = existsSync(srcCandidate) ? srcCandidate : projectRoot
 
 const SCAN_EXTS = new Set(['.tsx', '.jsx', '.ts'])
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.next', '.vercel', 'coverage'])
@@ -142,7 +147,12 @@ for await (const file of walk(srcRoot)) {
     report.tier3FilesMissingReducedMotionGuard.push(rel)
   }
 
-  if (hasGsap && !hasDualBranch && hasReducedMotion === false) {
+  // Floor 4: every GSAP-using file MUST use gsap.matchMedia() dual-branch.
+  // The PRIOR condition `hasReducedMotion === false` made this check inert for any
+  // file that contained ANY reduce-guard at all (single-branch matchMedia, useReducedMotion,
+  // etc.) — meaning the check never fired on the most common violation pattern.
+  // New rule: flag any GSAP file that does NOT use gsap.matchMedia().
+  if (hasGsap && !hasDualBranch) {
     report.tier3GsapFilesMissingDualBranch.push(rel)
   }
 

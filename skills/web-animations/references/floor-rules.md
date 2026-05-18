@@ -87,7 +87,7 @@ mm.add('(prefers-reduced-motion: reduce)', () => {
 })
 ```
 
-**Rule**: every kit Tier 3 component that uses GSAP MUST use `gsap.matchMedia()` for the reduced-motion split. The `kit/src/tier3/PinnedSection.tsx` currently uses single-branch early return — Phase 5d upgrades it.
+**Rule**: every kit Tier 3 component that uses GSAP MUST use `gsap.matchMedia()` for the reduced-motion split. `kit/src/tier3/PinnedSection.tsx` and `kit/src/tier3/SmoothScroll.tsx` both use the dual-branch pattern as of the post-independent-review fix. The grader's `tier3GsapFilesMissingDualBranch` check fires when `hasGsap && !hasDualBranch` — any single-branch GSAP file fails CI.
 
 ---
 
@@ -128,7 +128,7 @@ Floor: any `whileInView` without `once: true` is a P0 fix.
 | `SpringButton` | OK (small scale, ≤ 1.04) | clean (small scale is safe) | yes | n/a |
 | `MagneticButton` | guards via `useReducedMotion` | clean | yes | n/a |
 | `NumberTicker` | guards (sets final value immediately) | clean | n/a (text content) | n/a |
-| `SplitReveal` | OK (opacity + small y, no blur on reduce) | clean | yes | yes |
+| `SplitReveal` | guards via `useReducedMotion` (blur opt-in disabled under reduce; default is `blur=false`) | clean (cat 6 only when opt-in + no-preference) | yes | yes |
 | `Marquee` | guards (returns static flex layout under reduce) | #5 peripheral — guarded | yes | n/a (infinite) |
 | `AnimatedModal` | OK (small scale + opacity, ≤ 0.96–1) | clean | yes | n/a |
 | `SharedLayoutCard` | OK (layout-prop, FLIP via transform) | clean | yes | n/a |
