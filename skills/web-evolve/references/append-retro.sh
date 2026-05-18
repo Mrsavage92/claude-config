@@ -50,8 +50,10 @@ agent_role = retro.get('agent_role', '')
 agent_tool_use_id = retro.get('agent_tool_use_id', '')
 if agent_role != 'RetroAgent':
     print(f"REJECT:agent_role must be 'RetroAgent' (got {agent_role!r}). Phase F retro must be written by a separate Agent(subagent_type=general-purpose) dispatch — see references/retro-agent-brief.md. Cardinal Rule 6."); sys.exit(1)
-if not re.match(r'^a[a-zA-Z0-9]{6,}$', agent_tool_use_id):
-    print(f"REJECT:agent_tool_use_id {agent_tool_use_id!r} does not match RetroAgent agent_id pattern (e.g. 'a7c9b3b27a1722ce4'). Must be the agent-id returned by Agent tool when RetroAgent was dispatched."); sys.exit(1)
+# Harness agent-id format: 'a' + 16 lowercase hex chars (e.g. 'a72031897166059c2', 'a7c9b3b27a1722ce4').
+# Strict regex prevents fabricated ids like 'a1RetroAgent8x' which the prior loose regex accepted.
+if not re.match(r'^a[0-9a-f]{16}$', agent_tool_use_id):
+    print(f"REJECT:agent_tool_use_id {agent_tool_use_id!r} is not a harness agent-id (pattern: ^a[0-9a-f]{{16}}$ — 'a' followed by 16 lowercase hex chars, e.g. 'a72031897166059c2'). The agent-id is visible in the Agent tool invocation context. Fabricating an id is a Cardinal Rule 6 bypass attempt."); sys.exit(1)
 
 # Banned-phrase scan
 BANNED = base64.b64decode("Y29tcHJlaGVuc2l2ZXxyb2J1c3R8cHJvZHVjdGlvbi1yZWFkeXx3b3JsZC1jbGFzc3xwcmVtaXVtfHBlcmZlY3R8MTAvMTB8c2hpdCBob3R8YmVzdC1pbi1jbGFzc3xlbnRlcnByaXNlLWdyYWRlfGJhdHRsZS10ZXN0ZWQ=").decode()
