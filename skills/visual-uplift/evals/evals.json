@@ -1,0 +1,26 @@
+{
+  "skill_name": "visual-uplift",
+  "evals": [
+    {
+      "id": 1,
+      "name": "service-business-uplift-orbit-style",
+      "prompt": "I've got an existing service-business marketing site at /tmp/eval-fixture/orbit-digital-mock. Three routes (/, /services, /pricing). Looking at the screenshots and critique JSON in that folder, the typography is default Geist throughout, the services page is a uniform 6-card grid, the hero is a centered headline + gradient blob with no signature moment, and the testimonials row has placeholder SVG logos. I don't want to rebuild the whole site — just plan the visual uplift, route each issue to the right tool, and tell me what would land. Don't execute, just produce the plan.",
+      "expected_output": "A `.visual-uplift/plan.md` document containing: baseline scores table covering all 3 routes; ranked items with [Quick|Medium|Big swing] sizing in AI wall-clock minutes; each item names the specific tool (typeset, animate, polish, calibrate-amplitude, overdrive, delight, magic MCP inspiration/refiner/logo_search); each item carries a Memory check field; banned-default risk flagged where applicable (especially: Geist on banned font list, bento grid on banned components list); a Recommended order section with per-item rationale; a How-to-proceed footer with the gated execution commands. The plan must NOT execute any changes, must NOT contain banned self-flattery phrases (premium / world-class / etc.), must NOT propose a custom cursor for a service-business brand, and must NOT size anything in days/weeks.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "single-page-hero-uplift",
+      "prompt": "Single page only — landing page at /tmp/eval-fixture/saas-landing-mock. Critique gave it vq_aggregate 3.1/5, with distinctiveness 1.5 and hero_impact 2.2. No signature moment. The hero is a 5xl headline + subhead + two CTAs + a dashboard mockup screenshot. I want to keep the structure but make the hero feel like something other than 'every YC SaaS'. Plan it.",
+      "expected_output": "A plan that flags the dashboard-mockup hero against `feedback_taste_calibration` (it's on the banned list — 'dashboard mockup in hero — Stripe/Linear/Vercel/Resend/every YC SaaS'), proposes one specific memorable_choice that isn't dashboard-mockup or bento or GSAP pinned scroll (i.e. avoids the three named-as-banned signature reflexes), routes the work to specific tools (typeset / animate / overdrive / web-page-with-inspiration), and gives Medium or Big swing sizing with AI minute estimates. The plan must include the memory-flagged item with quoted rule. Plan only, no execution.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "wrong-skill-deflection",
+      "prompt": "The page works but it feels off — the cards have inconsistent padding, the buttons have three different shadow styles, and the focus ring is missing on form inputs. Fix it. Path: /tmp/eval-fixture/polish-target.",
+      "expected_output": "The skill should recognise this is pure polish-drift (one category, micro-issues, all minor) and either: (a) route directly to `/polish` and explain that visual-uplift's full diagnose-plan-execute is overkill for this scope, OR (b) produce a single-item plan that routes to `/polish` and explains why the other phases were minimal. Either is acceptable. What's NOT acceptable: producing a 5-item plan with hero rebuilds, typography swaps, or memorable_choice proposals — none of those match the stated issues. The skill should NOT inflate scope.",
+      "files": []
+    }
+  ]
+}
