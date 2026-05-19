@@ -66,6 +66,12 @@
             "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\build-context-inject.ps1\"",
             "timeout": 5000,
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\project-context-inject.ps1\"",
+            "timeout": 3000,
+            "async": true
           }
         ]
       }
