@@ -25,14 +25,14 @@ When the bug is in AuditHQ or Orbit, read these BEFORE you start hypothesizing â
 | Symptom | First evidence source |
 |---|---|
 | `/audit/new` returns 500 | Vercel function logs: `vercel logs <project> --prod | grep audit/new` |
-| Suite scoring looks wrong | `lib/scoring.ts` clampSuiteScore + `engine-check-counts.json` (canonical) |
+| Suite scoring looks wrong | Evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388` + `engine-check-counts.json` (canonical for check counts) |
 | Suite returns 0 findings on known-broken site | n8n workflow execution history at `audithq.app.n8n.cloud`, orchestrator id `hCcPTjk0eCwMOEJB` |
 | RPC error around audits | Supabase logs + memory `project_audithq_rpc_jsonb_regression` (requested_suites must be jsonb) |
 | Slow audit | `SELECT query, calls, mean_exec_time FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 20` |
 | Audit hangs forever | `SELECT * FROM pg_stat_activity WHERE state != 'idle' AND query_start < now() - interval '60 seconds'` |
 | "Works locally fails in prod" | Diff: env vars (Vercel dashboard vs `.env.local`), Supabase project (local vs prod URLs), Node version |
 | Credit deduction failed | `create_audit_and_decrement_credit` RPC + memory `project_audithq_score_clamp_locked` |
-| Score drift | clampSuiteScore is locked â€” score drift is NEVER a prompt-side issue, check the clamp function |
+| Score drift | Score drift is NEVER a prompt-side issue. Check the evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388` and the `_evidenceConstrained` calculation that drives it. |
 
 For non-AuditHQ projects, ask the user where their logs and DB live before guessing.
 

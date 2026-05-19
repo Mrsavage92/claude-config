@@ -74,7 +74,7 @@ CREATE POLICY audits_insert_owner ON audits
 These are memory-locked invariants. Schema changes must preserve them:
 
 - **`audits.requested_suites` is `jsonb`** — see memory `project_audithq_rpc_jsonb_regression`. Any new column or schema mod that touches this column must keep `to_jsonb()` on insert and `jsonb_array_elements_text` on parent SELECT in `create_audit_and_decrement_credit`.
-- **`clampSuiteScore` in `lib/scoring.ts` is THE scoring authority** — see memory `project_audithq_score_clamp_locked`. Don't propose moving clamping to the DB without a fresh decision. New tables should NOT add their own scoring constraints.
+- **Evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388` is the scoring authority.** It caps `overall_score` to 65 when the crawler returns insufficient content (`_evidenceConstrained && overall_score > 65`). Memory `project_audithq_score_clamp_locked` describes a planned `clampSuiteScore`/`lib/scoring.ts` architecture that has NOT been implemented — do not assume it exists. Schema changes that affect scoring must update the evidence-floor cap in audit-from-n8n, not a fictional `lib/scoring.ts`.
 - **`create_audit_and_decrement_credit` is the regression-prone RPC** — after any schema change touching `audits` / `checks` / `suite_scores`, the migration plan must include a smoke test that exercises this RPC.
 - **`check_results` is high-volume** — typical audit writes ~513 rows here. Index choices and any RLS policy must be cheap on inserts.
 - **`engine-check-counts.json` is the canonical source for check counts** — see memory `reference_audithq_canonical_files`. Don't propose a `check_counts` table without explicit reason.
@@ -143,7 +143,7 @@ For every database design task, produce:
 ## AuditHQ landmine compliance
 - requested_suites jsonb: {does this plan touch it? if yes, how preserved}
 - create_audit RPC: {does this plan require an RPC change?}
-- clampSuiteScore: {any new scoring constraints in this schema? should there be?}
+- evidence-floor cap: {any new scoring constraints in this schema? does the schema preserve or break the audit-from-n8n cap logic?}
 
 ## Migration handoff
 {One sentence: "Hand to migration-architect" OR "Greenfield, no existing data, direct apply"}
@@ -153,7 +153,7 @@ For every database design task, produce:
 
 - **Tables without RLS.** Even internal-looking tables get one — anon key may someday read them.
 - **Generic `data JSONB` column.** This is a "I don't want to design" smell. Specify the columns.
-- **Triggers as primary logic.** Application logic in triggers is invisible from the codebase — for AuditHQ, scoring must stay in `lib/scoring.ts`, not DB triggers.
+- **Triggers as primary logic.** Application logic in triggers is invisible from the codebase — for AuditHQ, scoring must stay in Edge Functions (specifically the evidence-floor cap at `audit-from-n8n/index.ts:367-388`), not DB triggers.
 - **`SELECT *` patterns.** Schema should support `SELECT id, name, status, ...` — narrow projections perform better with covering indexes.
 
 ## Key Distinction

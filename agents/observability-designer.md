@@ -43,7 +43,7 @@ Add **AuditHQ-specific** signals that aren't in the generic golden-four:
 - **Suite completion rate** — % of started audits that complete all requested suites. Drops here mean engine regression.
 - **Check-result write rate** — rows per second into `check_results`. Drops here mean a suite engine is hanging.
 - **Credit deduction success rate** — `create_audit_and_decrement_credit` failures. Memory-locked RPC; failures are revenue-critical.
-- **Score clamp invocations** — count of `clampSuiteScore` calls. Anomalous deviation = scoring regression.
+- **Evidence-floor cap firings** — count of `evidence_floor_cap_applied` log entries from `audit-from-n8n/index.ts:382`. Anomalous deviation in cap-firing rate = either crawler regression (more thin-content sites) or scoring regression.
 
 For Orbit:
 - **Client SLA compliance** — % of scheduled monitoring runs that completed within their window.
@@ -113,7 +113,7 @@ Never: `console.log("audit " + id + " failed")` — unqueryable.
 
 ### Investigation
 1. [specific Supabase SQL or Vercel filter for this alert class]
-2. Check memory-locked invariants: `clampSuiteScore`, `requested_suites` jsonb cast
+2. Check memory-locked invariants: evidence-floor cap (`audit-from-n8n/index.ts:367-388`) and `requested_suites` jsonb cast in `create_audit_and_decrement_credit` RPC
 
 ### Resolution patterns
 - [Most common cause + fix]
