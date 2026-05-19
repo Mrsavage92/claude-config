@@ -1,7 +1,7 @@
 # tokens-lock-enforce - block style drift when replication mode is active.
 #
 # When a project has tokens.lock.json (output of /style-mirror), block writes
-# to design-system files that introduce values divergent from the lock —
+# to design-system files that introduce values divergent from the lock --
 # specifically Visual Signature Elements that the lock did not capture.
 #
 # This is the enforcement layer for replication mode. The lock file says
@@ -52,7 +52,7 @@ for ($i = 0; $i -lt 6; $i++) {
 }
 if (-not $lockPath) { exit 0 }
 
-# Lock found — replication mode active. Read it.
+# Lock found -- replication mode active. Read it.
 try { $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json } catch { exit 0 }
 
 # Get the content being written.
@@ -67,7 +67,7 @@ $mot = $lock.motion
 
 $violations = @()
 
-# Gradient mesh — multi-stop radial-gradient.
+# Gradient mesh -- multi-stop radial-gradient.
 if ($sig -and -not $sig.gradient_mesh) {
     $gradientMatches = ([regex]::Matches($content, 'radial-gradient\s*\(\s*at\s+\d')).Count
     if ($gradientMatches -ge 1) {
@@ -75,14 +75,14 @@ if ($sig -and -not $sig.gradient_mesh) {
     }
 }
 
-# Glassmorphism — backdrop-filter blur or backdrop-blur-*.
+# Glassmorphism -- backdrop-filter blur or backdrop-blur-*.
 if ($sig -and -not $sig.glassmorphism) {
     if ($content -match 'backdrop-filter\s*:\s*blur' -or $content -match 'backdrop-blur(-(?:sm|md|lg|xl|2xl|3xl|none))?\b') {
         $violations += "Adds glassmorphism (backdrop-blur); lock.signature_elements.glassmorphism = false"
     }
 }
 
-# Grain texture — feTurbulence svg pattern or .grain class.
+# Grain texture -- feTurbulence svg pattern or .grain class.
 if ($sig -and -not $sig.grain) {
     if ($content -match 'feTurbulence' -or $content -match '\.grain\s*::?after') {
         $violations += "Adds grain texture; lock.signature_elements.grain = false"
@@ -103,7 +103,7 @@ if ($sig -and -not $sig.gradient_text) {
     }
 }
 
-# Hover scale — Framer Motion whileHover scale.
+# Hover scale -- Framer Motion whileHover scale.
 if ($mot -and -not $mot.hover_scale) {
     if ($content -match 'whileHover\s*=\s*\{\{\s*scale\s*:') {
         $violations += "Adds Framer hover scale; lock.motion.hover_scale = false"
@@ -117,7 +117,7 @@ if ($mot -and -not $mot.fade_up) {
     }
 }
 
-# Font-family override — only flag if the file is a token-bearing file
+# Font-family override -- only flag if the file is a token-bearing file
 # (CSS/Tailwind config) and content sets a font-family different from the lock.
 if ($isTokenFile -and $lock.typography -and $lock.typography.heading_family) {
     $lockedFont = [string]$lock.typography.heading_family

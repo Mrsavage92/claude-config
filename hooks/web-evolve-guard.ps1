@@ -71,7 +71,7 @@ function Get-SessionId {
 if ($toolName -in @("Edit","Write","MultiEdit")) {
     $filePath = $payload.tool_input.file_path
     if (-not $filePath) { exit 0 }
-    # Use [System.IO.Path] directly — Split-Path with -LiteralPath + -Parent has
+    # Use [System.IO.Path] directly -- Split-Path with -LiteralPath + -Parent has
     # an ambiguous parameter set in some PowerShell versions and silently fails
     # with $ErrorActionPreference=SilentlyContinue, leaving $dir null and the
     # hook erroneously returning exit 0 (allow). This was the hidden bug that

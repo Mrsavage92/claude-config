@@ -9,7 +9,7 @@ try {
 $cwd = $PWD.Path
 $buildLog = $null
 
-# Find BUILD-LOG.md — current directory only (no monorepo scan to save time)
+# Find BUILD-LOG.md -- current directory only (no monorepo scan to save time)
 if (Test-Path "$cwd\BUILD-LOG.md") {
     $buildLog = "$cwd\BUILD-LOG.md"
 }
@@ -29,7 +29,7 @@ if (-not $buildLog) {
 # No active build - stay completely silent
 if (-not $buildLog) { exit 0 }
 
-# Emit MINIMAL context — last 20 lines of BUILD-LOG only (was 40 + 40 SCOPE)
+# Emit MINIMAL context -- last 20 lines of BUILD-LOG only (was 40 + 40 SCOPE)
 Write-Output "=== BUILD CONTEXT ==="
 Write-Output "## BUILD-LOG.md (last 20 lines)"
 Get-Content $buildLog -Tail 20

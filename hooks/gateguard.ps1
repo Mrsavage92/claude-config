@@ -1,4 +1,4 @@
-# GateGuard — fact-force hook.
+# GateGuard -- fact-force hook.
 #
 # Blocks the first Write or MultiEdit to an EXISTING file in a session unless
 # the file has been Read first in the same session. Creating new files is
