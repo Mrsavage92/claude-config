@@ -86,7 +86,7 @@ def load_active_project_names() -> set[str]:
         "automation-agency",
         "bdr-integrations", "bdr group.co.uk",
         "glossbeauty.com.au",
-        "claude-config", "skills-library",
+        "claude-config",
     }
     names.update(known)
     return names
