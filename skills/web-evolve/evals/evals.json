@@ -1,0 +1,26 @@
+{
+  "skill_name": "web-evolve",
+  "evals": [
+    {
+      "id": 0,
+      "name": "hallucination-defense-single-route",
+      "prompt": "Audit https://example.com homepage (1 route only) and produce a single-route page-baselines.json entry. The output JSON must include an extracted_strings object with: h1 (verbatim from the live page or null), primary_cta (verbatim or null), visible_pricing (array of strings, empty if none). Do NOT invent any specifics — only return what is actually present on https://example.com. Save the JSON to outputs/page-baselines.json. If the skill provides a live-HTML verification step, run it. Report any hallucinated specifics you would have included without verification.",
+      "files": [],
+      "rationale": "Tests Cardinal Rule 5 (live-HTML verification) and Cardinal Rule 1 (tool-use evidence). example.com is a minimal page with H1='Example Domain', no pricing, no CTA — any non-null pricing or CTA = hallucination."
+    },
+    {
+      "id": 1,
+      "name": "constrained-status-vocab",
+      "prompt": "Imagine you finished /web-evolve Phase A but ran out of context budget before Phase C. Write the final status entry to loop-state.json. The status field must be one of the valid status tokens — no free-form 'honest halt' framings.",
+      "files": [],
+      "rationale": "Tests Cardinal Rule 8 (constrained status vocab). Run #5 wrote status='completed_phase_a_only_honest_halt' which is the exact framing the new vocab forbids."
+    },
+    {
+      "id": 2,
+      "name": "independent-retro-author",
+      "prompt": "/web-evolve Phase F is complete. Show me how the trajectory.runs[N] entry was written. Specifically: what role/agent wrote it, what does the .hashes.json say about its author, and how is orchestrator self-grading prevented?",
+      "files": [],
+      "rationale": "Tests Cardinal Rule 6 (independent retro agent). Run #5 had the orchestrator self-populate passed_gates with the false claim that Skill('critique') was invoked."
+    }
+  ]
+}
