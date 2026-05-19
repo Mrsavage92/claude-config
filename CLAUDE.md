@@ -5,7 +5,7 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 ## The User
 
 - Primary machine: Windows PC (VS Code extension). Mac is dormant.
-- Focus: AuditHQ (primary revenue), Orbit Digital, BDR MuleSoft.
+- Focus: AuditHQ (primary revenue, $10K/mo target). Full registry under Product Idea Gate.
 
 ## Operating Discipline (load-bearing — read every conversation)
 
@@ -40,63 +40,71 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 **Not a product idea (no gate):** features inside a validated product, bug fixes/refactors, research questions, client work (BDR MuleSoft).
 
 **Flow:** derive `{slug}` (kebab-case) → check `~/Documents/Claude/outputs/product-validation-{slug}.md`:
+
 - Missing or >30 days old → run `/product-validator` now. No build skill, no scope discussion.
 - BUILD (fresh) → proceed to relevant build skill.
 - VALIDATE-FIRST → surface interview protocol, do not touch code.
 - KILL → surface reasoning, redirect to primary revenue focus (currently AuditHQ).
 
-**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md`. Currently: **AuditHQ** (SaaS platform — 500+ check audit engine, target $10K/mo, $0 MRR); **Orbit Digital** (audit-led managed service, target $10K/mo, $0 MRR, rebranded from GrowLocal 2026-05-16, powered by AuditHQ internally); **BDR MuleSoft** (client delivery, doesn't block portfolio gate). Both AuditHQ and Orbit Digital are intentionally "big" simultaneously — different customer segments (SaaS users vs managed-service clients). All hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) Phase 0.0 enforces this.
+**Active projects registry** (`~/Documents/Claude/outputs/active-revenue-projects.md`):
+
+- **AuditHQ** — SaaS platform, 500+ check audit engine. Target $10K/mo, $0 MRR.
+- **Orbit Digital** — audit-led managed service. Target $10K/mo, $0 MRR. Rebranded from GrowLocal 2026-05-16; powered by AuditHQ internally.
+- **BDR MuleSoft** — client delivery. Doesn't block portfolio gate.
+
+Both AuditHQ and Orbit Digital are intentionally "big" simultaneously — different customer segments. Hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) enforce this at Phase 0.0.
 
 ## Machine Context
 
-- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew, no Node (use npx for one-off tools).
-- **PC** — Windows, VS Code extension. Config synced from GitHub.
+- **PC (primary)** — Windows, VS Code extension. Config synced from GitHub.
+- **Mac (dormant — rare use)** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew.
 
 ## Sync Architecture
 
-**Single source of truth: `github.com/Mrsavage92/claude-config`** — skills, agents, commands, hooks, settings.json, rules/, this file. Both machines pull from / push to it via SessionStart and Stop hooks. `Mrsavage92/skills-library` is a fork showcase, NOT the working repo — never push working content there. Notion hub: https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917.
+**Single source of truth: `github.com/Mrsavage92/claude-config`** — skills, agents, commands, hooks, settings.json, rules/, this file. Both machines pull from / push to it via SessionStart and Stop hooks. `Mrsavage92/skills-library` is a fork showcase, NOT the working repo — never push working content there. [Notion hub](https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917).
 
 After modifying skills/commands/agents, run `/sync-knowledge-base` automatically — never ask.
 
-If a skill's `description:` frontmatter changed, also run trigger optimization before sync:
+**Trigger optimization (Mac only — broken on Windows, see [feedback_skill_creator_windows_limits](memory)):** If a skill's `description:` frontmatter changed, also run before sync:
 
 ```bash
 python ~/.claude/skills/skill-creator/scripts/run_loop.py --skill <name>
 ```
 
-This runs Anthropic's official 20-fake-prompt benchmark (half should trigger, half shouldn't) and iteratively rewrites the description until trigger accuracy hits target. Costs Claude API tokens via `claude -p` subprocess, so do not run on every commit — only on description-touching changes.
+Runs a 20-fake-prompt benchmark and iteratively rewrites the description until trigger accuracy hits target. Costs Claude API tokens via `claude -p` subprocess — only on description-touching changes.
 
 ## Key Preferences
 
 - **NEVER ask yes/no confirmation or request approval mid-task — just act.** Includes git push, deleting files, deploying. Permanently authorised.
-- Setup instructions to user → always one copy-paste prompt for Claude Code, never a manual step list
+- **AskUserQuestion is for information I genuinely lack, not for approval.** Use when two valid paths have materially different outcomes and I can't pick from context (e.g. "which of these 4 options matches your setup?"). Never use to seek permission. Information-gathering = ask once; approval-seeking = act.
+- Setup instructions to user → always one copy-paste prompt for Claude Code, never a manual step list.
 - Lead with the answer, not the reasoning. No trailing "what I just did" summaries unless asked.
 
 ## Agent Routing (don't default to general-purpose)
 
 Roster pruned 2026-05-19: 65 → 21 agents. Use the specialist over `general-purpose` when it fits — past data shows I default to general-purpose ~55% of the time when a better tool exists.
 
-| When | Fire |
-|---|---|
-| Validating a plan, architecture, pricing, or commit BEFORE shipping | `strategic-cto-mentor` |
-| Scoping a new AuditHQ subsystem, suite engine, or scoring rewrite | `cto-architect` |
-| Wrong output, intermittent bug, or "works locally, fails in prod" | `root-cause-analyzer` |
-| AuditHQ Supabase schema additions or Orbit monitoring table design | `database-designer` |
-| Any AuditHQ schema migration touching existing prod data | `migration-architect` |
-| AuditHQ engine >60s, /audit/new latency, after measuring | `performance-tuner` |
-| AuditHQ lib/ files >800 lines or duplicated suite logic | `refactor-expert` |
-| Before any AuditHQ scoring or RPC change | `test-engineer` |
-| Wiring SLOs/alerts for AuditHQ or Orbit monitoring | `observability-designer` |
-| Non-trivial PR before commit | `pr-review-expert` |
-| After any try/except or error-handling change | `silent-failure-hunter` |
-| Open-ended codebase search (>3 queries) | `Explore` |
-| Designing new Claude agents/skills | `agent-designer` |
-| REST API design review | `api-design-reviewer` |
-| Onboarding a new dev to a project | `codebase-onboarding` |
-| Pruning skills/commands for waste | `harness-optimizer` |
-| Building an MCP server from an API | `mcp-server-builder` |
-| Designing a RAG / AI search pipeline | `rag-architect` |
-| Claude Code / SDK / API questions | `claude-code-guide` |
+| When                                                                | Fire                     |
+| ------------------------------------------------------------------- | ------------------------ |
+| Validating a plan, architecture, pricing, or commit BEFORE shipping | `strategic-cto-mentor`   |
+| Scoping a new AuditHQ subsystem, suite engine, or scoring rewrite   | `cto-architect`          |
+| Wrong output, intermittent bug, or "works locally, fails in prod"   | `root-cause-analyzer`    |
+| AuditHQ Supabase schema additions or Orbit monitoring table design  | `database-designer`      |
+| Any AuditHQ schema migration touching existing prod data            | `migration-architect`    |
+| AuditHQ engine >60s, /audit/new latency, after measuring            | `performance-tuner`      |
+| AuditHQ lib/ files >800 lines or duplicated suite logic             | `refactor-expert`        |
+| Before any AuditHQ scoring or RPC change                            | `test-engineer`          |
+| Wiring SLOs/alerts for AuditHQ or Orbit monitoring                  | `observability-designer` |
+| Non-trivial PR before commit                                        | `pr-review-expert`       |
+| After any try/except or error-handling change                       | `silent-failure-hunter`  |
+| Open-ended codebase search (>3 queries)                             | `Explore`                |
+| Designing new Claude agents/skills                                  | `agent-designer`         |
+| REST API design review                                              | `api-design-reviewer`    |
+| Onboarding a new dev to a project                                   | `codebase-onboarding`    |
+| Pruning skills/commands for waste                                   | `harness-optimizer`      |
+| Building an MCP server from an API                                  | `mcp-server-builder`     |
+| Designing a RAG / AI search pipeline                                | `rag-architect`          |
+| Claude Code / SDK / API questions                                   | `claude-code-guide`      |
 
 `general-purpose` is the catch-all — use it when nothing above fits, not as a default.
 
@@ -119,7 +127,7 @@ Rule of thumb: FIND info → haiku. THINK about info → sonnet. PRODUCE client 
 Each named project has a project-specific `CLAUDE.md` at its code root, structured in 6 sections (A What / B Goal / C Stack / D Decisions / E Where memory lives / F References / G Overrides). Auto-loaded when working in that dir. Current registry:
 
 | Project | CLAUDE.md location |
-|---|---|
+| --- | --- |
 | AuditHQ (PRIMARY revenue, $0 → $10K/mo target) | `C:/Users/Adam/audit-genius/CLAUDE.md` |
 | Orbit Digital (audit-led managed service, powered by AuditHQ; rebranded from GrowLocal 2026-05-16) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
 | BDR MuleSoft (client delivery, NetSuite↔SF critical path) | `C:/Users/Adam/Documents/Claude/BDR Group.co.uk/CLAUDE.md` |
@@ -159,25 +167,7 @@ Index: `~/.claude/rules/README.md`. Language rules override common where they co
 
 ## Visual Mirroring Protocol (MANDATORY)
 
-When any instruction contains "match this site visually", "look the same", "mirror the design", "copy the style", "make it look like X", or similar — **STOP. Do not write a single line of code until steps 1–3 are complete.**
-
-**Preferred (chrome-devtools-mcp):**
-1. `mcp__chrome-devtools__new_page(url=...)` → load the target URL
-2. `mcp__chrome-devtools__resize_page(width=1440, height=900)` then `mcp__chrome-devtools__take_screenshot(filePath=...)` → 1440×900 reference
-3. `mcp__chrome-devtools__evaluate_script(function="() => { ... }")` → extract computed styles:
-   - CSS custom properties from `:root` (colors, spacing, typography, radius, animation)
-   - `getComputedStyle` on: `body`, `nav/header`, `h1`, `h2`, `p`, primary button, secondary button, input, first link
-   - `backgroundImage`/`backgroundColor` on `html`, `body`, hero section
-
-**Fallback (puppeteer, only if chrome-devtools-mcp not connected):**
-- `mcp__puppeteer__puppeteer_navigate` → load
-- `mcp__puppeteer__puppeteer_screenshot` → 1440×900
-- `mcp__puppeteer__puppeteer_evaluate` → extract the same fields
-
-4. Present extracted tokens to confirm before building
-5. Build using **only the extracted values** — no approximations
-
-Skipping = phase failure. `/style-mirror` alone is not sufficient — it does not extract computed styles.
+When any instruction contains "match this site visually", "look the same", "mirror the design", "copy the style", "make it look like X", or similar — **STOP. Invoke `Skill('style-mirror')` BEFORE writing any code.** The skill loads the URL, screenshots 1440×900, extracts CSS custom properties + `getComputedStyle` on key selectors (body, nav, h1/h2/p, buttons, inputs, hero), and writes `tokens.lock.json`. Build only from extracted values — no approximations. Skipping = phase failure.
 
 ## Power User Shortcuts
 
@@ -192,16 +182,6 @@ Skipping = phase failure. `/style-mirror` alone is not sufficient — it does no
 - **`/ultrareview`** — parallel multi-agent code review. User-triggered and billed. Needs a git repository.
 - **`/undo`** — alias for `/rewind`. Step back through tool-call history.
 
-## Claude Code features available for opt-in (May 2026)
+## Opt-in Features (watchlist)
 
-Currently OFF or unused. Each is a single config change away — pick one when you want to experiment.
-
-- **`skillOverrides` setting** in settings.json — values: `off` (default), `user-invocable-only`, `name-only`. Setting to `user-invocable-only` would mean skills fire ONLY on explicit `/command` invocations and never auto-trigger from natural language. Verify the trade-off before flipping — auto-trigger is what makes the web-* skills useful.
-- **PreCompact hooks** — block context compaction with exit code 2. Useful for long /web-evolve or /audit runs where mid-task compaction loses state. Would go in `settings.json` `hooks.PreCompact[]`.
-- **MCP `alwaysLoad: true`** — opt a specific MCP server out of tool-search deferral so its tools load immediately. Useful for Supabase / Vercel during active dev. Edit the server entry in `~/.claude.json` or `.mcp.json`.
-- **Hook `type: "mcp_tool"`** — hooks can directly invoke MCP tools (e.g. fire a Slack notification on Stop hook without writing a wrapper script).
-- **Agent frontmatter `mcpServers:` and `hooks:`** — per-agent MCP/hook configuration. Lets a web agent always have chrome-devtools-mcp without polluting the global enabled list.
-- **`PushNotification` tool** — long-running tasks (autopilot, /web-evolve, /full-audit) can ping you when done. Currently a deferred tool — load via ToolSearch when needed.
-- **`worktree.baseRef` setting** — choose whether `isolation: "worktree"` agent calls branch off fresh `main` or current HEAD. Default is HEAD; setting to `main` gives every subagent a clean slate.
-- **`claude agents` command + Agent view** — centralized session manager (research preview). View all running background sessions in one UI.
-- **`/goal` command** — set explicit completion conditions for a session. Claude exits when the goal is met instead of waiting for a Stop signal. Useful inside `/loop`.
+Claude Code features I've considered but not adopted (skillOverrides, PreCompact hooks, alwaysLoad MCP, PushNotification, /goal, etc.). See `~/.claude/opt-in-features.md`. Extracted from this file 2026-05-19 to keep always-loaded context lean.
