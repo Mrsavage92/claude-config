@@ -1,6 +1,6 @@
 ---
 name: harness-optimizer
-description: Audits the user's Claude Code harness (skills, agents, commands, hooks, settings) for redundancy, cost waste, broken references, and reliability issues. Produces a ranked action list. Use when the harness feels bloated, skills overlap, or token usage is creeping up. Different from /usage-report (which shows what's USED) — this shows what to CUT, MERGE, or FIX.
+description: Audits ~/.claude/ harness (skills, agents, commands, hooks, settings) for redundancy, cost waste, broken references, and routing failures. Produces a ranked CUT / MERGE / FIX action list. Triggers: 'audit my harness', 'which skills overlap', 'agents I never use', 'why is my token usage creeping up'. NOT for: usage-only reporting without recommendations (use /usage-report skill).
 tools: Read, Grep, Glob, Bash
 model: claude-sonnet-4-6
 ---

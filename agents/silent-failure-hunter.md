@@ -1,6 +1,6 @@
 ---
 name: silent-failure-hunter
-description: Scans code for swallowed errors, empty catch blocks, suppressed logs, fallback values that hide bugs, and defensive try/except that quietly returns wrong answers. Use after any non-trivial code change, before shipping an audit/report product, or when investigating "works locally, fails in prod" mysteries. NOT a style linter — only flags failures the current code will hide from humans.
+description: Scans code for swallowed errors, empty catch blocks, suppressed logs, fallback values that hide bugs, defensive try/except returning wrong answers. Triggers: 'after a non-trivial code change', 'before shipping the audit engine', 'why does this silently return empty', 'works locally fails in prod' mysteries with no error. NOT for: style/lint (linter handles); bugs that throw visible errors (use root-cause-analyzer).
 tools: Read, Grep, Glob, Bash
 model: claude-sonnet-4-6
 ---

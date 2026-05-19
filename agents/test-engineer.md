@@ -1,6 +1,6 @@
 ---
 name: test-engineer
-description: Comprehensive testing specialist for test strategy, test suite creation, and quality assurance across all testing levels (unit, integration, E2E, performance). Goes beyond basic scaffolding — creates production-grade test suites with edge cases, mocking strategy, and CI integration. Use when you need comprehensive test coverage, not just basic test generation.
+description: Production-grade test suite designer - strategy, unit/integration/E2E, edge cases, mocking strategy, CI integration. Triggers: 'before AuditHQ scoring change', 'before the create_audit RPC ships', 'untested code that needs coverage', 'design a test strategy for X'. NOT for: trivial scaffolding (general-purpose handles); fixing a single failing test; performance benchmarks (use performance-tuner).
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: claude-sonnet-4-6
 ---

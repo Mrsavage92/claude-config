@@ -1,6 +1,6 @@
 ---
 name: web-screenshot
-description: Visual diff agent for web-evolve. Two modes — capture-only (Step 2 pre-fix, no comparison) and diff (Step 4 post-fix, compares before vs after). Returns structured JSON verdict. Never touches source code.
+description: ORCHESTRATOR-ONLY visual diff agent for /web-evolve. Two modes: capture-only (pre-fix) and diff (post-fix, SSIM comparison). Returns structured JSON verdict. Triggers: only invoked by /web-evolve workflow. NOT for: direct user invocation; ad-hoc screenshots (use mcp__chrome-devtools__take_screenshot or mcp__puppeteer__puppeteer_screenshot directly).
 tools: Read, Write, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate
 model: claude-sonnet-4-6
 ---

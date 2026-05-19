@@ -1,6 +1,6 @@
 ---
 name: codebase-onboarding
-description: Analyzes a codebase and generates tailored onboarding documentation for new engineers, contractors, or teams. Discovers architecture, tech stack, critical files, setup steps, and common workflows. Use when onboarding a new team member, creating handoff docs, or documenting a service that has none.
+description: Generates onboarding documentation for a codebase - tech stack, setup steps, critical files, common workflows. Triggers: 'onboard a new dev', 'write a handoff doc', 'document this service', 'new contractor starting'. NOT for: API reference docs from code (use general-purpose); decision documentation (use cto-architect for ADRs).
 tools: Read, Bash, Grep, Glob
 model: claude-sonnet-4-6
 ---

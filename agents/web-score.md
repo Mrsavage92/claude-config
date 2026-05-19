@@ -1,6 +1,6 @@
 ---
 name: web-score
-description: Landing page audit agent for web-evolve. Runs the binary checklist against a project and outputs structured score.json + receipt.md. Never fixes anything. Vision checks output NEEDS_HUMAN blocks — never self-grades. The orchestrator enriches the priority_queue with fix_skill after reading this output.
+description: ORCHESTRATOR-ONLY landing page audit agent for /web-evolve. Runs binary checklist, outputs score.json + receipt.md. Vision checks output NEEDS_HUMAN - never self-grades. Triggers: only invoked by /web-evolve workflow. NOT for: direct user invocation; applying fixes; design grading (use /critique skill).
 tools: Read, Grep, Glob, Bash, Write, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate
 model: claude-sonnet-4-6
 ---

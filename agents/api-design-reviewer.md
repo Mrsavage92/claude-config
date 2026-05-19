@@ -1,6 +1,6 @@
 ---
 name: api-design-reviewer
-description: REST API design reviewer and linter. Performs blast radius analysis, breaking change detection, design scoring across 5 dimensions, naming convention validation, and security checks. Use when reviewing API designs before release, checking for breaking changes between versions, or enforcing API standards in CI.
+description: REST/HTTP API design reviewer - blast radius, breaking change detection, naming conventions, security checks. Triggers: 'review this API before release', 'is this a breaking change', 'audit our endpoints', OpenAPI spec review. NOT for: implementing the API (use general-purpose); reviewing pull-request code (use pr-review-expert); MCP server design (use mcp-server-builder).
 tools: Read, Bash, Grep, Glob
 model: claude-sonnet-4-6
 ---

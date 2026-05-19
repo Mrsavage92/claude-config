@@ -44,6 +44,7 @@
     "product-add.md": "84f35bda813e2023efbdf60a23a890de",
     "project-health.md": "47584fa9305d12addaaa3bf1c339b69b",
     "proposal-writer.md": "7b1cb132b3e3d7afe1a8f81132869ed8",
+    "rate.md": "8b79c2fac8727adc7d595cb4d80554c3",
     "retro.md": "8fdd33d9e2884f6ec99f1e9eca03a6e5",
     "review.md": "c71df2713f597b7b56f41e6ed905eb8d",
     "rice.md": "aefda3a05d2a8492c92dc48efa5db93b",
@@ -71,27 +72,27 @@
     "web-scope.md": "5f9701ee0e828e57bff95ae18f522662"
   },
   "agents": {
-    "agent-designer.md": "5469a9b56b8d5f1b443ef49b7b243e15",
-    "api-design-reviewer.md": "30d47930105054dcda691c259d0c4513",
-    "codebase-onboarding.md": "6271259451db48f2a57a18616b7da863",
-    "cto-architect.md": "d963c29c19a2cac3548f182c582a2855",
-    "database-designer.md": "b71d046ae4379817027d388380e41029",
-    "harness-optimizer.md": "28150dd48e24fbef8f3636409e5381b6",
-    "mcp-server-builder.md": "d82a7a88c6ed789161f88ff89b1bd10f",
-    "migration-architect.md": "210d339648fe5d235750dfec133cb99b",
-    "observability-designer.md": "2d92f8ebfd7ed602aae6ab61445c1ce9",
-    "performance-tuner.md": "54c97b96537ad8e35c44b849557e6d17",
-    "pr-review-expert.md": "9dac04934451066a56ecb7a76764f0b3",
-    "rag-architect.md": "4da14ead9fd75ad2caba662f59455f46",
-    "refactor-expert.md": "d27153ada27e45a2dc34c5b2492ade3d",
-    "root-cause-analyzer.md": "79b48192d747384d4cfa689b75135693",
-    "silent-failure-hunter.md": "e65e5f4bc554c29d1cb47cee7394d1a5",
-    "strategic-cto-mentor.md": "79d0ed7dd535c20295968375528ca827",
-    "test-engineer.md": "45b64f0a7861381b618667a0753f7500",
-    "web-benchmark.md": "5c741e1faf953a48598835388ee22884",
-    "web-patch.md": "0aa884c9e175b4206937b780b74a7096",
-    "web-score.md": "d3f6edeb9cce7d6144af3f31d2d12d62",
-    "web-screenshot.md": "3d4fdf99e577c31cde6783db676429ff"
+    "agent-designer.md": "2a93049ce26d6e4522c54b4f5f163a5c",
+    "api-design-reviewer.md": "97b5878809c43e1cb0aca10fbcc95a15",
+    "codebase-onboarding.md": "5d24a46fb8e9b384d4a084668cff85bc",
+    "cto-architect.md": "850a375b8136ea07ee2b9dc6dbde8ac3",
+    "database-designer.md": "53f39a91df2748adff6884e010921755",
+    "harness-optimizer.md": "88f98ea9d51438229c12dbf6d4ece138",
+    "mcp-server-builder.md": "b5479822d17d6823d78c826c9dd1215e",
+    "migration-architect.md": "9262ac4103ecd1698b48f4860dd32ebb",
+    "observability-designer.md": "8530cdb6facb0912916401737dcd067e",
+    "performance-tuner.md": "d151436776351339ae6cb31a985175b7",
+    "pr-review-expert.md": "0c74cce67393cd08a7dd3709c6849379",
+    "rag-architect.md": "983ac10960090293f014e1ccdd49c533",
+    "refactor-expert.md": "ce2fdf30293254809b24bc334a35939e",
+    "root-cause-analyzer.md": "29133016052381a9cd33854ef4309e06",
+    "silent-failure-hunter.md": "66715c7a29fa8721369e0523cefa5668",
+    "strategic-cto-mentor.md": "6baca922ac2928f4e532e356c79ad2d1",
+    "test-engineer.md": "805b12b064cb05c33e0d1b8c79b127a8",
+    "web-benchmark.md": "40d6742bc139c5dda5af3aa90f383e1b",
+    "web-patch.md": "919408d71093e552b315508bc9b11fb1",
+    "web-score.md": "5bdb065eed021d8b91f3a7dcdd9ef0f7",
+    "web-screenshot.md": "11182eb69878ae6f0227c73755898875"
   },
   "skills": [
     "a11y-audit",
@@ -177,6 +178,7 @@
     "project-refresh",
     "project-review",
     "project-triage",
+    "rate",
     "refine",
     "remotion",
     "reputation",
@@ -243,8 +245,8 @@
     "web-table"
   ],
   "counts": {
-    "commands": 67,
+    "commands": 68,
     "agents": 21,
-    "skills": 147
+    "skills": 148
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: mcp-server-builder
-description: Builds production-ready Model Context Protocol (MCP) servers. Converts REST APIs / OpenAPI specs into MCP tool definitions and server scaffolds in Python or TypeScript. Use when you need to expose an API to Claude, build a Claude plugin, or create MCP tools for any service. NOT for general API design (use api-design-reviewer), backend application code (use cs-senior-engineer), or consuming existing MCP servers (just configure in settings.json).
+description: Builds production-ready Model Context Protocol (MCP) servers from REST APIs or OpenAPI specs, in Python or TypeScript. Triggers: 'expose this API to Claude', 'build an MCP server for X', 'wrap our API as MCP tools'. NOT for: general API design (use api-design-reviewer); backend application code (use general-purpose); configuring existing MCP servers (edit settings.json directly).
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---

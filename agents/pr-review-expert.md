@@ -1,6 +1,6 @@
 ---
 name: pr-review-expert
-description: Systematic PR/MR reviewer that goes beyond style. Performs blast radius analysis, security scanning, breaking change detection, test coverage delta, and performance impact assessment. Use proactively on any non-trivial pull request. Let the linter handle style — this handles logic, security, and correctness.
+description: Systematic PR/MR reviewer beyond style - blast radius, security, breaking changes, test coverage delta, performance impact. Triggers: 'review this PR before commit', 'is this change risky', security-sensitive diff, RLS policy change. NOT for: style/lint (linter handles); reviewing your own design (use strategic-cto-mentor); root-causing a bug (use root-cause-analyzer).
 tools: Read, Bash, Grep, Glob
 model: claude-sonnet-4-6
 ---

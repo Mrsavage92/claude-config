@@ -1,6 +1,6 @@
 ---
 name: performance-tuner
-description: Performance engineering specialist for profiling, bottleneck identification, and optimization. Handles CPU/memory/I-O/network/database performance issues. Follows Measure > Guess principle — profiles first, optimizes second. Use when applications are slow, resource-hungry, or need scalability improvements.
+description: Performance engineering specialist - profile, identify bottleneck, optimize. Follows Measure > Guess: profiles first, optimizes second. Triggers: 'AuditHQ engine takes >60s', '/audit/new latency spike', 'after profiling shows hotspot in X', N+1 query suspected. NOT for: unmeasured optimization (banned - measure first); known-correct code that just hasn't been profiled.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: claude-sonnet-4-6
 ---
