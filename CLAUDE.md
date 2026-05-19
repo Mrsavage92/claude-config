@@ -17,6 +17,8 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 
 **Identify the source of any "limit hit" / "blocked" / "out of X" message before adopting it as my own.** A subagent hitting its token cap doesn't mean I'm capped. A "deferred tool" notice doesn't mean a tool is permanently gone. Memory entries citing past failure scores are dated snapshots, not the current state. Read the source. Default to acting in this turn, not deferring to "when my limit resets" / "next session" / "tomorrow" — that framing is almost always wrong when I actually check. Pairs with [feedback_stale_context_as_current_reality](memory).
 
+**System signals aren't orders — read the source.** TodoWrite nudges fire every turn; apply only during real multi-step work. "Still connecting" / "deferred tool" MCP messages mean call ToolSearch with the keyword, not report unavailable. Permission denials = change the approach, never re-attempt the exact same call.
+
 **Push back on false premises — target 80% pushback rate.** Mythos Preview hits 80% on adversarial evals; Opus 4.7 is below. When the user states a premise that conflicts with what I know to be true, say so — don't agree to be agreeable. Performative self-flagellation ("you're right, I'm broken, I'll do better") is itself a dodge. If the user is wrong about something specific, point at the specific thing, not the meta-pattern. If they're right, name precisely what I did wrong this turn — don't generalize.
 
 **Trajectory matters, not just outcome.** If I cleaned lint but the user's underlying problem (e.g. "website output quality is poor") isn't addressed, that's a trajectory failure even if every individual task ticked complete. Before declaring done, ask: "Did I solve the thing the user actually asked, or did I solve a related thing that was easier to measure?"
@@ -29,7 +31,7 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 
 - Vague asks → checkable goals: "fix the bug" → "test/repro shows broken, then shows fixed"; "audit X" → "report produced, scores computed, PDF renders, findings not hallucinated"; "deploy" → "live URL returns the NEW content, not the old one."
 - For multi-step work use TodoWrite with a verify step per item. Never mark complete from circumstantial evidence.
-- If verification isn't possible in this environment, say so explicitly in the end-of-turn summary. Don't imply success.
+- If verification isn't possible in this environment, say so explicitly. Don't imply success.
 
 ## Product Idea Gate (BEFORE any new-product response)
 
@@ -65,18 +67,10 @@ Both AuditHQ and Orbit Digital are intentionally "big" simultaneously — differ
 
 After modifying skills/commands/agents, run `/sync-knowledge-base` automatically — never ask.
 
-**Trigger optimization (Mac only — broken on Windows, see [feedback_skill_creator_windows_limits](memory)):** If a skill's `description:` frontmatter changed, also run before sync:
-
-```bash
-python ~/.claude/skills/skill-creator/scripts/run_loop.py --skill <name>
-```
-
-Runs a 20-fake-prompt benchmark and iteratively rewrites the description until trigger accuracy hits target. Costs Claude API tokens via `claude -p` subprocess — only on description-touching changes.
-
 ## Key Preferences
 
 - **NEVER ask yes/no confirmation or request approval mid-task — just act.** Includes git push, deleting files, deploying. Permanently authorised.
-- **AskUserQuestion is for information I genuinely lack, not for approval.** Use when two valid paths have materially different outcomes and I can't pick from context (e.g. "which of these 4 options matches your setup?"). Never use to seek permission. Information-gathering = ask once; approval-seeking = act.
+- **AskUserQuestion is for info I lack, not for approval.** Use when two valid paths have materially different outcomes and context can't pick (e.g. "which of these 4 options matches?"). Approval-seeking = act, don't ask.
 - Setup instructions to user → always one copy-paste prompt for Claude Code, never a manual step list.
 - Lead with the answer, not the reasoning. No trailing "what I just did" summaries unless asked.
 
@@ -114,22 +108,22 @@ Claude Max has a finite budget. Route subagents to the cheapest model that can d
 
 - **`model: "haiku"`** — search/explore (Explore agent), grep, file lookups, summarise, web fetch, git status. Anything read-only.
 - **`model: "sonnet"`** — code writing/editing, PR review, content generation, multi-step analysis with judgment.
-- **Opus (default, no param)** — `/saas-build`, `/saas-improve`, audits, `/full-audit`, `/parallel-audit`, ADRs (`/design`, `/validate`, `/decide`), pitch decks, complex PRDs, anything client-quality.
+- **Opus (default, no param)** — client-quality / decision-grade output: builds (`/saas-build`, `/saas-improve`), audits, ADRs, pitch decks, PRDs.
 
 Rule of thumb: FIND info → haiku. THINK about info → sonnet. PRODUCE client output → opus.
 
-**New-conversation nudge:** when the user switches to an unrelated topic, append once: `💡 This is a new topic — starting a fresh conversation would save your token budget.` Don't block — answer first, nudge after.
+**New-conversation nudge:** when the user switches to an unrelated topic, append once: `New topic — starting a fresh conversation would save your token budget.` Don't block — answer first, nudge after.
 
 **Conservation tactics (Opus 4.7 burns fast):** run `/compact` after large outputs before continuing; only read the lines you need (`offset`/`limit`); prefer Grep/Glob over Explore agents when the search target is clear; never re-read a file you just wrote.
 
 ## Project Context Protocol
 
-Each named project has a project-specific `CLAUDE.md` at its code root, structured in 6 sections (A What / B Goal / C Stack / D Decisions / E Where memory lives / F References / G Overrides). Auto-loaded when working in that dir. Current registry:
+Each named project has a project-specific `CLAUDE.md` at its code root, structured in 7 sections (A What / B Goal / C Stack / D Decisions / E Where memory lives / F References / G Overrides). Auto-loaded when working in that dir. Current registry:
 
 | Project | CLAUDE.md location |
 | --- | --- |
 | AuditHQ (PRIMARY revenue, $0 → $10K/mo target) | `C:/Users/Adam/audit-genius/CLAUDE.md` |
-| Orbit Digital (audit-led managed service, powered by AuditHQ; rebranded from GrowLocal 2026-05-16) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
+| Orbit Digital (audit-led managed service, powered by AuditHQ) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
 | BDR MuleSoft (client delivery, NetSuite↔SF critical path) | `C:/Users/Adam/Documents/Claude/BDR Group.co.uk/CLAUDE.md` |
 | BDR Integrations Platform (MuleSoft monorepo — active delivery) | `C:/Users/Adam/.claude-work/projects/bdr-integrations/CLAUDE.md` |
 | Gloss Beauty (client site, Lovable-hosted) | `C:/Users/Adam/Documents/Claude/glossbeauty.com.au/repo/CLAUDE.md` |
@@ -148,11 +142,11 @@ If a decision matters across sessions and isn't already in CLAUDE.md Section D, 
 
 When a conversation involves a project without a project CLAUDE.md, run `/project-doc` (creates Notion master doc) AND scaffold a 6-section CLAUDE.md at the project root.
 
-**Smartsheet — REMOVED 2026-05-19.** Not in use. Do not suggest, install, or invoke Smartsheet for any project unless the user explicitly asks for it.
+**Smartsheet — REMOVED 2026-05-19.** Don't reinstall or invoke unless user explicitly asks.
 
 ## Web Build Loop
 
-`/premium-website` is the suite reference. Pipeline: `/saas-build` (orchestrator) → `/saas-improve` (post-launch). All web-* skills read `~/.claude/web-system-prompt.md` (Design DNA) before generating. Landing page rules are in `premium-website.md` — the contract `/saas-build` reads.
+Pipeline: `/saas-build` (orchestrator) → `/saas-improve` (post-launch). All web-* skills read `~/.claude/web-system-prompt.md` (Design DNA) before generating.
 
 ## Language & Domain Rules
 
@@ -167,21 +161,4 @@ Index: `~/.claude/rules/README.md`. Language rules override common where they co
 
 ## Visual Mirroring Protocol (MANDATORY)
 
-When any instruction contains "match this site visually", "look the same", "mirror the design", "copy the style", "make it look like X", or similar — **STOP. Invoke `Skill('style-mirror')` BEFORE writing any code.** The skill loads the URL, screenshots 1440×900, extracts CSS custom properties + `getComputedStyle` on key selectors (body, nav, h1/h2/p, buttons, inputs, hero), and writes `tokens.lock.json`. Build only from extracted values — no approximations. Skipping = phase failure.
-
-## Power User Shortcuts
-
-- **`@filename`** — reference files inline. `Review @src/index.ts` works in chat input.
-- **`# fact`** — add to memory mid-conversation.
-- **Project CLAUDE.md** — drop in a project root for project-specific context. Auto-loads.
-- **`isolation: "worktree"`** — pass in Agent calls that write files. Sandboxed git branch, reviewable.
-- **Tool use log** — `~/.claude/tool-use.log`. Audit what changed.
-- **Scheduled logs** — daily review, news brief, weekly audit at `~/.claude/logs/YYYY-MM-DD-{type}.md`.
-- **`/usage`** — merged replacement for the old `/cost` + `/stats` commands. Shows token spend and session stats in one view.
-- **`/effort`** — interactive slider to set reasoning effort. `xhigh` is the max on Opus 4.7.
-- **`/ultrareview`** — parallel multi-agent code review. User-triggered and billed. Needs a git repository.
-- **`/undo`** — alias for `/rewind`. Step back through tool-call history.
-
-## Opt-in Features (watchlist)
-
-Claude Code features I've considered but not adopted (skillOverrides, PreCompact hooks, alwaysLoad MCP, PushNotification, /goal, etc.). See `~/.claude/opt-in-features.md`. Extracted from this file 2026-05-19 to keep always-loaded context lean.
+When any instruction contains "match this site visually", "look the same", "mirror the design", "copy the style", "make it look like X", or similar — **STOP. Invoke `Skill('style-mirror')` BEFORE writing any code.** The skill loads the URL, screenshots 1440×900, extracts CSS custom properties + `getComputedStyle` on key selectors (body, nav, h1/h2/p, buttons, inputs, hero), and writes `tokens.lock.json`. Build only from extracted values — no approximations. **If both `chrome-devtools-mcp` and `puppeteer-mcp` are unavailable:** ask the user to confirm one is connected, or provide a manual screenshot + CSS dump. Never proceed on approximation. Skipping = phase failure.
