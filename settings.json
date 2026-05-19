@@ -36,12 +36,24 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Read|Write|Edit|MultiEdit|AskUserQuestion",
+        "matcher": "Read|Write|Edit|MultiEdit|AskUserQuestion|Bash",
         "hooks": [
           {
             "type": "command",
             "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\pretool-router.ps1\"",
             "timeout": 8000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\precompact-snapshot.ps1\"",
+            "timeout": 5000,
+            "async": true
           }
         ]
       }
@@ -80,6 +92,17 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\format-on-save.ps1\"",
+            "timeout": 5000,
+            "async": true
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -89,6 +112,12 @@
             "type": "command",
             "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\safe-session-start.ps1\"",
             "timeout": 15000,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\ref-check.ps1\"",
+            "timeout": 5000,
             "async": true
           }
         ]

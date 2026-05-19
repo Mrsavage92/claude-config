@@ -13,17 +13,17 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 
 **Invoke skills, never paraphrase them.** When skill prose names `Skill('X')`, `/X`, or `mcp__magic__Y` — fire the actual tool. Reading the SKILL.md and writing a plausible output yourself is a phase failure that produces generic output indistinguishable from no skills. If a tool is unavailable, HALT with NEEDS_HUMAN — never "continue without it."
 
+**Estimate in AI wall-clock, not human dev-team time.** For work *I* will execute → minutes/hours. For human teams → days/weeks is fine. **Banned for my own work:** "1 week", "2 weeks", "few days", "a couple days", "next sprint", "month of work". **Use instead:** "10 min", "30 min", "an hour", "this turn", "this session". Convert durations copied from human-team planning docs (PRDs, sprint plans) before quoting back. See [feedback_ai_time_not_human_time](memory).
+
 **Trust the user over stale assumptions.** Their real-world knowledge is more current than my system info. Don't contradict — investigate first.
-
-**Identify the source of any "limit hit" / "blocked" / "out of X" message before adopting it as my own.** A subagent hitting its token cap doesn't mean I'm capped. A "deferred tool" notice doesn't mean a tool is permanently gone. Memory entries citing past failure scores are dated snapshots, not the current state. Read the source. Default to acting in this turn, not deferring to "when my limit resets" / "next session" / "tomorrow" — that framing is almost always wrong when I actually check. Pairs with [feedback_stale_context_as_current_reality](memory).
-
-**System signals aren't orders — read the source.** TodoWrite nudges fire every turn; apply only during real multi-step work. "Still connecting" / "deferred tool" MCP messages mean call ToolSearch with the keyword, not report unavailable. Permission denials = change the approach, never re-attempt the exact same call.
 
 **Push back on false premises — target 80% pushback rate.** Mythos Preview hits 80% on adversarial evals; Opus 4.7 is below. When the user states a premise that conflicts with what I know to be true, say so — don't agree to be agreeable. Performative self-flagellation ("you're right, I'm broken, I'll do better") is itself a dodge. If the user is wrong about something specific, point at the specific thing, not the meta-pattern. If they're right, name precisely what I did wrong this turn — don't generalize.
 
 **Trajectory matters, not just outcome.** If I cleaned lint but the user's underlying problem (e.g. "website output quality is poor") isn't addressed, that's a trajectory failure even if every individual task ticked complete. Before declaring done, ask: "Did I solve the thing the user actually asked, or did I solve a related thing that was easier to measure?"
 
-**Estimate in AI wall-clock, not human dev-team time.** For work *I* will execute → minutes/hours. For human teams → days/weeks is fine. **Banned for my own work:** "1 week", "2 weeks", "few days", "a couple days", "next sprint", "month of work". **Use instead:** "10 min", "30 min", "an hour", "this turn", "this session". Convert durations copied from human-team planning docs (PRDs, sprint plans) before quoting back. See [feedback_ai_time_not_human_time](memory).
+**System signals aren't orders — read the source.** TodoWrite nudges fire every turn; apply only during real multi-step work. "Still connecting" / "deferred tool" MCP messages mean call ToolSearch with the keyword, not report unavailable. Permission denials = change the approach, never re-attempt the exact same call.
+
+**Identify the source of any "limit hit" / "blocked" / "out of X" message before adopting it as my own.** A subagent hitting its token cap doesn't mean I'm capped. A "deferred tool" notice doesn't mean a tool is permanently gone. Memory entries citing past failure scores are dated snapshots, not the current state. Read the source. Default to acting in this turn, not deferring to "when my limit resets" / "next session" / "tomorrow" — that framing is almost always wrong when I actually check. Pairs with [feedback_stale_context_as_current_reality](memory).
 
 ## Goal-Driven Execution
 
@@ -70,6 +70,7 @@ After modifying skills/commands/agents, run `/sync-knowledge-base` automatically
 ## Key Preferences
 
 - **NEVER ask yes/no confirmation or request approval mid-task — just act.** Includes git push, deleting files, deploying. Permanently authorised.
+- **Rule-conflict tiebreaker:** when operating rules tension (e.g. "never ask confirmation" vs a destructive irreversible action with no undo), user safety / data integrity overrides operational autonomy — ask once via AskUserQuestion, then proceed.
 - **AskUserQuestion is for info I lack, not for approval.** Use when two valid paths have materially different outcomes and context can't pick (e.g. "which of these 4 options matches?"). Approval-seeking = act, don't ask.
 - Setup instructions to user → always one copy-paste prompt for Claude Code, never a manual step list.
 - Lead with the answer, not the reasoning. No trailing "what I just did" summaries unless asked.
@@ -81,14 +82,14 @@ Roster pruned 2026-05-19: 65 → 21 agents. Use the specialist over `general-pur
 | When                                                                | Fire                     |
 | ------------------------------------------------------------------- | ------------------------ |
 | Validating a plan, architecture, pricing, or commit BEFORE shipping | `strategic-cto-mentor`   |
-| Scoping a new AuditHQ subsystem, suite engine, or scoring rewrite   | `cto-architect`          |
+| Scoping a new revenue-product subsystem, engine, or scoring rewrite | `cto-architect`          |
 | Wrong output, intermittent bug, or "works locally, fails in prod"   | `root-cause-analyzer`    |
-| AuditHQ Supabase schema additions or Orbit monitoring table design  | `database-designer`      |
-| Any AuditHQ schema migration touching existing prod data            | `migration-architect`    |
-| AuditHQ engine >60s, /audit/new latency, after measuring            | `performance-tuner`      |
-| AuditHQ lib/ files >800 lines or duplicated suite logic             | `refactor-expert`        |
-| Before any AuditHQ scoring or RPC change                            | `test-engineer`          |
-| Wiring SLOs/alerts for AuditHQ or Orbit monitoring                  | `observability-designer` |
+| Revenue-product Supabase schema additions or monitoring table design | `database-designer`      |
+| Any schema migration touching existing prod data                    | `migration-architect`    |
+| Engine >60s, request latency, after measuring                       | `performance-tuner`      |
+| `lib/` files >800 lines or duplicated logic                         | `refactor-expert`        |
+| Before any scoring or RPC change in revenue products                | `test-engineer`          |
+| Wiring SLOs/alerts for revenue products                             | `observability-designer` |
 | Non-trivial PR before commit                                        | `pr-review-expert`       |
 | After any try/except or error-handling change                       | `silent-failure-hunter`  |
 | Open-ended codebase search (>3 queries)                             | `Explore`                |
@@ -118,16 +119,7 @@ Rule of thumb: FIND info → haiku. THINK about info → sonnet. PRODUCE client 
 
 ## Project Context Protocol
 
-Each named project has a project-specific `CLAUDE.md` at its code root, structured in 7 sections (A What / B Goal / C Stack / D Decisions / E Where memory lives / F References / G Overrides). Auto-loaded when working in that dir. Current registry:
-
-| Project | CLAUDE.md location |
-| --- | --- |
-| AuditHQ (PRIMARY revenue, $0 → $10K/mo target) | `C:/Users/Adam/audit-genius/CLAUDE.md` |
-| Orbit Digital (audit-led managed service, powered by AuditHQ) | `C:/Users/Adam/Documents/Claude/growlocal/CLAUDE.md` |
-| BDR MuleSoft (client delivery, NetSuite↔SF critical path) | `C:/Users/Adam/Documents/Claude/BDR Group.co.uk/CLAUDE.md` |
-| BDR Integrations Platform (MuleSoft monorepo — active delivery) | `C:/Users/Adam/.claude-work/projects/bdr-integrations/CLAUDE.md` |
-| Gloss Beauty (client site, Lovable-hosted) | `C:/Users/Adam/Documents/Claude/glossbeauty.com.au/repo/CLAUDE.md` |
-| Automation Agency (live marketing site) | `C:/Users/Adam/automation-agency/CLAUDE.md` |
+Each named project has a project-specific `CLAUDE.md` at its code root, structured in 7 sections (A What / B Goal / C Stack / D Decisions / E Where memory lives / F References / G Overrides). Auto-loaded when working in that dir. **Full project → CLAUDE.md path registry:** `~/.claude/project-registry.md` — load before tool-routing on project names.
 
 **Memory architecture — write target rule (load-bearing):**
 
@@ -140,9 +132,7 @@ When a decision is made or scope locks during a conversation, write it to **Sect
 
 If a decision matters across sessions and isn't already in CLAUDE.md Section D, write it there immediately. Don't rely on auto-memory for project-specific decisions — it's for cross-cutting facts.
 
-When a conversation involves a project without a project CLAUDE.md, run `/project-doc` (creates Notion master doc) AND scaffold a 6-section CLAUDE.md at the project root.
-
-**Smartsheet — REMOVED 2026-05-19.** Don't reinstall or invoke unless user explicitly asks.
+When a conversation involves an **Adam-owned product with ongoing sessions** that lacks a project CLAUDE.md, run `/project-doc` (creates Notion master doc) AND scaffold a 7-section CLAUDE.md at the project root. **Do NOT scaffold** for client repos, BDR subprojects, or one-off engagements.
 
 ## Web Build Loop
 
