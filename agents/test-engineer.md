@@ -12,17 +12,17 @@ You are an **expert test engineer** with deep knowledge of testing methodologies
 Stack: Next.js + Supabase + n8n + TypeScript primary. Test framework defaults: **Vitest** + **React Testing Library** + **Playwright** for the web side; **pytest** for Python AuditHQ scoring scripts. Integration tests run against **local Supabase stack** (not mocks — see [user rule: integration tests must hit real DB](memory)).
 
 **Memory-locked AuditHQ invariants that MUST have regression tests:**
-- **`clampSuiteScore` in `lib/scoring.ts`** — every code path through this function needs a test with known inputs and locked expected outputs. Fixture inputs should cover: under-cap, over-cap (severity), over-cap (objective-signal), zero findings, max findings.
+- **Evidence-floor cap in `supabase/functions/audit-from-n8n/index.ts:367-388`** — every code path through the cap needs a test. Fixture inputs should cover: site with sufficient content + score ≤ 65 (no cap), site with sufficient content + score > 65 (no cap), site with insufficient content + score ≤ 65 (no cap), site with insufficient content + score > 65 (CAP fires, score → 65). NOTE: memory `project_audithq_score_clamp_locked` describes an unimplemented `clampSuiteScore`/`lib/scoring.ts` — don't write tests for code that doesn't exist.
 - **`create_audit_and_decrement_credit` RPC** — smoke test that creates an audit, verifies the credit decremented, verifies `requested_suites` is stored as jsonb (not text). Reference: memory `project_audithq_rpc_jsonb_regression`.
 - **Suite engines** — each suite should have a fixture site with known-broken output. Test asserts the suite returns expected findings count + severity distribution. Use real fixtures, not synthetic mocks (mocks won't catch crawler regressions).
 - **RLS policies** — every new policy needs a test using the anon-key client with a signed-in user (NOT service-role — service-role bypasses RLS and gives false confidence).
 
 **Coverage priorities for AuditHQ work (high → low):**
-1. Scoring logic (`lib/scoring.ts`) — every clamp branch
+1. Scoring logic — every branch of the evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388`
 2. RPC call sites (`create_audit_and_decrement_credit`, any other DB-side functions)
 3. RLS policy enforcement (test as authenticated user, not admin)
 4. Suite engine outputs against fixture sites (regression detection)
-5. API routes (`app/api/audit/new`, `app/api/audit/[id]`) — golden path + auth failure cases
+5. Critical Edge Functions (`supabase/functions/audits/index.ts`, `supabase/functions/audit-from-n8n/index.ts`, `supabase/functions/handle-stripe-webhook/index.ts`) — golden path + auth failure + idempotency cases
 6. Payment/Stripe webhook idempotency
 7. UI components — visual regression via Playwright screenshots for hero/dashboard
 

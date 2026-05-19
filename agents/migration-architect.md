@@ -16,7 +16,7 @@ Never plan a migration without a tested rollback path. If rollback isn't possibl
 These are memory-locked rules. Any migration plan that touches them must address regression-testing explicitly:
 
 - **`audits.requested_suites` is jsonb.** Any redefinition of `create_audit_and_decrement_credit` must keep `to_jsonb()` on insert and `jsonb_array_elements_text` on parent SELECT. See memory: `project_audithq_rpc_jsonb_regression`.
-- **`clampSuiteScore` in `lib/scoring.ts` applies severity cap + objective-signal cap before DB upsert.** Memory-locked. Do not propose schema changes that move clamping logic to the DB without a fresh decision. See: `project_audithq_score_clamp_locked`.
+- **Evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388`** is the deployed scoring authority — caps `overall_score` to 65 when crawled content is insufficient. NOTE: memory `project_audithq_score_clamp_locked` describes a planned `clampSuiteScore`/`lib/scoring.ts` architecture that has NOT been implemented. Schema changes affecting scoring must update the evidence-floor cap in audit-from-n8n, not a fictional `lib/scoring.ts`.
 - **`check_results` is high-volume (per-audit × ~513 checks).** Migrations touching it must batch — single-transaction ALTERs will lock the table.
 - **The `create_audit` RPC is the regression-prone touchpoint.** After ANY schema change to `audits`, `checks`, or `suite_scores`, run a smoke `/audit/new` test before considering the migration done.
 
@@ -45,7 +45,7 @@ Phase 5 (Contract):  Verify zero reads of old column via pg_stat_user_tables.idx
 | Data integrity | Can a row be lost? Is rollback truly safe (no downstream side-effects in `create_audit` RPC)? |
 | Availability | Will the migration lock a table the live `/audit/new` endpoint reads/writes? |
 | Performance | Will the migration starve the audit engine's concurrent check inserts? |
-| Locked invariants | Does this violate `clampSuiteScore` or `requested_suites` jsonb shape? |
+| Locked invariants | Does this violate the evidence-floor cap logic (audit-from-n8n/index.ts:367-388) or the `requested_suites` jsonb cast in `create_audit_and_decrement_credit` RPC? |
 | Rollback cost | If this goes wrong at 2am while the user is asleep, what breaks for paying users? |
 
 Risk score (1-5) × Impact (1-5) = Mitigation priority. Anything ≥15 needs an explicit kill-switch in the plan.
@@ -56,7 +56,7 @@ Risk score (1-5) × Impact (1-5) = Mitigation priority. Anything ≥15 needs an 
 - [ ] `supabase db dump` taken and restore tested on local stack
 - [ ] Rollback migration written (the next `supabase migration new revert_<name>`) and tested locally
 - [ ] Feature flag in place if the change is reads/writes (env var counts)
-- [ ] Identify the smoke test: typically `/audit/new` → completed audit → `clampSuiteScore` produces same output as before for a known fixture site
+- [ ] Identify the smoke test: typically `/audit/new` → completed audit → evidence-floor cap (`audit-from-n8n/index.ts:367-388`) produces same overall_score as before for a known-thin fixture site (cap should fire to 65) AND a known-rich fixture site (cap should NOT fire)
 
 **During:**
 - [ ] Run on local stack first. Always.
@@ -75,7 +75,7 @@ Risk score (1-5) × Impact (1-5) = Mitigation priority. Anything ≥15 needs an 
 |---|---|
 | Migration completion | 100%, no manual SQL hot-fixes after the fact |
 | User-visible downtime | 0 |
-| `clampSuiteScore` output for fixture site | Identical to pre-migration |
+| Evidence-floor cap output for fixture sites | Identical to pre-migration (test one site with sufficient content, one with insufficient) |
 | `create_audit` RPC smoke test | Passes |
 | Rollback path available | 7 days minimum |
 

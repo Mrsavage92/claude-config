@@ -25,7 +25,7 @@ The user's stack is Next.js on Vercel + Supabase Postgres + n8n cloud + TypeScri
 - Sequential suite calls when they could run in parallel (n8n workflow design issue, not code issue)
 - Vercel function cold starts on rarely-hit routes
 
-**Memory-locked perf rule:** the `clampSuiteScore` function in `lib/scoring.ts` is on the hot path of every audit; it is also memory-locked. Don't propose moving it elsewhere "for perf" without a fresh decision.
+**Memory-locked perf rule:** the evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388` is on the hot path of every audit completion. Don't propose moving the cap elsewhere "for perf" without a fresh decision. NOTE: memory `project_audithq_score_clamp_locked` describes a planned `clampSuiteScore`/`lib/scoring.ts` that has NOT been implemented.
 
 ## Core Principle
 

@@ -12,19 +12,19 @@ You are a **code refactoring specialist** who improves code quality through syst
 Stack: Next.js + Supabase + n8n + TypeScript primary, Python for AuditHQ scoring scripts. The user's projects accumulate large files quickly — AuditHQ suite engines, scoring logic, and check definitions routinely cross 800 lines. Refactoring is real work here, not a "for future use" abstraction.
 
 **Memory-locked AuditHQ invariants — refactor AROUND these, never refactor INTO them:**
-- **`clampSuiteScore` in `lib/scoring.ts`** is load-bearing. It applies severity cap + objective-signal cap before DB upsert. Do NOT inline it, replace it, or "simplify" it. Extracting helpers AROUND it is fine; touching it is not.
+- **Evidence-floor cap at `supabase/functions/audit-from-n8n/index.ts:367-388`** is load-bearing. It caps `overall_score` to 65 when crawler content is insufficient (`_evidenceConstrained && overall_score > 65`). Do NOT remove, inline elsewhere, or "simplify" the cap. NOTE: memory `project_audithq_score_clamp_locked` describes a planned `clampSuiteScore`/`lib/scoring.ts` architecture that has NOT been implemented — don't refactor toward it without confirming with the user first.
 - **`audits.requested_suites` is `jsonb`** — code reading or writing this column must preserve `to_jsonb()` / `jsonb_array_elements_text` patterns. If a refactor moves this logic, the new home must keep the cast.
 - **`create_audit_and_decrement_credit` RPC** — regression-prone. A refactor touching its call sites needs a smoke test (`/audit/new` against a known fixture) before considered done.
 - **`engine-check-counts.json`** is canonical. Refactors that hardcode counts elsewhere = regression risk.
 
 **Common AuditHQ refactor patterns:**
-- Splitting an >800-line suite engine into orchestrator + per-check modules. OK as long as the orchestrator still calls `clampSuiteScore` last and writes via the existing RPC.
+- Splitting an >800-line Edge Function (e.g. quick-scan/index.ts is 1356 lines) into orchestrator + per-check modules. OK as long as the orchestrator still applies the evidence-floor cap and writes via the existing `create_audit_and_decrement_credit` RPC.
 - Deduplicating boilerplate across suite engines into a shared `lib/suites/_base.ts`. OK; keep the public function signatures stable so n8n workflow callers don't break.
 - Promoting an inline type to a shared type — fine, frequent, low-risk.
 
 **Pre-refactor checklist (non-negotiable):**
 1. Tests exist for the behavior you're preserving. If not, write them first (or delegate to `test-engineer`).
-2. Identify the locked invariants in the target file. If `lib/scoring.ts` is involved, halt and confirm with the user before proceeding.
+2. Identify the locked invariants in the target file. If anything in `supabase/functions/audit-from-n8n/index.ts` lines 367-388 (the evidence-floor cap) is involved, halt and confirm with the user before proceeding.
 3. Read the file end-to-end. Files over 800 lines often have implicit ordering dependencies; preserve them.
 
 ## Core Philosophy
