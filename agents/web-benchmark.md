@@ -1,6 +1,6 @@
 ---
 name: web-benchmark
-description: Competitor benchmark agent for web-evolve. Screenshots a reference site, performs vision analysis, and produces gap-analysis.json. Falls back to WebSearch image analysis if the site blocks headless Puppeteer. Never touches the project repo.
+description: ORCHESTRATOR-ONLY agent for /web-evolve. Screenshots a reference competitor site, performs vision analysis, produces gap-analysis.json. Triggers: only invoked by /web-evolve skill workflow. NOT for: direct user invocation; touching the project repo; design changes (use /web-evolve, /web-page, or design skills).
 tools: Read, Write, WebSearch, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate
 model: claude-sonnet-4-6
 ---

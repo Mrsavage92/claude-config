@@ -1,6 +1,6 @@
 ---
 name: agent-designer
-description: Multi-agent system architect for designing AI agent networks. Covers architecture patterns (supervisor, swarm, pipeline), agent role definition, tool design, communication patterns, safety mechanisms, and evaluation frameworks. Use when designing new Claude agent systems, planning multi-agent workflows, or building Claude plugins/skills.
+description: Multi-agent system architect for designing Claude agent networks, plugin scaffolds, and skill structures. Triggers: 'design a new agent', 'multi-agent workflow', 'build a Claude skill', 'route work between agents'. NOT for: implementing the agent's code (use cto-architect to scope, general-purpose to write); existing agent audits (use harness-optimizer).
 tools: Read, Write, Edit, Grep, Glob
 model: sonnet
 ---

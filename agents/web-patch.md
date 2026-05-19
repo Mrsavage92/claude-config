@@ -1,6 +1,6 @@
 ---
 name: web-patch
-description: Commit agent for web-evolve. The orchestrator calls Skill('X') directly to apply fixes. This agent only verifies the changes landed, stages the modified files, commits, and returns the commit SHA. Never edits source code. Never invokes skills. Never audits.
+description: ORCHESTRATOR-ONLY commit agent for /web-evolve. Verifies fixes landed, stages files, commits, returns SHA. Never edits code, never invokes skills. Triggers: only invoked by /web-evolve workflow after a Skill('X') fix has been applied. NOT for: direct user invocation; making fixes; auditing.
 tools: Read, Grep, Glob, Bash, Write
 model: claude-haiku-4-5
 ---
