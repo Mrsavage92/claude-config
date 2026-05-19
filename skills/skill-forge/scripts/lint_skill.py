@@ -150,6 +150,36 @@ def lint(skill_path: Path) -> dict[str, Any]:
         re.IGNORECASE,
     )
 
+    # Explicit per-line opt-out marker for legitimate technical use of a banned
+    # word as a tier/grade/flag name (e.g. a quality tier literally named
+    # "world-class" or a CLI flag --world-class). Markdown HTML-comment form:
+    #   <!-- lint:allow-banned-phrase=world-class -->
+    # Shell/python comment form:
+    #   # lint:allow-banned-phrase=world-class
+    # The marker MUST appear on the same line as the offending phrase.
+    allow_marker_pattern = re.compile(
+        r"lint:allow-banned-phrase=([a-z0-9 ,\-]+)",
+        re.IGNORECASE,
+    )
+
+    # Filename-level exemption: a reference file whose stem contains a banned
+    # phrase (e.g. references/world-class-tier.md) is documenting that quality
+    # tier — its body will naturally contain the phrase. Skip the scan for the
+    # phrase that appears in the filename.
+    #
+    # Also: any reference doc with "tier" / "grade" / "level" in the stem is a
+    # categorical reference — it WILL legitimately reference other tier names
+    # (premium tier, world-class tier, etc.) as comparison points. Exempt the
+    # whole file in that case.
+    TIER_DOC_MARKERS = ("-tier", "tier-", "-grade", "grade-", "-level", "level-")
+
+    def filename_exempts(filepath: Path, phrase: str) -> bool:
+        stem_norm = filepath.stem.lower().replace("_", "-")
+        if any(marker in stem_norm for marker in TIER_DOC_MARKERS):
+            return True
+        phrase_norm = phrase.lower().replace("_", "-").replace(" ", "-")
+        return phrase_norm in stem_norm
+
     for f in files_to_scan:
         if is_self_exempt:
             break
@@ -160,6 +190,15 @@ def lint(skill_path: Path) -> dict[str, Any]:
         for line_no, line in enumerate(text.splitlines(), start=1):
             for match in phrase_pattern.finditer(line):
                 if skip_pattern.search(line):
+                    continue
+                # Per-line explicit opt-out
+                allow_match = allow_marker_pattern.search(line)
+                if allow_match:
+                    allowed = {p.strip().lower() for p in allow_match.group(1).split(",")}
+                    if match.group(0).lower() in allowed:
+                        continue
+                # Filename-level exemption for tier/grade reference docs
+                if filename_exempts(f, match.group(0)):
                     continue
                 rel = f.relative_to(skill_path)
                 findings["errors"].append({
