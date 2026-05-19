@@ -1,9 +1,53 @@
 ---
 name: critique
 description: Evaluate design from a UX perspective, assessing visual hierarchy, information architecture, emotional resonance, cognitive load, and overall quality with quantitative scoring, persona-based testing, automated anti-pattern detection, and actionable feedback. Use when the user asks to review, critique, evaluate, or give feedback on a design or component.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[area (feature, page, component...)]"
+metadata:
+  version: 2.1.1
+  user-invocable: true
+---
+
+## Mandatory gates (run BEFORE returning critique output)
+
+Three gates must pass before the critique artifact is shown to the user OR returned to an orchestrator. Skipping them was the source of the forge baseline's 46/80 score.
+
+1. **Structured-output gate** — `bash scripts/validate-output.sh <artifact-path>` must exit 0. The critique MUST contain: numeric scoring (dimension: number or X/5), a persona section (named persona from `references/personas.md`), an anti-pattern section, ≥3 evidence citations (file:line, screenshot region, section:, line N), and a verdict (REBUILD/REFINE/SHIP/PASS/FAIL). Prose-only critiques are rejected.
+
+2. **Hallucinated-stats gate** — `bash scripts/scan-hallucinated-stats.sh <artifact-path>` must exit 0. Every percentage or `X/N` score in the artifact must either (a) have an `EVIDENCE:`, `computed:`, or `source:` tag on the same line, or (b) be preceded within 5 lines by a code block showing the computation. The "65% we-dominant" pattern caught in the forge baseline is exactly what this gate blocks.
+
+3. **Banned-phrase gate** — `bash scripts/scan-banned-phrases.sh <artifact-path>` must exit 0. Banned: `comprehensive, robust, production-ready, world-class, premium, perfect, 10/10, shit hot, epic, best-in-class, enterprise-grade, battle-tested, deeply, holistic, seamless, cutting-edge`. The "premium" hit in the forge baseline triggered −2 in honest_self_bound.
+
+If any gate exits non-zero, the critique is incomplete. Fix the artifact and re-run the gates. Do not return prose-only "looks good" responses — those are the failure mode this skill exists to prevent.
+
+### Falsifiability rule (source: `[[forge-sources]]` Source 3 — scientific-critical-thinking)
+
+Every quantitative or claim-of-fact in the artifact must be **verifiable from evidence the artifact itself cites**. If a reader cannot trace a numeric score back to a specific dimension definition + observation in the artifact, the claim is unfalsifiable and must be stripped or re-grounded.
+
+- "Hierarchy: 2/5" without naming what made it 2 → unfalsifiable. Add: "Hierarchy: 2/5 — heading sizes within 1.2× ratio of body (no scale contrast); primary CTA visual weight equal to secondary link."
+- "Reading flow is broken" without naming the broken transition → unfalsifiable. Add: "Reading flow breaks at the hero-to-section-1 boundary because section-1 H2 (32px) is smaller than the body intro paragraph (36px) immediately below it."
+
+### Uncertainty markers (sources: 3, 5)
+
+When the critique infers user intent, mental model, or runtime behaviour that the artifact cannot directly verify, use explicit markers:
+
+- `[INFERRED]` — for guesses about user intent or motivation. E.g. "Visitor stops scrolling here `[INFERRED]` because the next section is jargon-dense."
+- `[UNMEASURED]` — for runtime behaviour (animation timing, focus-trap, screen-reader read order) that requires tools not available in this run.
+
+Inferred claims are not deductions. Marking inference honestly is a strength. Pretending an inference is a measurement is the failure mode.
+
+---
+
+## Persona requirement (load-bearing)
+
+Every critique invocation includes a persona walkthrough section. Read `references/personas.md` and pick the 1–2 personas whose ICP matches the target. The persona section must:
+
+- Name the persona (Sarah, James, Priya, Tom, Aisha, Marcus, Lena, David — or a new persona defined in `references/personas.md` with the same shape).
+- Cite the persona's actual pain points BY LINE from the personas.md entry (not paraphrased).
+- Describe what the persona sees in the first 5 seconds.
+- Tie ≥1 concrete observation to ≥1 of the persona's documented pain points.
+
+A critique without a persona section fails the structured-output gate.
+
 ---
 
 ## Web-evolve Targeted Mode
@@ -269,6 +313,12 @@ Present the Nielsen's 10 heuristics scores as a table:
 
 Be honest with scores. A 4 means genuinely excellent. Most real interfaces score 20-32.
 
+#### Strengths (mandatory section — never omit)
+
+After the Design Health Score table, list 2–3 things the design does well, with specific evidence (element, location, why it works). Source: anthropics/knowledge-work-plugins design-critique + davila7 scientific-critical-thinking 5-part verdict — every critique includes positive observations.
+
+A critique that returns only negatives is incomplete. If you cannot find 2 strengths, that itself is the most useful finding to report — surface it explicitly rather than padding with manufactured positives.
+
 #### Anti-Patterns Verdict
 
 **Start here.** Does this look AI-generated?
@@ -352,8 +402,8 @@ Ask questions along these lines (adapt to the specific findings; do NOT ask gene
 
 List recommended commands in priority order, based on the user's answers:
 
-1. **`/command-name`**: Brief description of what to fix (specific context from critique findings)
-2. **`/command-name`**: Brief description (specific context)
+1. **`/<command-name>`**: Brief description of what to fix (specific context from critique findings)
+2. **`/<command-name>`**: Brief description (specific context)
 ...
 
 **Rules for recommendations**:
@@ -371,3 +421,17 @@ After presenting the summary, tell the user:
 > You can ask me to run these one at a time, all at once, or in any order you prefer.
 >
 > Re-run `/critique` after fixes to see your score improve.
+
+---
+
+## Anti-patterns (failure modes /critique runs have committed)
+
+Read this before returning any critique.
+
+1. **Prose-only "looks good" response.** Returning a paragraph of impressions with no numeric scores, no persona walkthrough, no anti-pattern section. The structured-output gate exists to block this — DO NOT bypass it.
+2. **Hallucinated stats.** Numbers like "60% of users" or "9/10 hierarchy" without an `EVIDENCE:` / `computed:` / `source:` tag on the same line. The hallucinated-stats gate exists to catch this.
+3. **Banned self-praise.** Calling the critique itself "comprehensive" or the design "premium." Strip these words. The banned-phrase gate exists to catch them.
+4. **Persona walkthrough that paraphrases personas.md.** The persona's pain points must be cited by line number from `references/personas.md`, not summarised in your own words.
+5. **Default-high scoring.** Scoring everything 3-4/5 because the design "looks fine." Per `[[feedback_taste_calibration]]` — recalibrate to SOTM/Bruno Simon, not median SaaS. Most real interfaces score 20-32 on the Nielsen 40-pt scale.
+6. **Inference dressed as measurement.** Claiming a user "stops scrolling here" without `[INFERRED]` marker, or claiming animation timing without `[UNMEASURED]` marker. Honest inference is a strength; pretending inference is measurement is the failure mode.
+7. **All-negative report.** Omitting the Strengths section because "nothing was great." If you cannot find 2 strengths, name that explicitly — it's the most useful finding.

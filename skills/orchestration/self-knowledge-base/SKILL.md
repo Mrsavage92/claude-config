@@ -16,14 +16,15 @@ Trigger: "update knowledge base", "sync docs", "update notion", "sync knowledge 
 Keeps Claude Code configuration in sync across machines and documents everything in Notion.
 
 **Source of truth architecture:**
-- GitHub (`Mrsavage92/claude-config`) — the actual config files (commands, agents, skills, hooks, rules)
+- GitHub (`Mrsavage92/claude-config`) — the actual config files (commands, agents)
+- GitHub (`Mrsavage92/skills-library`) — the skills library
 - Notion — human-readable documentation
 
 **Triggers:** "update knowledge base", "sync docs", "update Notion", "push config"
 
 ## Features
 
-- Scans ~/.claude/commands/, ~/.claude/agents/, and ~/.claude/skills/ for current state
+- Scans ~/.claude/commands/ and ~/.claude/agents/ for current state
 - Diffs against last manifest to detect what changed
 - Pushes changes to github.com/Mrsavage92/claude-config
 - Updates Notion pages for only what changed

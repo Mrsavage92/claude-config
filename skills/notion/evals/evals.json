@@ -1,0 +1,55 @@
+{
+  "skill_name": "notion",
+  "rebuild_context": "Forge baseline 35/80. First rebuild attempt scored 47/80 (FAIL) — caught: (a) self-flattery in artifact content, (b) missing metadata block, (c) no Notion-Version header in artifact, (d) pagination not exercised, (e) MCP-fallback not exercised, (f) append-vs-rewrite not exercised. This eval set fixes all six gaps.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "standard-page-with-metadata",
+      "prompt": "Create a Notion page documenting the upcoming Q3 OKR review. Parent: Projects hub at 32a116e8bef281d6bbcae0db73eede0b. Title: 'Q3 2026 OKR Review — Planning'.\n\nFollow the SKILL.md page structure EXACTLY:\n  1. Hero callout (emoji 🎯, text 'Quarterly OKR review and Q4 planning kickoff')\n  2. Metadata block (REQUIRED — paragraph: 'Status: Scheduled · Owner: Adam · Date: 2026-06-15 · Project: Internal Ops')\n  3. Divider\n  4. H2 '📋 Agenda' with 4 bulleted_list_item children (review Q3 actuals, identify misses, Q4 themes, finalize)\n  5. Divider\n  6. H2 '✅ Pre-work' with 3 to_do items\n  7. Summary callout (emoji 💡, text 'Outcome: locked Q4 OKRs and dates for monthly check-ins')\n\nDRY RUN — do NOT make a live POST. Show:\n  - Transport selected (MCP first)\n  - validate-parent.sh output\n  - Assembled JSON for ALL children\n  - The exact MCP tool-call parameters\n\nCRITICAL: the page content describes a Q3 OKR review. It is NOT about the rebuild, NOT about the skill, NOT about scoring. The summary callout content is the user's business decision, not the model's self-assessment. Banned phrases anywhere in the page content: 'PASS', '80/80', 'rebuild', 'skill-creator', 'forge'.",
+      "expected_output": "16+ blocks including 1 hero callout, 1 metadata paragraph, 2+ dividers, 2 H2 headings, bulleted_list_item and to_do blocks, 1 summary callout. No banned phrases in any block content.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "hub-root-refusal",
+      "prompt": "User asks: 'Create a Notion page called Test at the workspace hub root (32a116e8bef28030a0f6d0be522bf917)'. Follow the SKILL.md workflow:\n  1. Validate the parent with scripts/validate-parent.sh.\n  2. If the script refuses, report what it said. Do NOT pass --allow-hub-root.\n  3. Stop without attempting the page creation.",
+      "expected_output": "validate-parent.sh exit 2; refusal reported; no page creation attempted.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "env-var-missing",
+      "prompt": "Demonstrate notion-call.sh's behavior when NOTION_INTERNAL_TOKEN is not set. Run with the env-var unset and a dummy GET request. Show the exit code and the user-facing error message. Confirm no API call was made (no HTTPS traffic).",
+      "expected_output": "Exit 1 with explicit env-var message; no API call attempted.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "header-evidence",
+      "prompt": "Prove the notion-call.sh script sends the Notion-Version: 2022-06-28 header on every request.\n\nSet NOTION_INTERNAL_TOKEN to a known-invalid value (e.g. 'ntn_invalid_test_token_for_header_check'). Run scripts/notion-call.sh --verbose GET /v1/users/me. The request will return 401 — that's expected and fine. Capture the verbose curl output showing the request headers, including the Notion-Version line.\n\nReport: did the curl output show 'Notion-Version: 2022-06-28' as an outgoing header? YES or NO with the exact line quoted.",
+      "expected_output": "curl verbose output shows '> Notion-Version: 2022-06-28' as outgoing request header. Authorization header also present (with the invalid test token, NOT the leaked one).",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "pagination-250-blocks",
+      "prompt": "Prove notion-call.sh auto-chunks block-append requests at 100 per request.\n\nDRY RUN — do not make live calls. Steps:\n  1. Generate a 250-block JSON file with jq: `jq -n '{children: [range(0;250) | {object:\"block\", type:\"paragraph\", paragraph:{rich_text:[{type:\"text\", text:{content: (\"block \" + (. | tostring))}}]}}]}' > /tmp/250-blocks.json`\n  2. Inspect notion-call.sh — find the chunking section and quote the lines that compute chunk count and offset slicing.\n  3. Manually compute: 250 blocks ÷ 100 per chunk = 3 chunks (100 + 100 + 50). Verify via jq that slicing the file at offsets 0, 100, 200 produces slice sizes 100, 100, 50 respectively. Show the jq commands and outputs.\n  4. Set NOTION_INTERNAL_TOKEN to a known-invalid token and run `bash .../notion-call.sh PATCH /v1/blocks/abc123/children --children-file /tmp/250-blocks.json 2>&1 | head -20`. Capture the chunk count and offset progression printed by the script before the first 401 fails.\n\nReport: chunk count, slice sizes, and any failure messages.",
+      "expected_output": "3 chunks confirmed by jq slicing. Script log lines show chunk=1/3 [0,100), chunk=2/3 [100,200), chunk=3/3 [200,250). 401 on the first chunk halts execution (expected).",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "append-vs-rewrite-decision",
+      "prompt": "Read the SKILL.md 'Append vs full-rewrite — decision rule' section and apply it. For each of these 6 page-update scenarios, state the correct pattern (Append OR Full rewrite) and why in one sentence:\n\n  A. Updating a project PRD page with a new 'Phase 3 — testing' section after Phase 2 is complete\n  B. Refreshing the Skills Library index page after 5 new skills were added today\n  C. Adding meeting notes for today's standup to a 'Engineering standups' page that has notes from prior days\n  D. Regenerating a daily revenue dashboard page from a fresh database query (yesterday's numbers should disappear)\n  E. Adding a retrospective for sprint 14 to a 'Sprint retros' page that lists retros 1-13\n  F. Regenerating a generated-from-manifest page (e.g. an Agents catalogue derived from agents/*.md)\n\nReport as a 6-row table: scenario, pattern, reason. The correct answers per SKILL.md: A=Append, B=Full rewrite, C=Append, D=Full rewrite, E=Append, F=Full rewrite.\n\nAlso: demonstrate the full-rewrite procedure by quoting the SKILL.md's 3-step bash sequence (GET children, DELETE each, PATCH new). Confirm that DELETE is invoked per existing block — NOT just an append.",
+      "expected_output": "6-row table with correct pattern choices; SKILL.md full-rewrite procedure quoted with all 3 steps (GET, DELETE-loop, PATCH).",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "mcp-fallback-rationale",
+      "prompt": "The SKILL.md says MCP first, REST fallback. Demonstrate the decision tree for when MCP cannot handle an operation.\n\nFor each of these operations, state explicitly:\n  - Whether MCP can do it (cite the specific mcp__claude_ai_Notion__* tool name)\n  - If yes: state 'MCP' as the choice\n  - If no: state 'REST via notion-call.sh' and the exact path\n\nOperations:\n  A. Create a new page under a parent\n  B. Update a page's title/icon\n  C. Search for a page by title\n  D. Append 50 blocks to an existing page (mid-page, not at creation)\n  E. Delete a specific block by ID\n  F. Fetch a page's full content (blocks + properties)\n\nReport as a 6-row table. The point is: every operation has an explicit transport choice with a stated reason — no silent fallback to REST when MCP would do.",
+      "expected_output": "6-row table. A, B, C, F should choose MCP (notion-create-pages, notion-update-page, notion-search, notion-fetch). D, E should choose REST (PATCH /v1/blocks/<id>/children, DELETE /v1/blocks/<id>) because MCP doesn't expose block-level append/delete.",
+      "files": []
+    }
+  ]
+}

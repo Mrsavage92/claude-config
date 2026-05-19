@@ -27,8 +27,6 @@ of truth that will be re-read in future sessions when context is lost.
 ## Notion Setup
 
 ```python
-import os
-
 TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
@@ -60,7 +58,7 @@ Pull from: conversation context, local memory file, CLAUDE.md, anything the user
 ## Step 2 — Find or Create Notion Project Page
 
 ```python
-import urllib.request, json, os
+import urllib.request, json
 
 def find_project_page(name):
     """Search for existing project page under Projects"""

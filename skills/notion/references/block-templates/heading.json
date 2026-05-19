@@ -1,0 +1,15 @@
+{
+  "_comment": "Replace REPLACE_LEVEL with heading_1, heading_2, or heading_3. Substitute the same level into the inner key.",
+  "object": "block",
+  "type": "REPLACE_LEVEL",
+  "REPLACE_LEVEL": {
+    "rich_text": [
+      {
+        "type": "text",
+        "text": { "content": "REPLACE_TEXT" }
+      }
+    ],
+    "is_toggleable": false,
+    "color": "default"
+  }
+}

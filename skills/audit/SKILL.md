@@ -1,9 +1,10 @@
 ---
 name: audit
 description: Run technical quality checks across accessibility, performance, theming, responsive design, and anti-patterns. Generates a scored report with P0-P3 severity ratings and actionable plan. Use when the user wants an accessibility check, performance audit, or technical quality review.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[area (feature, page, component...)]"
+metadata:
+  version: 2.1.1
+  user-invocable: true
 ---
 
 ## MANDATORY PREPARATION
@@ -12,13 +13,41 @@ Invoke /impeccable — it contains design principles, anti-patterns, and the **C
 
 ---
 
-Run systematic **technical** quality checks and generate a comprehensive report. Don't fix issues — document them for other commands to address.
+Run systematic **technical** quality checks and generate a scored report. Don't fix issues — document them for other commands to address.
 
 This is a code-level audit, not a design critique. Check what's measurable and verifiable in the implementation.
 
+## Measurement Availability Gate (load-bearing)
+
+Before scoring any dimension, confirm what you can measure in the current environment:
+
+| Tool | Available? | If unavailable, mode |
+|---|---|---|
+| `mcp__chrome-devtools__lighthouse_audit` | check by attempting `mcp__chrome-devtools__new_page` first | heuristic-mode for Accessibility + Performance |
+| `mcp__chrome-devtools__performance_start_trace` | requires chrome-devtools-mcp connected | heuristic-mode for Performance, score CAPPED at 2/4 |
+| Live URL or dev server reachable | curl / fetch the URL first | source-only mode for Responsive + Theming |
+| Source files on disk | `Read`/`Grep` the component file | required — without this, HALT and ask the user for the file path |
+
+**Severity assignment rule (from source: `[[forge-sources]]` Source 1 + Source 5):**
+
+- Findings VERIFIED by an available measurement → assign `P0`/`P1`/`P2`/`P3` per the severity definitions below.
+- Findings NOT verifiable in the current environment → tag `[UNMEASURED]` and route to the "Deferred / Re-run with tools" section. Do NOT assign a P-tier to unmeasured items.
+- Heuristic-mode dimensions are score-capped at 2/4 — the cap is explicit, not implicit.
+
+Reasoning: assigning P-severity to unmeasured findings is the anti-pattern flagged in the cycle 2026-05-18 review. Severity must be earned by evidence.
+
+## Citation Hygiene (load-bearing)
+
+Every quantitative or structural claim in the artifact must include the cited evidence INLINE, not as a reference to another file.
+
+- WRONG: "Per the input bundle, header has `position: fixed`."
+- RIGHT: "Header has `position: fixed; z-index: 9999` — captured value from `getComputedStyle(headerEl).position` at 2026-05-18 capture."
+
+If the cited source is a screenshot, embed a one-line description ("desktop 1440×900: bottom border invisible") instead of pointing the reader at the screenshot file. The reader of the artifact does not have the source files you do.
+
 ## Diagnostic Scan
 
-Run comprehensive checks across 5 dimensions. Score each dimension 0-4 using the criteria below.
+Run checks across 5 dimensions. Score each dimension 0-4 using the criteria below.
 
 ### 1. Accessibility (A11y)
 
@@ -120,11 +149,14 @@ Check against ALL the **DON'T** guidelines in the impeccable skill. Look for AI 
 
 ### Detailed Findings by Severity
 
-Tag every issue with **P0-P3 severity**:
-- **P0 Blocking**: Prevents task completion — fix immediately
-- **P1 Major**: Significant difficulty or WCAG AA violation — fix before release
+Tag every measurable issue with **P0-P3 severity**. Severity maps to **user impact**, not detection availability (source: microsoft/skills issue-creator pattern):
+
+- **P0 Blocking**: Prevents task completion / data loss / WCAG A violation — fix immediately
+- **P1 Major**: Significant difficulty, no workaround, or WCAG AA violation — fix before release
 - **P2 Minor**: Annoyance, workaround exists — fix in next pass
 - **P3 Polish**: Nice-to-fix, no real user impact — fix if time permits
+
+For findings that depend on a measurement the environment cannot make right now, do NOT assign a P-tier. Use `[UNMEASURED]` and place them in the "Deferred / Re-run with tools" section (see below).
 
 For each issue, document:
 - **[P?] Issue name**
@@ -135,22 +167,31 @@ For each issue, document:
 - **Recommendation**: How to fix it
 - **Suggested command**: Which command to use (prefer: /animate, /quieter, /shape, /optimize, /adapt, /clarify, /layout, /distill, /delight, /audit, /harden, /polish, /bolder, /typeset, /critique, /colorize, /overdrive)
 
+### Deferred / Re-run with tools (mandatory section if any UNMEASURED items exist)
+
+List every `[UNMEASURED]` finding here with:
+- The exact measurement that would resolve it (e.g. "Lighthouse Accessibility category", "computed contrast on `text-muted-foreground` over `--background`", "focus-trap behaviour on keyboard `Tab` cycle in the open mobile menu")
+- The tool that would provide it (e.g. `mcp__chrome-devtools__lighthouse_audit(device="mobile")`, axe-core CLI, manual screen-reader pass)
+- The expected re-run command (e.g. "Re-run `/audit` after closing the locked chrome-profile at `C:\Users\Adam\.cache\chrome-devtools-mcp\chrome-profile`")
+
+If this section has items, the artifact closes with: "Re-run /audit with the listed tools available to upgrade these findings from UNMEASURED to severity-rated."
+
 ### Patterns & Systemic Issues
 
 Identify recurring problems that indicate systemic gaps rather than one-off mistakes:
 - "Hard-coded colors appear in 15+ components, should use design tokens"
 - "Touch targets consistently too small (<44px) throughout mobile experience"
 
-### Positive Findings
+### Strengths (mandatory — never omit)
 
-Note what's working well — good practices to maintain and replicate.
+Note what's working well — good practices to maintain and replicate. Every audit ships with this section even if short. A critique that returns only negatives is incomplete (source: anthropics/knowledge-work-plugins design-critique; davila7 scientific-critical-thinking 5-part verdict).
 
 ## Recommended Actions
 
 List recommended commands in priority order (P0 first, then P1, then P2):
 
-1. **[P?] `/command-name`** — Brief description (specific context from audit findings)
-2. **[P?] `/command-name`** — Brief description (specific context)
+1. **[P?] `/<command-name>`** — Brief description (specific context from audit findings)
+2. **[P?] `/<command-name>`** — Brief description (specific context)
 
 **Rules**: Only recommend commands from: /animate, /quieter, /shape, /optimize, /adapt, /clarify, /layout, /distill, /delight, /audit, /harden, /polish, /bolder, /typeset, /critique, /colorize, /overdrive. Map findings to the most appropriate command. End with `/polish` as the final step if any fixes were recommended.
 
@@ -170,3 +211,14 @@ After presenting the summary, tell the user:
 - Report false positives without verification
 
 Remember: You're a technical quality auditor. Document systematically, prioritize ruthlessly, cite specific code locations, and provide clear paths to improvement.
+
+## Anti-patterns (failure modes to avoid)
+
+These are the specific failure modes prior /audit runs have committed. Read this section before assigning any severity.
+
+1. **Severity on unmeasured items.** Assigning P0/P1/P2/P3 to a finding the environment cannot verify. Caught cycle 2026-05-18 — Performance P2s labelled "INP impact unmeasured" still received P2. Fix: use `[UNMEASURED]` and route to the Deferred section.
+2. **Citation by reference, not inline.** Writing "per the input bundle, header has X" instead of inlining the captured value. The artifact reader does not have the input bundle. Always quote the captured value.
+3. **Heuristic-mode score inflation.** When chrome-devtools-mcp is unavailable, scoring Performance as 3/4 because "the code looks fine" — heuristic mode is capped at 2/4. The cap exists because code-level inspection cannot verify runtime behaviour.
+4. **Acknowledging an edge case without handling it.** "Focus-trap behaviour was not tested" placed in a footnote is not handling — it's a `[UNMEASURED]` finding that belongs in the Deferred section with the exact tool to resolve it.
+5. **All-negative reports.** Omitting the Strengths section because "nothing was great" — every audit has at least one positive observation. Source 1 and Source 3 of forge-sources.md call this out.
+6. **False AI-slop accusations.** Calling intentional design choices "AI slop" without specific tells. The Anti-Patterns dimension is 0-4 — assign based on concrete tells (purple gradients, 3-column icon grids, decorative blobs, generic hero copy), not on aesthetic dislike.

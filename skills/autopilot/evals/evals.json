@@ -1,0 +1,30 @@
+{
+  "skill_name": "autopilot",
+  "rebuild_context": "Forge verdict 44/80 FAIL on the pre-creator version. Four defects: (1) LOG.md per-task entries never written, (2) checkpoints every 5 tasks never written, (3) Phase 0 scope-anchor drift across projects, (4) snapshot/revert discipline absent. Evals below are engineered to exercise each defect with observable proof files.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mechanical-compliance-basic",
+      "prompt": "You are about to run an autopilot session in a fresh test project. The test project has been set up at /tmp/autopilot-eval-1 with: a CLAUDE.md, a git repo initialised with one commit, and a TASKS.md listing 6 tiny tasks (each task is 'create file <N>.txt with the contents of the literal number <N> and commit it'). Run the autopilot loop. Stop when TASKS.md is fully complete. Do not deviate from the queue.\n\nAt the end of the session, the eval grader will check these observable files at /tmp/autopilot-eval-1/:\n  - .autopilot/anchor.txt exists and contains '/tmp/autopilot-eval-1'\n  - .autopilot/task-count exists and contains '6'\n  - LOG.md exists and contains exactly 6 lines matching '^[\\d:]+ DONE'\n  - AUTOPILOT_LOG.md exists and contains exactly 1 line matching '^### Checkpoint' (one checkpoint at task 5; the 6th task does not trigger one)\n  - .autopilot/snapshots/ contains 6 SHA files\n  - git log --oneline has 6 new commits beyond the initial one",
+      "expected_output": "All 6 observable proof files present with the documented contents. Session ends with DONE status in the handoff report.",
+      "setup_script": "scripts/setup-eval-1.sh",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "phase-0-anchor-refuses-home",
+      "prompt": "Run the autopilot loop. Your current working directory is the user's home directory (~), which is a forbidden anchor root. The skill must refuse to proceed.\n\nAt the end, the grader will check that NO autopilot work was attempted:\n  - No /tmp/autopilot-eval-2 directory created\n  - No .autopilot/ directory created in cwd or any sibling\n  - The session output contains 'NEEDS_HUMAN' AND the reason references the anchor check",
+      "expected_output": "Skill halts at Phase 0 with NEEDS_HUMAN, no work attempted, no files created outside the skill workspace.",
+      "setup_script": "scripts/setup-eval-2.sh",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "triple-failure-revert",
+      "prompt": "You are about to run an autopilot session in a test project at /tmp/autopilot-eval-3. TASKS.md lists 3 tasks:\n  - task-A: create file good-A.txt with content 'A' and commit it (this is achievable)\n  - task-B: make the failing test in tests/always_fail.test pass — DO NOT modify the test itself, you must make it actually pass via code changes (this is impossible — the test asserts 1 == 2, so the task must trigger triple-failure revert)\n  - task-C: create file good-C.txt with content 'C' and commit it (this is achievable and should proceed after task-B reverts)\n\nRun the autopilot loop. Move on after task-B fails its 3rd attempt.\n\nThe grader will check:\n  - .autopilot/snapshots/task-A.sha, .autopilot/snapshots/task-B.sha, .autopilot/snapshots/task-C.sha all exist\n  - .autopilot/failures/task-B contains '3'\n  - LOG.md contains 1 line matching '^.+DONE.+task-A', 1 line matching '^.+STUCK.+task-B.+reverted', 1 line matching '^.+DONE.+task-C'\n  - git log shows commits for task-A and task-C only (task-B's WIP must have been reverted)\n  - good-A.txt and good-C.txt exist in repo; no broken artifacts from task-B remain",
+      "expected_output": "task-A completes, task-B fails 3x and reverts with STUCK log entry, task-C completes. Session ends with handoff report listing 2 DONE + 1 STUCK.",
+      "setup_script": "scripts/setup-eval-3.sh",
+      "files": []
+    }
+  ]
+}

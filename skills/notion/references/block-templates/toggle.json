@@ -1,0 +1,13 @@
+{
+  "object": "block",
+  "type": "toggle",
+  "toggle": {
+    "rich_text": [
+      {
+        "type": "text",
+        "text": { "content": "REPLACE_TOGGLE_LABEL" }
+      }
+    ],
+    "children": []
+  }
+}

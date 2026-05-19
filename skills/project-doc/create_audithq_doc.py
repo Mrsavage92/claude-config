@@ -1,4 +1,4 @@
-import urllib.request, json, os
+import urllib.request, json
 from datetime import datetime
 
 TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))

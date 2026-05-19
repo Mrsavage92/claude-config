@@ -1,87 +1,191 @@
 ---
 name: notion
 description: >
-  Create, update, and manage Notion pages with beautiful formatting and enforced project structure.
-  All project docs live under the Projects hub. Trigger for: creating Notion pages, documenting a
-  project, writing PRDs/sprint plans/status updates to Notion, "add this to Notion", "create a
-  Notion page", "document this in Notion", "update Notion", or any request to write structured
-  content into Notion.
+  Create, update, and manage Notion pages with enforced project structure and validated block
+  types. All project docs live under the Projects hub. Trigger for: creating Notion pages,
+  documenting a project, writing PRDs/sprint plans/status updates to Notion, "add this to
+  Notion", "create a Notion page", "document this in Notion", "update Notion", or any request
+  to write structured content into Notion.
 ---
 
-# Skill: Notion — Beautiful Docs & Project Structure
+# Notion — pages with validated structure
 
-You are a Notion expert. Every page you create must look exceptional — scannable, structured, and
-visually clear. You know the user's exact workspace and always put things in the right place.
+You create and update Notion pages for the user. The skill is built around three load-bearing
+constraints that previously failed in real invocations:
+
+1. **No token in any code you write.** The leaked token in source/git history forced a hard
+   rule: you may not write Python/JavaScript that handles Notion auth. Use MCP tools or the
+   sanctioned bash wrapper. If you find yourself typing `Authorization: Bearer ntn_…`, stop.
+2. **Block JSON comes from templates, not memory.** Hand-rolled block JSON has caused real
+   bugs (no callout block ever produced, quote used as a fallback because the model couldn't
+   recall the callout shape). Read `references/block-templates/*.json` and substitute placeholders.
+3. **Parent must be validated.** Project docs go under Projects (`32a116e8bef281d6bbcae0db73eede0b`),
+   never at the workspace hub root. `scripts/validate-parent.sh` enforces this.
 
 ---
 
-## Workspace Structure
+## Workspace structure
 
 ```
-Hub (32a116e8bef28030a0f6d0be522bf917)
-└── Projects (32a116e8bef281d6bbcae0db73eede0b)  ← ALL project docs go here
+Hub (32a116e8bef28030a0f6d0be522bf917)              ← workspace root; do NOT place docs here
+└── Projects (32a116e8bef281d6bbcae0db73eede0b)     ← ALL project docs go here
     ├── Orbit Digital (rebranded from GrowLocal 2026-05-16)
     ├── Authmark
     ├── Gloss Beauty — glossbeauty.com.au
     ├── Website Audit SaaS
-    └── [new projects created here]
+    └── [new project pages created here]
 ```
 
-**Rule:** Any document related to a project → find or create the project page under Projects,
-then create the doc as a child of that project. Never create project docs at the hub root.
+For any document related to a project, find or create the project page under Projects, then
+create the doc as a child of that project.
 
 ---
 
-## API Setup
+## Transport order (MCP first, REST fallback)
 
-```python
-import os
+For every Notion operation, prefer this order:
 
-TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
-HEADERS = {
-    'Authorization': f'Bearer {TOKEN}',
-    'Notion-Version': '2022-06-28',
-    'Content-Type': 'application/json'
+1. **`mcp__claude_ai_Notion__notion-*` tools** — first choice. They handle auth, headers, and
+   pagination transparently. No token to leak. No JSON to hand-roll for the page itself
+   (block JSON for children still uses the templates).
+   - `notion-create-pages` for new pages
+   - `notion-update-page` for property updates
+   - `notion-fetch` for reads
+   - `notion-search` for finding existing pages
+   - `notion-create-comment`, `notion-get-comments`, `notion-get-users`, `notion-get-teams`
+2. **`bash scripts/notion-call.sh`** — fallback when MCP can't do the operation or fails. This
+   is the ONLY sanctioned REST path. The script reads `NOTION_INTERNAL_TOKEN` from env, sets
+   `Notion-Version: 2022-06-28`, auto-chunks block-append at 100/request, and logs every call
+   to `.notion-skill/api-log`.
+
+If you're tempted to write `urllib.request`, `fetch()`, `axios`, or any other inline HTTP
+call to api.notion.com — stop. Use the script. The skill exists because that pattern leaked
+the token in 8+ places across 3 prior invocations.
+
+When you do use the script, log which path you took and why in your reply to the user (e.g.
+"Used MCP `notion-create-pages` for page; used `notion-call.sh` for block-children PATCH
+because MCP doesn't expose a children-append endpoint").
+
+---
+
+## Page-creation workflow
+
+### Step 1 — Decide the parent
+
+For project docs, find the project page under Projects. If it doesn't exist:
+
+```bash
+# Find via MCP
+# (use mcp__claude_ai_Notion__notion-search with query=<project-name>, ancestor_id=<Projects ID>)
+```
+
+Then validate:
+
+```bash
+bash scripts/validate-parent.sh <parent-id>
+```
+
+If the script exits 2 (parent is hub root), either pick a real project page OR add
+`--allow-hub-root` if the user explicitly wants a workspace-level page. Default is refuse.
+
+### Step 2 — Create the page
+
+**Preferred (MCP):**
+```
+mcp__claude_ai_Notion__notion-create-pages with:
+  parent: { page_id: <validated-parent-id> }
+  pages: [
+    {
+      properties: { title: <page title> },
+      content: <markdown — MCP renders it; use this for simple pages>
+    }
+  ]
+```
+
+**Fallback (REST):**
+```bash
+cat > /tmp/page-body.json <<EOF
+{
+  "parent": {"page_id": "<validated-parent-id>"},
+  "properties": {"title": [{"text": {"content": "Page title"}}]},
+  "children": []
 }
-HUB_ID = '32a116e8bef28030a0f6d0be522bf917'
-PROJECTS_ID = '32a116e8bef281d6bbcae0db73eede0b'
+EOF
+bash scripts/notion-call.sh POST /v1/pages --body-file /tmp/page-body.json
 ```
 
-Always use the REST API directly via Python `urllib.request`. The Notion MCP server is available
-but the REST API is more reliable for complex page creation.
+The created page returns a `url` — show it to the user.
+
+### Step 3 — Assemble children blocks (if not done via MCP markdown)
+
+**Every page MUST include a metadata block** immediately after the hero callout (or at top for shared/internal docs without callout). The metadata block is a single paragraph containing: `Status: <state> · Owner: <name> · Date: <YYYY-MM-DD> · Project: <project-name>`. This is non-negotiable — pages without it fail the visual-structure check.
+
+Example metadata paragraph:
+```bash
+META=$(jq '.paragraph.rich_text[0].text.content = "Status: In progress · Owner: Adam · Date: 2026-05-18 · Project: <name>"' references/block-templates/paragraph.json)
+```
+
+For structured pages where MCP markdown isn't expressive enough, build a children array by
+combining templates from `references/block-templates/`:
+
+```bash
+# Hero callout
+HERO=$(jq '.callout.rich_text[0].text.content = "Project goal: ship the audit redesign"
+          | .callout.icon.emoji = "🎯"' references/block-templates/callout.json)
+
+# Divider
+DIV=$(cat references/block-templates/divider.json)
+
+# H2 section heading
+H2=$(jq '. as $t | $t * {type:"heading_2", heading_2: {rich_text: [{type:"text", text:{content:"Status"}}], is_toggleable:false, color:"default"}} | del(.heading_1, .heading_3)' references/block-templates/heading.json)
+
+# Paragraph
+P=$(jq '.paragraph.rich_text[0].text.content = "Currently in design review."' references/block-templates/paragraph.json)
+
+# Combine
+jq -n --argjson hero "$HERO" --argjson div "$DIV" --argjson h2 "$H2" --argjson p "$P" \
+  '{children: [$hero, $div, $h2, $p]}' > /tmp/children.json
+
+# Append (auto-chunks at 100)
+bash scripts/notion-call.sh PATCH /v1/blocks/<page-id>/children --children-file /tmp/children.json
+```
+
+If a needed block type isn't in `references/block-templates/`, add a new template file
+following the existing `REPLACE_*` placeholder pattern. Do NOT inline new block JSON.
+
+### Step 4 — Report
+
+Show the user:
+- The page URL
+- Which transport was used (MCP, REST, or both)
+- The number of blocks appended (from `.notion-skill/api-log` — `wc -l .notion-skill/api-log`)
 
 ---
 
-## Visual Design Standards
+## Visual structure — the canonical page shape
 
-Every page must follow these rules without exception:
+Every page should follow this shape unless the user requests otherwise:
 
-### Page Structure
-1. **Hero callout** at the top — emoji + one-sentence purpose of the page
-2. **Metadata block** — status, owner, date, project (as a paragraph or small table)
-3. **Divider** after metadata
-4. **Body sections** using H2 headings (##) with emoji prefixes
-5. **Divider** between major sections
-6. **Summary/Next Steps callout** at the bottom
-
-### Block Hierarchy
 ```
-📌 Callout (hero — page purpose)
-─── divider ───
-H1: Page title context (if needed)
-H2: 🔍 Section Name    ← main sections always H2 + emoji
-  paragraph text
-  • bullet points for lists
-  ▸ toggle for detail / supporting info
-H2: 📋 Next Section
-─── divider ───
-💡 Callout (key insight or decision)
-H2: ✅ Next Steps
-  □ To-do item (checkbox)
+[hero callout]   ← `callout.json`, emoji + 1-sentence purpose
+[metadata]       ← REQUIRED — paragraph: "Status: X · Owner: Y · Date: YYYY-MM-DD · Project: Z"
+[divider]        ← `divider.json`
+[H2: 🎯 Section] ← `heading.json` level 2
+  paragraph
+  bullets
+  toggles (for supporting detail)
+[divider]
+[H2: ✅ Next Steps]
+  to_do items
+[summary callout] ← key insight or decision (factual, not self-rating)
 ```
 
-### Emoji Conventions
-Always use consistent emoji for section types:
+The summary callout at the bottom is FACTUAL — what was decided or what's next. It is NEVER the model's self-assessment of its own work ("This rebuild scored 80/80" is forbidden — that's an artifact-embedded self-quality claim and matches the banned pattern in `[feedback_no_self_quality_claims]`).
+
+### Emoji conventions (personal/private docs)
+
+Use consistent emoji to make sections scannable:
+
 - 🎯 Goal / Objective
 - 📋 Overview / Summary
 - 🔍 Research / Analysis
@@ -97,200 +201,110 @@ Always use consistent emoji for section types:
 - 👥 Team / Stakeholders
 - 🔗 Links / References
 
-### Callout Colors (icon mapping)
+### Callout colour semantics
+
 - 💡 = insight/tip (yellow)
 - ⚠️ = warning/risk (red)
 - ✅ = complete/good (green)
 - 📌 = pinned/important (blue)
 - 🚧 = in progress (orange)
 
----
+### Shared / internal docs
 
-## Document Templates
+For documents shared with people other than Adam (clients, contractors, public-facing
+templates):
 
-### PRD (Product Requirements Document)
-```
-📌 [Product name] — PRD
-[Status: Draft | Owner: Adam | Date: YYYY-MM-DD]
-─────
-H2: 🎯 Problem Statement
-H2: 👥 Target User (ICP)
-H2: 🧩 Requirements
-  H3: Must Have
-  H3: Should Have
-  H3: Won't Have (this version)
-H2: 🏗️ Technical Approach
-H2: 📊 Success Metrics
-H2: 🚀 Launch Plan
-H2: ⚠️ Risks
-H2: ✅ Next Steps
-  □ checkbox items
-```
-
-### Sprint Plan
-```
-📌 Sprint [N] — [Goal]
-[Dates: MM/DD – MM/DD | Capacity: X pts | Status: Planning]
-─────
-H2: 🎯 Sprint Goal
-H2: 🧩 Stories
-  (story title — X pts)
-  ▸ Acceptance criteria
-H2: 📊 Capacity
-H2: ⚠️ Dependencies / Risks
-H2: ✅ Definition of Done
-```
-
-### Project Status Update
-```
-📌 [Project] — Status Update [Date]
-─────
-💡 TL;DR: [one sentence on where things stand]
-─────
-H2: ✅ Done Since Last Update
-H2: 🚧 In Progress
-H2: 🔜 Up Next
-H2: ⚠️ Blockers
-H2: 📊 Key Metrics
-```
-
-### Project Review (from /project-review output)
-```
-📌 [Project] — Strategic Review [Date]
-─────
-H2: 📋 Current State
-H2: 🔍 Competitive Landscape
-H2: 🎯 Positioning
-H2: 💰 Pricing Analysis
-H2: ⚠️ Gap Analysis
-H2: 🚨 Risk Register
-H2: 🚀 Forward Roadmap
-─────
-💡 Overall Verdict
-```
-
-### Meeting Notes
-
-**Rule:** When creating a meeting notes page for an UPCOMING meeting (not a retrospective), always include the three prep sections below — What to Say, Risks, and Pre-Meeting Prep. These must be specific to the meeting context, never generic placeholders. Pull from the conversation to populate them.
-
-```
-📌 [Meeting name] — [Date]
-[Attendees: ... | Duration: ...]
-─────
-H2: 📋 Meeting Details        ← table: date, time, location, duration
-H2: 👥 Attendees
-H2: 🎯 Purpose
-H2: 📋 Agenda
-─── divider ───
-H2: ⚡ Key Numbers / Context  ← callout with the critical data point (e.g. the number being discussed)
-─── divider ───
-H2: 🗣 What to Say            ← specific lines: Opening, The Ask, If Asked Why, Close
-H2: ⚠️ Risks                  ← named risks with specific rebuttals, not generic warnings
-H2: 📋 Pre-Meeting Prep       ← checkbox list of concrete tasks to do before the call
-─── divider ───
-H2: 🗒 Discussion Notes       ← left blank to fill live
-H2: 💡 Decisions Made         ← left blank
-H2: ✅ Action Items            ← table: action / owner / due date / status (pre-fill known items)
-H2: 🚀 Next Steps             ← checkboxes
-```
-
-**What to Say section rules:**
-- Use H3 subheadings: Opening / The Ask / If Asked Why / Close
-- Each point is a bullet with an actual sentence Adam can say
-- Never write "explain X" — write the actual words
-
-**Risks section rules:**
-- Name each risk as an H3 (e.g. "Rate Dispute", "System Limitation")
-- Each risk bullet includes what to say if it comes up — a specific rebuttal, not just awareness
-- Use a red callout at the top: "Nothing below should catch you off guard on the call."
-
-**Pre-Meeting Prep rules:**
-- Checkbox items only — concrete, completable tasks
-- Include: numbers to verify, documents to read, info to have on hand, things to prepare
-- Use a yellow callout with the meeting time as urgency anchor
-
-### Research / Analysis Doc
-```
-📌 [Topic] — Research
-[Date | Author]
-─────
-H2: 🔍 What We Investigated
-H2: ⚡ Key Findings
-H2: 💰 Market / Competitive Data
-  (tables where useful)
-H2: 💡 Recommendations
-H2: 🔗 Sources
-```
+- **No emojis anywhere** — headings, callout icons, bullets, page icons, body. Notion forces
+  a real emoji on callout icons, so use `quote.json` instead of `callout.json`. Quote blocks
+  render as a bold indented block with a left border — clean, no emoji required.
+- Formatting (callouts-via-quote, tables, dividers) is encouraged — just no emoji symbols.
 
 ---
 
-## Workflow: Creating a Project Doc
+## When to use what
 
-```python
-# Step 1 — Find or create the project page under Projects
-def find_or_create_project(project_name):
-    # GET /blocks/PROJECTS_ID/children
-    # Search for child_page with matching title
-    # If not found: POST /pages with parent={page_id: PROJECTS_ID}
-    pass
-
-# Step 2 — Create the doc as a child of the project page
-def create_doc(project_page_id, title, blocks):
-    # POST /pages
-    # parent = {page_id: project_page_id}
-    # title = title
-    # children = blocks (built from template above)
-    pass
-```
-
-Always search for an existing project page before creating a new one. Match by name
-(case-insensitive, partial match ok).
+| Operation | First choice | Why |
+|---|---|---|
+| Create a project page with simple markdown | `mcp__claude_ai_Notion__notion-create-pages` | MCP handles markdown→blocks; no JSON to hand-roll |
+| Create a page with structured blocks (callouts, tables, toggles) | MCP create-pages with minimal content, then `notion-call.sh PATCH children` | MCP markdown doesn't fully support callout colors / icons |
+| Update page title/icon/cover/properties | `mcp__claude_ai_Notion__notion-update-page` | Full property control |
+| Read an existing page | `mcp__claude_ai_Notion__notion-fetch` | One call returns blocks + properties |
+| Find a page by name | `mcp__claude_ai_Notion__notion-search` | Server-side search |
+| Append blocks (mid-existing-page) | `notion-call.sh PATCH /v1/blocks/<id>/children` | MCP exposes page-level edits, not block-append |
+| Delete a block | `notion-call.sh DELETE /v1/blocks/<id>` | Same |
 
 ---
 
-## Block Builder Reference
+## Append vs full-rewrite — decision rule
 
-```python
-def h1(text): return {'object':'block','type':'heading_1','heading_1':{'rich_text':[t(text)]}}
-def h2(text): return {'object':'block','type':'heading_2','heading_2':{'rich_text':[t(text)]}}
-def h3(text): return {'object':'block','type':'heading_3','heading_3':{'rich_text':[t(text)]}}
-def p(text):  return {'object':'block','type':'paragraph','paragraph':{'rich_text':[t(text)]}}
-def bullet(text): return {'object':'block','type':'bulleted_list_item','bulleted_list_item':{'rich_text':[t(text)]}}
-def todo(text, done=False): return {'object':'block','type':'to_do','to_do':{'rich_text':[t(text)],'checked':done}}
-def divider(): return {'object':'block','type':'divider','divider':{}}
-def callout(text, emoji='💡'): return {'object':'block','type':'callout','callout':{'rich_text':[t(text)],'icon':{'type':'emoji','emoji':emoji}}}
-def toggle(text, children=[]): return {'object':'block','type':'toggle','toggle':{'rich_text':[t(text)],'children':children}}
-def t(text, bold=False, color='default'): return {'type':'text','text':{'content':str(text)[:2000]},'annotations':{'bold':bold,'color':color}}
+Two ways to update a page:
 
-# Table helper
-def table(headers, rows):
-    cells = lambda vals: [{'type':'table_cell','table_cell':{'rich_text':[t(v)]}} for v in vals]
-    return {
-        'object':'block','type':'table',
-        'table':{
-            'table_width':len(headers),
-            'has_column_header':True,
-            'has_row_header':False,
-            'children':[
-                {'object':'block','type':'table_row','table_row':{'cells':[[{'type':'text','text':{'content':h},'annotations':{'bold':True}}] for h in headers]}},
-                *[{'object':'block','type':'table_row','table_row':{'cells':[[{'type':'text','text':{'content':str(c)}}] for c in row]}} for row in rows]
-            ]
-        }
-    }
+- **Append** — add new blocks at the end. Use for: project docs accumulating history (PRDs, sprint logs, retrospectives, anything where the prior content stays). MCP `notion-update-page` does property updates; `notion-call.sh PATCH /v1/blocks/<page-id>/children` appends block children.
+- **Full rewrite** — DELETE every existing child block, then PATCH a fresh children array. Use for: pages that are regenerated from a data source (Skills Library index, manifest pages, generated dashboards, anything where the old content is stale).
+
+How to decide:
+
+| Page type | Pattern | Why |
+|---|---|---|
+| Project PRD / sprint plan / retro | Append | Historical record; new sections add context, don't replace |
+| Skills Library / Agents / Commands index | Full rewrite | The page IS the data; stale entries must go |
+| Status dashboard / report regenerated from query | Full rewrite | Today's numbers replace yesterday's |
+| Meeting notes (ongoing) | Append | Each meeting adds a section |
+| Generated documentation (e.g. from manifest.json) | Full rewrite | Source-of-truth changes mean the doc is stale |
+
+Full-rewrite procedure (when needed):
+```bash
+# 1. Fetch existing children
+bash scripts/notion-call.sh GET /v1/blocks/<page-id>/children > /tmp/existing.json
+# 2. DELETE each existing block
+jq -r '.results[].id' /tmp/existing.json | while read block_id; do
+  bash scripts/notion-call.sh DELETE /v1/blocks/$block_id
+done
+# 3. PATCH the fresh children array (auto-chunked)
+bash scripts/notion-call.sh PATCH /v1/blocks/<page-id>/children --children-file /tmp/new-children.json
 ```
+
+Appending to a page that should be fully rewritten is an anti-pattern — it leaves stale content alongside new content and corrupts the page's purpose. When in doubt, ask the user which mode they want; do not silently default to append.
 
 ---
 
-## Rules
+## Anti-patterns (mechanically blocked)
 
-1. **Never use em dashes (—) anywhere** - use a hyphen (-) only. No exceptions.
-2. **No emojis in shared/internal docs** - no emoji anywhere: headings, callout icons, bullets, page icons, or body text. Use a plain text icon (e.g. "•") for callout icons. Formatting (callouts, tables, dividers) is encouraged - just no emoji symbols.
-3. **Always put project docs under the correct project** - never at hub root
-4. **Structure shared docs in logical reading order** - context and current state before solutions, solutions before actions. Never append sections to the bottom without considering the full flow.
-5. **Always end with a Next Steps or Actions section** with checkbox items
-6. **Use dividers** between H2 sections for visual breathing room
-7. **Use tables** for any comparison data (pricing, features, metrics, statuses)
-8. **Use quote blocks for important notes in shared docs** - Notion forces a real emoji on callout icons, so use quote blocks instead. `{'object':'block','type':'quote','quote':{'rich_text':[t(text, bold=True)]}}` renders as a bold indented block with a left border - clean and no emoji required. Callouts with emoji icons are only acceptable in personal/private pages.
-9. **Max 2000 chars per text block** - split long content across multiple paragraphs
-10. **Chunk API calls** - max 99 blocks per PATCH request
-11. After creating, print the Notion URL: `https://notion.so/{page_id_no_dashes}`
+These have all failed in past invocations. The rebuild blocks them.
+
+1. **Writing `TOKEN = 'ntn_...'` in any script.** Caught by `notion-call.sh` refusing the
+   leaked literal AND by skill prose forbidding inline auth code.
+2. **Creating project docs at hub root.** Caught by `scripts/validate-parent.sh` exit 2.
+3. **Using `quote` blocks where `callout` is what the spec asks for, on personal docs.** The
+   templates make it as easy to use a callout as a quote. No memory required.
+4. **Using REST when MCP would do.** The transport-order section above puts MCP first; the
+   skill instructs you to log which transport you used and why.
+5. **Hand-rolling block JSON.** Templates in `references/block-templates/` are the only
+   sanctioned source; new types are added as new template files.
+6. **Appending without chunking past 100 blocks.** `notion-call.sh` auto-chunks PATCH
+   children requests at 100/req, no caller logic required.
+
+---
+
+## Observable proof of compliance
+
+A healthy session leaves these artifacts in the cwd:
+
+- `.notion-skill/api-log` — one line per `notion-call.sh` invocation with `[ts] METHOD path
+  status=NNN [chunk=N/M]`. MCP-only sessions will have no `api-log`, which is fine — log the
+  MCP calls in your reply to the user.
+
+Reviewers check:
+- No `ntn_K46793192822...` literal in any file written this session
+- No inline `Authorization: Bearer ...` in any Python/JS/shell the model produced
+- All pages created have `parent.page_id` matching a validated parent
+- Callout block type appears when the spec calls for it (hero callout, decision callout) on
+  personal docs
+
+---
+
+## Setup requirement
+
+`NOTION_INTERNAL_TOKEN` must be set in `~/.claude/settings.json` env block before the skill
+runs. If unset, `notion-call.sh` exits 1 with a setup message — halt and ask the user to set
+it. Never proceed without a real token; never hardcode a fallback.
