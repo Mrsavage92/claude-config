@@ -17,16 +17,37 @@ Encapsulate data access behind a consistent interface.
 - Business logic depends on the interface, not the storage.
 - Enables swapping sources and mocking in tests.
 
+```typescript
+interface UserRepository {
+  findById(id: string): Promise<User | null>
+  create(input: NewUser): Promise<User>
+}
+
+class SupabaseUserRepository implements UserRepository {
+  async findById(id: string) {
+    const { data } = await supabase.from('users').select().eq('id', id).maybeSingle()
+    return data
+  }
+  async create(input: NewUser) { /* ... */ }
+}
+
+// Business logic depends on the interface, not Supabase.
+async function welcomeNewUser(repo: UserRepository, input: NewUser) {
+  const user = await repo.create(input)
+  await sendWelcomeEmail(user)
+}
+```
+
 ### API Response Envelope
 
 Consistent shape for all API responses:
 
-```
+```json
 {
-  success: boolean,
-  data: T | null,
-  error: string | null,
-  meta?: { total, page, limit }
+  "success": true,
+  "data": { "id": "..." },
+  "error": null,
+  "meta": { "total": 42, "page": 1, "limit": 20 }
 }
 ```
 
@@ -36,16 +57,41 @@ Consistent shape for all API responses:
 - Use schema libraries: Zod (TS), Pydantic (Python).
 - Don't re-validate between trusted internal modules.
 
+```typescript
+// External boundary — validate.
+const body = bookingSchema.parse(await request.json())
+
+// Internal call — already validated upstream, do NOT re-parse.
+await persistBooking(body)
+```
+
 ### Idempotency
 
 Any operation that can be retried (webhooks, background jobs, API mutations) must be idempotent:
+
 - Use unique request IDs or idempotency keys.
 - Check "already processed" before applying.
 - Return the same result on retry.
 
+```typescript
+async function processStripeEvent(event: Stripe.Event) {
+  const seen = await db
+    .from('processed_webhook_events')
+    .select('id')
+    .eq('id', event.id)
+    .maybeSingle()
+  if (seen.data) return { status: 'duplicate', id: event.id }
+
+  await applyEvent(event)
+  await db.from('processed_webhook_events').insert({ id: event.id })
+  return { status: 'applied', id: event.id }
+}
+```
+
 ### Optimistic Updates
 
 For perceived responsiveness:
+
 1. Snapshot current state.
 2. Apply update immediately in UI.
 3. Send to server in background.
