@@ -17,7 +17,8 @@ $paths_to_check = @(
     "$h\.claude\web-system-prompt.md",
     "$h\.claude\rules\README.md",
     "$h\.claude\project-registry.md",
-    "$h\.claude\opt-in-features.md"
+    "$h\.claude\opt-in-features.md",
+    "$h\.claude\machine-context-mac.md"
 )
 
 $missing = @()

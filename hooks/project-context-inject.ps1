@@ -1,7 +1,8 @@
 # project-context-inject.ps1 -- UserPromptSubmit hook
-# Detects mention of a known project slug in the user's prompt and prints
-# the path to the matching project CLAUDE.md so Claude knows to read it.
-# Cheap: just emits hints; never reads the full file.
+# Detects mention of a known project slug in the user's prompt and prints the path
+# to the matching project CLAUDE.md so Claude knows to read it if relevant.
+# Single source of truth: slugs and paths come from ~/.claude/project-registry.md.
+# Cheap: just emits hints; never reads the full project CLAUDE.md.
 # Non-blocking: always exits 0.
 
 $ErrorActionPreference = 'SilentlyContinue'
@@ -14,23 +15,32 @@ try {
     if (-not $promptText) { exit 0 }
     $lc = $promptText.ToLowerInvariant()
 
-    $h = $env:USERPROFILE
-    $projects = @(
-        @{ slugs = @('audithq','audit-genius','audit genius'); path = "$h\audit-genius\CLAUDE.md" },
-        @{ slugs = @('orbit digital','orbit','growlocal'); path = "$h\Documents\Claude\growlocal\CLAUDE.md" },
-        @{ slugs = @('bdr mulesoft','bdr group'); path = "$h\Documents\Claude\BDR Group.co.uk\CLAUDE.md" },
-        @{ slugs = @('bdr-integrations','bdr integrations'); path = "$h\.claude-work\projects\bdr-integrations\CLAUDE.md" },
-        @{ slugs = @('gloss beauty','glossbeauty'); path = "$h\Documents\Claude\glossbeauty.com.au\repo\CLAUDE.md" },
-        @{ slugs = @('automation agency','automation-agency'); path = "$h\automation-agency\CLAUDE.md" }
-    )
+    $registryPath = "$env:USERPROFILE\.claude\project-registry.md"
+    if (-not (Test-Path -LiteralPath $registryPath)) { exit 0 }
 
     $matched = New-Object System.Collections.Generic.List[string]
-    foreach ($p in $projects) {
-        foreach ($s in $p.slugs) {
+
+    foreach ($line in Get-Content -LiteralPath $registryPath) {
+        # Skip non-table lines, header row, and separator row
+        if ($line -notmatch '^\|') { continue }
+        if ($line -match '^\|\s*Project\b') { continue }
+        if ($line -match '^\|\s*-{3,}') { continue }
+
+        # Cells split: leading-empty | Project | Slugs | Path | Notes | trailing-empty
+        $cells = $line -split '\|' | ForEach-Object { $_.Trim() }
+        if ($cells.Length -lt 4) { continue }
+
+        $slugsCell = $cells[2]
+        $pathCell = ($cells[3] -replace '`', '').Trim()
+        if (-not $slugsCell -or -not $pathCell) { continue }
+
+        $slugs = $slugsCell -split ',' | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ }
+
+        foreach ($s in $slugs) {
             $pattern = '\b' + [regex]::Escape($s) + '\b'
-            if ($lc -match $pattern -and (Test-Path -LiteralPath $p.path)) {
-                if (-not $matched.Contains($p.path)) {
-                    $matched.Add($p.path) | Out-Null
+            if ($lc -match $pattern -and (Test-Path -LiteralPath $pathCell)) {
+                if (-not $matched.Contains($pathCell)) {
+                    $matched.Add($pathCell) | Out-Null
                 }
                 break
             }

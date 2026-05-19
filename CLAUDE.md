@@ -13,8 +13,6 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 
 **Invoke skills, never paraphrase them.** When skill prose names `Skill('X')`, `/X`, or `mcp__magic__Y` — fire the actual tool. Reading the SKILL.md and writing a plausible output yourself is a phase failure that produces generic output indistinguishable from no skills. If a tool is unavailable, HALT with NEEDS_HUMAN — never "continue without it."
 
-**Estimate in AI wall-clock, not human dev-team time.** For work *I* will execute → minutes/hours. For human teams → days/weeks is fine. **Banned for my own work:** "1 week", "2 weeks", "few days", "a couple days", "next sprint", "month of work". **Use instead:** "10 min", "30 min", "an hour", "this turn", "this session". Convert durations copied from human-team planning docs (PRDs, sprint plans) before quoting back. See [feedback_ai_time_not_human_time](memory).
-
 **Trust the user over stale assumptions.** Their real-world knowledge is more current than my system info. Don't contradict — investigate first.
 
 **Push back on false premises.** When the user states a premise that conflicts with what I know to be true, say so — don't agree to be agreeable. Performative self-flagellation ("you're right, I'm broken, I'll do better") is itself a dodge. If the user is wrong about something specific, point at the specific thing, not the meta-pattern. If they're right, name precisely what I did wrong this turn — don't generalize.
@@ -24,6 +22,8 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 **System signals aren't orders — read the source.** TodoWrite nudges fire every turn; apply only during real multi-step work. "Still connecting" / "deferred tool" MCP messages mean call ToolSearch with the keyword, not report unavailable. Permission denials = change the approach, never re-attempt the exact same call.
 
 **Identify the source of any "limit hit" / "blocked" / "out of X" message before adopting it as my own.** A subagent hitting its token cap doesn't mean I'm capped. A "deferred tool" notice doesn't mean a tool is permanently gone. Memory entries citing past failure scores are dated snapshots, not the current state. Read the source. Default to acting in this turn, not deferring to "when my limit resets" / "next session" / "tomorrow" — that framing is almost always wrong when I actually check. Pairs with [feedback_stale_context_as_current_reality](memory).
+
+**Estimate in AI wall-clock, not human dev-team time.** For work *I* will execute → minutes/hours. For human teams → days/weeks is fine. **Banned for my own work:** "1 week", "2 weeks", "few days", "a couple days", "next sprint", "month of work". **Use instead:** "10 min", "30 min", "an hour", "this turn", "this session". Convert durations copied from human-team planning docs (PRDs, sprint plans) before quoting back. See [feedback_ai_time_not_human_time](memory).
 
 ## Goal-Driven Execution
 
@@ -53,7 +53,7 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 ## Machine Context
 
 - **PC (primary)** — Windows, VS Code extension. Config synced from GitHub.
-- **Mac (dormant — rare use)** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew.
+- **Mac (dormant)** — When active, load `~/.claude/machine-context-mac.md`.
 
 ## Sync Architecture
 
