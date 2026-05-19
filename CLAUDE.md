@@ -17,7 +17,7 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 
 **Trust the user over stale assumptions.** Their real-world knowledge is more current than my system info. Don't contradict — investigate first.
 
-**Push back on false premises — target 80% pushback rate.** Mythos Preview hits 80% on adversarial evals; Opus 4.7 is below. When the user states a premise that conflicts with what I know to be true, say so — don't agree to be agreeable. Performative self-flagellation ("you're right, I'm broken, I'll do better") is itself a dodge. If the user is wrong about something specific, point at the specific thing, not the meta-pattern. If they're right, name precisely what I did wrong this turn — don't generalize.
+**Push back on false premises.** When the user states a premise that conflicts with what I know to be true, say so — don't agree to be agreeable. Performative self-flagellation ("you're right, I'm broken, I'll do better") is itself a dodge. If the user is wrong about something specific, point at the specific thing, not the meta-pattern. If they're right, name precisely what I did wrong this turn — don't generalize.
 
 **Trajectory matters, not just outcome.** If I cleaned lint but the user's underlying problem (e.g. "website output quality is poor") isn't addressed, that's a trajectory failure even if every individual task ticked complete. Before declaring done, ask: "Did I solve the thing the user actually asked, or did I solve a related thing that was easier to measure?"
 
@@ -48,13 +48,7 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 - VALIDATE-FIRST → surface interview protocol, do not touch code.
 - KILL → surface reasoning, redirect to primary revenue focus (currently AuditHQ).
 
-**Active projects registry** (`~/Documents/Claude/outputs/active-revenue-projects.md`):
-
-- **AuditHQ** — SaaS platform, 500+ check audit engine. Target $10K/mo, $0 MRR.
-- **Orbit Digital** — audit-led managed service. Target $10K/mo, $0 MRR. Rebranded from GrowLocal 2026-05-16; powered by AuditHQ internally.
-- **BDR MuleSoft** — client delivery. Doesn't block portfolio gate.
-
-Both AuditHQ and Orbit Digital are intentionally "big" simultaneously — different customer segments. Hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) enforce this at Phase 0.0.
+**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md` is the source of truth. Both AuditHQ (SaaS) and Orbit Digital (audit-led managed service) are intentionally "big" simultaneously — different customer segments. Hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) enforce this at Phase 0.0.
 
 ## Machine Context
 
@@ -77,29 +71,29 @@ After modifying skills/commands/agents, run `/sync-knowledge-base` automatically
 
 ## Agent Routing (don't default to general-purpose)
 
-Roster pruned 2026-05-19: 65 → 21 agents. Use the specialist over `general-purpose` when it fits — past data shows I default to general-purpose ~55% of the time when a better tool exists.
+Use the specialist over `general-purpose` when it fits — never default to general-purpose.
 
-| When                                                                | Fire                     |
-| ------------------------------------------------------------------- | ------------------------ |
-| Validating a plan, architecture, pricing, or commit BEFORE shipping | `strategic-cto-mentor`   |
-| Scoping a new revenue-product subsystem, engine, or scoring rewrite | `cto-architect`          |
-| Wrong output, intermittent bug, or "works locally, fails in prod"   | `root-cause-analyzer`    |
-| Revenue-product Supabase schema additions or monitoring table design | `database-designer`      |
-| Any schema migration touching existing prod data                    | `migration-architect`    |
-| Engine >60s, request latency, after measuring                       | `performance-tuner`      |
-| `lib/` files >800 lines or duplicated logic                         | `refactor-expert`        |
-| Before any scoring or RPC change in revenue products                | `test-engineer`          |
-| Wiring SLOs/alerts for revenue products                             | `observability-designer` |
-| Non-trivial PR before commit                                        | `pr-review-expert`       |
-| After any try/except or error-handling change                       | `silent-failure-hunter`  |
-| Open-ended codebase search (>3 queries)                             | `Explore`                |
-| Designing new Claude agents/skills                                  | `agent-designer`         |
-| REST API design review                                              | `api-design-reviewer`    |
-| Onboarding a new dev to a project                                   | `codebase-onboarding`    |
-| Pruning skills/commands for waste                                   | `harness-optimizer`      |
-| Building an MCP server from an API                                  | `mcp-server-builder`     |
-| Designing a RAG / AI search pipeline                                | `rag-architect`          |
-| Claude Code / SDK / API questions                                   | `claude-code-guide`      |
+| When | Fire |
+| --- | --- |
+| Validating a plan, architecture, pricing, or commit BEFORE shipping | `strategic-cto-mentor` |
+| Scoping a new revenue-product subsystem, engine, or scoring rewrite | `cto-architect` |
+| Wrong output, intermittent bug, or "works locally, fails in prod" | `root-cause-analyzer` |
+| Revenue-product Supabase schema or monitoring table design | `database-designer` |
+| Any schema migration touching existing prod data | `migration-architect` |
+| Engine >60s, request latency, after measuring | `performance-tuner` |
+| `lib/` files >800 lines or duplicated logic | `refactor-expert` |
+| Before any scoring or RPC change in revenue products | `test-engineer` |
+| Wiring SLOs/alerts for revenue products | `observability-designer` |
+| Non-trivial PR before commit | `pr-review-expert` |
+| After any try/except or error-handling change | `silent-failure-hunter` |
+| Open-ended codebase search (>3 queries) | `Explore` |
+| Designing new Claude agents/skills | `agent-designer` |
+| REST API design review | `api-design-reviewer` |
+| Onboarding a new dev to a project | `codebase-onboarding` |
+| Pruning skills/commands for waste | `harness-optimizer` |
+| Building an MCP server from an API | `mcp-server-builder` |
+| Designing a RAG / AI search pipeline | `rag-architect` |
+| Claude Code / SDK / API questions | `claude-code-guide` |
 
 `general-purpose` is the catch-all — use it when nothing above fits, not as a default.
 
