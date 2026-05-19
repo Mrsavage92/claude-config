@@ -150,7 +150,7 @@ Replaces Lovable for all new projects. Orchestrated by `/saas-build`.
 ## Sync
 
 - **Local:** `~/.claude/skills/` (flat skill folders)
-- **GitHub:** `Mrsavage92/claude-config` (canonical repo)
+- **GitHub:** `Mrsavage92/skills-library` (this repo)
 - **Notion:** [Skills Library](https://notion.so/334116e8bef2817f8156d86f263b4c2c)
 - **Sync hook:** auto-pushes on session end via `settings.json`
 

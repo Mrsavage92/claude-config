@@ -22,8 +22,6 @@ Run PUSH after completing significant work (feature shipped, decision made, bloc
 ## Notion Setup
 
 ```python
-import os
-
 TOKEN = os.environ.get('NOTION_INTERNAL_TOKEN') or (_ for _ in ()).throw(RuntimeError('Set NOTION_INTERNAL_TOKEN env var'))
 HEADERS = {
     'Authorization': f'Bearer {TOKEN}',
@@ -45,7 +43,7 @@ HEADERS = {
 ### Step 2 — Fetch the Notion Page
 
 ```python
-import urllib.request, json, os
+import urllib.request, json
 
 def get_page_blocks(page_id):
     """Fetch all blocks from a Notion page"""

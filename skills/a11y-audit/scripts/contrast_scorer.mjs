@@ -99,6 +99,32 @@ export const contrastScorerSource = String.raw`
       return [r, g, bl, alpha];
     }
 
+    // lab() — CIE Lab. Browsers serialise oklch from Tailwind v4 @theme as lab()
+    // when the source uses theme(), so this parser must understand it or every
+    // Tailwind-v4-themed surface falls back to "transparent" in the cascade walk
+    // and the contrast scan false-positives spectacularly.
+    m = str.match(/^lab\\(\\s*([\\d.]+%?)[\\s,]+(-?[\\d.]+)[\\s,]+(-?[\\d.]+)(?:[\\s,\\/]+([\\d.]+%?))?\\s*\\)$/);
+    if (m) {
+      // CIE Lab → D50 XYZ → linear sRGB (D65) → sRGB. Lossy; OK for contrast scoring.
+      const L = m[1].endsWith('%') ? parseFloat(m[1]) : parseFloat(m[1]);
+      const a = parseFloat(m[2]);
+      const b = parseFloat(m[3]);
+      const alpha = m[4] === undefined ? 1 : (m[4].endsWith('%') ? parseFloat(m[4]) / 100 : parseFloat(m[4]));
+      const fy = (L + 16) / 116;
+      const fx = a / 500 + fy;
+      const fz = fy - b / 200;
+      const e = 216 / 24389, k = 24389 / 27;
+      const X = (Math.pow(fx, 3) > e ? Math.pow(fx, 3) : (116 * fx - 16) / k) * 0.96422;
+      const Y = (L > 8 ? Math.pow(fy, 3) : L / k);
+      const Z = (Math.pow(fz, 3) > e ? Math.pow(fz, 3) : (116 * fz - 16) / k) * 0.82521;
+      // D50 → D65 Bradford-adapted, then to linear sRGB
+      let R =  3.1338561 * X - 1.6168667 * Y - 0.4906146 * Z;
+      let G = -0.9787684 * X + 1.9161415 * Y + 0.0334540 * Z;
+      let B =  0.0719453 * X - 0.2289914 * Y + 1.4052427 * Z;
+      const enc = (c) => c <= 0 ? 0 : c >= 1 ? 255 : Math.round(255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1/2.4) - 0.055));
+      return [enc(R), enc(G), enc(B), alpha];
+    }
+
     // oklch() — L C h, h in deg/rad/grad/turn (browser returns deg)
     m = str.match(/^oklch\\(\\s*([\\d.]+%?)[\\s,]+([\\d.]+)[\\s,]+(-?[\\d.]+)(?:deg)?(?:[\\s,\\/]+([\\d.]+%?))?\\s*\\)$/);
     if (m) {

@@ -89,24 +89,51 @@ Run these checks:
 - `git commit -m "sync: <date> — <summary of changes>"`
 - `git push origin main`
 
-**Step 4 — Update Notion via REST API**
-- Token: read from env var `NOTION_INTERNAL_TOKEN` (configured in `~/.claude/settings.json`). NEVER hardcode. If unset, HALT and tell the user to set it.
+**Step 4 — Update Notion via the notion skill's wrapper (NEVER write urllib code with a token literal)**
+
+This step previously emitted a runtime Python script that hardcoded the token literal. That was the source of the public-repo leak. The fix is mechanical: do NOT write inline auth code; use the `notion-call.sh` wrapper from the notion skill.
+
+- Token: `notion-call.sh` reads `NOTION_INTERNAL_TOKEN` from env; if unset OR set to the previously-leaked literal, the script halts.
 - Notion hub page ID: `32a116e8-bef2-8030-a0f6-d0be522bf917`
 - Child pages: Agents (`32a116e8-bef2-815d-8b38-f37eaa467ec5`), Slash Commands (`32a116e8-bef2-8118-9f49-e6d790a56bd1`), Skills Library (`32a116e8-bef2-8196-b2d3-e630d645984a`)
-- Clear all blocks then rewrite each page completely (do not append — always full rewrite)
-- Use `PATCH https://api.notion.com/v1/blocks/{page_id}/children` with chunks of 100 blocks max
-- Use `DELETE https://api.notion.com/v1/blocks/{block_id}` to clear (loop until no blocks remain)
-- Notion-Version header: `2022-06-28`
-- All file reads use `encoding='utf-8', errors='ignore'` to handle special characters
-- Skills Library entries: `/{skill-name} - {description}` (pull description from SKILL.md heading or description: field)
-- Header paragraph on each page: `{N} commands | {N} agents | {N} skills | Last updated: {date}`
+- Clear all blocks then rewrite each page completely (full rewrite — never append). Per the notion skill, this is the GET → DELETE-loop → PATCH procedure:
+  ```bash
+  WRAP="C:/Users/Adam/.claude/skills/notion/scripts/notion-call.sh"
+  PAGE_ID="<one of the child page IDs above>"
+  bash "$WRAP" GET /v1/blocks/$PAGE_ID/children > /tmp/existing.json
+  jq -r '.results[].id' /tmp/existing.json | while read block_id; do
+    bash "$WRAP" DELETE /v1/blocks/$block_id
+  done
+  bash "$WRAP" PATCH /v1/blocks/$PAGE_ID/children --children-file /tmp/new-children.json
+  ```
+- The wrapper auto-chunks PATCH children at 100/req and sets `Notion-Version: 2022-06-28`. You do not handle either concern in your own code.
+- Build the new-children JSON by combining templates in `C:/Users/Adam/.claude/skills/notion/references/block-templates/`. Header paragraph format: `{N} commands | {N} agents | {N} skills | Last updated: {date}`. Each skill entry: `/{skill-name} - {description}` (pull description from SKILL.md `description:` frontmatter or H1 heading).
+- **Forbidden:** writing any Python or shell that contains `Authorization: Bearer ntn_...`, `TOKEN = 'ntn_...'`, or any other inline token. If you find yourself typing those bytes, stop and use the wrapper.
 
-**Step 5 — Report**
-Output a summary table:
+**Step 5 — Verify counts + strip banned phrases before emitting the report**
+
+Two mechanical gates run before the user sees the summary. Both must pass.
+
+```bash
+# Gate 1 — verify the report's claimed counts match the manifest we just wrote.
+# Mechanical fix for the 178-vs-175 count drift in the forge baseline.
+bash scripts/verify-counts.sh manifest.json $CMDS_IN_REPORT $AGTS_IN_REPORT $SKILLS_IN_REPORT
+# Exit 2 = mismatch; recompute from manifest and try again.
+
+# Gate 2 — strip banned self-praise from the report text before printing.
+# Mechanical fix for the banned phrase "Comprehensive coverage..." that leaked into the baseline report.
+printf '%s' "$REPORT_TEXT" > /tmp/sync-report.md
+bash scripts/strip-banned-phrases.sh /tmp/sync-report.md
+# Exit 3 = banned phrase found; edit the report text to remove it and re-run.
+```
+
+Only after both exit 0 may the report be shown to the user. The summary table:
 - What was added/modified/removed across commands, agents, skills
-- Final counts: commands / agents / skills
-- GitHub push status
-- Notion update status (each page)
+- Final counts: commands / agents / skills (read from `manifest.json`, not estimated)
+- GitHub push status (commit SHA)
+- Notion update status (per page: blocks cleared / blocks written)
+
+The summary is FACTUAL — counts, commit SHA, page IDs. Never a self-rating of the sync quality.
 
 ## When to run
 

@@ -1,0 +1,12 @@
+{
+  "object": "block",
+  "type": "bulleted_list_item",
+  "bulleted_list_item": {
+    "rich_text": [
+      {
+        "type": "text",
+        "text": { "content": "REPLACE_TEXT" }
+      }
+    ]
+  }
+}
