@@ -484,6 +484,15 @@ Repeating one more time the core loop here for emphasis:
 - Repeat until you and the user are satisfied
 - Package the final skill and return it to the user.
 
+## After authoring: verify with `/rate` and `/skill-forge`
+
+A skill that the same author drafted AND graded is a priming risk. Once the skill passes its own evals, hand it off:
+
+- **`/rate <skill-path>`** — produces a numeric 0-100 score with a strategic gap-to-100 ladder. Cold, unprimed, structurally validated by a grader script. Use this as the "does the skill hold up out of context" check before declaring it done.
+- **`/skill-forge <skill-name>`** — independent post-hoc audit. Spawns a reviewer subagent that hasn't seen this conversation, sources external implementations from the wild, and rebuilds to a verified score if the skill underperforms.
+
+Run both before considering a new skill shippable. If `/rate` produces <85 OR `/skill-forge` flags a rebuild cycle, treat the skill as iteration-N and loop back to the eval step here.
+
 Please add steps to your TodoList, if you have such a thing, to make sure you don't forget. If you're in Cowork, please specifically put "Create evals JSON and run `eval-viewer/generate_review.py` so human can review test cases" in your TodoList to make sure it happens.
 
 Good luck!

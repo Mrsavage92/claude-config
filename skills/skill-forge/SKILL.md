@@ -227,6 +227,7 @@ All written under `~/.claude/skills/<skill-name>/` so they live with the skill a
 
 ## Related skills
 
+- Use `/rate <skill-path>` for a fast cold 0-100 score with a strategic gap-to-perfect ladder. `/rate` is the pre-forge triage: if it scores ≥85, the skill probably doesn't need a forge rebuild — just patch the listed P0s. If it scores <70 or surfaces multiple P0s in load-bearing areas, `/skill-forge` is the right next step. The two skills share `references/banned-phrases.json` so calibration is consistent.
 - Use `/critique` for design output review (frontend pages, components) — different domain.
 - Use `/self-audit` for harness-wide structural audit — that's about config, not a specific skill.
 - Use `/usage-report` to find which skills are actually getting invoked before deciding what to forge.
