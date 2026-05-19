@@ -43,10 +43,30 @@ if ($Mode -eq "start") {
         }
     } catch { "[$((Get-Date).ToString())][start][config] $_" >> $LOG }
 
+    # Skills: copy from claude-config (skills-library retired 2026-05-19).
+    # Robocopy mirrors only what changed; /XD excludes runtime/cache dirs;
+    # /XF excludes work products. Exit codes 0-7 are success in robocopy world.
     try {
-        Set-Location $SkillsDir
-        git fetch origin master 2>>$LOG
-        git pull origin master --rebase 2>>$LOG
+        # Defensive cleanup: remove the legacy skills-library .git if still present
+        # (matches sync.ps1's installer logic so session hooks don't see a stale repo).
+        $legacyGit = "$SkillsDir\.git"
+        if (Test-Path $legacyGit) {
+            Remove-Item -LiteralPath $legacyGit -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        $skillsSrc = "$RepoDir\skills"
+        if (Test-Path $skillsSrc) {
+            robocopy $skillsSrc $SkillsDir `
+                /E /XO `
+                /XD .git __pycache__ .cache .evolution `
+                    web-evolve-workspace skill-miner-workspace `
+                    project-triage-workspace skill-creator-workspace node_modules `
+                /XF "*.pyc" "*.pyo" ".forge-*.md" "SKILL.md.pre-*" `
+                /NFL /NDL /NJH /NJS /NC /NS /NP `
+                /R:1 /W:1 2>>$LOG | Out-Null
+            if ($LASTEXITCODE -ge 8) {
+                "[$((Get-Date).ToString())][start][skills] robocopy exit $LASTEXITCODE" >> $LOG
+            }
+        }
     } catch { "[$((Get-Date).ToString())][start][skills] $_" >> $LOG }
 
     exit 0
@@ -127,19 +147,38 @@ if os.path.exists(rp):
 
 } catch { "[$((Get-Date).ToString())][stop][config] $_" >> $LOG }
 
-# Skills: always safe (skills only change intentionally on one machine)
+# Skills: mirror local → claude-config repo, then push from there.
+# Replaces the prior skills-library git-based sync (retired 2026-05-19).
 try {
-    Set-Location $SkillsDir
-    git fetch origin master 2>>$LOG
-    git rebase origin/master 2>>$LOG
-    git add -A
-    git diff --cached --quiet
-    $skillsChanged = $LASTEXITCODE -ne 0
-    if ($skillsChanged) { git commit -m $MSG 2>>$LOG }
-    git push origin master 2>>$LOG
+    $skillsSrc = $SkillsDir
+    $skillsDst = "$RepoDir\skills"
+    if ((Test-Path $skillsSrc) -and (Test-Path $skillsDst)) {
+        robocopy $skillsSrc $skillsDst `
+            /E /XO `
+            /XD .git __pycache__ .cache .evolution `
+                web-evolve-workspace skill-miner-workspace `
+                project-triage-workspace skill-creator-workspace node_modules `
+            /XF "*.pyc" "*.pyo" ".forge-*.md" "SKILL.md.pre-*" `
+            /NFL /NDL /NJH /NJS /NC /NS /NP `
+            /R:1 /W:1 2>>$LOG | Out-Null
+        if ($LASTEXITCODE -ge 8) {
+            "[$((Get-Date).ToString())][stop][skills] robocopy exit $LASTEXITCODE" >> $LOG
+        }
+    }
 
-    # Update Notion if skills changed (even if claude-config didn't)
-    if ($skillsChanged -and -not $hasChanges) {
-        Start-Process python3 -ArgumentList "`"$env:USERPROFILE\Documents\notion_sync.py`"" -WindowStyle Hidden
+    Set-Location $RepoDir
+    git add skills/ 2>>$LOG
+    git diff --cached --quiet -- skills/
+    $skillsChanged = $LASTEXITCODE -ne 0
+    if ($skillsChanged) {
+        git commit -m "$MSG (skills)" 2>>$LOG
+        git fetch origin main 2>>$LOG
+        git rebase origin/main 2>>$LOG
+        git push origin main 2>>$LOG
+
+        # Update Notion if skills changed (even if claude-config config didn't)
+        if (-not $hasChanges) {
+            Start-Process python3 -ArgumentList "`"$env:USERPROFILE\Documents\notion_sync.py`"" -WindowStyle Hidden
+        }
     }
 } catch { "[$((Get-Date).ToString())][stop][skills] $_" >> $LOG }
