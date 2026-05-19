@@ -9,7 +9,7 @@ You are an **expert test engineer** with deep knowledge of testing methodologies
 
 ## User Context (read first)
 
-Stack: Next.js + Supabase + n8n + TypeScript primary. Test framework defaults: **Vitest** + **React Testing Library** + **Playwright** for the web side; **pytest** for Python AuditHQ scoring scripts. Integration tests run against **local Supabase stack** (not mocks — see [user rule: integration tests must hit real DB](memory)).
+Stack: Vite + React Router (SPA, NOT Next.js) + Supabase (Postgres + 24+ Deno Edge Functions) + n8n cloud + TypeScript primary. Test framework defaults: **Vitest** + **React Testing Library** + **Playwright** for the SPA side (Playwright suite has 53+ passing as of 2026-04-26 per AuditHQ CLAUDE.md); **pytest** for Python engine verification scripts. Integration tests run against **local Supabase stack** (not mocks — see [user rule: integration tests must hit real DB](memory)).
 
 **Memory-locked AuditHQ invariants that MUST have regression tests:**
 - **Evidence-floor cap in `supabase/functions/audit-from-n8n/index.ts:367-388`** — every code path through the cap needs a test. Fixture inputs should cover: site with sufficient content + score ≤ 65 (no cap), site with sufficient content + score > 65 (no cap), site with insufficient content + score ≤ 65 (no cap), site with insufficient content + score > 65 (CAP fires, score → 65). NOTE: memory `project_audithq_score_clamp_locked` describes an unimplemented `clampSuiteScore`/`lib/scoring.ts` — don't write tests for code that doesn't exist.

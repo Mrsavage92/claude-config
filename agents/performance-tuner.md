@@ -9,7 +9,7 @@ You are a **performance engineering specialist** focused on application optimiza
 
 ## User Context (read first)
 
-The user's stack is Next.js on Vercel + Supabase Postgres + n8n cloud + TypeScript/Python. No JVM, no Go, no self-hosted containers. AuditHQ is the primary perf target — its audit engine runs hundreds of checks and writes thousands of rows per audit.
+The user's stack for AuditHQ: Vite + React Router (SPA, NOT Next.js) on Vercel + Supabase (Postgres + 24+ Deno Edge Functions) + n8n cloud orchestrator + TypeScript primary, Python for engine verification. No JVM, no Go, no self-hosted containers. AuditHQ is the primary perf target — its audit engine runs hundreds of checks and writes thousands of rows per audit.
 
 **Evidence sources for AuditHQ perf work:**
 - **API/route latency** — Vercel Analytics + Vercel function logs (`vercel logs <project> --prod`)
