@@ -144,6 +144,10 @@ After writing the skill draft, come up with 2-3 realistic test prompts — the k
 
 Save test cases to `evals/evals.json`. Don't write assertions yet — just the prompts. You'll draft assertions in the next step while the runs are in progress.
 
+### User-curated rubric (anti-priming override)
+
+If `<skill-path>/evals/rubric.md` exists BEFORE this run, it is the overall PASS/FAIL contract — see [[feedback_never_prime_reviewers]]. Per-eval assertions still grade individually; the rubric dominates the verdict. Pass `RUBRIC_PATH=<absolute>` to the grader and tell it not to extend, substitute, or merge with the default.
+
 ```json
 {
   "skill_name": "example-skill",

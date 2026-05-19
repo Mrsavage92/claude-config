@@ -100,14 +100,23 @@ Spawn a `general-purpose` Agent with this exact briefing pattern. The agent rece
 
 - `.forge-spec.md` (the success criteria)
 - `.forge-artifact.md` (the actual output)
-- `references/rubric.md` (the scoring rubric — read by the agent, not me)
+- **The rubric** — see rubric-resolution rule below
 - The skill's frontmatter `description` (the skill's own claim of what it does — so the agent can check claim-vs-reality)
+
+**Rubric resolution (load-bearing — written ≥2026-05-19):**
+
+1. If a user-written rubric exists at `~/.claude/skills/<skill-name>/rubric.md` — use it. This is the project's CRITERIA-WRITTEN-BEFORE-EVAL pattern. The user has pre-committed to what "good" means for this skill. The reviewer scores against the user's bar, not a default.
+2. Else if a `.forge-rubric.md` exists in the skill folder — use it. (Lower-precedence alternative name kept for back-compat with the older `.forge-spec.md` convention.)
+3. Else fall back to `~/.claude/skills/skill-forge/references/rubric.md` (the generic 7-dimension grid).
+
+When the user provides `rubric.md`, the reviewer must be told **explicitly** that this is the authoritative scoring contract — not a suggestion. The reviewer must NOT supplement with the default rubric on top. See [[feedback_never_prime_reviewers]] — a user-curated rubric is the strongest possible anti-priming move, because the reviewer can't pick easy criteria when the user already wrote them.
 
 The agent does NOT receive:
 - The SKILL.md body (so it cannot grade the prose)
 - This conversation
 - My opinion
 - Any prior score
+- The original default rubric, if a user `rubric.md` exists (prevents merging the two)
 
 The agent returns:
 ```json

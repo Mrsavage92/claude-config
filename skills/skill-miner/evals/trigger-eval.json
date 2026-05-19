@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I've been doing claude code stuff for a few months and I keep typing similar prompts. is there a way to find which ones I keep repeating that should just be skills?",
+    "should_trigger": true
+  },
+  {
+    "query": "mine my transcripts and tell me what's missing from my skill library",
+    "should_trigger": true
+  },
+  {
+    "query": "i feel like every week i write the same 'verify the vercel deploy and curl the page' prompt — surely that should be a skill, can we find what else looks like that across my jsonl logs",
+    "should_trigger": true
+  },
+  {
+    "query": "go through my ~/.claude/projects folder and find recurring user prompts that don't have a matching skill yet, group them, and tell me which to build",
+    "should_trigger": true
+  },
+  {
+    "query": "find skill gaps in my setup",
+    "should_trigger": true
+  },
+  {
+    "query": "what prompts am i repeating that should be skills",
+    "should_trigger": true
+  },
+  {
+    "query": "/skill-miner --days 60",
+    "should_trigger": true
+  },
+  {
+    "query": "before i ask /skill-creator to make a new skill for vercel verification, can you check if i already have something similar — or if i've been asking for this enough to justify a new one",
+    "should_trigger": true
+  },
+  {
+    "query": "I want to make my harness smarter by finding patterns I've been repeating without realising. Look at my session history.",
+    "should_trigger": true
+  },
+  {
+    "query": "scan my claude code logs for prompts I keep writing manually",
+    "should_trigger": true
+  },
+  {
+    "query": "create a new skill for me that takes a website URL and generates social media captions in my brand voice — call it /caption-mill",
+    "should_trigger": false
+  },
+  {
+    "query": "review my /audit skill and tell me where it scored low last time — i think the rubric is broken",
+    "should_trigger": false
+  },
+  {
+    "query": "audit https://orbitdigital.com.au for technical SEO and write a markdown report",
+    "should_trigger": false
+  },
+  {
+    "query": "show me which of my installed skills i've actually used in the last 30 days — i suspect half are dead weight",
+    "should_trigger": false
+  },
+  {
+    "query": "open ~/.claude/projects/audithq/session-abc123.jsonl and tell me what the user asked claude to do in turn 47",
+    "should_trigger": false
+  },
+  {
+    "query": "/skill-creator — build a new skill called /sf-query that wraps my recurring Salesforce data queries",
+    "should_trigger": false
+  },
+  {
+    "query": "list all the skills i have installed",
+    "should_trigger": false
+  },
+  {
+    "query": "/skill-forge review /audit",
+    "should_trigger": false
+  },
+  {
+    "query": "i need to debug my python script that reads jsonl files — it's hitting a UnicodeDecodeError on line 42 of session-xyz.jsonl",
+    "should_trigger": false
+  },
+  {
+    "query": "what's the difference between /skill-creator and /skill-forge — when do i use which one?",
+    "should_trigger": false
+  }
+]

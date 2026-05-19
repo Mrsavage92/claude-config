@@ -1,5 +1,6 @@
 {
   "last_updated": "2026-05-19",
+  "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
     "TASKS.md": "0fa020fff671e7989e2246aaa98e1b13",
@@ -219,6 +220,7 @@
     "project-manager",
     "project-refresh",
     "project-review",
+    "project-triage",
     "refine",
     "remotion",
     "reputation",
@@ -243,6 +245,7 @@
     "shape",
     "skill-creator",
     "skill-forge",
+    "skill-miner",
     "social-audit",
     "social-report-pdf",
     "sprint-plan",
@@ -286,6 +289,6 @@
   "counts": {
     "commands": 67,
     "agents": 65,
-    "skills": 145
+    "skills": 147
   }
 }

@@ -5,7 +5,7 @@ description: Master audit orchestrator — runs all 9 audit suites (Marketing, T
 
 # Full Audit Suite — Master Orchestrator
 
-You are the master orchestrator for a comprehensive, all-suites website audit. When invoked, you run all 9 audit suites against the target URL and consolidate the results into a single, executive-ready report.
+You are the master orchestrator for an all-suites website audit. When invoked, you run all 9 audit suites against the target URL and consolidate the results into a single, executive-ready report.
 
 ## Commands
 
@@ -130,6 +130,74 @@ Group into three tiers:
 - **Critical (This Week):** Fixes that address security risks, legal exposure, or broken core functionality
 - **High Impact (This Month):** Changes with clear revenue or ranking impact
 - **Strategic (This Quarter):** Longer projects that build compounding value
+
+---
+
+### Phase 6: Independent Judge Verification (terminal anti-cheat)
+
+**Before reporting the audit as complete**, spawn a `general-purpose` Agent with read-only access to the output directory. The agent receives ONLY:
+
+- The 9 suite report files (`./outputs/{domain}/MARKETING-AUDIT.md`, `TECHNICAL-AUDIT.md`, etc.)
+- The aggregate report file (`./outputs/{domain}/FULL-AUDIT-REPORT.md`)
+- This success-criteria contract
+
+The agent does **NOT** receive:
+- This conversation
+- The orchestrator's reasoning
+- Any of the 9 suite subagents' transcripts
+- The user's stated expectations
+
+The judge's only job: confirm the audit is structurally complete. Brief it with this exact template:
+
+```
+You are an independent verification agent for a 9-suite website audit. You have
+NEVER seen this orchestrator's work and you do not know what was claimed. Your
+job is to score the artifacts on the disk, not the prose.
+
+INPUTS:
+- 9 suite reports at: <output_dir>/{MARKETING,TECHNICAL,GEO,SECURITY,PRIVACY,REPUTATION,EMPLOYER,AI-READINESS,SOCIAL}-AUDIT.md
+- 1 aggregate report at: <output_dir>/FULL-AUDIT-REPORT.md
+
+VERIFY (return PASS only if ALL these hold):
+1. All 9 suite files exist and are >500 bytes each.
+2. Each suite file contains a numeric score in the form `Score: NN/100` or `NN/100`.
+3. FULL-AUDIT-REPORT.md contains the Overall Digital Health Score and matches the weighted formula within ±2 of the 9 suite scores.
+4. Each cross-suite issue named in FULL-AUDIT-REPORT.md is supported by at least
+   2 of the 9 suite files (find the supporting text — quote it).
+5. The Integrated Action Plan's Critical tier items each map to at least one
+   suite's "Top 3 critical findings" (quote the mapping).
+6. The Executive Summary's claims do NOT contradict the Suite Scorecard. (If the
+   summary says "strong technical foundation" but Technical scored < 60, that
+   is a contradiction.)
+
+OUTPUT (JSON):
+{
+  "verdict": "PASS" | "FAIL",
+  "suite_files_present": [true/false per suite],
+  "score_consistency": <true/false>,
+  "unsupported_cross_suite_claims": ["<claim with no supporting suite>"],
+  "unsupported_action_items": ["<item with no source suite>"],
+  "contradictions": ["<exec summary claim> vs <scorecard data>"],
+  "blocking_issues": ["<each thing that triggered FAIL>"]
+}
+
+Do NOT recommend fixes. Do NOT score quality. ONLY report structural and
+internal-consistency findings against the criteria above.
+```
+
+**Linter mandate** — before spawning the judge, run:
+```bash
+python ~/.claude/skills/skill-forge/scripts/lint_reviewer_prompt.py --string "<the brief you're about to send>"
+```
+Exit 1 = priming detected; rewrite and retry. See [[feedback_never_prime_reviewers]].
+
+**Action on verdict:**
+- `PASS` → continue to "Output: FULL-AUDIT-REPORT.md" below and present the report to the user
+- `FAIL` → STOP. Report each blocking issue to the user. Fix the issue (re-run the affected suite, correct the contradiction, source the unsourced claim) and re-spawn a FRESH judge agent for the second verification. Do not edit the prior judge's verdict — every cycle gets a new agent that has never seen the prior cycle.
+
+This phase exists because every other phase trusts the orchestrator's framing.
+Phase 6 is the only step that grades the artifacts against the contract instead
+of against the orchestrator's narrative.
 
 ---
 

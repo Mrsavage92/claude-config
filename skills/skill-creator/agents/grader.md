@@ -15,6 +15,7 @@ You receive these parameters in your prompt:
 - **expectations**: List of expectations to evaluate (strings)
 - **transcript_path**: Path to the execution transcript (markdown file)
 - **outputs_dir**: Directory containing output files from execution
+- **rubric_path** (optional): Absolute path to a user-curated rubric file. If present, the rubric is the dominant scoring contract for the overall verdict. Per-eval expectations are still graded individually, but the overall PASS/FAIL is decided against the rubric. **Do not extend the rubric, do not substitute your own criteria, do not merge it with the default grid.** This file represents the user's pre-committed standard of "good" — applied here as the anti-priming pattern. If you find the rubric ambiguous, mark that dimension UNCLEAR and explain — do not interpret it favorably.
 
 ## Process
 
