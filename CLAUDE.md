@@ -112,7 +112,7 @@ If a decision matters across sessions and isn't already in CLAUDE.md Section D, 
 
 When a conversation involves a project without a project CLAUDE.md, run `/project-doc` (creates Notion master doc) AND scaffold a 6-section CLAUDE.md at the project root.
 
-**Smartsheet:** Eloquent or BDR work ONLY. Never use Smartsheet MCP tools for personal projects. Always confirm explicit approval before calling any Smartsheet tool.
+**Smartsheet — REMOVED 2026-05-19.** Not in use. Do not suggest, install, or invoke Smartsheet for any project unless the user explicitly asks for it.
 
 ## Web Build Loop
 
@@ -159,3 +159,21 @@ Skipping = phase failure. `/style-mirror` alone is not sufficient — it does no
 - **`isolation: "worktree"`** — pass in Agent calls that write files. Sandboxed git branch, reviewable.
 - **Tool use log** — `~/.claude/tool-use.log`. Audit what changed.
 - **Scheduled logs** — daily review, news brief, weekly audit at `~/.claude/logs/YYYY-MM-DD-{type}.md`.
+- **`/usage`** — merged replacement for the old `/cost` + `/stats` commands. Shows token spend and session stats in one view.
+- **`/effort`** — interactive slider to set reasoning effort. `xhigh` is the max on Opus 4.7.
+- **`/ultrareview`** — parallel multi-agent code review. User-triggered and billed. Needs a git repository.
+- **`/undo`** — alias for `/rewind`. Step back through tool-call history.
+
+## Claude Code features available for opt-in (May 2026)
+
+Currently OFF or unused. Each is a single config change away — pick one when you want to experiment.
+
+- **`skillOverrides` setting** in settings.json — values: `off` (default), `user-invocable-only`, `name-only`. Setting to `user-invocable-only` would mean skills fire ONLY on explicit `/command` invocations and never auto-trigger from natural language. Verify the trade-off before flipping — auto-trigger is what makes the web-* skills useful.
+- **PreCompact hooks** — block context compaction with exit code 2. Useful for long /web-evolve or /audit runs where mid-task compaction loses state. Would go in `settings.json` `hooks.PreCompact[]`.
+- **MCP `alwaysLoad: true`** — opt a specific MCP server out of tool-search deferral so its tools load immediately. Useful for Supabase / Vercel during active dev. Edit the server entry in `~/.claude.json` or `.mcp.json`.
+- **Hook `type: "mcp_tool"`** — hooks can directly invoke MCP tools (e.g. fire a Slack notification on Stop hook without writing a wrapper script).
+- **Agent frontmatter `mcpServers:` and `hooks:`** — per-agent MCP/hook configuration. Lets a web agent always have chrome-devtools-mcp without polluting the global enabled list.
+- **`PushNotification` tool** — long-running tasks (autopilot, /web-evolve, /full-audit) can ping you when done. Currently a deferred tool — load via ToolSearch when needed.
+- **`worktree.baseRef` setting** — choose whether `isolation: "worktree"` agent calls branch off fresh `main` or current HEAD. Default is HEAD; setting to `main` gives every subagent a clean slate.
+- **`claude agents` command + Agent view** — centralized session manager (research preview). View all running background sessions in one UI.
+- **`/goal` command** — set explicit completion conditions for a session. Claude exits when the goal is met instead of waiting for a Stop signal. Useful inside `/loop`.
