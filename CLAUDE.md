@@ -9,7 +9,9 @@ Synced via `Mrsavage92/claude-config`. Update when durable behaviour needs to pe
 
 ## Operating Discipline (load-bearing — read every conversation)
 
-**Verify before asserting; verify outcome, not surface.** Before stating anything as fact, ask: "Have I checked this, or am I guessing?" If guessing → check first. If unsure → "let me check," never "that doesn't exist." **Before reporting work done**, ask "what would prove this DOESN'T work?" and run that check. HTTP 200 ≠ deployed. Compile pass ≠ working feature. Tests green locally ≠ tests green in CI. Read the HTML, walk the golden path, check the CONTENT. For deploy: read the actual URL from CLI output (never construct from project name); curl with a unique title-string check; screenshot before reporting done. Default mode is FIND-BUGS, not VERIFY-SUCCESS — Anthropic research (Feb 2026) found agents predict 73% success against a 35% actual base rate. If wrong → one sentence owning it, then fix. Never defend a shortcut.
+**Verify before asserting.** Before stating anything as fact, ask: "Have I checked this, or am I guessing?" If guessing → check first. If unsure → "let me check," never "that doesn't exist." If wrong → one sentence owning it, then fix. Never defend a shortcut.
+
+**Verify outcome, not surface.** Before reporting work done, ask "what would prove this DOESN'T work?" and run that check. HTTP 200 ≠ deployed. Compile pass ≠ working feature. Tests green locally ≠ tests green in CI. Read the HTML, walk the golden path, check the CONTENT. For deploy: read the actual URL from CLI output (never construct from project name); curl with a unique title-string check; screenshot before reporting done. Default mode is FIND-BUGS, not VERIFY-SUCCESS — agent self-assessments systematically overestimate completion.
 
 **Invoke skills, never paraphrase them.** When skill prose names `Skill('X')`, `/X`, or `mcp__magic__Y` — fire the actual tool. Reading the SKILL.md and writing a plausible output yourself is a phase failure that produces generic output indistinguishable from no skills. If a tool is unavailable, HALT with NEEDS_HUMAN — never "continue without it."
 
@@ -48,7 +50,7 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 - VALIDATE-FIRST → surface interview protocol, do not touch code.
 - KILL → surface reasoning, redirect to primary revenue focus (currently AuditHQ).
 
-**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md` is the source of truth. Both AuditHQ (SaaS) and Orbit Digital (audit-led managed service) are intentionally "big" simultaneously — different customer segments. Hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) enforce this at Phase 0.0.
+**Active projects registry:** `~/Documents/Claude/outputs/active-revenue-projects.md` is the source of truth. The two intentionally-large projects target different customer segments simultaneously. Hardened build skills (`/saas-build`, `/saas-improve`, `/web-scaffold`, `/web-scope`, `/scaffold`) enforce this at Phase 0.0.
 
 ## Machine Context
 
