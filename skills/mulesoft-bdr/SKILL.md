@@ -30,6 +30,23 @@ description: "BDR Group MuleSoft integration project tracker. Reads the Implemen
 
 11. **Maven IS available locally on Adam's Windows machine** — bundled with the Salesforce Mule DX VS Code extension at `C:\Users\Adam\.vscode\extensions\salesforce.mule-dx-dependencies-1.6.1-win32-x64\build\deps\apache-maven-3.9.4\bin\mvn.cmd`. Set `JAVA_HOME` to the bundled JDK 17 first. So local builds DO work — just not via plain `mvn` on PATH. Don't claim "no local Maven" anymore.
 
+12. **BDR's Anypoint subscription is "Customer - Integration Advanced"** (verified 2026-05-19 by Adam screenshot of Access Management → Subscription). Expires 2030-04-12. This tier **includes**:
+    - Full Anypoint Monitoring (built-in dashboards, custom dashboards, insights, traces, alerts, custom metrics, telemetry exporter, reports)
+    - **Functional Monitoring** (the synthetic API testing product — formerly APIfortress)
+    - Log Search + Log Points + Raw Data
+    - Runtime Manager basic alerts
+    
+    **Implication: do NOT propose building custom monitoring Mule apps for BDR.** All synthetic checks, log-content alerts, KPI threshold alerts, and dashboards are already in the subscription. Build using the UI in Anypoint Monitoring + Functional Monitoring, not custom Mule scheduler flows. See `~/.claude/skills/mulesoft-platform/references/monitoring.md` for the full decision tree.
+    
+    **Subscription caps to track** (Access Management → Subscription → Runtime Manager + Object Store panels):
+    - Mule Public Flows: 200 (BDR uses ~25 across 3 prod apps — plenty of headroom)
+    - Mule Messages: 20M / month (Phase 1 single-digit % usage)
+    - Data Throughput: 40,000 GB / month
+    - VPCs: 2 (0 used)
+    - Network Connections: 4 (0 used)
+    - Object Store API Requests: shown <1% used
+    - vCores: check separately on Subscription Usage panel — roughly 1.6 vCores currently used across the 6 deployed apps (3 prod × 0.4 + 3 sandbox × 0.2)
+
 ## Purpose
 Track the BDR Group MuleSoft integration programme against the Implementation Playbook. Phase 1 scope is NetSuite entitystatus → Salesforce On Stop flag. Future phases expand to liquidations sync, event-driven workflows, and platform-wide integration per the 6-Phase Enterprise strategy.
 
