@@ -75,7 +75,20 @@ Jump directly to the relevant Step 4 page-type template below. Skip Steps 1-3.
 
 ### Step 1 — Read Context
 
-**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active. Read it FIRST and treat it as the authoritative source for colors, typography, spacing, radius, shadows, motion. It overrides `web-system-prompt.md` Design DNA defaults, the Visual Signature Elements list, and the shadcn/Lucide/Framer-Motion mandates. Do NOT add gradient mesh, grain, border glow, glassmorphism, grid lines, animated gradient text, fadeUp/stagger, or hover scale unless the lock proves the reference uses them. After the page is built, screenshot it and diff against `.evolution/style-mirror/reference.png` before reporting done.
+**DESIGN-SYSTEM LEDGER GATE (read this first, before tokens lock):** Two files together form the locked design contract for this route:
+
+1. `design-system/MASTER.md` — project-wide tokens, color job, type pairing, mode, motion strategy, signature element, banned reaches, component primitives. Read in full. This is the canonical design source.
+2. `design-system/pages/<slug>.md` — per-route override (if it exists). Slug derives from the route: `/` → `home.md`, `/pricing` → `pricing.md`, `/services/audits` → `services-audits.md`. When this file exists, sections inside it OVERRIDE the matching MASTER sections for this route only. Sections absent from the override inherit from MASTER unchanged.
+
+If `design-system/MASTER.md` is missing: HALT and surface "Run /web-scope to scaffold design-system/MASTER.md first — building without a locked ledger produces drift." Do NOT proceed with assumed defaults.
+
+If `design-system/pages/<slug>.md` is missing: that's normal. Per-route override files only exist when a route genuinely deviates from MASTER. Build from MASTER alone.
+
+After building, if you made a decision on this route that should NOT apply to other routes (e.g. compact-hero variant on /pricing, motion intensity dial 0.0 on legal pages), WRITE that decision to `design-system/pages/<slug>.md` (copy from `design-system/pages/_template.md`). The next time `/web-page` or `/web-evolve` touches this route they'll respect the override automatically.
+
+**TOKENS LOCK GATE (read second):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active. Read it and treat it as the authoritative source for colors, typography, spacing, radius, shadows, motion — it overrides MASTER's tokens for matched fields. It overrides `web-system-prompt.md` Design DNA defaults, the Visual Signature Elements list, and the shadcn/Lucide/Framer-Motion mandates. Do NOT add gradient mesh, grain, border glow, glassmorphism, grid lines, animated gradient text, fadeUp/stagger, or hover scale unless the lock proves the reference uses them. After the page is built, screenshot it and diff against `.evolution/style-mirror/reference.png` before reporting done.
+
+Read-order precedence (highest wins): `tokens.lock.json` > `design-system/pages/<slug>.md` > `design-system/MASTER.md` > web-system-prompt.md defaults.
 
 Read `~/.claude/web-system-prompt.md`. If missing: continue — use sensible dark SaaS defaults (HSL color variables, Inter/Geist font, 4px grid spacing) and flag NEEDS_HUMAN "Install web-system-prompt.md — Design DNA is missing."
 Read `SCOPE.md` for the page definition (purpose, data, empty state, loading state, error state, signature element).
@@ -324,6 +337,20 @@ If a duplicate exists: refactor to use the shared component. If the new pattern 
 ### Step 6c — Context Refresh (every 3rd page)
 
 After completing every 3rd page (pages 3, 6, 9...), before starting the next page — re-read `DESIGN-BRIEF.md` and `SCOPE.md` in full. Long build sessions compress early context and late pages drift from the locked design contract. This is mandatory — skip it and color choices, typography, and component patterns decay by page 6.
+
+### Step 7.0 — Mechanical handoff gate (BEFORE the prose checklist)
+
+Run the script-driven handoff check on the file you just wrote. This catches banned-pattern regressions, missing focus states, debug code, and missing per-page metadata MECHANICALLY — no Claude judgment, no self-assessment drift.
+
+```bash
+bash ~/.claude/skills/web-page/references/run-handoff-check.sh <path-to-file-just-written>
+```
+
+- Exit 0 → proceed to Step 7 Pass 1 (prose checklist).
+- Exit 1 → fix every banned-severity hit in-place, re-run, repeat until exit 0. Do NOT proceed to Pass 1 with banned hits outstanding.
+- Exit 2 → script missing or misconfigured. HALT and surface to user — never silently skip.
+
+Full check definition + how to extend: [references/handoff-checklist.md](references/handoff-checklist.md). Banned-pattern source: `~/.claude/skills/taste-skill/data/taste-rules.csv`.
 
 ### Step 7 — Per-Page Self-Review (TWO PASSES — both mandatory)
 
