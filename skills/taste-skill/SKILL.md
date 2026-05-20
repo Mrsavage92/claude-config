@@ -5,8 +5,19 @@ description: Senior UI/UX Engineer. Architect digital interfaces overriding defa
 
 # High-Agency Frontend Skill
 
+## 0. MACHINE-READABLE RULES (canonical source)
+
+The full banned-pattern + required-pattern set lives in `data/taste-rules.csv` (40 rules across 10 categories: typography, color, layout, hero, mode, cursor, motion, components, content, originality). Section 7 below is a human-readable summary — the CSV is the canonical machine-readable contract.
+
+**When to query the CSV instead of reading prose:**
+- Before generating frontend code → `python data/check_taste.py --severity banned` to see what's off the table.
+- After generating frontend code → `python data/check_taste.py <generated-file.tsx>` to scan for violations. Exit 1 = banned-severity hit, must fix before commit.
+- Other skills (`/rate`, `/critique`, `/audit`, `/web-evolve`) read this CSV to ground their findings instead of duplicating prose rules.
+
+If a rule belongs in this skill, it belongs in `taste-rules.csv` — edit there, not in prose.
+
 ## 1. ACTIVE BASELINE CONFIGURATION
-* DESIGN_VARIANCE: 8 (1=Perfect Symmetry, 10=Artsy Chaos)
+* DESIGN_VARIANCE: 8 (1=Strict Symmetry, 10=Artsy Chaos)
 * MOTION_INTENSITY: 6 (1=Static/No movement, 10=Cinematic/Magic Physics)
 * VISUAL_DENSITY: 4 (1=Art Gallery/Airy, 10=Pilot Cockpit/Packed Data)
 
@@ -33,11 +44,11 @@ Unless the user explicitly specifies a different stack, adhere to these structur
 
 
 ## 3. DESIGN ENGINEERING DIRECTIVES (Bias Correction)
-LLMs have statistical biases toward specific UI cliché patterns. Proactively construct premium interfaces using these engineered rules:
+LLMs have statistical biases toward specific UI cliché patterns. Proactively construct high-end interfaces using these engineered rules:
 
 **Rule 1: Deterministic Typography**
 * **Display/Headlines:** Default to `text-4xl md:text-6xl tracking-tighter leading-none`.
-    * **ANTI-SLOP:** Discourage `Inter` for "Premium" or "Creative" vibes. Force unique character using `Geist`, `Outfit`, `Cabinet Grotesk`, or `Satoshi`.
+    * **ANTI-SLOP:** Discourage `Inter` for "High-end" or "Creative" vibes. Force unique character using `Geist`, `Outfit`, `Cabinet Grotesk`, or `Satoshi`.
     * **TECHNICAL UI RULE:** Serif fonts are strictly BANNED for Dashboard/Software UIs. For these contexts, use exclusively high-end Sans-Serif pairings (`Geist` + `Geist Mono` or `Satoshi` + `JetBrains Mono`).
 * **Body/Paragraphs:** Default to `text-base text-gray-600 leading-relaxed max-w-[65ch]`.
 
@@ -67,7 +78,7 @@ LLMs have statistical biases toward specific UI cliché patterns. Proactively co
 To actively combat generic AI designs, systematically implement these high-end coding concepts as your baseline:
 * **"Liquid Glass" Refraction:** When glassmorphism is needed, go beyond `backdrop-blur`. Add a 1px inner border (`border-white/10`) and a subtle inner shadow (`shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]`) to simulate physical edge refraction.
 * **Magnetic Micro-physics (If MOTION_INTENSITY > 5):** Implement buttons that pull slightly toward the mouse cursor. **CRITICAL:** NEVER use React `useState` for magnetic hover or continuous animations. Use EXCLUSIVELY Framer Motion's `useMotionValue` and `useTransform` outside the React render cycle to prevent performance collapse on mobile.
-* **Perpetual Micro-Interactions:** When `MOTION_INTENSITY > 5`, embed continuous, infinite micro-animations (Pulse, Typewriter, Float, Shimmer, Carousel) in standard components (avatars, status dots, backgrounds). Apply premium Spring Physics (`type: "spring", stiffness: 100, damping: 20`) to all interactive elements—no linear easing.
+* **Perpetual Micro-Interactions:** When `MOTION_INTENSITY > 5`, embed continuous, infinite micro-animations (Pulse, Typewriter, Float, Shimmer, Carousel) in standard components (avatars, status dots, backgrounds). Apply high-end Spring Physics (`type: "spring", stiffness: 100, damping: 20`) to all interactive elements—no linear easing.
 * **Layout Transitions:** Always utilize Framer Motion's `layout` and `layoutId` props for smooth re-ordering, resizing, and shared element transitions across state changes.
 * **Staggered Orchestration:** Do not mount lists or grids instantly. Use `staggerChildren` (Framer) or CSS cascade (`animation-delay: calc(var(--index) * 100ms)`) to create sequential waterfall reveals. **CRITICAL:** For `staggerChildren`, the Parent (`variants`) and Children MUST reside in the identical Client Component tree. If data is fetched asynchronously, pass the data as props into a centralized Parent Motion wrapper.
 
@@ -95,7 +106,7 @@ To actively combat generic AI designs, systematically implement these high-end c
 * **8-10 (Cockpit Mode):** Tiny paddings. No card boxes; just 1px lines to separate data. Everything is packed. **Mandatory:** Use Monospace (`font-mono`) for all numbers.
 
 ## 7. AI TELLS (Forbidden Patterns)
-To guarantee a premium, non-generic output, you MUST strictly avoid these common AI design signatures unless explicitly requested:
+To guarantee a high-end, non-generic output, you MUST strictly avoid these common AI design signatures unless explicitly requested:
 
 ### Visual & CSS
 * **NO Neon/Outer Glows:** Do not use default `box-shadow` glows or auto-glows. Use inner borders or subtle tinted shadows.
@@ -110,20 +121,20 @@ To guarantee a premium, non-generic output, you MUST strictly avoid these common
 * **Serif Constraints:** Use Serif fonts ONLY for creative/editorial designs. **NEVER** use Serif on clean Dashboards.
 
 ### Layout & Spacing
-* **Align & Space Perfectly:** Ensure padding and margins are mathematically perfect. Avoid floating elements with awkward gaps.
+* **Align & Space Precisely:** Ensure padding and margins are mathematically exact. Avoid floating elements with awkward gaps.
 * **NO 3-Column Card Layouts:** The generic "3 equal cards horizontally" feature row is BANNED. Use a 2-column Zig-Zag, asymmetric grid, or horizontal scrolling approach instead.
 
 ### Content & Data (The "Jane Doe" Effect)
 * **NO Generic Names:** "John Doe", "Sarah Chan", or "Jack Su" are banned. Use highly creative, realistic-sounding names.
 * **NO Generic Avatars:** DO NOT use standard SVG "egg" or Lucide user icons for avatars. Use creative, believable photo placeholders or specific styling.
 * **NO Fake Numbers:** Avoid predictable outputs like `99.99%`, `50%`, or basic phone numbers (`1234567`). Use organic, messy data (`47.2%`, `+1 (312) 847-1928`).
-* **NO Startup Slop Names:** "Acme", "Nexus", "SmartFlow". Invent premium, contextual brand names.
+* **NO Startup Slop Names:** "Acme", "Nexus", "SmartFlow". Invent specific, contextual brand names.
 * **NO Filler Words:** Avoid AI copywriting clichés like "Elevate", "Seamless", "Unleash", or "Next-Gen". Use concrete verbs.
 
 ### External Resources & Components
 * **NO Broken Unsplash Links:** Do not use Unsplash. Use absolute, reliable placeholders like `https://picsum.photos/seed/{random_string}/800/600` or SVG UI Avatars.
 * **shadcn/ui Customization:** You may use `shadcn/ui`, but NEVER in its generic default state. You MUST customize the radii, colors, and shadows to match the high-end project aesthetic.
-* **Production-Ready Cleanliness:** Code must be extremely clean, visually striking, memorable, and meticulously refined in every detail.
+* **Shipping Cleanliness:** Code must be clean, visually striking, memorable, and refined in every detail.
 
 ## 8. THE CREATIVE ARSENAL (High-End Inspiration)
 Do not default to generic UI. Pull from this library of advanced concepts to ensure the output is visually striking and memorable. When appropriate, leverage **GSAP (ScrollTrigger/Parallax)** for complex scrolltelling or **ThreeJS/WebGL** for 3D/Canvas animations, rather than basic CSS motion. **CRITICAL:** Never mix GSAP/ThreeJS with Framer Motion in the same component tree. Default to Framer Motion for UI/Bento interactions. Use GSAP/ThreeJS EXCLUSIVELY for isolated full-page scrolltelling or canvas backgrounds, wrapped in strict useEffect cleanup blocks.
@@ -198,11 +209,11 @@ When generating modern SaaS dashboards or feature sections, you MUST utilize the
 * **Surfaces:** Use `rounded-[2.5rem]` for all major containers. Apply a "diffusion shadow" (a very light, wide-spreading shadow, e.g., `shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]`) to create depth without clutter.
 * **Typography:** Strict `Geist`, `Satoshi`, or `Cabinet Grotesk` font stack. Use subtle tracking (`tracking-tight`) for headers.
 * **Labels:** Titles and descriptions must be placed **outside and below** the cards to maintain a clean, gallery-style presentation.
-* **Pixel-Perfection:** Use generous `p-8` or `p-10` padding inside cards.
+* **Pixel-Tight:** Use generous `p-8` or `p-10` padding inside cards.
 
 ### B. The Animation Engine Specs (Perpetual Motion)
 All cards must contain **"Perpetual Micro-Interactions."** Use the following Framer Motion principles:
-* **Spring Physics:** No linear easing. Use `type: "spring", stiffness: 100, damping: 20` for a premium, weighty feel.
+* **Spring Physics:** No linear easing. Use `type: "spring", stiffness: 100, damping: 20` for a weighted, considered feel.
 * **Layout Transitions:** Heavily utilize the `layout` and `layoutId` props to ensure smooth re-ordering, resizing, and shared element state transitions.
 * **Infinite Loops:** Every card must have an "Active State" that loops infinitely (Pulse, Typewriter, Float, or Carousel) to ensure the dashboard feels "alive".
 * **Performance:** Wrap dynamic lists in `<AnimatePresence>` and optimize for 60fps. **PERFORMANCE CRITICAL:** Any perpetual motion or infinite loop MUST be memoized (React.memo) and completely isolated in its own microscopic Client Component. Never trigger re-renders in the parent layout.

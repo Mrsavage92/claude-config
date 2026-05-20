@@ -201,6 +201,17 @@ done
 4. Skill('critique') per-iter-delta with `output_format: tokens-only` returning `{KEEP, VOID, REVERT}`
 5. Parse via `references/parse-verdict.sh`
 6. Apply verdict mechanically: KEEP→commit, VOID→`git reset --hard HEAD~1`, REVERT→`git revert HEAD --no-edit`
+6.5. **Mechanical handoff gate on changed files** (runs on KEEP verdicts only — secondary gate after critique).
+   ```bash
+   git diff --name-only HEAD~1 HEAD | grep -E '\.(tsx|jsx)$' | while read -r f; do
+     bash ~/.claude/skills/web-page/references/run-handoff-check.sh "$f" || {
+       echo "[handoff-fail] $f — voiding iter"
+       git reset --hard HEAD~1
+       exit 1
+     }
+   done
+   ```
+   Catches Inter font, `#0d1117` GitHub-default bg, debug code, missing focus states, custom cursors, "Elevate"/"Streamline" copy clichés that critique's vision pass missed. Any banned-severity hit voids the iter same as VOID verdict. Banned-pattern source: `~/.claude/skills/taste-skill/data/taste-rules.csv` (40 rules).
 7. Update loop-state.json under WriterAgent role
 8. Run `references/per-iter-gates.sh` (verifies tool-use IDs for the critique call, increments deviation_count on any failed sub-check)
 

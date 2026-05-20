@@ -195,6 +195,30 @@ Write `SCOPE.md` to the project root with this structure:
 6. Settings (last — least critical path)
 ```
 
+### Step 5.5 — Scaffold the Design System ledger (MASTER + per-page overrides)
+
+Create the project's design-system ledger so build skills (`/web-page`, `/web-evolve`) read project-wide locks once and per-route deviations from one place — instead of mining `SCOPE.md`, `DESIGN-BRIEF.md`, and CLAUDE.md prose every time.
+
+```bash
+mkdir -p design-system/pages
+cp ~/.claude/skills/web-scope/references/MASTER-template.md design-system/MASTER.md
+cp ~/.claude/skills/web-scope/references/page-override-template.md design-system/pages/_template.md
+```
+
+Then populate `design-system/MASTER.md` from the decisions you just locked in Steps 1–5:
+- Tokens block: copy from SCOPE.md `## Design Brief` (color, font, mode, radius).
+- Color job: copy from `Color job:` line in SCOPE.md.
+- Typography pairing: from `Font:` decision.
+- Mode: from `Mode:` decision.
+- Motion strategy: from DESIGN-BRIEF.md `Motion Strategy` section if present, else pick ONE.
+- Signature element: from DESIGN-BRIEF.md `Memorability hook` section if present, else REQUIRE a decision now — every project must commit to one memorable choice.
+- Banned reaches: read `~/.claude/skills/taste-skill/data/taste-rules.csv --severity banned` and append any project-specific extras (e.g. "no Lottie on this credible-service brand").
+- Component primitives in use: list the components the scaffold/build will compose pages from.
+
+Per-route override files (`design-system/pages/<slug>.md`) are created LATER by `/web-page` when a route genuinely deviates from MASTER. Don't pre-create them — only when needed. The `_template.md` is the copy-source.
+
+If `design-system/MASTER.md` already exists in the project root, do NOT overwrite — read it, diff against your locked decisions, and prompt the user only if there's a real conflict.
+
 ### Step 6 — Output Summary
 
 ```
