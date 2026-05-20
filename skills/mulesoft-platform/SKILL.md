@@ -92,6 +92,8 @@ vCore allocation — check Runtime Manager → Usage. BDR has Premier plan, spec
 - App running on 0.1 vCore in production → flag as undersized
 - Multiple apps sharing the same Secret Group → flag as blast radius risk
 - Production deploy without corresponding git tag → flag for rollback difficulty
+- **User asks to BUILD a custom monitoring/observability Mule app → STOP and check their Anypoint subscription tier FIRST.** Most enterprise tiers (Integration Advanced, Titanium, Gold) include Anypoint Monitoring + Functional Monitoring, which cover ~95% of monitoring use cases natively. Building custom monitoring code without confirming the subscription is wasted work. See `references/monitoring.md` decision tree.
+- **Before recommending vCore scale-up or new app deploy → check Subscription Usage panel for current cap headroom.** Overage charges apply on most plans. See `references/monitoring.md` "Object Store + usage caps" section for the screens to check.
 
 ## Templates
 
