@@ -1,0 +1,20 @@
+# Skill-creator / skill-forge local backups
+**/SKILL.md.pre-creator
+**/SKILL.md.pre-forge
+
+# Runtime state inside skills (loop progress, smoke backups, etc.)
+**/.evolution/loop-state.json
+**/.evolution/loop-state.json.smoke-backup
+
+# Per-skill local logs and caches
+.notion-skill/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Conflict / patch leftovers
+*.orig
+*.rej

@@ -26,11 +26,32 @@ Run-Safe "notion-context" {
     & "$env:USERPROFILE\.claude\hooks\fetch-notion-context.ps1"
 } 8
 
-# 2. Git sync pull (5s timeout)
-Run-Safe "git-sync-pull" {
-    $repo = "$env:USERPROFILE\.claude"
+# 2. Git sync pull -- claude-config (skills/agents/commands) (5s timeout)
+Run-Safe "claude-config-pull" {
+    $repo = "$env:USERPROFILE\Documents\Git\claude-config"
     if (Test-Path "$repo\.git") {
         Set-Location $repo
         git pull --ff-only origin main 2>&1 | Out-Null
     }
 } 5
+
+# 3. Git sync pull -- claude-memory (private memory) + mirror into local cwd-mangled dirs (8s timeout)
+Run-Safe "claude-memory-pull" {
+    $repo = "$env:USERPROFILE\Documents\Git\claude-memory"
+    if (Test-Path "$repo\pull-memory.ps1") {
+        & "$repo\pull-memory.ps1" 2>&1 | Out-Null
+    }
+} 8
+
+# 4. Sync-pending reminder. Printed to stdout so SessionStart hook injects it
+#    into Claude's context -- prompts Claude to run /sync-knowledge-base.
+$marker = "$env:USERPROFILE\.claude\.sync-pending"
+if (Test-Path $marker) {
+    try {
+        $count = (Get-Content $marker | Measure-Object -Line).Lines
+        Write-Output "SYNC PENDING: $count config files changed last session (skills/agents/commands/hooks). Run /sync-knowledge-base to update Notion."
+        Remove-Item -LiteralPath $marker -Force -ErrorAction SilentlyContinue
+    } catch {
+        "[$(Get-Date)] sync-pending-read ERROR: $_" >> $LOG
+    }
+}

@@ -59,9 +59,12 @@ Before non-trivial work, state the success criterion. Loop until verified — do
 
 ## Sync Architecture
 
-**Single source of truth: `github.com/Mrsavage92/claude-config`** — skills, agents, commands, hooks, settings.json, rules/, this file. Both machines pull from / push to it via SessionStart and Stop hooks. `Mrsavage92/skills-library` is a fork showcase, NOT the working repo — never push working content there. [Notion hub](https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917).
+Two repos, split by visibility:
 
-After modifying skills/commands/agents, run `/sync-knowledge-base` automatically — never ask.
+- **Public — `github.com/Mrsavage92/claude-config`** — skills, agents, commands, hooks, settings.json, rules/, this file. `Mrsavage92/skills-library` is a fork showcase, NOT the working repo — never push working content there. After modifying skills/commands/agents, run `/sync-knowledge-base` automatically — never ask.
+- **Private — `github.com/Mrsavage92/claude-memory`** — auto-memory under `~/.claude/projects/<cwd-mangled>/memory/`. Contains business state, founder feedback, ICP detail. Never reference this repo from public docs or skills. Auto-pulled on session start, auto-pushed on session stop via `pull-memory.ps1` / `push-memory.ps1` in `~/Documents/Git/claude-memory/`.
+
+[Notion hub](https://www.notion.so/Claude-32a116e8bef28030a0f6d0be522bf917).
 
 ## Key Preferences
 
