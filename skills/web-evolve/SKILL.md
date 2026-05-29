@@ -58,6 +58,15 @@ Returns exit 0 only if ALL pass:
 
 Any failure → HALT with the failing gate name. No soft-degrade. The exit code is the gate. Gate 12 is a WARN not a halt.
 
+**Tokens lock check (replication mode — read immediately after boot gates pass):**
+If `tokens.lock.json` exists at the project root:
+- Read it before Phase A begins. Store as `$LOCK`.
+- Pass `lock_path: tokens.lock.json` to every critique agent in Phase A — checklist items that propose patterns listed in `$LOCK.forbidden_additions` (e.g. gradient_mesh, hover_scale, fade_up, glassmorphism, grain) are auto-discarded before entering `page-baselines.json`.
+- In Phase R, when routing to refinement skills (polish, animate, colorize, overdrive, typeset, layout, delight), prepend `lock: tokens.lock.json` to their args so they enter lock-aware mode.
+- Do NOT surface findings like "add gradient mesh", "add hover scale", "add fadeUp" — verify against `forbidden_additions` first.
+
+If `tokens.lock.json` does NOT exist: replication mode is inactive. Standard Phase A + R logic applies.
+
 **Resume protocol.** Phase C iters are heavy (~100–200k tokens for one `Skill('web-page')` invocation). A typical `/web-evolve` session executes 0–2 iters and exits. State persists in `.evolution/`. Re-invoking `/web-evolve` in a fresh session reads `loop-state.json` and continues from the next queued route. The previous run's retro (validated by `append-retro.sh`) provides `next_run_priorities.json` which orders the queue. If a prior iter committed but did not run Phase D, Gate 12 warns — push + verify before starting new iters.
 
 ---

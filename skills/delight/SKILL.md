@@ -1,8 +1,6 @@
 ---
 name: delight
 description: Add moments of joy, personality, and unexpected touches that make interfaces memorable and enjoyable to use. Elevates functional to delightful. Use when the user asks to add polish, personality, animations, micro-interactions, delight, or make an interface feel fun or memorable.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[target]"
 ---
 
@@ -10,7 +8,12 @@ Identify opportunities to add moments of joy, personality, and unexpected polish
 
 ## MANDATORY PREPARATION
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first. Additionally gather: what's appropriate for the domain (playful vs professional vs quirky vs elegant).
+**Context loading — read in this order, stop at the first match:**
+1. `tokens.lock.json` at project root → replication mode. Delight that diverges from the lock is a regression — every moment of joy must still look like the reference.
+2. `.agents/context.json` or `DESIGN-CONTEXT.md` → read for domain tone (playful vs professional vs quirky vs elegant).
+3. Neither exists → **HALT with NEEDS_HUMAN:** "No design context. Run `Skill('style-mirror')` first, or create `DESIGN-CONTEXT.md` with the project's tone."
+
+Note: the original context-loading skill (impeccable) is no longer installed. The above order covers its role.
 
 ---
 

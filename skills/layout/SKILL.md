@@ -1,8 +1,6 @@
 ---
 name: layout
 description: Improve layout, spacing, and visual rhythm. Fixes monotonous grids, inconsistent spacing, and weak visual hierarchy. Use when the user mentions layout feeling off, spacing issues, visual hierarchy, crowded UI, alignment problems, or wanting better composition.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[target]"
 ---
 
@@ -25,7 +23,12 @@ Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 
 ## MANDATORY PREPARATION
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first.
+**Context loading — read in this order, stop at the first match:**
+1. `tokens.lock.json` at project root → replication mode. Layout changes must stay within the reference's spacing grid and section structure.
+2. `.agents/context.json` or `DESIGN-CONTEXT.md` → read for layout constraints.
+3. Neither exists → **HALT with NEEDS_HUMAN:** "No design context. Run `Skill('style-mirror')` first, or create `DESIGN-CONTEXT.md`."
+
+Note: the original context-loading skill (impeccable) is no longer installed. The above order covers its role.
 
 ---
 
@@ -62,7 +65,7 @@ Analyze what's weak about the current spatial design:
 
 ## Plan Layout Improvements
 
-Consult the [spatial design reference](reference/spatial-design.md) from the impeccable skill for detailed guidance on grids, rhythm, and container queries.
+Consult the [spatial design reference](reference/spatial-design.md) for detailed guidance on grids, rhythm, and container queries.
 
 Create a systematic plan:
 

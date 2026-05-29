@@ -1,64 +1,75 @@
 ---
 name: refine
-description: "Refinement router for design improvements — typography, layout, color, motion, simplify, calmer, joy, copy, bolder. Use when the user wants any kind of incremental design pass: 'fix the typography', 'tighten spacing', 'add more color', 'add motion', 'simplify this', 'tone down', 'add personality', 'fix the copy', 'make it bolder'. Single entry point that dispatches to the right specialist; replaces calling typeset/layout/colorize/animate/distill/quieter/delight/clarify/bolder directly."
+description: Single entry point for all visual refinement. Diagnoses which dimension is most off (typography, layout, color, motion, delight, clarity), loads context once, then routes to the right specialist. Use when something looks wrong but you are not sure which specialist to invoke, or when the user says "make this better", "refine this", "improve the design", "something feels off".
+argument-hint: "[target]"
 ---
 
-# /refine — Refinement Router
+# /refine
 
-One entry point for all small-to-medium design improvements. Routes to the right specialist based on the mode argument so the user doesn't need to remember nine separate skill names.
+The shared entry point for all visual refinement work. Loads context once, diagnoses the target, routes to the specialist that will close the biggest gap.
 
-## Why this exists
+**Do not invoke the specialist skills yourself and call it refine.** The value here is in the diagnosis — routing to the wrong specialist wastes a turn. If the target has broken typography AND broken layout, route to typeset first (typography is the faster visual signal).
 
-Before `/refine`, nine refinement skills (typeset, layout, colorize, animate, distill, quieter, delight, clarify, bolder) competed for the user's attention in the slash-command list. Each had near-identical scaffolding and all shared `/impeccable` as MANDATORY PREPARATION. The user couldn't remember which name to use; the model frequently picked the wrong one or paraphrased the work.
+---
 
-Now: `/refine <mode> [target]`. The router invokes the correct specialist via `Skill()` and passes through args. The specialists keep working unchanged for direct programmatic use (e.g. `saas-build` Phase 5a still calls `Skill('typeset')` by name).
+## Step 1 — Load context (shared, done once)
 
-## Modes
+**Read in this order, stop at the first match:**
 
-| Mode | Specialist | Use when the user wants… |
+1. `tokens.lock.json` at project root → replication mode active. Every refinement must stay within the lock. Pass `lock: tokens.lock.json` as the first arg to whichever specialist you route to.
+2. `.agents/context.json` or `DESIGN-CONTEXT.md` → read for design constraints.
+3. Neither exists → **HALT with NEEDS_HUMAN:** "No design context. Run `Skill('style-mirror')` against a reference URL first, or create `DESIGN-CONTEXT.md` with palette, typography, and tone."
+
+Note: the original context-loading skill (impeccable) is no longer installed. This step covers its role for the entire refinement pass.
+
+---
+
+## Step 2 — Diagnose the target
+
+Screenshot the target (or read the file if no browser MCP). Apply the following checks in order:
+
+| Check | Symptom | Specialist |
 |---|---|---|
-| `typography` / `type` / `font` | `typeset` | Better fonts, hierarchy, sizing, weight, readability |
-| `layout` / `spacing` / `grid` | `layout` | Tighter spacing, fixed grids, better rhythm, alignment |
-| `color` / `colour` / `palette` | `colorize` | More color, less monochrome, better palette, expressive accents |
-| `motion` / `animation` / `animate` | `animate` | Animations, transitions, micro-interactions, scroll effects |
-| `simplify` / `reduce` / `distill` | `distill` | Strip complexity, remove noise, get to essence |
-| `calmer` / `quieter` / `tone-down` | `quieter` | Reduce intensity, soften aggressive design, less stimulation |
-| `joy` / `delight` / `personality` | `delight` | Add character, surprise, moments of charm |
-| `copy` / `microcopy` / `clarity` | `clarify` | Improve UX copy, error messages, labels, instructions |
-| `bolder` / `amplify` / `stronger` | `bolder` | More visual impact, more confidence, less safe |
+| Typography | Font wrong, scale off, hierarchy unclear, tight/loose line-height | `Skill('typeset')` |
+| Layout | Cramped, monotonous grid, bad rhythm, inconsistent spacing | `Skill('layout')` |
+| Color | Flat, single-hue, primary overused, contrast wrong | `Skill('colorize')` |
+| Motion | Missing or wrong timing, no entrance animation, jank | `Skill('animate')` |
+| Delight | Generic, no personality, nothing memorable | `Skill('delight')` |
+| Clarity | Confusing copy, bad labels, unclear errors | `Skill('clarify')` |
+| Multiple dimensions failing | Run `/critique` first, get a ranked list, then route the top finding | `Skill('critique')` → route top finding |
 
-## Process
+**Pick ONE.** The single most broken dimension. If two dimensions are equally broken, use the tiebreaker: typography > layout > color > motion > delight > clarity (fix foundational before decorative).
 
-1. Parse the first arg as the mode. If unrecognised, ask the user which mode they meant from the table above.
-2. Match the mode to its specialist via the lookup table.
-3. Invoke the specialist via `Skill('<specialist>')` with the remaining args passed through verbatim.
-4. The specialist runs its own `MANDATORY PREPARATION` (which is now lock-aware via the impeccable Step 0 gate).
-5. Return the specialist's output unchanged.
+---
 
-This is a thin router. Do NOT do the refinement work in this skill — invoke the specialist. Paraphrasing the specialist's body in the router context is a phase failure.
+## Step 3 — Route
 
-## TOKENS LOCK GATE
+Pass the context you loaded in Step 1 as the first part of the specialist's args:
 
-If `tokens.lock.json` exists at the project root, replication mode is active. The router still dispatches to the same specialist — the specialist's lock awareness (via `/impeccable` Context Gathering Step 0) handles the rest. Do not strip or alter the user's args based on lock presence; the specialist decides what to do.
+```
+# Replication mode:
+Skill('typeset', args='lock: tokens.lock.json | reference: <url> | [target description]')
 
-## When NOT to use
+# Non-replication mode:
+Skill('layout', args='[target description] | context: DESIGN-CONTEXT.md')
+```
 
-- For full-page rebuilds → `/web-page` or `/web-component`
-- For final pre-ship sweep → `/polish` (separate skill, not part of this router because it's a different pattern: whole-product, not single-aspect)
-- For score-driven iterative improvement → `/web-evolve` (orchestrator that calls these specialists in targeted mode with `checks:` and `fail_proof:` args)
-- For initial design direction → `/impeccable craft` (commits to an aesthetic direction; refinement comes after)
+The specialist MUST enter its "skip MANDATORY PREPARATION — context in args" branch. Do NOT let it re-run the context-loading step.
 
-## Anti-Patterns (do NOT do these)
+---
 
-- **Doing the refinement in this skill.** The router invokes the specialist. If you find yourself writing CSS or component code in this context, stop and call `Skill('<specialist>')`.
-- **Picking a mode without checking with the user.** If the request is ambiguous ("make this better"), ask which mode they want — don't guess. "Better" is not a mode.
-- **Calling multiple specialists in sequence from this router.** That's `/polish` or `/web-evolve`'s job. This router does ONE specialist per invocation.
-- **Adding new modes here without adding the specialist.** The router is a lookup, not a place to invent new refinement types.
+## Step 4 — Verify
 
-## Related skills
+After the specialist completes:
+- Screenshot the result (or re-read the file).
+- Confirm the targeted dimension improved.
+- If the second most broken dimension is still significantly off, route to its specialist. One specialist per turn — do not chain without checking.
 
-- The 9 specialists remain user-invocable for backward compatibility but `/refine <mode>` is the preferred entry point.
-- `/impeccable` — required preparation, called by every specialist.
-- `/polish` — multi-aspect final sweep (different pattern; calls many specialists).
-- `/web-evolve` — score-driven loop that calls specialists in targeted mode.
-- `/saas-build` Phase 5a — calls polish + typeset + colorize + animate + distill in parallel by name (do NOT change to /refine — the phase requires verifiable Skill() calls to each).
+---
+
+## Anti-patterns
+
+- Running all specialists on the same target in one pass. Each specialist makes targeted edits; running them all introduces conflicts.
+- Routing to a specialist before loading context. The lock or context file shapes every decision — load it first, every time.
+- Calling this skill when the request is clearly scoped: user says "fix the colors" → call `Skill('colorize')` directly.
+- Diagnosing without looking. Screenshot or read the file before picking a specialist. "It probably needs typeset" is not a diagnosis.

@@ -62,7 +62,7 @@ If your args contain `mode: rebuild` AND `rebuild_brief:` AND `route:`, you are 
     - Has a clear primary CTA above the fold.
     - Names WHO YOU ARE + WHAT YOU DO + WHO IT'S FOR in the hero/intro.
 6. **A partial rebuild is a failure.** If you ship only a banner + new headline (not the full page), the orchestrator will VOID the iter per Cardinal Rule 31. A REBUILD iter that's actually a polish iter wearing a rebuild costume is the failure mode this contract prevents.
-7. **Do not invoke design-context setup or /critique inline.** The orchestrator handles those. Just build.
+7. **Do not invoke /impeccable teach or /critique inline.** The orchestrator handles those. Just build.
 8. **Output** one paragraph: which file changed, what the structural pattern is now, which checklist_fails are resolved, and any new components scaffolded. The orchestrator will re-screenshot + re-critique to verify the rebuilt page clears the tier floor.
 
 Jump directly to the relevant Step 4 page-type template below. Skip Steps 1-3.
@@ -156,7 +156,7 @@ Structure: [Banner] → Nav → Hero (with animated bg) → Logo Cloud → Stats
 
 **Hero build sequence — follow in order:**
 
-1. **Animated background first** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `animated background gradient`. Use `BackgroundGradientAnimation` (interactive WebGL blobs). Set `opacity: 0.15-0.2`, `z-index: -1`, lazy-loaded. Wrap in `useReducedMotion` check. This is NON-NEGOTIABLE — no CSS fallback.
+1. **Animated background first** — `mcp__magic__21st_magic_component_inspiration` searchQuery: `animated background gradient`. Use `BackgroundGradientAnimation` (interactive WebGL blobs). Set `opacity: 0.15-0.2`, `z-index: -1`, lazy-loaded. Wrap in `useReducedMotion` check. This is NON-NEGOTIABLE — no CSS fallback. **Exception: replication mode.** If `tokens.lock.json` exists and `forbidden_additions` contains `"gradient_mesh"`, skip this step — the reference does not use it and the lock forbids it.
 
 2. **Product visual mockup** — built from shadcn primitives shaped like the real app:
    - Browser chrome: three colored dots (`bg-destructive/50`, `bg-yellow-400/50`, `bg-green-500/50`) + URL bar showing `app.[product].com.au`
