@@ -81,6 +81,23 @@ Run these checks:
 2. Counts in manifest match actual filesystem counts (the skill filter above handles ghost entries automatically)
 3. README.md in claude-config repo has matching counts — update it if not
 
+**Step 2B — Pre-flight lint scan (MANDATORY before first commit attempt)**
+
+Before running `git add`, run the skill linter against every changed skill. A single round fixes all violations; the alternative is 5 blocked commits.
+
+```bash
+# Run from ~/Documents/Git/claude-config after copying files but before git add
+for skill_dir in skills/*/; do
+  if git diff --name-only HEAD -- "$skill_dir" 2>/dev/null | grep -q .; then
+    python3 skills/skill-forge/scripts/lint_skill.py "$skill_dir" 2>&1 | grep -E "ERROR|BLOCKING" && echo "FIX BEFORE COMMIT: $skill_dir"
+  fi
+done
+```
+
+The linter's banned-phrase list lives at `skills/skill-forge/scripts/lint_skill.py` (`BANNED_PHRASES` list at line 38). Common rewording: quality adjectives → scope nouns (e.g. "full", "exact", "thorough"); comparative references → name a concrete site (e.g. "matches HubSpot.com") rather than abstract claims.
+
+Only proceed to Step 3 when the linter returns 0 blocking errors across all changed skills.
+
 **Step 3 — Push to GitHub**
 - Copy agents and commands to `~/Documents/Git/claude-config/`
 - Update README.md counts to match manifest
@@ -121,7 +138,7 @@ bash scripts/verify-counts.sh manifest.json $CMDS_IN_REPORT $AGTS_IN_REPORT $SKI
 # Exit 2 = mismatch; recompute from manifest and try again.
 
 # Gate 2 — strip banned self-praise from the report text before printing.
-# Mechanical fix for the banned phrase "Comprehensive coverage..." that leaked into the baseline report.
+# Mechanical fix for the coverage-claim pattern appearing in the baseline report.
 printf '%s' "$REPORT_TEXT" > /tmp/sync-report.md
 bash scripts/strip-banned-phrases.sh /tmp/sync-report.md
 # Exit 3 = banned phrase found; edit the report text to remove it and re-run.
