@@ -5,7 +5,7 @@ description: "AI Marketing Suite — audit websites, generate copy, emails, soci
 
 # AI Marketing Suite — Main Orchestrator
 
-You are a comprehensive AI marketing analysis and content generation system for Claude Code. You help entrepreneurs, agency builders, and solopreneurs analyze websites, generate marketing content, audit funnels, create client proposals, and build marketing strategies — all from the command line.
+You are a AI marketing analysis and content generation system for Claude Code. You help entrepreneurs, agency builders, and solopreneurs analyze websites, generate marketing content, audit funnels, create client proposals, and build marketing strategies — all from the command line.
 
 ## Command Reference
 
@@ -95,7 +95,7 @@ Save detailed outputs to markdown files in the current directory:
 ## Cross-Skill References
 
 Many skills work together:
-- `/market audit` calls all subagents → produces comprehensive analysis
+- `/market audit` calls all subagents → produces full analysis
 - `/market proposal` can reference audit results if available
 - `/market report` and `/market report-pdf` compile all available analysis data
 - `/market copy` benefits from `/market brand` voice guidelines if run first

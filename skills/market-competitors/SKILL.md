@@ -1,6 +1,11 @@
+---
+name: market-competitors
+description: Identifies competitors and analyzes their marketing strategies; produces positioning gap report and differentiation opportunities.
+---
+
 # Competitive Intelligence Analysis
 
-You are the competitive intelligence engine for `/market competitors <url>`. You identify competitors, analyze their marketing strategies, and produce a comprehensive comparison report that reveals positioning gaps, steal-worthy tactics, and differentiation opportunities. Output is structured for both strategic decision-making and client presentations.
+You are the competitive intelligence engine for `/market competitors <url>`. You identify competitors, analyze their marketing strategies, and produce a comparison report that reveals positioning gaps, steal-worthy tactics, and differentiation opportunities. Output is structured for both strategic decision-making and client presentations.
 
 ## When This Skill Is Invoked
 
@@ -87,12 +92,12 @@ For each competitor, analyze:
 **Positioning Map:**
 Plot each competitor on two axes:
 - X-axis: Perceived simplicity ←→ Perceived power
-- Y-axis: Perceived affordability ←→ Perceived premium
+- Y-axis: Perceived affordability ←→ Perceived exclusivity
 
 ```
 POSITIONING MAP
 ===============
-                    PREMIUM
+                    HIGH-END
                        |
                        |
         [Competitor C] |  [Aspirational]
@@ -133,7 +138,7 @@ Build a detailed pricing matrix:
 
 ### 2.3 Feature Comparison Matrix
 
-Build a comprehensive feature comparison:
+Build a feature comparison:
 
 ```markdown
 | Feature Category | Feature | [Target] | Comp A | Comp B | Comp C |

@@ -1,7 +1,12 @@
+---
+name: market-report
+description: Compiles audit results into a client-ready markdown marketing report with scores, findings, and prioritized action plan.
+---
+
 # Marketing Report Generator (Markdown Format)
 
 ## Skill Purpose
-Generate a comprehensive, professionally formatted marketing report in Markdown. This skill compiles data from all previous audit and analysis results into a single, client-ready document with scores, findings, recommendations, and a prioritized action plan with revenue impact estimates.
+Generate a professionally formatted marketing report in Markdown. This skill compiles data from all previous audit and analysis results into a single, client-ready document with scores, findings, recommendations, and a prioritized action plan with revenue impact estimates.
 
 ## When to Use
 - User wants a full marketing report for a client or their own business
@@ -57,7 +62,7 @@ Evaluate based on SEO audit findings.
 | Content quality (E-E-A-T) | 25 | Excellent = 25, Good = 17, Average = 10, Poor = 3 |
 | Technical SEO | 20 | No issues = 20, Minor issues = 13, Major issues = 7, Critical = 0 |
 | Internal linking | 15 | Strategic = 15, Present = 10, Minimal = 5, None = 0 |
-| Schema markup | 15 | Comprehensive = 15, Basic = 10, Minimal = 5, None = 0 |
+| Schema markup | 15 | Full implementation = 15, Basic = 10, Minimal = 5, None = 0 |
 
 #### Category 3: Content & Messaging (Weight: 15%)
 Evaluate based on brand voice analysis and content audit.
@@ -88,7 +93,7 @@ Evaluate based on email marketing assessment.
 |---|---|---|
 | List building mechanism | 20 | Multiple opt-ins = 20, One opt-in = 13, No visible opt-in = 5 |
 | Email design & content | 20 | Professional and engaging = 20, Adequate = 13, Needs work = 7 |
-| Automation sequences | 25 | Comprehensive = 25, Basic = 15, Minimal = 8, None = 0 |
+| Automation sequences | 25 | Full automation = 25, Basic = 15, Minimal = 8, None = 0 |
 | Segmentation | 20 | Advanced = 20, Basic = 13, None = 5 |
 | Deliverability signals | 15 | Strong = 15, Adequate = 10, Concerning = 5, Problems = 0 |
 
@@ -100,8 +105,8 @@ Evaluate based on ad account audit (if applicable).
 | Campaign structure | 20 | Well-organized = 20, Adequate = 13, Messy = 7, None = 0 |
 | Targeting quality | 25 | Precise and layered = 25, Good = 17, Broad = 10, Wasteful = 3 |
 | Ad creative quality | 25 | Compelling and varied = 25, Adequate = 17, Weak = 10, Poor = 3 |
-| Landing page alignment | 15 | Perfect match = 15, Good = 10, Misaligned = 5, Broken = 0 |
-| Tracking & attribution | 15 | Comprehensive = 15, Basic = 10, Minimal = 5, Missing = 0 |
+| Landing page alignment | 15 | Exact match = 15, Good = 10, Misaligned = 5, Broken = 0 |
+| Tracking & attribution | 15 | Full attribution = 15, Basic = 10, Minimal = 5, Missing = 0 |
 
 #### Overall Score Calculation
 ```
@@ -232,7 +237,7 @@ High impact, high effort. These are foundational changes that require planning a
 **Days 61-90: Scale & Expand**
 - Week 9-10: Scale what's working, cut what isn't
 - Week 11: Expand to new channels or campaigns
-- Week 12: Comprehensive review, update strategy for next quarter
+- Week 12: Full quarterly review, update strategy for next quarter
 
 ### Step 10: Appendix
 

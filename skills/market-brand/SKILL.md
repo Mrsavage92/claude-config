@@ -1,7 +1,12 @@
+---
+name: market-brand
+description: Analyzes a brand's voice, tone, and messaging patterns; generates actionable brand voice guidelines.
+---
+
 # Brand Voice Analysis and Guidelines Generation
 
 ## Skill Purpose
-Analyze a brand's voice, tone, and messaging across all available channels and generate a comprehensive brand voice guidelines document. This skill examines how a brand communicates, identifies patterns and inconsistencies, and produces actionable guidelines that any writer or marketer can follow to maintain brand consistency.
+Analyze a brand's voice, tone, and messaging across all available channels and generate a brand voice guidelines document. This skill examines how a brand communicates, identifies patterns and inconsistencies, and produces actionable guidelines that any writer or marketer can follow to maintain brand consistency.
 
 ## When to Use
 - User wants to understand or document a brand's voice
@@ -170,7 +175,7 @@ Analyze all source material and identify the 15-20 most characteristic words or 
 - e.g., "build", "scale", "transform", "streamline"
 
 **Descriptive words:** (adjectives they use)
-- e.g., "powerful", "simple", "enterprise-grade", "effortless"
+- e.g., "powerful", "simple", "enterprise-ready", "effortless"
 
 **Value words:** (words that reflect their values)
 - e.g., "transparent", "sustainable", "inclusive", "innovative"
@@ -265,7 +270,7 @@ The complete narrative of who the brand is, what they stand for, and why they ex
 
 ### Step 9: Generate Brand Voice Documentation
 
-Create the comprehensive Do's and Don'ts guide:
+Create the Do's and Don'ts guide:
 
 #### Voice Chart
 

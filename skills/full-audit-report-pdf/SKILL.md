@@ -63,7 +63,7 @@ After generation, verify the PDF was created and report the file path and size t
 
 ## What the PDF Contains
 
-The engine produces a comprehensive PDF with:
+The engine produces a structured PDF with:
 
 1. **Cover Page** -- Business name, URL, date, overall Digital Health Score gauge, grade
 2. **Table of Contents** -- All 8 suites listed with page numbers

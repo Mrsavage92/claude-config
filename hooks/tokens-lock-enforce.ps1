@@ -50,7 +50,15 @@ for ($i = 0; $i -lt 6; $i++) {
     if ($lockPath) { break }
     $dir = [System.IO.Path]::GetDirectoryName($dir)
 }
-if (-not $lockPath) { exit 0 }
+if (-not $lockPath) {
+    # No lock found. If this is a landing/hero component, warn — style-mirror
+    # should have been run first and written tokens.lock.json.
+    $isLandingComponent = $filePath -match '(?i)components[\\/]landing|components[\\/]hero|pages[\\/]Index|pages[\\/]Landing'
+    if ($isLandingComponent) {
+        [Console]::Error.WriteLine("[tokens-lock-enforce] WARNING: Writing to a landing component ($([System.IO.Path]::GetFileName($filePath))) without tokens.lock.json in the project tree. Run Skill('style-mirror') first to materialise the lock, or set CLAUDE_TOKENS_LOCK_OFF=1 to override.")
+    }
+    exit 0
+}
 
 # Lock found -- replication mode active. Read it.
 try { $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json } catch { exit 0 }

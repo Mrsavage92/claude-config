@@ -315,7 +315,7 @@ Reference template lives in `~/.claude/skills/web-scaffold/references/nextjs-tem
 
 ### Step 5.7 — Content humanizer pass (MANDATORY before commit on any AI-written copy)
 
-If any copy on this page was AI-generated (hero headline, feature descriptions, FAQ answers, CTA text), fire `Skill('content-humanizer', args='target_files: {list of components with copy} | preserve: brand-voice from CLAUDE.md')` as the final step before Step 6.
+If any copy on this page was AI-generated (hero headline, feature descriptions, FAQ answers, CTA text), manually review each component file before Step 6: strip banned tells (`delve`, `leverage`, `robust`, `seamless`, `unlock`, `unprecedented`, em-dash overuse, sentence-length uniformity, "in today's fast-paced world"-style filler). Do this manually — no skill handles it.
 
 The humanizer pass strips perplexity-lowering tells: banned words (`delve`, `leverage`, `robust`, `seamless`, `unlock`, `unprecedented`), em-dash overuse, sentence-length uniformity, "in today's fast-paced world"-style filler. Skipping it ships AI-template copy and fails the sales-page-10 checklist on rules 2 (WHAT YOU DO clarity) and 4 (OUTCOME-not-process).
 

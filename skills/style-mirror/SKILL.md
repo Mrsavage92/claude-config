@@ -5,7 +5,7 @@ description: >
   Extracts exact values (colors, layout structure, typography, spacing, gradients) via screenshot +
   live CSS inspection, produces a diff, then applies every change systematically.
   Invoked when the user says "make it look like X", "mirror X", or "I want it to look like X".
-tools: Read, Write, Edit, Bash, mcp__chrome-devtools__new_page, mcp__chrome-devtools__navigate_page, mcp__chrome-devtools__take_screenshot, mcp__chrome-devtools__evaluate_script, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate, Glob, Grep
+allowed-tools: Read, Write, Edit, Bash, mcp__chrome-devtools__new_page, mcp__chrome-devtools__navigate_page, mcp__chrome-devtools__take_screenshot, mcp__chrome-devtools__evaluate_script, mcp__puppeteer__puppeteer_navigate, mcp__puppeteer__puppeteer_screenshot, mcp__puppeteer__puppeteer_evaluate, Glob, Grep
 ---
 
 # Skill: /style-mirror
@@ -137,7 +137,7 @@ When this skill is active (and whenever `tokens.lock.json` exists), the followin
 - **Hover scale `whileHover={{ scale: 1.02 }}`** — only if reference's `:hover` computed transform shows scale
 - **Rounded corners larger than reference** — read `border-radius` from extracted tokens, do not "improve" it to a larger Tailwind default
 - **shadcn/ui component substitution** — if reference uses bespoke buttons/cards/inputs, do NOT swap to shadcn primitives
-- **Premium-website mandatory section list** — if reference does not have a "Logo Cloud → Stats → Testimonials → Pricing → FAQ" structure, do NOT add those sections
+- **web-page mandatory section list** — if reference does not have a "Logo Cloud → Stats → Testimonials → Pricing → FAQ" structure, do NOT add those sections
 - **21st.dev component lock** — disabled during mirror. Use the reference's actual layout structure.
 - **Awwwards-style "signature visual moments"** — restraint. The point is to look like the reference, not to look like a 2025 Awwwards finalist.
 
@@ -462,6 +462,8 @@ For each section in the reference (in order: nav → hero → next-section → n
 6. **Confirm** in BUILD-LOG.md or `.style-mirror/section-log.md`: section name, tokens used, mismatches found, mismatches fixed.
 
 Section-by-section is non-negotiable when the page has more than 3 sections. The hero-good-everything-else-drifts failure mode is exactly this skipped loop.
+
+**⛔ HARD STOP before Step 7:** Write the completed section names to `.style-mirror/section-log.md` (one line per section: `✓ hero`, `✓ nav`, etc.). If the file does not exist or lists fewer sections than the page has, DO NOT proceed to Step 7. A single full-page screenshot without a section-log entry for each section is a Step 6b skip — it is not a valid verification.
 
 ## Step 7 — Screenshot and verify
 

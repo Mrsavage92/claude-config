@@ -1,7 +1,12 @@
+---
+name: market-landing
+description: CRO analysis of any landing page; section-by-section teardown with prioritized, actionable conversion fixes.
+---
+
 # Landing Page CRO Analysis
 
 ## Skill Purpose
-Perform a comprehensive Conversion Rate Optimization (CRO) analysis on any landing page. This skill produces a section-by-section teardown with prioritized, actionable fixes that directly impact conversion rates.
+Perform a Conversion Rate Optimization (CRO) analysis on any landing page. This skill produces a section-by-section teardown with prioritized, actionable fixes that directly impact conversion rates.
 
 ## When to Use
 - User provides a landing page URL and asks for conversion optimization
@@ -101,7 +106,7 @@ How the page presents what the product/service includes.
 - [ ] Most important features/benefits are listed first
 - [ ] Each feature section has a clear mini-headline
 - [ ] Screenshots, demos, or visuals accompany feature descriptions
-- [ ] Feature list is comprehensive but not overwhelming (3-7 key features)
+- [ ] Feature list is thorough but not overwhelming (3-7 key features)
 
 **Feature-to-Benefit Translation Check:**
 Bad: "AI-powered analytics dashboard"

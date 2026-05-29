@@ -1,6 +1,6 @@
 ---
 name: parallel-audit
-description: Run multiple audit suites simultaneously against a URL using parallel subagent delegation. Completes in a fraction of the time of sequential audits. Use when you want a comprehensive multi-domain audit (marketing + technical + GEO + security + privacy) without waiting for each to finish before the next starts.
+description: Run multiple audit suites simultaneously against a URL using parallel subagent delegation. Completes in a fraction of the time of sequential audits. Use when you want a multi-domain audit (marketing + technical + GEO + security + privacy) without waiting for each to finish before the next starts.
 ---
 
 # Parallel Audit
