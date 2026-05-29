@@ -1,3 +1,8 @@
+---
+name: web-ai
+description: AI integration for the web-* suite — Anthropic Claude API via Supabase Edge Functions, streaming responses, cost tracking, chat UI, and prompt template management.
+---
+
 # /web-ai
 
 AI integration skill for the web-* suite. Covers Anthropic Claude API via Supabase Edge Functions, streaming responses, cost tracking, chat UI, and prompt template management.
@@ -28,7 +33,7 @@ Read SCOPE.md. Answer:
 - Which feature requires AI? (chat, analysis, generation, classification, agentic-tool-use)
 - Is the output streamed or one-shot? (Agent abstraction handles both)
 - Is there a per-user token budget or cost cap?
-- What models are in play? (default: `claude-haiku-4-5-20251001` for fast/cheap, `claude-sonnet-4-6` for quality, `claude-opus-4-7` for high-judgment one-shots)
+- What models are in play? (default: `claude-haiku-4-5-20251001` for fast/cheap, `claude-sonnet-4-6` for quality, `claude-opus-4-8` for high-judgment one-shots)
 - Are prompt templates parameterised per user context?
 - **Agent or single-call?** Anything with tools or multi-step reasoning → use AI SDK 6 `Agent`. Single completion with no tools → `streamText` is still fine.
 
