@@ -1,9 +1,14 @@
+---
+name: saas-improve
+description: Post-launch improvement orchestrator for shipped SaaS products. Routes visual findings to specialist skills (typeset, layout, colorize, animate, delight, clarify, polish, overdrive). Use after /saas-build when the product is live and needs quality uplift.
+---
+
 # /saas-improve
 
 Autonomous multi-agent improvement swarm. Reads live production signals, dispatches 7 specialist agents in parallel, merges their intelligence into a unified priority stack, then executes every fix without stopping.
 
 DO NOT TRIGGER when: user says "review [something]" — that is /review (audit + score + findings log).
-TRIGGER when: user says "improve", "fix gaps", "make it production-ready", "run saas-improve", or resumes after a build session.
+TRIGGER when: user says "improve", "fix gaps", "make it ship-ready", "run saas-improve", or resumes after a build session.
 
 ## When to Use
 - After /saas-build completes (or after any build session)
@@ -67,7 +72,7 @@ Read these files before doing anything else:
 5. `DESIGN-BRIEF.md` — locked color + typography contract
 6. `MARKET-BRIEF.md` — competitor landscape and differentiator from launch
 7. `~/Documents/Claude/outputs/product-validation-{slug}.md` — validator verdict + locked moat/competitors (strategic spine)
-8. `~/.claude/commands/premium-website.md` — quality standard
+8. `~/.claude/commands/``website-quality-check.md`` — quality standard (see commands dir)
 9. `~/.claude/skills/shared/saas-gap-checklist.md` — base completeness checklist
 10. `~/.claude/web-system-prompt.md` — Design DNA
 
@@ -291,7 +296,7 @@ Run `/project-refresh` PUSH mode with the above summary.
 **Never stop because:**
 - There are many items — that is expected, swarm handles scale
 - A fix takes many steps — break it down and execute
-- "The product works" — working and production-ready are different
+- "The product works" — working and ship-ready are different
 - An agent found nothing — clean is good, log it and move on
 
 ---
@@ -312,14 +317,14 @@ Run `/project-refresh` PUSH mode with the above summary.
 
 When the UX/Friction or Revenue agent returns design-related findings, route execution through the correct impeccable skill rather than writing raw fix code.
 
-| Finding type | Impeccable skill |
+| Finding type | Skill |
 |---|---|
 | Typography inconsistent, poor sizing, wrong hierarchy | `/typeset` |
 | Layout cramped, monotonous grid, bad rhythm | `/layout` |
 | Color flat, monochromatic, or primary overused | `/colorize` |
-| Interface feels generic, safe, or template-like | `/bolder` |
-| Overcrowded, too many elements, cognitive overload | `/distill` |
-| Contrast excessive, visually aggressive | `/quieter` |
+| Interface feels generic, safe, or template-like | `/overdrive` (raises technical ambition + visual distinctiveness) |
+| Overcrowded, too many elements, cognitive overload | `/clarify` (strips noise, sharpens signal) |
+| Contrast excessive, visually aggressive | `/colorize` (rebalance palette toward restraint) |
 | Missing animations or wrong motion timing | `/animate` |
 | No micro-interactions, personality, or memorable moments | `/delight` |
 | Mobile breakpoints broken or inconsistent | `/adapt` |
@@ -327,7 +332,9 @@ When the UX/Friction or Revenue agent returns design-related findings, route exe
 | Multiple visual category failures (can't isolate) | `/critique` first, then route findings |
 | P3 final polish before closing the session | `/polish` |
 
-Run `/impeccable teach` at the start of any design-heavy improve session if no design context has been established. Without it these skills produce generic output.
+Note: `/bolder`, `/distill`, `/quieter` are no longer installed. Closest substitutes listed above.
+
+**Context loading before any design-heavy improve session:** Check for `tokens.lock.json` (replication mode), `.agents/context.json`, or `DESIGN-CONTEXT.md`. If none exists, run `Skill('style-mirror')` first. `/impeccable` is no longer installed.
 
 ---
 

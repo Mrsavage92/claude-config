@@ -1,8 +1,6 @@
 ---
 name: polish
 description: Performs a final quality pass fixing alignment, spacing, consistency, and micro-detail issues before shipping. Use when the user mentions polish, finishing touches, pre-launch review, something looks off, or wants to go from good to great.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[target]"
 ---
 
@@ -23,7 +21,12 @@ Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 
 ## MANDATORY PREPARATION
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first. Additionally gather: quality bar (MVP vs flagship).
+**Context loading — read in this order, stop at the first match:**
+1. `tokens.lock.json` at project root → replication mode. The lock IS the design system. Jump to Design System Discovery.
+2. `.agents/context.json` or `DESIGN-CONTEXT.md` at project root → read it for design constraints.
+3. Neither exists → **HALT with NEEDS_HUMAN:** "No design context. Run `Skill('style-mirror')` against a reference URL to establish the lock, or create `DESIGN-CONTEXT.md` with the project's palette, typography, and tone."
+
+Note: the original context-loading skill (impeccable) is no longer installed. The above order covers its role.
 
 ---
 
@@ -66,7 +69,7 @@ Work through these dimensions methodically:
 
 ### Visual Alignment & Spacing
 
-- **Pixel-perfect alignment**: Everything lines up to grid
+- **Grid alignment**: Everything lines up to grid
 - **Consistent spacing**: All gaps use spacing scale (no random 13px gaps)
 - **Optical alignment**: Adjust for visual weight (icons may need offset for optical centering)
 - **Responsive consistency**: Spacing and alignment work at all breakpoints
@@ -186,7 +189,7 @@ Every interactive element needs all states:
 
 Go through systematically:
 
-- [ ] Visual alignment perfect at all breakpoints
+- [ ] Visual alignment correct at all breakpoints
 - [ ] Spacing uses design tokens consistently
 - [ ] Typography hierarchy consistent
 - [ ] All interactive states implemented
@@ -214,7 +217,7 @@ Go through systematically:
 - Spend hours on polish if it ships in 30 minutes (triage)
 - Introduce bugs while polishing (test thoroughly)
 - Ignore systematic issues (if spacing is off everywhere, fix the system)
-- Perfect one thing while leaving others rough (consistent quality level)
+- Fix one thing while leaving others rough (consistent quality level)
 - Create new one-off components when design system equivalents exist
 - Hard-code values that should use design tokens
 

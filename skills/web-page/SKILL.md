@@ -62,7 +62,7 @@ If your args contain `mode: rebuild` AND `rebuild_brief:` AND `route:`, you are 
     - Has a clear primary CTA above the fold.
     - Names WHO YOU ARE + WHAT YOU DO + WHO IT'S FOR in the hero/intro.
 6. **A partial rebuild is a failure.** If you ship only a banner + new headline (not the full page), the orchestrator will VOID the iter per Cardinal Rule 31. A REBUILD iter that's actually a polish iter wearing a rebuild costume is the failure mode this contract prevents.
-7. **Do not invoke /impeccable teach or /critique inline.** The orchestrator handles those. Just build.
+7. **Do not invoke design-context setup or /critique inline.** The orchestrator handles those. Just build.
 8. **Output** one paragraph: which file changed, what the structural pattern is now, which checklist_fails are resolved, and any new components scaffolded. The orchestrator will re-screenshot + re-critique to verify the rebuilt page clears the tier floor.
 
 Jump directly to the relevant Step 4 page-type template below. Skip Steps 1-3.
@@ -97,7 +97,7 @@ Read `src/styles/index.css` and Glob `src/components/**/*.tsx` for existing comp
 
 If SCOPE.md does not have a definition for the requested page: define it now (all 5 fields) and add it to SCOPE.md before building.
 
-**Design context check:** Look for `.agents/context.json` or `DESIGN-CONTEXT.md` in the project root. If neither exists, run `/impeccable teach` before building. This one-time setup is required for `/typeset`, `/layout`, `/colorize`, and other refinement skills to produce targeted output when they fire during `/web-review`.
+**Design context check:** Look for `tokens.lock.json`, `.agents/context.json`, or `DESIGN-CONTEXT.md` in the project root. If none exists: **HALT with NEEDS_HUMAN** — "No design context. Run `Skill('style-mirror')` against a reference URL first (required by CLAUDE.md visual rebuild gate). `/impeccable` is no longer installed."
 
 ### Step 2 — Enforce Page Order
 

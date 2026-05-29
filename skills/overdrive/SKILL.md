@@ -1,8 +1,6 @@
 ---
 name: overdrive
 description: Pushes interfaces past conventional limits with technically ambitious implementations — shaders, spring physics, scroll-driven reveals, 60fps animations. Use when the user wants to wow, impress, go all-out, or make something that feels extraordinary.
-version: 2.1.1
-user-invocable: true
 argument-hint: "[target]"
 ---
 
@@ -32,7 +30,12 @@ Jump directly to implementation steps below. Skip MANDATORY PREPARATION.
 
 ## MANDATORY PREPARATION
 
-Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first.
+**Context loading — read in this order, stop at the first match:**
+1. `tokens.lock.json` at project root → replication mode. The lock defines what "extraordinary" looks like for this project. Extraordinary = dramatically better than the reference, never divergent from it.
+2. `.agents/context.json` or `DESIGN-CONTEXT.md` at project root → read it for design constraints.
+3. Neither exists → **HALT with NEEDS_HUMAN:** "No design context. Run `Skill('style-mirror')` against a reference URL, or create `DESIGN-CONTEXT.md` before overdrive can proceed."
+
+Note: the original context-loading skill (impeccable) is no longer installed. The above order covers its role.
 
 **EXTRA IMPORTANT FOR THIS SKILL**: Context determines what "extraordinary" means. A particle system on a creative portfolio is impressive. The same particle system on a settings page is embarrassing. But a settings page with instant optimistic saves and animated state transitions? That's extraordinary too. Understand the project's personality and goals before deciding what's appropriate.
 

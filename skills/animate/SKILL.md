@@ -19,7 +19,7 @@ The output is code, not advice. A `/animate` invocation that returns bullet-list
 
 1. **Output is code, not prose.** The artifact MUST contain ≥3 concrete before/after `Edit` proposals OR an explicit "no enhancement needed — page already at ceiling" finding. Bullet-list recommendations without diffs = phase failure. # source: feedback_skill_pipeline_no_self_synthesis
 2. **Respect the host project's site-profile.** Before any proposal, read `<project>/.evolution/site-profile.json` (or `.audit/site-profile.json`). Use the route's `motion_ceiling` as a hard cap. Proposing Tier N+1 on a Tier N-capped route = phase failure. # source: web-animations/references/site-types.md
-3. **`Skill('impeccable')` means LITERAL invocation, not Read on its SKILL.md.** The MANDATORY PREPARATION step below uses the Skill tool, not the Read tool. Paraphrasing /impeccable instead of running it = phase failure. # source: feedback_skill_pipeline_no_self_synthesis
+3. **Context loading is MANDATORY PREPARATION.** The Phase 0 instructions above replace the old context-loading skill call. Follow them — do not paraphrase or skip. # source: feedback_skill_pipeline_no_self_synthesis
 4. **`from 'motion/react'`, never `'framer-motion'`.** Framer Motion v12 renamed the package. Any `from 'framer-motion'` import in a proposal = phase failure. # source: motion.dev v12 docs
 5. **Every motion proposal includes both a reduced-motion guard AND, where the motion communicates state, an ARIA-state replacement.** Visual-state-only proposals without `aria-pressed` / `aria-expanded` / `aria-current` etc. = phase failure. # source: references/aria-state-replacements.md
 6. **One signature moment per route, not maximalism.** Designate exactly ONE hero animation; everything else is micro-interactions, feedback, or removal. # source: motion.dev best practices + Vercel/Linear/Stripe production patterns
@@ -61,13 +61,12 @@ Skip directly to Phase 4 (Implement Animations) below. Skip Phases 0–3.
 
 ## Phase 0 — MANDATORY PREPARATION
 
-Run BOTH calls. Do not paraphrase either.
+**Context loading — read in this order, stop at the first match:**
+1. `tokens.lock.json` at project root → replication mode. Check `forbidden_additions` — if `"hover_scale"` or `"fade_up"` is in the list, those motions are banned for this project.
+2. `.agents/context.json` or `DESIGN-CONTEXT.md` at project root → read for motion constraints and design context.
+3. Neither exists → **HALT with NEEDS_HUMAN:** "No design context. Run `Skill('style-mirror')` first to establish the lock, or create `DESIGN-CONTEXT.md`."
 
-```
-Skill('impeccable')
-```
-
-This loads design principles, anti-patterns, and the Context Gathering Protocol. If no design context exists yet, /impeccable will run its `teach` flow first.
+Note: the original context-loading skill (impeccable) is no longer installed. The above order replaces it.
 
 Then read the host project's motion governance:
 
@@ -212,7 +211,7 @@ Proposal <N> is the single hero moment for this route. Other proposals are feedb
 ## Anti-patterns (do NOT do these)
 
 1. **Returning prose bullets instead of code diffs.** "I recommend adding a fade-up to the hero" is a failure. The artifact must be edits.
-2. **Reading `/impeccable/SKILL.md` instead of calling `Skill('impeccable')`.** Paraphrasing a skill's content is the failure mode this skill explicitly bans.
+2. **Skipping Phase 0 context loading.** Proceeding without reading tokens.lock.json, .agents/context.json, or DESIGN-CONTEXT.md when one exists is the failure mode this skill explicitly bans.
 3. **Proposing Tier N+1 on a Tier N-capped route.** Read site-profile.json BEFORE choosing tier — not after.
 4. **Removing a layoutId or motion.span without adding the ARIA-state replacement.** Visual-only motion that communicated state needs `aria-pressed`/`aria-expanded`/`aria-current` when stripped.
 5. **Inventing edge cases.** If the target has no form, don't fabricate a form-submit proposal. Note "no form on this route — N/A" and move on.
@@ -234,7 +233,7 @@ Proposal <N> is the single hero moment for this route. Other proposals are feedb
 
 ## Related skills
 
-- `Skill('impeccable')` — design principles + context gathering (mandatory prep)
+- Context loading (Phase 0) — tokens.lock.json → .agents/context.json → DESIGN-CONTEXT.md → HALT
 - `Skill('web-animations')` — the tier system + kit + grader this skill obeys
 - `Skill('polish')` — smaller scope: micro-interactions only, no entrance choreography
 - `Skill('overdrive')` — escalation for Tier 4 (3D, shaders, Rive, Lottie)
