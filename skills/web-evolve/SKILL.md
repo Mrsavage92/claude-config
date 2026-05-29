@@ -1,356 +1,251 @@
 ---
 name: web-evolve
-description: Auto-decided, score-driven continuous improvement loop for existing websites. Invoke with `/web-evolve` — no flags. Re-invoke to advance one tier. Audits every public route, routes REBUILD verdicts through web-page, routes refinement through design skills, verifies visible delta per iter via Skill('critique'), deploys to evolve branch, merges to main only after preview-verify.
+description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Scope with an arg or omit to continue last scope. Use when improving an existing site iteratively — landing pages, dashboard routes, any specific page.
+argument-hint: "[landing | dashboard | /route]"
 ---
 
 # /web-evolve
 
-Continuous improvement loop. Every gate is a bash script returning an exit code; the loop reads the exit code, not LLM prose. The orchestrator does not write files that audit agents read. The retro is authored by a separate agent. Each cardinal rule has a script in `references/` that enforces it without depending on orchestrator self-discipline.
+One area. Score it. Fix it. Confirm ≥ 85. Remember it. Stop.
 
-This is a structural rebuild after a Phase 2 forge score of 8/100 (see `.forge-score.md`). The 9 failure modes the rebuild closes are documented in `.forge-spec.md`. External patterns sourced from 8 implementations are in `.forge-sources.md` (Anthropic cookbook, Aider, cover-agent, OpenAI evals, DSPy, LangGraph, Anthropic multi-agent research).
-
----
-
-## Cardinal rules (mechanical — each maps to a script in references/)
-
-1. **Verdict-as-token gate.** `Skill('critique')` is called with `output_format: tokens`. The agent must return one of `{PASS, FAIL_REBUILD, FAIL_REFINE, FAIL_VOID}`. The orchestrator passes the response through `references/parse-verdict.sh`. Anything outside that set → `__invalid__` → HALT. # source: openai/evals + cookbook/evaluator_optimizer
-2. **Capability-stripped producer.** All writes to `.evolution/*` go through bash scripts (`append-retro.sh`, `enumerate-routes.sh`, `iter-step.sh`, etc.) using `python3 … > tmp && mv tmp file` redirects — not the `Edit`/`Write` tools. The existing `web-evolve-guard.ps1` hook is iter-aware: it inspects `loop-state.json.current_checks` and blocks `Edit`/`Write` on source files routed via `fix-routing.md` with `edit_direct: false`. A `WriterAgent` subagent invocation handles file writes the orchestrator cannot directly perform (TasteFetcher writes taste-rules.md, RetroAgent's output is appended via `append-retro.sh`). The role separation is enforced by the script contracts, not by a settings.json deny rule (the harness has no per-role permission concept). # source: aider ArchitectCoder (capability separation via different tool paths)
-3. **Ground-truth reward.** Every gate is a bash function in `references/gate-checks.sh` returning exit code. The loop reads `$?`. LLM prose ("the page improved") never reaches the gate. # source: cover-agent + dspy.Refine
-4. **Cache integrity.** Every file in `.evolution/` that downstream agents read has a sha256 in `.evolution/.hashes.json` recorded by the agent that wrote it. Phase 0.5 + every phase entry re-verifies hashes. Orchestrator-modified file → HALT. # source: aider's separate-role architecture
-5. **Live-HTML verification.** Each entry in `page-baselines.json` is asserted via `references/verify-live-html.sh <route>` before Phase R reads it. Hashes the live H1, primary CTA, visible pricing strings; compares against the agent's claim. Mismatch → entry dropped, route re-audited. # source: cover-agent rollback-on-mismatch
-6. **Independent retro.** Phase F is `Agent(subagent_type=general-purpose)` — `RetroAgent` — with read-only access to `.evolution/*.json`, `git log`, `~/.claude/tool-use.log`. It writes `trajectory.runs[N]`. Orchestrator commits the file but does not modify content. # source: Anthropic multi-agent CitationAgent
-7. **Session-scoped ask counter.** Counter lives at `~/.claude/state/web-evolve-asks-<session-id>.json`. Hook reads it. 2nd ask in a session is blocked regardless of phase. # source: langgraph state-graph pattern
-8. **Constrained status vocab.** Status field is regex-validated against `{PASS, halted_before_phase_c, halted_at_iter_N, deviation_cap_exceeded, taste_pre_flight_failed}`. No free-form status. No "honest halt" string. # source: openai/evals choice_strings
-9. **Loop exit is Python, not prose.** `references/loop-condition.sh` is the only loop predicate. Orchestrator "I think we should halt" has no path to ending the loop. # source: langgraph should_continue
-
-The previous version's 8 principles + Phase 0.4 cross-run check are archived in `references/decisions.md`. They are not deleted — they are demoted from "load-bearing" to "documentation," because principles that depend on orchestrator self-discipline failed across Runs #1–#5.
+Re-run to pick the next area. You never decide what to work on.
 
 ---
 
-## ENTRY PROTOCOL — read this first, every invocation
+## Invocation
 
-`/web-evolve` is a stateful loop. The orchestrator does not memorize phases. On every invocation (including the user saying "continue"), do exactly these two steps:
-
-1. **Run boot gates** — `bash references/boot-gates.sh` — abort on any HALT.
-2. **Ask the dispatcher what's next** — `bash references/next-phase.sh` — it reads `.evolution/loop-state.json` and emits the exact next command + token estimate + what-comes-after. Follow that output literally. Do not improvise the next phase.
-
-After completing the dispatched phase, the phase script writes `loop-state.next_phase` for the next invocation. The user can keep saying "continue" or re-invoke `/web-evolve` and the loop advances one phase per turn until the dispatcher emits `complete`.
-
-This is the only entry protocol. The phase-by-phase spec below documents WHAT each phase does — but you are not running them in order from this document. You are running the one the dispatcher names.
+| Command | Behaviour |
+|---|---|
+| `/web-evolve` | Continue last scope, or default to `landing` |
+| `/web-evolve landing` | Work through landing page areas in priority order |
+| `/web-evolve dashboard` | Work through all authenticated app routes |
+| `/web-evolve /clients` | Laser-focus on the `/clients` route only |
+| `/web-evolve /audit/new` | Laser-focus on that specific route |
 
 ---
 
-## Phase 0 — Boot gates (HALT-gated, runs before everything)
+## Per-run flow
+
+### Step 1 — Read state
+
+Read `.web-evolve/state.json` at the project root.
+
+- **Missing:** First run. Go to Step 1A.
+- **Present:** Filter areas by current scope. Go to Step 2.
+
+**Step 1A — Bootstrap**
+
+Enumerate areas for the current scope (see Area Enumeration). Write `.web-evolve/state.json` with all areas at `status: "pending"`. Then go to Step 2.
+
+### Step 2 — Pick target
+
+1. First area with `status: "pending"` (never reviewed) — take it
+2. None pending: lowest-scored area with `status: "needs-work"` — take it
+3. All `status: "done"` (≥ 85): report completion, suggest next scope, exit
+
+Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
+
+### Step 3 — Inspect
+
+1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools)
+2. Read the component file(s) from the area's `files` list
+3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`
+
+### Step 4 — Score
+
+Score each dimension independently (see Scoring Rubric). Write `dimensions` + `score` to state.
+
+| Dimension | Max | Question |
+|---|---|---|
+| **Hook** | 25 | Does this area make the user act, lean in, or immediately understand the value? |
+| **Visuals** | 25 | Does it look like 21st.dev / Awwwards quality, or like a shadcn default? |
+| **Clarity** | 25 | Is every label, heading, and action obvious without thinking? |
+| **Function** | 25 | Works on mobile, keyboard-accessible, all states handled (empty / loading / error)? |
+
+### Step 5 — Fix (score < 85)
+
+Route each failing dimension using the Fix Routing table. **One skill per dimension. Complete it before moving to the next.**
+
+After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
+
+Max 2 full fix passes per run. Still < 85 after pass 2: set `status: "needs-work"`, note the specific blocker, commit current state, exit. Next run retries this area.
+
+**Taste gate:** Before declaring ≥ 85 done, check the changed files against `~/.claude/skills/taste-skill/data/taste-rules.csv` — run `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`. Exit 1 = banned pattern, fix before committing.
+
+### Step 6 — Re-score
+
+Apply the same rubric to the post-fix state. If ≥ 85: `status: "done"`. If not: `status: "needs-work"`, note blocker.
+
+### Step 7 — Commit and report
 
 ```bash
-bash references/boot-gates.sh
+git add [changed files] .web-evolve/state.json
+git commit -m "fix([area-id]): [label] [old]→[new score]"
 ```
 
-Returns exit 0 only if ALL pass:
-- `wc -l SKILL.md` ≤ 500 (current bloat guard)
-- `bash references/smoke-test.sh` returns exit 2 (hook actually blocks a violation attempt)
-- `~/.claude/state/web-evolve-asks-<session-id>.json` exists or is created with `count: 0`
-- `Skill('taste-skill')` available (dry-run probe)
-- Settings.json has the `.evolution/*` deny rule active for the orchestrator role
-- `references/.hashes.json` matches sha256 of every `references/*.sh` (no orchestrator tampering)
-- puppeteer-core resolvable at `~/.cache/web-evolve-puppeteer/node_modules/puppeteer-core/lib/(esm/)?puppeteer/puppeteer-core.js` (Gate 10)
-- Gate 12 warns if prior trajectory entry had iters without recorded Phase D verification
-
-Any failure → HALT with the failing gate name. No soft-degrade. The exit code is the gate. Gate 12 is a WARN not a halt.
-
-**Tokens lock check (replication mode — read immediately after boot gates pass):**
-If `tokens.lock.json` exists at the project root:
-- Read it before Phase A begins. Store as `$LOCK`.
-- Pass `lock_path: tokens.lock.json` to every critique agent in Phase A — checklist items that propose patterns listed in `$LOCK.forbidden_additions` (e.g. gradient_mesh, hover_scale, fade_up, glassmorphism, grain) are auto-discarded before entering `page-baselines.json`.
-- In Phase R, when routing to refinement skills (polish, animate, colorize, overdrive, typeset, layout, delight), prepend `lock: tokens.lock.json` to their args so they enter lock-aware mode.
-- Do NOT surface findings like "add gradient mesh", "add hover scale", "add fadeUp" — verify against `forbidden_additions` first.
-
-If `tokens.lock.json` does NOT exist: replication mode is inactive. Standard Phase A + R logic applies.
-
-**Resume protocol.** Phase C iters are heavy (~100–200k tokens for one `Skill('web-page')` invocation). A typical `/web-evolve` session executes 0–2 iters and exits. State persists in `.evolution/`. Re-invoking `/web-evolve` in a fresh session reads `loop-state.json` and continues from the next queued route. The previous run's retro (validated by `append-retro.sh`) provides `next_run_priorities.json` which orders the queue. If a prior iter committed but did not run Phase D, Gate 12 warns — push + verify before starting new iters.
+Output the Run Report (see Output Format), then stop.
 
 ---
 
-## Phase 0.5 — Taste cache via TasteFetcher (hash-verified)
+## Scoring rubric
 
-The orchestrator cannot write `.evolution/taste-rules.md`. Instead:
+### Hook (0–25)
+| Range | What it means |
+|---|---|
+| 20–25 | Clear value, compelling CTA, user knows exactly what to do next |
+| 13–19 | Value present but CTA weak or copy generic |
+| 6–12 | Value buried or CTA easy to miss |
+| 0–5 | No clear value prop or no CTA |
 
-```
-Agent(subagent_type=general-purpose, prompt="
-  TasteFetcher role. Capability: Write to .evolution/taste-rules.md ONLY.
-  Invoke Skill('taste-skill', args='mode: load-for-web-evolve | output_path: .evolution/taste-rules.md').
-  After write, compute sha256 of taste-rules.md and APPEND an entry to .evolution/.hashes.json.
+### Visuals (0–25)
+| Range | What it means |
+|---|---|
+| 20–25 | Specific, opinionated, polished — looks like it belongs on Awwwards or 21st.dev |
+| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top |
+| 6–12 | Template aesthetic — bento grid, Inter everywhere, dark navy + gold, or similar |
+| 0–5 | Broken, unstyled, or visually non-existent |
 
-  CANONICAL SHAPE for .evolution/.hashes.json (this is the wrapper, not a flat array):
-    {
-      \"files\": [
-        {\"file\": \"taste-rules.md\", \"sha256\": \"<hash>\", \"written_by\": \"TasteFetcher\", \"skill_tool_use_id\": \"<id>\"}
-      ]
-    }
+### Clarity (0–25)
+| Range | What it means |
+|---|---|
+| 20–25 | Every label obvious, hierarchy sharp, nothing requires thought |
+| 13–19 | Mostly clear, one label or message needs decoding |
+| 6–12 | Multiple unclear labels or misleading hierarchy |
+| 0–5 | Confusing enough to block the user |
 
-  If .hashes.json does not exist: create it with the wrapper above.
-  If it exists as a flat list (legacy from older runs): convert it to {files: <existing>} then append the new entry.
-  If it exists as the wrapper: push the new entry onto .files.
-
-  Return only the sha256 string. No prose.
-")
-```
-
-Orchestrator parses the returned sha256, reads `.evolution/.hashes.json`, asserts they match. Mismatch → HALT.
-
-Subsequent phases pass `taste_rules_hash: <sha256>` in every Skill('critique') call. The critique agent re-hashes the file at read time and exits invalid if it doesn't match — proving the orchestrator hasn't injected prose into the cache between TasteFetcher writing it and the critique reading it.
+### Function (0–25)
+| Range | What it means |
+|---|---|
+| 20–25 | Mobile works, keyboard works, all states (empty / loading / error) handled |
+| 13–19 | Works but one state missing |
+| 6–12 | Multiple functional gaps |
+| 0–5 | Broken or inaccessible |
 
 ---
 
-## Phase A — Audit (route enumeration + parallel critique)
+## Fix routing
 
-### A.1 — Enumerate routes
+Pass `lock: tokens.lock.json` as a first arg to every skill when `tokens.lock.json` exists at project root.
 
-```bash
-bash references/enumerate-routes.sh
-```
+| Failing dimension | Page type | Skill to call |
+|---|---|---|
+| Visuals | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes internally to mcp__magic / typeset / animate / colorize / calibrate-amplitude / overdrive |
+| Visuals | Dashboard / app route | `Skill('dashboard-design')` for the right pattern first → `Skill('visual-uplift', args='--execute [file]')` |
+| Motion weak or missing | Any | `Skill('web-animations')` to pick tier → `Skill('animate', args='[file]')` |
+| Motion needs to be ambitious | Any | `Skill('overdrive', args='[file]')` |
+| Amplitude wrong (too loud / quiet / generic) | Any | `Skill('calibrate-amplitude', args='dial:[0.0–1.0] | [file]')` |
+| Hook, copy, CTA | Any | `Skill('clarify', args='[file]')` |
+| Personality, delight missing | Any | `Skill('delight', args='[file]')` |
+| Function — accessibility gaps | Any | `Skill('a11y-audit', args='[file] --baseUrl http://localhost:[port]')` |
+| Total score < 40 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
 
-Crawls sitemap.xml / app/sitemap.ts / homepage `<a href>`. Cap 20. Writes `.evolution/route-list.json` + sha256. Orchestrator cannot edit the file after the script writes it.
+---
 
-### A.2 — Per-route critique (parallel, token-constrained)
+## Area enumeration
 
-For each route, spawn one critique invocation:
+### Landing (`/web-evolve landing`)
 
-```
-Skill('critique', args='
-  mode: web-evolve | run_mode: per-route-baseline |
-  output_format: tokens-only |
-  taste_rules_hash: <sha256 from Phase 0.5> |
-  screenshot_path: <abs path> |
-  route: <route-path-starting-with-/> |
-  checklist: sales-page-10 |
-  briefing_file: references/critique-brief.md
-')
-```
+Glob `src/components/landing/`, `src/components/sections/`, `src/components/layout/`. Map by filename pattern:
 
-The briefing file (read by the critique agent) is read-only and the critique agent must return:
+| Priority | ID | Label | File pattern |
+|---|---|---|---|
+| 1 | `hero-cta` | Hero / primary CTA | `*Hero*`, `*hero*` |
+| 2 | `pricing` | Pricing section | `*Pricing*`, `*pricing*` |
+| 3 | `nav` | Navigation | `*Nav*`, `*Header*` |
+| 4 | `form` | Primary form | `*Form*`, `*Signup*`, `*Subscribe*` |
+| 5 | `features` | Features / how-it-works | `*Features*`, `*HowIt*` |
+| 6 | `social-proof` | Testimonials / trust | `*Testimonial*`, `*Trust*`, `*Review*` |
+| 7 | `footer` | Footer | `*Footer*` |
+
+Skip any pattern that returns no file. Do not create state entries for components that do not exist.
+
+### Route / dashboard (`/web-evolve /route` or `dashboard`)
+
+1. Find the page file: glob `**/pages/[slug]*.tsx` and `**/app/*[slug]*/page.tsx`
+2. Read it, extract all named imports from `src/` (one level deep only)
+3. Group into logical areas:
+
+| Priority | ID | Label | What to look for |
+|---|---|---|---|
+| 1 | `[route]-data` | Primary data view | Component rendering the main list / table / grid |
+| 2 | `[route]-stats` | Stats / metrics row | Stat cards, metric counts |
+| 3 | `[route]-action` | Primary action | "New X" button, primary CTA |
+| 4 | `[route]-filters` | Filters / controls | Filter bar, search, sort |
+| 5 | `[route]-empty` | Empty state | Empty state component |
+
+---
+
+## State schema
+
 ```json
 {
-  "verdict": "PASS | FAIL_REBUILD | FAIL_REFINE | FAIL_VOID",
-  "checklist_fails": ["sales-page-10:rule_N", ...],
-  "taste_violations": ["section_7:banned_font", ...],
-  "vq_aggregate": 0.0-5.0,
-  "tool_use_id_for_screenshot_read": "<the tool_use_id of the Read call that loaded the screenshot>"
+  "project": "audithq-prod-live",
+  "last_scope": "landing",
+  "areas": [
+    {
+      "id": "hero-cta",
+      "label": "Hero / primary CTA",
+      "page": "landing",
+      "priority": 1,
+      "files": ["src/components/landing/HeroQuickScan.tsx"],
+      "status": "done",
+      "score": 91,
+      "dimensions": { "hook": 24, "visuals": 22, "clarity": 23, "function": 22 },
+      "issues": ["no animation on scan submit", "sub-headline generic"],
+      "fixes": ["added loading state animation", "rewrote sub-headline"],
+      "run": 2
+    },
+    {
+      "id": "pricing",
+      "label": "Pricing section",
+      "page": "landing",
+      "priority": 2,
+      "files": ["src/components/landing/PricingSection.tsx"],
+      "status": "pending",
+      "score": null,
+      "dimensions": null
+    }
+  ]
 }
 ```
 
-If `tool_use_id_for_screenshot_read` is absent OR does not appear in the transcript, the response is rejected (agent claimed to read the screenshot but didn't). The orchestrator runs `references/verify-tool-use-id.sh <id>` and the script exits non-zero on mismatch.
-
-### A.3 — Parse + persist
-
-```bash
-bash references/parse-handoff.sh per-route-baseline
-```
-
-Validates schema via `python3` (stdlib `json` + `re`). Malformed entries dropped to `.evolution/parse-failures.json`. The script writes `.evolution/page-baselines.json` (under WriterAgent role). Orchestrator cannot modify after write.
-
-### A.4 — Live-HTML verification (the cover-agent rollback pattern)
-
-```bash
-for route in $(python3 -c "import json; [print(r.get('route') or r.get('slug') or '') for r in json.load(open('.evolution/page-baselines.json')).get('routes',[])]"); do
-  bash references/verify-live-html.sh "$route"
-done
-```
-
-For each route the script:
-- Puppeteer-probes the live URL
-- Extracts H1, primary CTA text, visible pricing strings
-- Hashes them
-- Compares hash against the agent's claim in `page-baselines.json`
-- Exit 1 on mismatch → entry deleted, route added to `.evolution/re-audit-queue.txt`
-
-Routes re-audited max 1 time. Still-mismatched → HALT for that route, surface to user.
+`status` progression: `"pending"` → `"needs-work"` → `"done"`
 
 ---
 
-## Phase R — REBUILD-mode gate
+## Output format
 
-```bash
-bash references/rebuild-gate.sh
+```
+▶ web-evolve — run #N | scope: [page]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Area:    [label]
+File:    [primary file]
+
+Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])
+Issues:
+  - [specific problem 1]
+  - [specific problem 2]
+
+[after fixing:]
+After:   [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])
+Fixes:
+  - [what changed 1]
+  - [what changed 2]
+
+✅ Done — committed "fix([id]): [label] [before]→[after]"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Next:  [next area label] ([page]) — run /web-evolve [scope] to continue
 ```
 
-Reads `.evolution/page-baselines.json`. If `rebuild_queue.length >= 1` → enters REBUILD mode and emits per-route `rebuild-iter` commands. REBUILD iters invoke `Skill('web-page')` ONLY. The hook blocks any Edit/Write to source files unless `Skill('web-page')` is the active context (verified via tool-use chain in the transcript).
-
-If `rebuild_queue.length == 0` → proceed to standard Phase R hero signature pick (full spec in `references/tier-contracts.md`).
+If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web-evolve /[other-route]).`
 
 ---
 
-## Phase C — Improvement loop (Python predicate)
+## Anti-patterns
 
-```bash
-while bash references/loop-condition.sh; do
-  bash references/iter-step.sh
-done
-```
-
-**Iter pacing reality.** `Skill('web-page')` typically consumes 100k–200k tokens per invocation (multi-phase: read existing code → plan → write → typecheck → build). One iter through to commit + critique runs ~150k. Five iters in a single Phase C loop = ~750k tokens — not realistic in one conversation. **A normal Phase C run executes 1–2 iters per session and resumes across sessions.** State is on disk in `loop-state.json` + `rebuild-queue.txt` + `refine-queue.txt`. Boot gates check prior-run Phase D status (Gate 12) and warn if a previous run committed iter work that was never deployed.
-
-**Per-iter outcomes** drive `iter-step.sh apply-verdict`:
-- `PASS` → KEEP (commit, advance to next route)
-- `FAIL_REFINE` with `prior_violations_resolved >= 1` and `regressions_introduced == 0` → KEEP_REQUEUE_REFINE (commit + move route from rebuild-queue → refine-queue for follow-up polish iter)
-- `FAIL_REBUILD`, or `FAIL_REFINE` without prior_resolved → REVERT (`git revert HEAD --no-edit`, route stays in queue)
-- `FAIL_VOID` → VOID (`git reset --hard HEAD~1`, requires `current_base_head` recorded in loop-state)
-
-`loop-condition.sh` reads `loop-state.json` and exits 0 only if:
-- `iteration < max_iterations`
-- `current_score < target_score`
-- `deviation_count < 3`
-- `void_count < max_voids`
-- No HALT flag set by any prior phase
-
-`iter-step.sh` does (each step is its own exit-coded check):
-1. Pre-screenshot via puppeteer
-2. Dispatch via `references/fix-routing.md` (SKILL_LOOKUP)
-3. Post-screenshot
-4. Skill('critique') per-iter-delta with `output_format: tokens-only` returning `{KEEP, VOID, REVERT}`
-5. Parse via `references/parse-verdict.sh`
-6. Apply verdict mechanically: KEEP→commit, VOID→`git reset --hard HEAD~1`, REVERT→`git revert HEAD --no-edit`
-6.5. **Mechanical handoff gate on changed files** (runs on KEEP verdicts only — secondary gate after critique).
-   ```bash
-   git diff --name-only HEAD~1 HEAD | grep -E '\.(tsx|jsx)$' | while read -r f; do
-     bash ~/.claude/skills/web-page/references/run-handoff-check.sh "$f" || {
-       echo "[handoff-fail] $f — voiding iter"
-       git reset --hard HEAD~1
-       exit 1
-     }
-   done
-   ```
-   Catches Inter font, `#0d1117` GitHub-default bg, debug code, missing focus states, custom cursors, "Elevate"/"Streamline" copy clichés that critique's vision pass missed. Any banned-severity hit voids the iter same as VOID verdict. Banned-pattern source: `~/.claude/skills/taste-skill/data/taste-rules.csv` (40 rules).
-7. Update loop-state.json under WriterAgent role
-8. Run `references/per-iter-gates.sh` (verifies tool-use IDs for the critique call, increments deviation_count on any failed sub-check)
-
----
-
-## Phase D — Deploy + verify (no soft-degrade)
-
-```bash
-bash references/deploy-and-verify.sh
-```
-
-The script:
-1. Pushes evolve branch
-2. Polls `vercel inspect <deployment>` for status
-3. **Asserts** `vercel env ls preview` shows all required env vars with `scope=all-preview-branches` OR with the current branch name listed. Mismatch → exit 1, HALT. No soft-degrade fallback.
-4. Writes the preview URL to `.evolution/loop-state.json`
-5. Opens the merge gate only after preview env scope is verified
-
-After the script exits 0, the orchestrator must Puppeteer-verify the preview URL against post-iter screenshots before any merge. Main is not touched by `deploy-and-verify.sh`; a separate merge step may run only after preview verification passes.
-
-If step 3 fails for the first time on a project: HALT with a one-time-setup instruction printed to the user — they go to the Vercel dashboard and set the env vars to "All Preview Branches" scope once. Run is not resumable until that's done. This breaks the per-branch dependency that broke Run #6.
-
----
-
-## Phase F — Independent retro (RetroAgent, not orchestrator)
-
-```
-Agent(subagent_type=general-purpose, prompt=<contents of references/retro-agent-brief.md>)
-```
-
-RetroAgent role:
-- Read-only access to `.evolution/*.json`, `git log --oneline -50`, `~/.claude/tool-use.log` (filtered to this session)
-- NO access to the orchestrator's reasoning, conversation history, or prior trajectory entries beyond run N-1
-- Required output: a single `trajectory.runs[N]` JSON entry matching `references/trajectory-schema.json`
-- Constrained verdict vocab (cardinal rule 8)
-- MUST flag every gate the orchestrator failed even if the orchestrator's prose claimed pass — RetroAgent reads tool-use log, not prose
-
-Orchestrator runs:
-```bash
-bash references/append-retro.sh "<RetroAgent JSON output>"
-```
-
-This script validates schema, appends to trajectory.json, writes `.evolution/next-run-priorities.json` from the RetroAgent's `next_run_priorities` field, and commits. Orchestrator cannot edit either file's content — only invokes the script.
-
-If RetroAgent's verdict is `PASS`: deviation_count == 0, all gates green, score ≥ target.
-If `FAIL`: the run's status field is one of the constrained tokens (Cardinal rule 8). The user-facing summary is generated by the script from the structured fields — orchestrator does not write the summary.
-
----
-
-## Phase 0.5–F handoff schema
-
-Every phase reads inputs and writes outputs through `references/parse-handoff.sh <phase-name>`. The script knows the schema for each phase from `references/schemas/`. Malformed inputs are dropped (per orchestrator_workers pattern). The orchestrator cannot "fix up" an agent's malformed response — it must reject.
-
----
-
-## Anti-patterns (each blocked by a mechanism, not a warning)
-
-- **Producer-grades-producer.** Blocked by Cardinal rule 6 (Phase F is separate agent) + Cardinal rule 1 (critique returns constrained tokens) + critique-brief.md banning self-grading.
-- **Orchestrator-written cache.** Blocked by Cardinal rule 2 (capability-stripped via hook deny on `.evolution/*`) + Cardinal rule 4 (hash verification at every read).
-- **Trust-the-claim.** Blocked by Cardinal rule 5 (verify-live-html.sh) + tool_use_id verification in Phase A.2.
-- **Soft-degrade fallback.** Removed. Every gate is exit-code; failure = HALT. Phase D's Vercel env-var check is the first place soft-degrade existed and is now exit-1 only.
-- **Comfort framing of incomplete runs.** Blocked by Cardinal rule 8 (constrained status vocab) + Cardinal rule 6 (RetroAgent writes the summary, not the orchestrator).
-- **Principle-based fixes.** Every cardinal rule has a script. If a future failure requires a new rule, it requires a new script. No rule that depends on orchestrator self-discipline ships.
-- **Spec line-count bloat.** Phase 0 boot gate halts if `SKILL.md > 500 lines`. The bloat pattern is now mechanically capped.
-
----
-
-## Reference paths
-
-```
-boot-gates:           references/boot-gates.sh           — Phase 0 entry checks
-smoke-test:           references/smoke-test.sh           — hook violation attempt, asserts exit 2
-gate-checks:          references/gate-checks.sh          — every cardinal-rule check, exit-coded
-parse-verdict:        references/parse-verdict.sh        — token-vocab regex validator
-parse-handoff:        references/parse-handoff.sh        — python schema validator between phases
-loop-condition:       references/loop-condition.sh       — non-LLM loop predicate
-verify-live-html:     references/verify-live-html.sh     — puppeteer ground-truth check
-verify-tool-use-id:   references/verify-tool-use-id.sh   — tool_use_id transcript verification
-enumerate-routes:     references/enumerate-routes.sh     — sitemap + crawl
-rebuild-gate:         references/rebuild-gate.sh         — REBUILD-mode entry
-iter-step:            references/iter-step.sh            — single Phase C iter
-deploy-and-verify:    references/deploy-and-verify.sh    — Phase D (no soft-degrade)
-append-retro:         references/append-retro.sh         — Phase F write (script writes, not orchestrator)
-critique-brief:       references/critique-brief.md       — critique agent briefing (read-only, token-constrained)
-retro-agent-brief:    references/retro-agent-brief.md    — RetroAgent briefing
-schemas/:             references/schemas/                — python-validated schemas per phase
-trajectory-schema:    references/trajectory-schema.json  — trajectory.runs[N] structure
-hashes:               references/.hashes.json            — sha256 of every references/*.sh
-```
-
-Preserved from previous version (still sound):
-
-```
-fix-routing:             references/fix-routing.md            — SKILL_LOOKUP, edit_direct flags
-sales-page-checklist:    references/sales-page-checklist.md   — 10-rule baseline checklist
-scoring-engine:          references/scoring-engine.md
-multi-run-orchestration: references/multi-run-orchestration.md — Phase A.0 decision tree
-tier-contracts:          references/tier-contracts.md         — tier 98+ contracts (preserved)
-decisions:               references/decisions.md              — historical principle archive
-```
-
----
-
-## What the rebuild changed vs SKILL.md.pre-forge
-
-| Failure mode (forge spec #) | Mechanical fix |
-|---|---|
-| 1 (Skill('critique') not invoked) | tool_use_id required in agent response; verify-tool-use-id.sh exits 1 on mismatch |
-| 2 (hook untested) | Phase 0 boot gate runs smoke-test.sh which attempts a violation and asserts exit 2 |
-| 3 (orchestrator-authored cache) | TasteFetcher sub-agent + hook deny on `.evolution/*` + hash verification |
-| 4 (comfort-blanket honest halt) | Constrained status vocab (cardinal rule 8); RetroAgent writes status, not orchestrator |
-| 5 (Vercel preview per-branch) | Phase D asserts scope=all-preview-branches or matching branch list; exit 1 = HALT, no fallback |
-| 6 (spec line-count growth) | Phase 0 boot gate `wc -l SKILL.md ≤ 500` |
-| 7 (ask counter narrow) | Session-scoped counter file in `~/.claude/state/`; hook reads it |
-| 8 (self-graded Phase F) | RetroAgent is a separate Agent invocation with read-only access |
-| 9 (audit hallucinations) | verify-live-html.sh + tool_use_id verification |
-
-Run #5's SKILL.md was 358 lines. This SKILL.md is 298 (verified via `wc -l`). Below the 500-line cap with all 9 fixes added because the mechanical machinery lives in `references/`.
-
----
-
-## Related skills
-
-- `/skill-forge` — used to produce this rebuild. Re-run if a fresh chat scores /web-evolve lower than this one does.
-- `/critique` — only valid visual-quality signal; called with constrained-token args (cardinal rule 1)
-- `/web-page` — only valid REBUILD execution path
-- `/taste-skill` — Phase 0.5 cache source (hash-verified)
-- `/style-mirror` — extracts reference tokens if no reference provided
-
-Do NOT use this skill for:
-- Building a new site → `/saas-build` then `/web-scaffold`
-- One-off page fixes → `/impeccable` (web-fix was removed and replaced by impeccable per fix-routing.md)
-- Single-component refactors → `/web-component`
+- **Declaring done before re-scoring.** Always re-apply the rubric after fixes — do not assume the fix worked.
+- **Fixing adjacent things.** Only touch the dimensions that scored < 15. Don't refactor the whole file because one button lacked a hover state.
+- **Moving on at 84.** If the re-score is 84, fix the remaining gap or mark `needs-work`. Do not round up.
+- **Inventing files.** Only add areas to state for components that exist on disk. Skip patterns that return no glob match.
+- **Skipping the taste gate.** A visually polished component that passes slop patterns (bento default, Geist on everything) is not done.
