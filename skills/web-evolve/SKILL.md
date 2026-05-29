@@ -10,6 +10,8 @@ One area. Score it. Fix it. Confirm ≥ 85. Remember it. Stop.
 
 Re-run to pick the next area. You never decide what to work on.
 
+**NOT for:** initial builds → `/web-page`; one-off fixes without state tracking → `/visual-uplift`; full-site gap analysis → `/saas-improve`.
+
 ---
 
 ## Invocation
@@ -34,6 +36,8 @@ Read `.web-evolve/state.json` at the project root.
 - **Present:** Filter areas by current scope. Go to Step 2.
 
 **Step 1A — Bootstrap**
+
+Create the state directory: run `mkdir -p .web-evolve/` before any file write.
 
 Enumerate areas for the current scope (see Area Enumeration). Write `.web-evolve/state.json` with all areas at `status: "pending"`. Then go to Step 2.
 
@@ -66,6 +70,10 @@ Score each dimension independently (see Scoring Rubric). Write `dimensions` + `s
 
 Route each failing dimension using the Fix Routing table. **One skill per dimension. Complete it before moving to the next.**
 
+**Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
+
+**Context budget check:** Before calling `web-page` or `visual-uplift`, if the session has already consumed > 100k tokens, note the risk in the run report and recommend starting a fresh session for that fix. Do not attempt a heavy skill call when the window is nearly full — an incomplete run produces broken state.
+
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
 Max 2 full fix passes per run. Still < 85 after pass 2: set `status: "needs-work"`, note the specific blocker, commit current state, exit. Next run retries this area.
@@ -74,7 +82,9 @@ Max 2 full fix passes per run. Still < 85 after pass 2: set `status: "needs-work
 
 ### Step 6 — Re-score
 
-Apply the same rubric to the post-fix state. If ≥ 85: `status: "done"`. If not: `status: "needs-work"`, note blocker.
+Re-read all files in `area.files` plus any new `.tsx`/`.jsx` files created in the same directories by the fix skill. Re-screenshot if browser MCP available.
+
+Apply the same rubric. If ≥ 85: `status: "done"`. If not: `status: "needs-work"`, note blocker.
 
 ### Step 7 — Commit and report
 
@@ -101,7 +111,7 @@ Output the Run Report (see Output Format), then stop.
 | Range | What it means |
 |---|---|
 | 20–25 | Specific, opinionated, polished — looks like it belongs on Awwwards or 21st.dev |
-| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top |
+| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top. If the component renders correctly but feels generically loud/quiet/safe rather than specifically broken, route to `calibrate-amplitude` before `visual-uplift`. |
 | 6–12 | Template aesthetic — bento grid, Inter everywhere, dark navy + gold, or similar |
 | 0–5 | Broken, unstyled, or visually non-existent |
 
@@ -145,7 +155,7 @@ Pass `lock: tokens.lock.json` as a first arg to every skill when `tokens.lock.js
 
 ### Landing (`/web-evolve landing`)
 
-Glob `src/components/landing/`, `src/components/sections/`, `src/components/layout/`. Map by filename pattern:
+Glob `src/components/landing/`, `src/components/sections/`, `src/components/layout/`. Map by filename pattern. When a pattern matches multiple files, pick the one whose filename most closely matches the area ID (e.g. `HeroQuickScan.tsx` over `HeroVisual.tsx` for `hero-cta`). Log all matches in the run report so the user can correct if wrong.
 
 | Priority | ID | Label | File pattern |
 |---|---|---|---|
@@ -160,6 +170,18 @@ Glob `src/components/landing/`, `src/components/sections/`, `src/components/layo
 Skip any pattern that returns no file. Do not create state entries for components that do not exist.
 
 ### Route / dashboard (`/web-evolve /route` or `dashboard`)
+
+**When scope is `dashboard` (all app routes):**
+
+Discover routes before picking the first area:
+1. **React Router projects** — read `src/App.tsx` or `src/router.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal). These are the app routes.
+2. **Next.js projects** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
+3. List discovered routes to the user in the run report before picking the first.
+4. Create one state group per route. Pick the highest-priority route with `status: "pending"` to work on this session.
+
+Set `last_scope` to the specific route worked on (e.g. `/clients`), not `"dashboard"` — so a bare `/web-evolve` resumes that route correctly.
+
+**When scope is a specific `/route`:**
 
 1. Find the page file: glob `**/pages/[slug]*.tsx` and `**/app/*[slug]*/page.tsx`
 2. Read it, extract all named imports from `src/` (one level deep only)
