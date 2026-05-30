@@ -82,7 +82,8 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 Score each dimension independently (see Scoring Rubric). Write to state:
 - `dimensions` + `score`
-- `run`: increment `run_counter` in state.json by 1, use that value. If this area was previously scored (`status: "needs-work"`), keep the existing `run` value unchanged.
+- `run_counter` (global, in state root): **Always** increment by 1 when scoring a new area for the first time. Do NOT increment when re-scoring a `needs-work` area.
+- `area.run`: **First score only** — set to the post-increment `run_counter` value. **Re-score** — keep the existing value unchanged. These are two separate actions; do not conflate them.
 - `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
@@ -101,7 +102,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
-**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, flag the risk in the run report and recommend starting a fresh session for this fix. An incomplete heavy skill call produces broken state.
+**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, halt with `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Do not proceed with the heavy skill call — an incomplete call produces broken state.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
@@ -111,7 +112,7 @@ Track the pass number in `area.pass` in state (start at 0, increment before each
 - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
 - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
 
-Exit 1 = banned pattern present, fix before committing. Exit 2 = script not found, skip gate and note in run report.
+Exit 1 = banned pattern present, fix before committing. Exit 2 = script not found; note `taste-gate: skipped (script not found)` in the run report and proceed.
 
 ### Step 6 — Re-score
 
@@ -169,7 +170,7 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 | Range | What it means |
 |---|---|
 | 20–25 | Specific, opinionated, polished — looks like it belongs on Awwwards or 21st.dev. A designer would say "that's intentional." |
-| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top. If the component renders correctly but feels generically loud/quiet/safe rather than specifically broken, route to `calibrate-amplitude` before `visual-uplift`. Would look identical to 50 other SaaS products. |
+| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top. Would look identical to 50 other SaaS products. See Fix Routing for the calibrate-amplitude → visual-uplift path. |
 | 6–12 | Template aesthetic — bento grid, Inter/Geist everywhere, dark navy + gold, undifferentiated card grid, or similar AI-slop patterns. A designer would cringe. |
 | 0–5 | Broken, unstyled, or visually non-existent. |
 
@@ -206,7 +207,8 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.6 [file]')` first — `0.6` is a default for "generically safe" output; adjust to `0.9` for bolder, `0.3` for quieter. If Visuals still < 20 after → visual-uplift |
 | Visuals — template/slop | 6–12 | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes to mcp__magic / typeset / animate / colorize / overdrive |
 | Visuals — template/slop | 6–12 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
-| Visuals — broken or missing | 0–5 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — score too low to refine |
+| Visuals — broken or missing | 0–5 AND total < 50 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine in context |
+| Visuals — broken or missing | 0–5 AND total ≥ 50 | Any | `Skill('visual-uplift', args='--execute [file]')` — other dimensions are passing; apply targeted styling only |
 | Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. Do NOT route here for Hook, Clarity, or Function failures. |
 | Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
@@ -217,7 +219,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Function 13–19 — one state missing | — | Any | Direct fix in file: add the missing empty/loading/error state component |
 | Function 6–12 — multiple gaps | — | Any | `Skill('a11y-audit', args='[file]')` + direct fix for missing states |
 | Function 0–5 — broken/inaccessible | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` |
-| Personality, delight missing | — | Any | `Skill('delight', args='[file]')` |
+| Personality, delight missing | — (only when total ≥ 60) | Any | `Skill('delight', args='[file]')` — do not add delight when the component has structural failures; fix those first |
 | Total score < 40 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
 
 ---
@@ -247,8 +249,9 @@ Skip any pattern that returns no file. Do not create state entries for component
 Discover routes before picking the first area:
 1. **React Router projects** — read `src/App.tsx` or `src/router.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal). These are the app routes.
 2. **Next.js projects** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
-3. Create one state group per discovered route. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). Log which route was picked in the run report — do not ask the user to choose.
-4. **Immediately** write `"last_scope": "[picked route]"` to state.json — e.g. `"/clients"`. This update happens here, inside the numbered flow, before Step 2.
+3. Create one state group per discovered route. If no routes were discovered (empty App.tsx, no app/ pages): halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
+4. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). Log which route was picked in the run report — do not ask the user to choose.
+5. **Immediately** write `"last_scope": "[picked route]"` to state.json. Example: state had `"last_scope": "dashboard"` from Step 1A; after this step it becomes `"last_scope": "/clients"`. This second write is required before Step 2.
 
 **When scope is a specific `/route`:**
 
