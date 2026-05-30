@@ -62,7 +62,7 @@ Enumerate areas for the current scope (see Area Enumeration).
 
 **Zero-match guard:** If all globs returned no files, do NOT write an empty state.json — an empty state causes Step 2 to report false completion. Instead halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths against your project structure and re-run.`
 
-Write `.web-evolve/state.json` with all areas at `status: "pending"`, `"last_scope": "[current scope arg]"`, and `"run_counter": 0`. For `dashboard` scope, `last_scope` is initially `"dashboard"` — it is updated to the specific route (e.g. `"/clients"`) after route discovery runs in Area Enumeration. Then go to Step 2.
+Write `.web-evolve/state.json` with all areas at `status: "pending"`, `"last_scope": "[current scope arg]"`, and `"run_counter": 0`. For `dashboard` scope this is a two-write sequence: Step 1A writes `"last_scope": "dashboard"` now; Area Enumeration step 4 overwrites it with the specific route (e.g. `"/clients"`) immediately after discovery. Both writes are required — the second one is not optional. Then go to Step 2.
 
 ### Step 2 — Pick target
 
@@ -86,6 +86,7 @@ Score each dimension independently (see Scoring Rubric). Write to state:
 - `function_verified`: `true` if browser MCP was used to assess Function, `false` if code-only.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
+- `pass`: set to `0` on first score; do not reset on re-score.
 
 | Dimension | Max | Question |
 |---|---|---|
@@ -100,11 +101,11 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
-**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, or `dashboard-design`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, flag the risk in the run report and recommend starting a fresh session for this fix. An incomplete heavy skill call produces broken state.
+**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, flag the risk in the run report and recommend starting a fresh session for this fix. An incomplete heavy skill call produces broken state.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
-When all failing dimensions have been addressed (or max 2 passes reached): go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome.
+Track the pass number in `area.pass` in state (start at 0, increment before each pass). When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
 
 **Taste gate:** Before declaring ≥ 85 done, run:
 - Windows: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
@@ -121,7 +122,7 @@ Apply the same rubric.
 - **≥ 85:** `status: "done"`. Go to Step 7.
 - **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
 - **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
-- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix. For modified files: `git checkout -- [file]`. For newly created files (created by the fix skill): `git rm [file]`. Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
+- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix. For modified files: `git checkout -- [file]`. For newly created files added to the index by the fix skill: `git rm --cached [file] && rm [file]` (Mac/Linux) or `git rm --cached [file]; Remove-Item [file]` (Windows). For new files never staged: `rm [file]` / `Remove-Item [file]` only. Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
 
 ### Step 7 — Commit and report
 
@@ -208,7 +209,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')` then re-evaluate CTA placement in layout |
 | Hook 0–5 — no CTA | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — no CTA cannot be patched |
 | Clarity 6–25 — copy/labels unclear | — | Any | `Skill('clarify', args='[file]')` |
-| Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if still failing after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
+| Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if Clarity re-score is still in the 0–5 band after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
 | Function 13–19 — one state missing | — | Any | Direct fix in file: add the missing empty/loading/error state component |
 | Function 6–12 — multiple gaps | — | Any | `Skill('a11y-audit', args='[file]')` + direct fix for missing states |
 | Function 0–5 — broken/inaccessible | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` |
@@ -292,10 +293,11 @@ Discover routes before picking the first area:
       "status": "pending",
       "score": null,
       "dimensions": null,
-      "function_verified": null,
+      "function_verified": "pending",
       "issues": [],
       "fixes": [],
-      "run": null
+      "run": null,
+      "pass": 0
     }
   ]
 }
@@ -308,12 +310,12 @@ Discover routes before picking the first area:
 ## Output format
 
 ```
-▶ web-evolve — run #N | scope: [page]
+▶ web-evolve — run #[run_counter value] | scope: [last_scope]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Area:    [label]
 File:    [primary file]
 
-Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])
+Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])   [for re-work sessions: use the score already in state.json for this area]
 Issues:
   - [specific problem 1]
   - [specific problem 2]
@@ -325,7 +327,8 @@ Fixes:
   - [what changed 2]
 
 ✅ Done — committed "fix([id]): [label] [before]→[after]"
-State: [N done] / [N needs-work] / [N pending] in scope [page]
+⚠ Needs more work — [specific blocker]. Re-run to retry.   ← use this line instead when status is needs-work
+State: [N done] / [N needs-work] / [N pending] in scope [last_scope]
 [if function_verified:false] ⚠ Function scored from code only — verify on a real device before shipping.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -346,6 +349,8 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 - **Scope contamination.** After `/web-evolve dashboard`, `last_scope` is updated to the specific route worked on once discovery runs. A bare `/web-evolve` resumes that route — correct, but always print the active scope in the run header so the user isn't surprised.
 - **Visual scoring without a screenshot.** Scoring Visuals from code alone produces unreliable results — compiled Tailwind class names don't tell you what actually renders. If browser MCP is unavailable: note "Visuals assessed from code only" in the run report and accept that the score has higher uncertainty.
 - **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
+- **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
+- **Incrementing `run_counter` during a regression revert.** A revert does not count as a new run. Do not increment `run_counter` when reverting; it only increments on first-score of a new area.
 
 ---
 
