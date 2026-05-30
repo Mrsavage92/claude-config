@@ -32,7 +32,8 @@ Re-run to pick the next area. You never decide what to work on.
 - **Project root** — the directory containing `package.json`. Run `git rev-parse --show-toplevel` if in doubt.
 - **Scope** — the page group being worked on: `landing`, `dashboard`, or a specific route string like `/clients`.
 - **Area** — one logical UI unit (hero section, pricing table, nav, etc.) with a `page` field matching the scope.
-- **`run` counter** — the sequential run number that first scored this area. Set once on first score, never updated on re-score.
+- **`run_counter`** — global integer in state.json, incremented by 1 each time a new area is first scored. Starts at 0.
+- **`run` (per-area)** — the value of `run_counter` at the time this area was first scored. Set once, never updated.
 - **`forbidden_additions`** — field in `tokens.lock.json` listing visual patterns absent from the reference site. No fix may introduce them.
 
 **Multi-scope coexistence:** `state.json` holds areas from all scopes simultaneously. Running `/web-evolve /clients` only operates on areas where `page === "/clients"`. A pending `landing` area is unaffected. `last_scope` tracks the most recently active scope so a bare `/web-evolve` resumes it.
@@ -75,14 +76,16 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
 2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. Fix operations apply to whichever file owns the failing dimension. Commit all changed files.
-3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`, continue.
+3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`. Treat as if `forbidden_additions` contains the common defaults (gradient_mesh, hover_scale, fade_up, glassmorphism, grain, grid_lines) to avoid introducing patterns that are typically locked out.
 
 ### Step 4 — Score
 
 Score each dimension independently (see Scoring Rubric). Write to state:
 - `dimensions` + `score`
-- `run`: increment `run_counter` in state.json by 1, write that value here. If this area was previously scored (`status: "needs-work"`), keep the existing `run` value — do not increment again.
+- `run`: increment `run_counter` in state.json by 1, use that value. If this area was previously scored (`status: "needs-work"`), keep the existing `run` value unchanged.
 - `function_verified`: `true` if browser MCP was used to assess Function, `false` if code-only.
+- `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
+- `fixes`: set to `[]` — populated in Step 5.
 
 | Dimension | Max | Question |
 |---|---|---|
@@ -93,7 +96,7 @@ Score each dimension independently (see Scoring Rubric). Write to state:
 
 ### Step 5 — Fix (score < 85)
 
-Route each failing dimension using the Fix Routing table. **One skill per dimension. Complete it before moving to the next.**
+Route each failing dimension using the Fix Routing table. **One skill per dimension. Complete it before moving to the next.** After each skill call, append a one-line description of what changed to `area.fixes` in state.
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
@@ -176,7 +179,7 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 ### Function (0–25)
 | Range | What it means |
 |---|---|
-| 20–25 | Mobile works, keyboard works, all states (empty / loading / error) handled |
+| 20–25 | Mobile: renders without horizontal overflow at 375px viewport, all interactive elements ≥ 44×44px touch target. Keyboard: all actions reachable by Tab + Enter. All states (empty / loading / error) handled and rendered. |
 | 13–19 | Works but one state missing |
 | 6–12 | Multiple functional gaps |
 | 0–5 | Broken or inaccessible |
@@ -187,7 +190,7 @@ If Function cannot be verified (no dev server, no browser MCP): assess from code
 
 ## Fix routing
 
-Pass `lock: tokens.lock.json` as a first arg to every skill when `tokens.lock.json` exists at project root.
+Pass `lock:tokens.lock.json` as a first arg to every skill when `tokens.lock.json` exists at project root.
 
 **If a skill is unavailable:** apply the fix directly in code. For Visuals: apply Tailwind class improvements and replace with a 21st.dev component via `mcp__magic__21st_magic_component_builder` directly. For Hook: edit copy in the file. For Function: fix the specific broken behaviour in code.
 
@@ -220,7 +223,7 @@ When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json `
 
 ### Landing (`/web-evolve landing`)
 
-Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick the one whose filename most closely matches the area ID (e.g. `HeroQuickScan.tsx` over `HeroVisual.tsx` for `hero-cta`). Log all matches in the run report so the user can correct if wrong.
+Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick by highest line count (most likely the primary component). Log all matches in the run report. Fallback for non-standard structures: if a pattern returns no matches in the above paths, try `**/components/**/*[Pattern]*` before skipping the area.
 
 | Priority | ID | Label | File pattern |
 |---|---|---|---|
@@ -241,8 +244,7 @@ Skip any pattern that returns no file. Do not create state entries for component
 Discover routes before picking the first area:
 1. **React Router projects** — read `src/App.tsx` or `src/router.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal). These are the app routes.
 2. **Next.js projects** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
-3. List discovered routes to the user in the run report before picking the first.
-4. Create one state group per route. Pick the highest-priority route with `status: "pending"` to work on this session.
+3. Create one state group per route. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). Log which route was picked in the run report — do not ask the user to choose.
 
 Set `last_scope` to the specific route worked on (e.g. `/clients`), not `"dashboard"` — so a bare `/web-evolve` resumes that route correctly.
 
@@ -321,6 +323,7 @@ Fixes:
   - [what changed 2]
 
 ✅ Done — committed "fix([id]): [label] [before]→[after]"
+State: [N done] / [N needs-work] / [N pending] in scope [page]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Next:  [next area label] ([page]) — run /web-evolve to continue
