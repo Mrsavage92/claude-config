@@ -53,9 +53,9 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 ### Step 3 — Inspect
 
-1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools)
+1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
 2. Read the component file(s) from the area's `files` list
-3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`
+3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`, continue.
 
 ### Step 4 — Score
 
@@ -80,13 +80,21 @@ After each skill call: re-screenshot (if browser MCP available). Visible change 
 
 Max 2 full fix passes per run. Still < 85 after pass 2: set `status: "needs-work"`, note the specific blocker, commit current state, exit. Next run retries this area.
 
-**Taste gate:** Before declaring ≥ 85 done, check the changed files against `~/.claude/skills/taste-skill/data/taste-rules.csv` — run `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`. Exit 1 = banned pattern, fix before committing.
+**Taste gate:** Before declaring ≥ 85 done, run:
+- Windows: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
+- Mac/Linux: `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
+
+Exit 1 = banned pattern present, fix before committing. Exit 2 = script not found, skip gate and note in run report.
 
 ### Step 6 — Re-score
 
 Re-read all files in `area.files` plus any new `.tsx`/`.jsx` files created in the same directories by the fix skill. Re-screenshot if browser MCP available.
 
-Apply the same rubric. If ≥ 85: `status: "done"`. If not: `status: "needs-work"`, note blocker.
+Apply the same rubric. 
+
+- Re-score **higher** than pre-fix and ≥ 85: `status: "done"`.
+- Re-score **higher** but < 85: `status: "needs-work"`, note remaining blocker, continue to Step 7.
+- Re-score **lower** than pre-fix: the fix made things worse. Run `git checkout -- [changed files]` to revert. Set `status: "needs-work"` with note `fix-regressed: [dimension]`. Commit only the reverted state. Exit — do not retry in this session.
 
 ### Step 7 — Commit and report
 
@@ -94,6 +102,8 @@ Apply the same rubric. If ≥ 85: `status: "done"`. If not: `status: "needs-work
 git add [changed files] .web-evolve/state.json
 git commit -m "fix([area-id]): [label] [old]→[new score]"
 ```
+
+If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
 
 Output the Run Report (see Output Format), then stop.
 
@@ -133,22 +143,26 @@ Output the Run Report (see Output Format), then stop.
 | 6–12 | Multiple functional gaps |
 | 0–5 | Broken or inaccessible |
 
+If Function cannot be verified (no dev server, no browser MCP): assess from code only. Mark `"function_verified": false` in state. A code-only Function score ≥ 20 still counts toward done — but flag it in the run report for human verification before shipping.
+
 ---
 
 ## Fix routing
 
 Pass `lock: tokens.lock.json` as a first arg to every skill when `tokens.lock.json` exists at project root.
 
+**If a skill is unavailable:** apply the fix directly in code. For Visuals: apply Tailwind class improvements and replace with a 21st.dev component via `mcp__magic__21st_magic_component_builder` directly. For Hook: edit copy in the file. For Function: fix the specific broken behaviour in code.
+
 | Failing dimension | Page type | Skill to call |
 |---|---|---|
 | Visuals | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes internally to mcp__magic / typeset / animate / colorize / calibrate-amplitude / overdrive |
-| Visuals | Dashboard / app route | `Skill('dashboard-design')` for the right pattern first → `Skill('visual-uplift', args='--execute [file]')` |
-| Motion weak or missing | Any | `Skill('web-animations')` to pick tier → `Skill('animate', args='[file]')` |
+| Visuals | Dashboard / app route | `Skill('dashboard-design', args='[file]')` for the right pattern first → `Skill('visual-uplift', args='--execute [file]')` |
+| Motion weak or missing | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')` |
 | Motion needs to be ambitious | Any | `Skill('overdrive', args='[file]')` |
-| Amplitude wrong (too loud / quiet / generic) | Any | `Skill('calibrate-amplitude', args='dial:[0.0–1.0] | [file]')` |
+| Amplitude wrong (too loud / quiet / generic) | Any | `Skill('calibrate-amplitude', args='dial:[0.0-1.0] [file]')` |
 | Hook, copy, CTA | Any | `Skill('clarify', args='[file]')` |
 | Personality, delight missing | Any | `Skill('delight', args='[file]')` |
-| Function — accessibility gaps | Any | `Skill('a11y-audit', args='[file] --baseUrl http://localhost:[port]')` |
+| Function — accessibility gaps | Any | `Skill('a11y-audit', args='[file]')` — find dev server port from `package.json` scripts.dev before running |
 | Total score < 40 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
 
 ---
@@ -273,3 +287,18 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 - **Moving on at 84.** If the re-score is 84, fix the remaining gap or mark `needs-work`. Do not round up.
 - **Inventing files.** Only add areas to state for components that exist on disk. Skip patterns that return no glob match.
 - **Skipping the taste gate.** A visually polished component that passes slop patterns (bento default, Geist on everything) is not done.
+- **Scope contamination.** After `/web-evolve dashboard`, `last_scope` is set to the specific route worked on, not `"dashboard"`. A bare `/web-evolve` resumes that route — correct behaviour, but always print the active scope in the run header so the user isn't surprised.
+- **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
+
+---
+
+## References
+
+Active files used by this skill:
+
+- `references/sales-page-checklist.md` — scoring calibration anchors for Hook dimension
+- `references/tier-contracts.md` — motion tier definitions (passed to web-animations)
+- `references/critique-brief.md` — format for critique calls
+- `references/scoring-engine.md` — additional scoring guidance
+
+`references/archive/` contains the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F). Archived 2026-05-29 when the skill was rebuilt as a focused per-area loop. Do not invoke files from archive/.
