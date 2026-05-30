@@ -11,7 +11,7 @@ One area. Score it. Fix it. Confirm ≥ 85. Remember it. Stop.
 
 Re-run to pick the next area. You never decide what to work on.
 
-**NOT for:** initial builds → `/web-page`; one-off fixes without state tracking → `/visual-uplift`; full-site gap analysis → `/saas-improve`.
+**NOT for:** initial builds → `/web-page`; one-off surgical visual fixes without state → `/visual-uplift`; full-site gap analysis → `/saas-improve`. When the user says "just fix this one thing" with no intent to track progress, use `/visual-uplift` or `/refine`, not this skill.
 
 `disallowed-tools: AskUserQuestion` — this skill never asks the user for decisions. It picks the next area, scope, and fix automatically. Any prompt that would require user input is a spec gap, not a permission to ask.
 
@@ -21,7 +21,7 @@ Re-run to pick the next area. You never decide what to work on.
 
 | Command | Behaviour |
 |---|---|
-| `/web-evolve` | Continue last scope, or default to `landing` |
+| `/web-evolve` | Resume `last_scope` from state.json (specific route like `/clients`, not `dashboard`), or default to `landing` on first run |
 | `/web-evolve landing` | Work through landing page areas in priority order |
 | `/web-evolve dashboard` | Work through all authenticated app routes |
 | `/web-evolve /clients` | Laser-focus on the `/clients` route only |
@@ -95,6 +95,7 @@ Score each dimension independently (see Scoring Rubric). Write to state:
 - `run_counter` (global, in state root): **Always** increment by 1 when scoring a new area for the first time. Do NOT increment when re-scoring a `needs-work` area. Example: state had `run_counter: 2`; scoring the third new area → write `run_counter: 3`.
 - `area.run`: **First score only** — set to the post-increment `run_counter` value (e.g. `3`). **Re-score of a needs-work area** — keep the existing value (still `3`). These are two separate writes; do not conflate them.
 - `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
+- `taste_verified`: set to `null` now — updated to `true` (taste gate exit 0) or `false` (exit 2, script missing) in Step 6.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
 - `pass`: keep existing value (already set to 0 at bootstrap); do not reset on re-score.
@@ -116,8 +117,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 - Before calling `web-page` (mode:rebuild): halt if `session_skill_calls` ≥ 1 in state.json — `web-page` is the heaviest call and warrants its own fresh context.
 - Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: the calibrate-amplitude + visual-uplift chained pair counts as 1 call. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
 - Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
-  - **If halting before Step 4 (area not yet scored):** Leave `status: "pending"`, `score: null`. Do NOT write partial state — the area has no score to preserve. The next session scores and fixes normally.
-  - **If halting after Step 4 (area has a score):** Write full state: `pass`, `score`, `dimensions`, `issues`, `status: "needs-work"`. Next session resumes from the fix step.
+  - Write full state before halting: `pass`, `score`, `dimensions`, `issues`, `status: "needs-work"`. Context budget halts only occur in Step 5, which is entered after Step 4 has already written the score — there is no pre-score halt path in Step 5.
   - Do not proceed with the heavy skill call.
 - "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
 
@@ -231,7 +231,9 @@ Score 20–25 if ≥ 5 pass. Score 13–19 if 3–4 pass. Score 6–12 if 1–2 
 | 6–12 | Multiple functional gaps |
 | 0–5 | Broken or inaccessible |
 
-If Function cannot be verified (no dev server, no browser MCP): assess from code only. Mark `"function_verified": false` in state. A code-only Function score ≥ 20 still counts toward done — but flag it in the run report for human verification before shipping.
+If Function cannot be verified (no dev server, no browser MCP): assess from code only. Mark `"function_verified": false` in state. A code-only Function score ≥ 20 still counts toward done — but flag it in the run report.
+
+If Visuals cannot be verified (no browser MCP, no screenshot): assess from code only. **Cap the Visuals score at 19/25 maximum** — rendered appearance cannot be confirmed from Tailwind class names alone. Flag `"visuals_screenshot": false` in the run report.
 
 ---
 
@@ -253,7 +255,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Visuals — template/slop | 6–12 | Dashboard | Pass 1: `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')`. Same fallback logic as landing. |
 | Visuals — broken or missing | 0–5 AND total < 50 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine in context |
 | Visuals — broken or missing | 0–5 AND total ≥ 50 | Any | `Skill('visual-uplift', args='--execute [file]')` — other dimensions are passing; apply targeted styling only |
-| Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. Do NOT route here for Hook, Clarity, or Function failures. |
+| Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use ONLY when motion is the PRIMARY cause (no animations at all, or clearly wrong timing). If the component has other template-slop issues (color, layout, components) alongside motion issues, use visual-uplift first — it handles motion as part of its routing. Do NOT route here for Hook, Clarity, or Function failures. |
 | Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
 | Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')`. After clarify runs, re-evaluate CTA placement: is the primary CTA above the fold? If not, move it up in the component before re-scoring. |
