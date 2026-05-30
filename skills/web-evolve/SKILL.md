@@ -1,7 +1,7 @@
 ---
 name: web-evolve
 disallowed-tools: AskUserQuestion
-description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Scope with an arg or omit to continue last scope. Use when improving an existing site iteratively — landing pages, dashboard routes, any specific page.
+description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Use when the user says "improve the site", "web-evolve", "make the landing page better", "improve the dashboard", "iterate on [page]", "level up [page]", "fix [page] visually", or re-runs after a prior web-evolve session.
 argument-hint: "[landing | dashboard | /route]"
 ---
 
@@ -100,7 +100,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
-**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, or `dashboard-design`, if the session has already consumed > 100k tokens, note the risk in the run report and recommend starting a fresh session for that fix. Do not attempt a heavy skill call when the window is nearly full — an incomplete run produces broken state.
+**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, or `dashboard-design`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, flag the risk in the run report and recommend starting a fresh session for this fix. An incomplete heavy skill call produces broken state.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
@@ -121,7 +121,7 @@ Apply the same rubric.
 - **≥ 85:** `status: "done"`. Go to Step 7.
 - **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
 - **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
-- **Lower than immediately preceding score (regression at any pass):** Revert only the most recent fix (`git checkout -- [changed files from that fix]`). Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
+- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix. For modified files: `git checkout -- [file]`. For newly created files (created by the fix skill): `git rm [file]`. Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
 
 ### Step 7 — Commit and report
 
@@ -163,18 +163,18 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 ### Visuals (0–25)
 | Range | What it means |
 |---|---|
-| 20–25 | Specific, opinionated, polished — looks like it belongs on Awwwards or 21st.dev |
-| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top. If the component renders correctly but feels generically loud/quiet/safe rather than specifically broken, route to `calibrate-amplitude` before `visual-uplift`. |
-| 6–12 | Template aesthetic — bento grid, Inter everywhere, dark navy + gold, or similar |
-| 0–5 | Broken, unstyled, or visually non-existent |
+| 20–25 | Specific, opinionated, polished — looks like it belongs on Awwwards or 21st.dev. A designer would say "that's intentional." |
+| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top. If the component renders correctly but feels generically loud/quiet/safe rather than specifically broken, route to `calibrate-amplitude` before `visual-uplift`. Would look identical to 50 other SaaS products. |
+| 6–12 | Template aesthetic — bento grid, Inter/Geist everywhere, dark navy + gold, undifferentiated card grid, or similar AI-slop patterns. A designer would cringe. |
+| 0–5 | Broken, unstyled, or visually non-existent. |
 
 ### Clarity (0–25)
 | Range | What it means |
 |---|---|
-| 20–25 | Every label obvious, hierarchy sharp, nothing requires thought |
-| 13–19 | Mostly clear, one label or message needs decoding |
-| 6–12 | Multiple unclear labels or misleading hierarchy |
-| 0–5 | Confusing enough to block the user |
+| 20–25 | Every label obvious without context, hierarchy sharp, user knows what to click without reading twice. A non-technical user could navigate unaided. |
+| 13–19 | Mostly clear, one label or message needs a second read |
+| 6–12 | Multiple labels require context to decode, or hierarchy misleads attention |
+| 0–5 | A first-time visitor would be stuck or confused about what to do |
 
 ### Function (0–25)
 | Range | What it means |
@@ -194,9 +194,7 @@ Pass `lock:tokens.lock.json` as a first arg to every skill when `tokens.lock.jso
 
 **If a skill is unavailable:** apply the fix directly in code. For Visuals: apply Tailwind class improvements and replace with a 21st.dev component via `mcp__magic__21st_magic_component_builder` directly. For Hook: edit copy in the file. For Function: fix the specific broken behaviour in code.
 
-When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json ` to every skill's args. Example: `Skill('visual-uplift', args='lock:tokens.lock.json --execute src/components/Hero.tsx')`.
-
-`forbidden_additions` is a field in `tokens.lock.json` listing visual patterns the reference site does not use (e.g. gradient_mesh, hover_scale). No fix skill may introduce those patterns.
+When `tokens.lock.json` exists at project root (and was successfully read in Step 3), prepend `lock:tokens.lock.json ` to every skill's args — e.g. `Skill('visual-uplift', args='lock:tokens.lock.json --execute src/components/Hero.tsx')`. If Step 3 logged a malformed warning, do not prepend the lock arg.
 
 | Failing dimension | Visuals score | Page type | Skill to call |
 |---|---|---|---|
@@ -223,7 +221,7 @@ When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json `
 
 ### Landing (`/web-evolve landing`)
 
-Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick by highest line count (most likely the primary component). Log all matches in the run report. Fallback for non-standard structures: if a pattern returns no matches in the above paths, try `**/components/**/*[Pattern]*` before skipping the area.
+Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick by highest line count (most likely the primary component). Log all matches in the run report. Fallback for non-standard structures: if a pattern returns no matches in the above paths, try the literal pattern globally — e.g. for `hero-cta`: `**/components/**/Hero*.tsx`, `**/components/**/hero*.tsx`.
 
 | Priority | ID | Label | File pattern |
 |---|---|---|---|
@@ -244,9 +242,8 @@ Skip any pattern that returns no file. Do not create state entries for component
 Discover routes before picking the first area:
 1. **React Router projects** — read `src/App.tsx` or `src/router.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal). These are the app routes.
 2. **Next.js projects** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
-3. Create one state group per route. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). Log which route was picked in the run report — do not ask the user to choose.
-
-Set `last_scope` to the specific route worked on (e.g. `/clients`), not `"dashboard"` — so a bare `/web-evolve` resumes that route correctly.
+3. Create one state group per discovered route. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). Log which route was picked in the run report — do not ask the user to choose.
+4. **Immediately** write `"last_scope": "[picked route]"` to state.json — e.g. `"/clients"`. This update happens here, inside the numbered flow, before Step 2.
 
 **When scope is a specific `/route`:**
 
@@ -270,6 +267,7 @@ Set `last_scope` to the specific route worked on (e.g. `/clients`), not `"dashbo
 {
   "project": "audithq-prod-live",
   "last_scope": "landing",
+  "run_counter": 2,
   "areas": [
     {
       "id": "hero-cta",
@@ -293,7 +291,11 @@ Set `last_scope` to the specific route worked on (e.g. `/clients`), not `"dashbo
       "files": ["src/components/landing/PricingSection.tsx"],
       "status": "pending",
       "score": null,
-      "dimensions": null
+      "dimensions": null,
+      "function_verified": null,
+      "issues": [],
+      "fixes": [],
+      "run": null
     }
   ]
 }
@@ -324,6 +326,7 @@ Fixes:
 
 ✅ Done — committed "fix([id]): [label] [before]→[after]"
 State: [N done] / [N needs-work] / [N pending] in scope [page]
+[if function_verified:false] ⚠ Function scored from code only — verify on a real device before shipping.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Next:  [next area label] ([page]) — run /web-evolve to continue
