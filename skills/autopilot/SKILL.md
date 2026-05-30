@@ -1,5 +1,6 @@
 ---
 name: autopilot
+disallowed-tools: AskUserQuestion
 description: >
   Autonomous project progression engine. Reads current project state, determines next highest-value
   task, executes it, updates progress tracking, and repeats until blocked or iteration limit reached.

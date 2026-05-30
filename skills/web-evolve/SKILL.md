@@ -1,5 +1,6 @@
 ---
 name: web-evolve
+disallowed-tools: AskUserQuestion
 description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Scope with an arg or omit to continue last scope. Use when improving an existing site iteratively — landing pages, dashboard routes, any specific page.
 argument-hint: "[landing | dashboard | /route]"
 ---
@@ -33,6 +34,7 @@ Re-run to pick the next area. You never decide what to work on.
 Read `.web-evolve/state.json` at the project root.
 
 - **Missing:** First run. Go to Step 1A.
+- **Malformed JSON:** Rename to `.web-evolve/state.json.corrupt`, log `⚠ state.json corrupt — bootstrapping from scratch`, then go to Step 1A.
 - **Present:** Filter areas by current scope. Go to Step 2.
 
 **Step 1A — Bootstrap**

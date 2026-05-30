@@ -48,7 +48,8 @@ WEAK_DESCRIPTION_PHRASES = [
 
 ALLOWED_FRONTMATTER_KEYS = {
     "name", "description", "license", "allowed-tools", "metadata", "compatibility",
-    "argument-hint",
+    "argument-hint", "disallowed-tools", "context", "disable-model-invocation",
+    "when-to-use", "cost", "model", "effort",
 }
 
 MAX_SKILL_MD_LINES = 500

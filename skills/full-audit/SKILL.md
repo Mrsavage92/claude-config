@@ -1,5 +1,6 @@
 ---
 name: full-audit
+disallowed-tools: AskUserQuestion
 description: Master audit orchestrator — runs all 9 audit suites (Marketing, Technical, GEO, Security, Privacy, Reputation, Employer Brand, AI Readiness, Social Footprint) against a URL and produces a single combined FULL-AUDIT-REPORT.md with cross-suite scores, priority issues, and an integrated action plan.
 ---
 
