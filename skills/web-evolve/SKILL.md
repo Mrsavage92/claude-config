@@ -52,7 +52,7 @@ Read `.web-evolve/state.json` at the project root.
 - **Missing:** First run. Go to Step 1A.
 - **Legacy v1 state (contains `"phases"`, `"trajectory"`, or `"loop_state"` keys):** Rename to `.web-evolve/state.json.v1`, log `⚠ v1 state detected — bootstrapping fresh v2 state`, then go to Step 1A.
 - **Malformed JSON:** Rename to `.web-evolve/state.json.corrupt`, log `⚠ state.json corrupt — bootstrapping from scratch`, then go to Step 1A.
-- **Present:** Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
+- **Present:** Reset `session_skill_calls` to `0` in state.json (start of a fresh run). Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
 
 **Step 1A — Bootstrap**
 
@@ -113,15 +113,15 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
 **Context budget check:**
-- Before calling `web-page` (mode:rebuild): halt if you have called **any** skill earlier in this session — `web-page` is the heaviest call and warrants its own fresh context.
-- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if you have already called **2+** skills in this session. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
+- Before calling `web-page` (mode:rebuild): halt if `session_skill_calls` ≥ 1 in state.json — `web-page` is the heaviest call and warrants its own fresh context.
+- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: the calibrate-amplitude + visual-uplift chained pair counts as 1 call. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
 - Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
   - **If halting before Step 4 (area not yet scored):** Do NOT change status — leave as `"pending"`. The next session will score and fix normally. Only write `pass: 0` to prevent ambiguity.
   - **If halting after Step 4 (area has a score):** Write full state: `pass`, `score`, `dimensions`, `issues`, `status: "needs-work"`. Next session resumes from the fix step.
   - Do not proceed with the heavy skill call.
 - "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
 
-After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
+After each skill call: increment `session_skill_calls` in state.json by 1. Re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
 Track the pass number in `area.pass` in state (start at 0, increment before each pass). When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
 
@@ -146,7 +146,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
   - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
   - Exit 1 = banned pattern — fix it, re-score, re-run taste gate. Max 2 taste gate iterations. If banned pattern persists after 2 attempts: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern name]` and go to Step 7. Do not loop indefinitely.
-  - Exit 2 = script not found; note `taste-gate: skipped (script not found)` in run report, set `status: "done"`. Go to Step 7.
+  - Exit 2 = script not found; set `status: "done"`, add `"taste_verified": false` to area state, note `taste-gate: skipped (script not found)` in run report. Go to Step 7.
   - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
 ### Step 7 — Commit and report
@@ -154,6 +154,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
 ```bash
 git add [changed files] .web-evolve/state.json
 git commit -m "fix([area-id]): [label] [old]→[new score]"
+# If first-score (old score was null): use format "fix([id]): [label] new:91"
 ```
 
 If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
@@ -228,7 +229,10 @@ If Function cannot be verified (no dev server, no browser MCP): assess from code
 
 Pass `lock:tokens.lock.json` as a first arg to every skill when `tokens.lock.json` exists at project root.
 
-**If a skill is unavailable:** apply the fix directly in code. For Visuals: apply Tailwind class improvements and replace with a 21st.dev component via `mcp__magic__21st_magic_component_builder` directly. For Hook: edit copy in the file. For Function: fix the specific broken behaviour in code.
+**If a skill is unavailable:**
+- `clarify`, `delight`, `a11y-audit`, `animate`, `colorize`, `typeset`, `layout`: apply targeted code edits directly — these are focused skills with clear, substitutable actions.
+- `visual-uplift`, `calibrate-amplitude`, `dashboard-design`: use `mcp__magic__21st_magic_component_builder` directly with a description of the component needed.
+- `web-page` or `overdrive`: **HALT with NEEDS_HUMAN** — no inline substitute. These require their own context window.
 
 When `tokens.lock.json` exists at project root (and was successfully read in Step 3), prepend `lock:tokens.lock.json ` to every skill's args — e.g. `Skill('visual-uplift', args='lock:tokens.lock.json --execute src/components/Hero.tsx')`. If Step 3 logged a malformed warning, do not prepend the lock arg.
 
@@ -258,7 +262,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 ### Landing (`/web-evolve landing`)
 
-Glob paths: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Pick the highest-line-count file when multiple match. All globs match `.tsx`, `.jsx`, `.vue`, and `.svelte`. Log all matches.
+Glob paths: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`, `app/components/`, `components/`, `src/pages/`. Pick the highest-line-count file when multiple match. All globs match `.tsx`, `.jsx`, `.vue`, and `.svelte`. Log all matches.
 
 | Priority | ID | Label | Primary patterns | Fallback (if primary returns nothing) |
 |---|---|---|---|---|
@@ -308,6 +312,7 @@ Discover routes before picking the first area:
   "project": "audithq-prod-live",
   "last_scope": "landing",
   "run_counter": 2,
+  "session_skill_calls": 0,
   "areas": [
     {
       "id": "hero-cta",
