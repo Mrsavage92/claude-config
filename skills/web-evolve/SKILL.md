@@ -11,7 +11,7 @@ One area. Score it. Fix it. Confirm ≥ 85. Remember it. Stop.
 
 Re-run to pick the next area. You never decide what to work on.
 
-**NOT for:** initial builds → `/web-page`; one-off surgical visual fixes without state → `/visual-uplift`; full-site gap analysis → `/saas-improve`. When the user says "just fix this one thing" with no intent to track progress, use `/visual-uplift` or `/refine`, not this skill.
+**NOT for:** initial builds → `/web-page`; one-off surgical visual fixes without state → `/visual-uplift`; full-site gap analysis → `/saas-improve`. When the user says "just fix this one thing" with no intent to track progress, use `/visual-uplift` or `/refine`, not this skill. Note: web-evolve's Fix Routing table does dispatch to `/visual-uplift` and related skills internally — that dispatch is unaffected by this NOT-for list, which governs user-facing triggers only.
 
 `disallowed-tools: AskUserQuestion` — this skill never asks the user for decisions. It picks the next area, scope, and fix automatically. Any prompt that would require user input is a spec gap, not a permission to ask.
 
@@ -75,8 +75,10 @@ One write, after enumeration is complete. Then go to Step 2.
 
 ### Step 2 — Pick target
 
-1. First area with `status: "pending"` (never reviewed) — take it
+1. First area with `status: "pending"` (never reviewed) — take it. Proceed to Step 3.
 2. None pending: lowest-scored area with `status: "needs-work"` — take it. Tiebreaker on equal scores: lower `priority` value first.
+   - **Budget-halt re-entry:** If the area has a non-null `score` already (was budget-halted after scoring): skip Step 4 entirely and go directly to Step 5 to resume the fix. Re-scoring a halted area wastes tokens and may produce a different score.
+   - Otherwise (halted before scoring, `score: null`): proceed through Steps 3 and 4 normally.
 3. All `status: "done"` (≥ 85): report completion, suggest next scope, exit
 
 Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
@@ -85,7 +87,7 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 0. **Stale files check:** Before reading, verify every path in `area.files` exists on disk. If a file is missing (renamed or deleted since bootstrap): update `area.files` with the new path if you can find it (grep for the component name), or set `status: "needs-work"` with note `source-file-moved: [old path]` and go to Step 7.
 1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
-2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. Fix operations apply to whichever file owns the failing dimension. Commit all changed files.
+2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. **Fix ownership rule:** Hook and Clarity issues → fix the file containing the most copy (highest text node density). Visuals issues → fix the file with the most CSS classes. Function issues → fix the file containing the event handlers or state logic. When in doubt, fix the first file in the `files` list. Commit all changed files.
 3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`. Treat as if `forbidden_additions` contains the common defaults (gradient_mesh, hover_scale, fade_up, glassmorphism, grain, grid_lines) to avoid introducing patterns that are typically locked out. **Enforcement:** When choosing a fix skill in Step 5, check the skill's output against `forbidden_additions` — do not call visual-uplift if it will likely add gradient_mesh (e.g. reference has `gradient_mesh: false`). Pass the lock arg so the skill self-enforces.
 
 ### Step 4 — Score
@@ -98,6 +100,7 @@ Score each dimension independently (see Scoring Rubric). Write to state:
 - `taste_verified`: set to `null` now — updated to `true` (taste gate exit 0) or `false` (exit 2, script missing) in Step 6.
 - `taste_gate_attempts`: set to `0` now — incremented in Step 6 outcome D on each Exit 1.
 - `visuals_screenshot`: set to `true` if a screenshot was taken in Step 3, `false` otherwise. Written now from the Step 3 observation.
+- **Visuals cap:** If `visuals_screenshot` is `false`, cap the Visuals dimension score at 19/25 before writing `dimensions`. Compute as: `visuals = min(visuals_raw, 19)`.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
 - `pass`: keep existing value (already set to 0 at bootstrap); do not reset on re-score.
@@ -158,8 +161,9 @@ Apply the same rubric. Four mutually exclusive outcomes:
 ```bash
 git add [changed files] .web-evolve/state.json
 git commit -m "fix([area-id]): [label] [old]→[new score]"
-# First-score (old score null): "fix([id]): [label] new:[score]"
-# Regression revert:           "revert([id]): [label] pass-[N]-regressed"
+# First-score (old score null):  "fix([id]): [label] new:[score]"
+# Regression revert:             "revert([id]): [label] pass-[N]-regressed"
+# REVERT_FAILED:                 "wip([id]): [label] revert-failed — manual fix required"
 ```
 
 If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
@@ -309,7 +313,7 @@ Discover routes before picking the first area:
 3. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
 4. **Remix** — read `app/routes/`. Extract authenticated routes by looking for auth guard imports.
 5. **Astro** — read `src/pages/`. Filter out marketing pages.
-6. Create one state group per discovered route. If no routes were discovered: halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
+6. Create one state group per discovered route. Deduplicate by page file path — if two route strings resolve to the same page component, keep only the one with the shorter route path. If no routes were discovered: halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
 7. Pick the first route alphabetically with `status: "pending"`. This is the `last_scope` value Step 1A will write. Log the picked route in the run report.
 
 **When scope is a specific `/route`:**
@@ -384,7 +388,7 @@ Discover routes before picking the first area:
 ## Output format
 
 ```
-▶ web-evolve — run #[run_counter post-increment value] | scope: [last_scope]
+▶ web-evolve — run #[run_counter value] | scope: [last_scope] [append "(re-work)" if this is a needs-work area]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Area:    [label]
 File:    [primary file]
