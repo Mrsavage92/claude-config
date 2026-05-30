@@ -58,16 +58,16 @@ Create the state directory:
 
 Set `"project"` to the name of the project root directory (e.g. `"audithq-prod-live"`).
 
-Enumerate areas for the current scope (see Area Enumeration). 
+Execute the Area Enumeration procedure in the Area Enumeration section below for `[current scope]`. 
 
 **Zero-match guard:** If all globs returned no files, do NOT write an empty state.json — an empty state causes Step 2 to report false completion. Instead halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths against your project structure and re-run.`
 
-Write `.web-evolve/state.json` with all areas at `status: "pending"`, `"last_scope": "[current scope arg]"`, and `"run_counter": 0`. For `dashboard` scope this is a two-write sequence: Step 1A writes `"last_scope": "dashboard"` now; Area Enumeration step 4 overwrites it with the specific route (e.g. `"/clients"`) immediately after discovery. Both writes are required — the second one is not optional. Then go to Step 2.
+Write `.web-evolve/state.json` with all areas at `status: "pending"`, `"pass": 0`, `"function_verified": null`, `"issues": []`, `"fixes": []`, `"run": null`, `"last_scope": "[current scope arg]"`, and `"run_counter": 0`. For `dashboard` scope this is a two-write sequence: Step 1A writes `"last_scope": "dashboard"` now; Area Enumeration step 4 overwrites it with the specific route (e.g. `"/clients"`) immediately after discovery. Both writes are required — the second one is not optional. Then go to Step 2.
 
 ### Step 2 — Pick target
 
 1. First area with `status: "pending"` (never reviewed) — take it
-2. None pending: lowest-scored area with `status: "needs-work"` — take it
+2. None pending: lowest-scored area with `status: "needs-work"` — take it. Tiebreaker on equal scores: lower `priority` value first.
 3. All `status: "done"` (≥ 85): report completion, suggest next scope, exit
 
 Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
@@ -83,10 +83,10 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 Score each dimension independently (see Scoring Rubric). Write to state:
 - `dimensions` + `score`
 - `run`: increment `run_counter` in state.json by 1, use that value. If this area was previously scored (`status: "needs-work"`), keep the existing `run` value unchanged.
-- `function_verified`: `true` if browser MCP was used to assess Function, `false` if code-only.
+- `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
-- `pass`: set to `0` on first score; do not reset on re-score.
+- `pass`: keep existing value (already set to 0 at bootstrap); do not reset on re-score.
 
 | Dimension | Max | Question |
 |---|---|---|
@@ -107,9 +107,9 @@ After each skill call: re-screenshot (if browser MCP available). Visible change 
 
 Track the pass number in `area.pass` in state (start at 0, increment before each pass). When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
 
-**Taste gate:** Before declaring ≥ 85 done, run:
-- Windows: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
-- Mac/Linux: `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
+**Taste gate:** Before declaring ≥ 85 done, run the appropriate command for your shell:
+- PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
+- Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
 
 Exit 1 = banned pattern present, fix before committing. Exit 2 = script not found, skip gate and note in run report.
 
@@ -122,7 +122,11 @@ Apply the same rubric.
 - **≥ 85:** `status: "done"`. Go to Step 7.
 - **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
 - **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
-- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix. For modified files: `git checkout -- [file]`. For newly created files added to the index by the fix skill: `git rm --cached [file] && rm [file]` (Mac/Linux) or `git rm --cached [file]; Remove-Item [file]` (Windows). For new files never staged: `rm [file]` / `Remove-Item [file]` only. Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
+- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix. For modified files: `git checkout -- [file]`. For newly created files added to the index by the fix skill:
+- Bash: `git rm --cached [file] && rm [file]`
+- PowerShell: `git rm --cached [file]; Remove-Item [file]`
+
+For new files never staged: `rm [file]` (Bash) or `Remove-Item [file]` (PowerShell). Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
 
 ### Step 7 — Commit and report
 
@@ -199,12 +203,12 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 | Failing dimension | Visuals score | Page type | Skill to call |
 |---|---|---|---|
-| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.6 [file]')` first; if still failing → visual-uplift |
+| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.6 [file]')` first — `0.6` is a default for "generically safe" output; adjust to `0.9` for bolder, `0.3` for quieter. If Visuals still < 20 after → visual-uplift |
 | Visuals — template/slop | 6–12 | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes to mcp__magic / typeset / animate / colorize / overdrive |
 | Visuals — template/slop | 6–12 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
 | Visuals — broken or missing | 0–5 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — score too low to refine |
-| Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. |
-| Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Use when animate tier is too conservative for the page type. |
+| Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. Do NOT route here for Hook, Clarity, or Function failures. |
+| Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
 | Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')` then re-evaluate CTA placement in layout |
 | Hook 0–5 — no CTA | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — no CTA cannot be patched |
@@ -293,7 +297,7 @@ Discover routes before picking the first area:
       "status": "pending",
       "score": null,
       "dimensions": null,
-      "function_verified": "pending",
+      "function_verified": null,
       "issues": [],
       "fixes": [],
       "run": null,
@@ -310,12 +314,12 @@ Discover routes before picking the first area:
 ## Output format
 
 ```
-▶ web-evolve — run #[run_counter value] | scope: [last_scope]
+▶ web-evolve — run #[run_counter post-increment value] | scope: [last_scope]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Area:    [label]
 File:    [primary file]
 
-Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])   [for re-work sessions: use the score already in state.json for this area]
+Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])   [re-work: use score from state.json | new area: "unscored"]
 Issues:
   - [specific problem 1]
   - [specific problem 2]
@@ -351,6 +355,7 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 - **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
 - **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
 - **Incrementing `run_counter` during a regression revert.** A revert does not count as a new run. Do not increment `run_counter` when reverting; it only increments on first-score of a new area.
+- **Routing by skill name rather than dimension.** Calling `overdrive` because you want animation doesn't mean the Visuals dimension is failing. Check the score first. Calling `clarify` for a Visuals failure makes no sense. Always route by the lowest-scoring dimension, not by what sounds good.
 
 ---
 
