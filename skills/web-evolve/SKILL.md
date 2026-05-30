@@ -13,6 +13,8 @@ Re-run to pick the next area. You never decide what to work on.
 
 **NOT for:** initial builds → `/web-page`; one-off fixes without state tracking → `/visual-uplift`; full-site gap analysis → `/saas-improve`.
 
+`disallowed-tools: AskUserQuestion` — this skill never asks the user for decisions. It picks the next area, scope, and fix automatically. Any prompt that would require user input is a spec gap, not a permission to ask.
+
 ---
 
 ## Invocation
@@ -48,6 +50,7 @@ Re-run to pick the next area. You never decide what to work on.
 Read `.web-evolve/state.json` at the project root.
 
 - **Missing:** First run. Go to Step 1A.
+- **Legacy v1 state (contains `"phases"`, `"trajectory"`, or `"loop_state"` keys):** Rename to `.web-evolve/state.json.v1`, log `⚠ v1 state detected — bootstrapping fresh v2 state`, then go to Step 1A.
 - **Malformed JSON:** Rename to `.web-evolve/state.json.corrupt`, log `⚠ state.json corrupt — bootstrapping from scratch`, then go to Step 1A.
 - **Present:** Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
 
@@ -112,7 +115,10 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 **Context budget check:**
 - Before calling `web-page` (mode:rebuild): halt if you have called **any** skill earlier in this session — `web-page` is the heaviest call and warrants its own fresh context.
 - Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if you have already called **2+** skills in this session. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
-- Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the full current area state to state.json: `pass`, `score` (if already scored), `dimensions` (if already scored), `issues` (if already populated), `status: "needs-work"`. This ensures the next session resumes with full context. Do not proceed with the heavy skill call.
+- Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
+  - **If halting before Step 4 (area not yet scored):** Do NOT change status — leave as `"pending"`. The next session will score and fix normally. Only write `pass: 0` to prevent ambiguity.
+  - **If halting after Step 4 (area has a score):** Write full state: `pass`, `score`, `dimensions`, `issues`, `status: "needs-work"`. Next session resumes from the fix step.
+  - Do not proceed with the heavy skill call.
 - "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
@@ -139,7 +145,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
 **D — ≥ 85:** Run the taste gate:
   - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-  - Exit 1 = banned pattern — fix it, re-score. Do NOT set `status: "done"` yet; loop back to taste gate after fix.
+  - Exit 1 = banned pattern — fix it, re-score, re-run taste gate. Max 2 taste gate iterations. If banned pattern persists after 2 attempts: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern name]` and go to Step 7. Do not loop indefinitely.
   - Exit 2 = script not found; note `taste-gate: skipped (script not found)` in run report, set `status: "done"`. Go to Step 7.
   - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
@@ -271,11 +277,13 @@ Skip any ID whose patterns (primary and fallback) return no files. Do not create
 **When scope is `dashboard` (all app routes):**
 
 Discover routes before picking the first area:
-1. **React Router / TanStack Router** — read `src/App.tsx`, `src/router.tsx`, or `src/routes.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal).
-2. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
-3. **Remix / Astro** — read `app/routes/` (Remix) or `src/pages/` (Astro). Extract authenticated routes by looking for auth guard imports or `loader` functions that check session.
-3. Create one state group per discovered route. If no routes were discovered (empty App.tsx, no app/ pages): halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
-4. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). This is the `last_scope` value that Step 1A will write to state.json. Log which route was picked in the run report — do not ask the user to choose.
+1. **React Router / TanStack Router (config-based)** — read `src/App.tsx`, `src/router.tsx`, or `src/routes.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal).
+2. **TanStack Start / TanStack Router (file-based)** — glob `src/routes/**/*.tsx` or `app/routes/**/*.tsx`. Each file is a route; filter out files containing `createRootRoute` (root layout, not a page) and marketing routes. The route path is derived from the filename (`_authenticated.dashboard.tsx` → `/dashboard`).
+3. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
+4. **Remix** — read `app/routes/`. Extract authenticated routes by looking for auth guard imports.
+5. **Astro** — read `src/pages/`. Filter out marketing pages.
+6. Create one state group per discovered route. If no routes were discovered: halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
+7. Pick the first route alphabetically with `status: "pending"`. This is the `last_scope` value Step 1A will write. Log the picked route in the run report.
 
 **When scope is a specific `/route`:**
 
@@ -347,7 +355,7 @@ Discover routes before picking the first area:
 Area:    [label]
 File:    [primary file]
 
-Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])   [re-work: use score from state.json | new area: "unscored"]
+Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])   [re-work: use score from state.json | new area: null — write as "null" not "unscored"]
 Issues:
   - [specific problem 1]
   - [specific problem 2]
