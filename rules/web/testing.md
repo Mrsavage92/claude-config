@@ -1,3 +1,12 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/*.spec.*"
+  - "**/*.test.*"
+---
+
 # Web Testing
 
 > Extends [common/testing.md](../common/testing.md).

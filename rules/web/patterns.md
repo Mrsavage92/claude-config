@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.jsx"
+---
+
 # Web Patterns
 
 > Extends [common/patterns.md](../common/patterns.md).

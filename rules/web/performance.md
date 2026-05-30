@@ -1,3 +1,12 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/*.css"
+  - "**/*.html"
+---
+
 # Web Performance
 
 > Extends [common/performance.md](../common/performance.md).

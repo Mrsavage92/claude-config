@@ -1,3 +1,9 @@
+---
+paths:
+  - ".claude/settings.json"
+  - ".claude/settings.local.json"
+---
+
 # Web Hooks (Claude Code PostToolUse patterns)
 
 > Extends [common/patterns.md](../common/patterns.md). Reference only — Adam's hook system is already configured in `~/.claude/settings.json`.

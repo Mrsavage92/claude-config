@@ -1,3 +1,12 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.jsx"
+  - "**/*.js"
+  - "**/*.html"
+---
+
 # Web Security
 
 > Extends [common/security.md](../common/security.md).

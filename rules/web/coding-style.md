@@ -1,3 +1,13 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.css"
+  - "**/*.html"
+---
+
 # Web Coding Style
 
 > Extends [common/coding-style.md](../common/coding-style.md) with frontend-specific content.
