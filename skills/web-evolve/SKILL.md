@@ -24,6 +24,7 @@ Re-run to pick the next area. You never decide what to work on.
 | `/web-evolve dashboard` | Work through all authenticated app routes |
 | `/web-evolve /clients` | Laser-focus on the `/clients` route only |
 | `/web-evolve /audit/new` | Laser-focus on that specific route |
+| `/web-evolve [anything else]` | Halt: `⚠ Unrecognised scope "[arg]". Use: landing, dashboard, or a route starting with /` |
 
 ---
 
@@ -48,7 +49,7 @@ Read `.web-evolve/state.json` at the project root.
 
 - **Missing:** First run. Go to Step 1A.
 - **Malformed JSON:** Rename to `.web-evolve/state.json.corrupt`, log `⚠ state.json corrupt — bootstrapping from scratch`, then go to Step 1A.
-- **Present:** Filter areas by current scope. Go to Step 2.
+- **Present:** Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
 
 **Step 1A — Bootstrap**
 
@@ -79,6 +80,7 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 ### Step 3 — Inspect
 
+0. **Stale files check:** Before reading, verify every path in `area.files` exists on disk. If a file is missing (renamed or deleted since bootstrap): update `area.files` with the new path if you can find it (grep for the component name), or set `status: "needs-work"` with note `source-file-moved: [old path]` and go to Step 7.
 1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
 2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. Fix operations apply to whichever file owns the failing dimension. Commit all changed files.
 3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`. Treat as if `forbidden_additions` contains the common defaults (gradient_mesh, hover_scale, fade_up, glassmorphism, grain, grid_lines) to avoid introducing patterns that are typically locked out.
@@ -107,17 +109,14 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
-**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, halt with `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the current `pass` value to state.json so the next session resumes from the correct pass count. Do not proceed with the heavy skill call — an incomplete call produces broken state.
+**Context budget check:**
+- Before calling `web-page` (mode:rebuild): halt if you have called **any** skill earlier in this session — `web-page` is the heaviest call and warrants its own fresh context.
+- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if you have already called **2+** skills in this session.
+- Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the current `pass` value to state.json. Do not proceed.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
 Track the pass number in `area.pass` in state (start at 0, increment before each pass). When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
-
-**Taste gate:** Before declaring ≥ 85 done, run the appropriate command for your shell:
-- PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
-- Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-
-Exit 1 = banned pattern present, fix before committing. Exit 2 = script not found; note `taste-gate: skipped (script not found)` in the run report and proceed.
 
 ### Step 6 — Re-score
 
@@ -125,10 +124,15 @@ Re-read all files in `area.files` plus any new `.tsx`/`.jsx` files created in th
 
 Apply the same rubric.
 
-- **≥ 85:** `status: "done"`. Go to Step 7.
 - **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
 - **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
-- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix. For modified files: `git checkout -- [file]`. For newly created files added to the index by the fix skill:
+- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix.
+- **≥ 85:** Run the taste gate before setting `status: "done"`:
+  - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
+  - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
+  - Exit 1 = banned pattern found — fix it, re-score. Do NOT set `status: "done"` until the taste gate passes.
+  - Exit 2 = script not found; note `taste-gate: skipped (script not found)` and set `status: "done"`.
+  - Exit 0 = gate passed → set `status: "done"`. Go to Step 7. For modified files: `git checkout -- [file]`. For newly created files added to the index by the fix skill:
 - Bash: `git rm --cached [file] && rm [file]`
 - PowerShell: `git rm --cached [file]; Remove-Item [file]`
 
@@ -187,6 +191,16 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 | 6–12 | Multiple labels require context to decode, or hierarchy misleads attention |
 | 0–5 | A first-time visitor would be stuck or confused about what to do |
 
+**Clarity calibration — 6 tests:**
+1. Every button label says what it does — not "Submit", "OK", "Click here"
+2. Every input has a visible label, not just placeholder text
+3. Error messages say what went wrong and what to do next — not "An error occurred"
+4. Empty states tell the user why it's empty and what action to take
+5. Section headers tell the visitor what they're about to read — not vague decorative phrases
+6. CTAs use active verbs ("Start free scan", not "Free scan" or "Learn more")
+
+Score 20–25 if ≥ 5 pass. Score 13–19 if 3–4 pass. Score 6–12 if 1–2 pass. Score 0–5 if 0 pass.
+
 ### Function (0–25)
 | Range | What it means |
 |---|---|
@@ -233,7 +247,17 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 ### Landing (`/web-evolve landing`)
 
-Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick by highest line count (most likely the primary component). Log all matches in the run report. Fallback for non-standard structures: if a pattern returns no matches in the above paths, try the literal pattern globally — e.g. for `hero-cta`: `**/components/**/Hero*.tsx`, `**/components/**/hero*.tsx`.
+Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick by highest line count. Log all matches. Fallback globs (used when primary paths return nothing):
+
+| ID | Primary patterns | Fallback |
+|---|---|---|
+| `hero-cta` | `*Hero*`, `*hero*` | `**/components/**/Hero*.tsx` |
+| `pricing` | `*Pricing*`, `*pricing*` | `**/components/**/Pric*.tsx` |
+| `nav` | `*Nav*`, `*Header*` | `**/components/**/Nav*.tsx` |
+| `form` | `*Form*`, `*Signup*`, `*Subscribe*` | `**/components/**/*Form*.tsx` |
+| `features` | `*Features*`, `*HowIt*` | `**/components/**/*Feature*.tsx` |
+| `social-proof` | `*Testimonial*`, `*Trust*`, `*Review*` | `**/components/**/*Testimon*.tsx` |
+| `footer` | `*Footer*` | `**/components/**/Footer*.tsx` |
 
 | Priority | ID | Label | File pattern |
 |---|---|---|---|
@@ -339,10 +363,11 @@ Fixes:
   - [what changed 1]
   - [what changed 2]
 
-✅ Done — committed "fix([id]): [label] [before]→[after]"
+✅ Done — committed "fix([id]): [label] [before]→[after]"  [pass: N]
 ⚠ Needs more work — [specific blocker]. Re-run to retry.   ← use this line instead when status is needs-work
 State: [N done] / [N needs-work] / [N pending] in scope [last_scope]
 [if function_verified:false] ⚠ Function scored from code only — verify on a real device before shipping.
+[if Visuals scored without screenshot] ⚠ Visuals scored from code only — confirm rendered output before treating as done.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Next:  [next area label] ([page]) — run /web-evolve to continue
