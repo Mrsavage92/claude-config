@@ -86,7 +86,7 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 0. **Stale files check:** Before reading, verify every path in `area.files` exists on disk. If a file is missing (renamed or deleted since bootstrap): update `area.files` with the new path if you can find it (grep for the component name), or set `status: "needs-work"` with note `source-file-moved: [old path]` and go to Step 7.
 1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
 2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. Fix operations apply to whichever file owns the failing dimension. Commit all changed files.
-3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`. Treat as if `forbidden_additions` contains the common defaults (gradient_mesh, hover_scale, fade_up, glassmorphism, grain, grid_lines) to avoid introducing patterns that are typically locked out.
+3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`. Treat as if `forbidden_additions` contains the common defaults (gradient_mesh, hover_scale, fade_up, glassmorphism, grain, grid_lines) to avoid introducing patterns that are typically locked out. **Enforcement:** When choosing a fix skill in Step 5, check the skill's output against `forbidden_additions` — do not call visual-uplift if it will likely add gradient_mesh (e.g. reference has `gradient_mesh: false`). Pass the lock arg so the skill self-enforces.
 
 ### Step 4 — Score
 
@@ -123,7 +123,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 After each skill call: increment `session_skill_calls` in state.json by 1. Re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
-Track the pass number in `area.pass` in state (start at 0, increment before each pass). When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
+Track the pass number in `area.pass` in state. **On first entry to Step 5 for a `needs-work` area (re-run from a prior session): reset `area.pass` to 0 first** — the prior session's pass count is stale. Increment `area.pass` by 1 at the start of each pass within this session. When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
 
 ### Step 6 — Re-score
 
@@ -267,7 +267,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Function 6–12 — multiple gaps | — | Any | `Skill('a11y-audit', args='[file]')` + direct fix for missing states |
 | Function 0–5 — broken/inaccessible | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` |
 | Personality, delight missing | — (only when total ≥ 60) | Any | `Skill('delight', args='[file]')` — do not add delight when the component has structural failures; fix those first |
-| Total score < 40 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
+| Total score < 40 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild [lock:tokens.lock.json if lock exists]')` — full rebuild |
 
 ---
 
@@ -339,6 +339,8 @@ Discover routes before picking the first area:
       "score": 91,
       "dimensions": { "hook": 24, "visuals": 22, "clarity": 23, "function": 22 },
       "function_verified": true,
+      "taste_verified": true,
+      "visuals_screenshot": true,
       "issues": ["no animation on scan submit", "sub-headline generic"],
       "fixes": ["added loading state animation", "rewrote sub-headline"],
       "run": 2,
