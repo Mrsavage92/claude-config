@@ -62,7 +62,12 @@ Execute the Area Enumeration procedure in the Area Enumeration section below for
 
 **Zero-match guard:** If all globs returned no files, do NOT write an empty state.json — an empty state causes Step 2 to report false completion. Instead halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths against your project structure and re-run.`
 
-Write `.web-evolve/state.json` with all areas at `status: "pending"`, `"pass": 0`, `"function_verified": null`, `"issues": []`, `"fixes": []`, `"run": null`, `"last_scope": "[current scope arg]"`, and `"run_counter": 0`. For `dashboard` scope this is a two-write sequence: Step 1A writes `"last_scope": "dashboard"` now; Area Enumeration step 4 overwrites it with the specific route (e.g. `"/clients"`) immediately after discovery. Both writes are required — the second one is not optional. Then go to Step 2.
+Execute the Area Enumeration procedure completely (including route discovery for `dashboard` scope). Once enumeration is done, write `.web-evolve/state.json` **once** with:
+- All discovered areas at `status: "pending"`, `"pass": 0`, `"function_verified": null`, `"issues": []`, `"fixes": []`, `"run": null`
+- `"last_scope"`: for `landing` scope, write `"landing"`; for `dashboard` scope, write the specific first-picked route (e.g. `"/clients"`); for `/route` scope, write the route string.
+- `"run_counter": 0`
+
+One write, after enumeration is complete. Then go to Step 2.
 
 ### Step 2 — Pick target
 
@@ -102,7 +107,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
-**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, halt with `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Do not proceed with the heavy skill call — an incomplete call produces broken state.
+**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: if you have already called 2+ skills in this session, or if this is a second run within the same conversation, halt with `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the current `pass` value to state.json so the next session resumes from the correct pass count. Do not proceed with the heavy skill call — an incomplete call produces broken state.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
@@ -185,7 +190,7 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 ### Function (0–25)
 | Range | What it means |
 |---|---|
-| 20–25 | Mobile: renders without horizontal overflow at 375px viewport, all interactive elements ≥ 44×44px touch target. Keyboard: all actions reachable by Tab + Enter. All states (empty / loading / error) handled and rendered. |
+| 20–25 | Mobile: renders without horizontal overflow at 375px viewport, all interactive elements ≥ 44×44px touch target. Keyboard: all actions reachable by Tab + Enter. All states handled and visually rendered: empty state shows a placeholder/message (not a blank white box), loading state shows a spinner/skeleton (not a frozen UI), error state shows an error message (not a silent failure). |
 | 13–19 | Works but one state missing |
 | 6–12 | Multiple functional gaps |
 | 0–5 | Broken or inaccessible |
@@ -204,7 +209,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 | Failing dimension | Visuals score | Page type | Skill to call |
 |---|---|---|---|
-| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.6 [file]')` first — `0.6` is a default for "generically safe" output; adjust to `0.9` for bolder, `0.3` for quieter. If Visuals still < 20 after → visual-uplift |
+| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first — `0.75` pushes a generically-safe component toward distinctive (the 13–19 band needs MORE bold, not less; 0.75 is a conservative push toward 1.0=boldest). Adjust to `0.9` for maximum boldness. If Visuals still < 20 after → visual-uplift |
 | Visuals — template/slop | 6–12 | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes to mcp__magic / typeset / animate / colorize / overdrive |
 | Visuals — template/slop | 6–12 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
 | Visuals — broken or missing | 0–5 AND total < 50 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine in context |
@@ -247,11 +252,11 @@ Skip any pattern that returns no file. Do not create state entries for component
 **When scope is `dashboard` (all app routes):**
 
 Discover routes before picking the first area:
-1. **React Router projects** — read `src/App.tsx` or `src/router.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal). These are the app routes.
-2. **Next.js projects** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
+1. **React Router / TanStack Router** — read `src/App.tsx`, `src/router.tsx`, or `src/routes.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal).
+2. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
+3. **Remix / Astro** — read `app/routes/` (Remix) or `src/pages/` (Astro). Extract authenticated routes by looking for auth guard imports or `loader` functions that check session.
 3. Create one state group per discovered route. If no routes were discovered (empty App.tsx, no app/ pages): halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
-4. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). Log which route was picked in the run report — do not ask the user to choose.
-5. **Immediately** write `"last_scope": "[picked route]"` to state.json. Example: state had `"last_scope": "dashboard"` from Step 1A; after this step it becomes `"last_scope": "/clients"`. This second write is required before Step 2.
+4. Pick the first route with `status: "pending"` (alphabetical order as tiebreaker). This is the `last_scope` value that Step 1A will write to state.json. Log which route was picked in the run report — do not ask the user to choose.
 
 **When scope is a specific `/route`:**
 
@@ -289,7 +294,8 @@ Discover routes before picking the first area:
       "function_verified": true,
       "issues": ["no animation on scan submit", "sub-headline generic"],
       "fixes": ["added loading state animation", "rewrote sub-headline"],
-      "run": 2
+      "run": 2,
+      "pass": 1
     },
     {
       "id": "pricing",
