@@ -283,7 +283,7 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 ## Anti-patterns
 
 - **Declaring done before re-scoring.** Always re-apply the rubric after fixes — do not assume the fix worked.
-- **Fixing adjacent things.** Only touch the dimensions that scored < 15. Don't refactor the whole file because one button lacked a hover state.
+- **Fixing adjacent things.** Fix only the specific issues identified in the failing dimension. Don't refactor the whole file because one button lacked a hover state. The fix scope is the issue, not the component.
 - **Moving on at 84.** If the re-score is 84, fix the remaining gap or mark `needs-work`. Do not round up.
 - **Inventing files.** Only add areas to state for components that exist on disk. Skip patterns that return no glob match.
 - **Skipping the taste gate.** A visually polished component that passes slop patterns (bento default, Geist on everything) is not done.
@@ -296,9 +296,8 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 
 Active files used by this skill:
 
-- `references/sales-page-checklist.md` — scoring calibration anchors for Hook dimension
-- `references/tier-contracts.md` — motion tier definitions (passed to web-animations)
-- `references/critique-brief.md` — format for critique calls
-- `references/scoring-engine.md` — additional scoring guidance
+- `references/sales-page-checklist.md` — calibration for the Hook dimension (what makes a CTA pass vs fail)
+- `references/decisions.md` — design decisions log for this skill
+- `references/fix-routing.md` — supplementary routing guidance for edge cases not covered by the routing table
 
-`references/archive/` contains the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F). Archived 2026-05-29 when the skill was rebuilt as a focused per-area loop. Do not invoke files from archive/.
+`references/archive/` contains the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F, Awwwards tier contracts, critique briefings). Archived 2026-05-29 when the skill was rebuilt. Do not invoke files from archive/.
