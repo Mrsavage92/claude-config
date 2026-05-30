@@ -59,11 +59,11 @@ Create the state directory:
 
 Set `"project"` to the name of the project root directory (e.g. `"audithq-prod-live"`).
 
-Execute the Area Enumeration procedure in the Area Enumeration section below for `[current scope]`. 
+Execute the Area Enumeration procedure (see Area Enumeration section) for `[current scope]`. After enumeration is fully complete:
 
-**Zero-match guard:** If all globs returned no files, do NOT write an empty state.json — an empty state causes Step 2 to report false completion. Instead halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths against your project structure and re-run.`
+**Zero-match guard:** If enumeration produced zero areas, do NOT write state.json. Halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths and re-run.`
 
-Execute the Area Enumeration procedure completely (including route discovery for `dashboard` scope). Once enumeration is done, write `.web-evolve/state.json` **once** with:
+Otherwise, write `.web-evolve/state.json` **once** with:
 - All discovered areas at `status: "pending"`, `"pass": 0`, `"function_verified": null`, `"issues": []`, `"fixes": []`, `"run": null`
 - `"last_scope"`: for `landing` scope, write `"landing"`; for `dashboard` scope, write the specific first-picked route (e.g. `"/clients"`); for `/route` scope, write the route string.
 - `"run_counter": 0`
@@ -113,6 +113,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 - Before calling `web-page` (mode:rebuild): halt if you have called **any** skill earlier in this session — `web-page` is the heaviest call and warrants its own fresh context.
 - Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if you have already called **2+** skills in this session.
 - Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the current `pass` value to state.json. Do not proceed.
+- "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
@@ -122,21 +123,25 @@ Track the pass number in `area.pass` in state (start at 0, increment before each
 
 Re-read all files in `area.files` plus any new `.tsx`/`.jsx` files created in the same directories by the fix skill. Re-screenshot if browser MCP available.
 
-Apply the same rubric.
+Apply the same rubric. Four mutually exclusive outcomes:
 
-- **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
-- **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
-- **Lower than immediately preceding score (regression at any pass):** Revert the most recent fix.
-- **≥ 85:** Run the taste gate before setting `status: "done"`:
+**A — Higher but < 85, pass 1:** Return to Step 5 for pass 2. (Do not go to Step 7 yet.)
+
+**B — Higher but < 85, pass 2:** Set `status: "needs-work"`, note the specific remaining blocker. Go to Step 7.
+
+**C — Lower than the immediately preceding score (regression):**
+  - For modified files: `git checkout -- [file]`
+  - For newly created files staged by the fix skill — Bash: `git rm --cached [file] && rm [file]`; PowerShell: `git rm --cached [file]; Remove-Item [file]`
+  - For new files never staged: `rm [file]` (Bash) or `Remove-Item [file]` (PowerShell)
+  - Re-score after revert. If score is back to pre-fix level: set `status: "needs-work"` with note `fix-regressed-all-passes`. If score is still above original but below pre-pass-2 level: set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`.
+  - Go to Step 7.
+
+**D — ≥ 85:** Run the taste gate:
   - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-  - Exit 1 = banned pattern found — fix it, re-score. Do NOT set `status: "done"` until the taste gate passes.
-  - Exit 2 = script not found; note `taste-gate: skipped (script not found)` and set `status: "done"`.
-  - Exit 0 = gate passed → set `status: "done"`. Go to Step 7. For modified files: `git checkout -- [file]`. For newly created files added to the index by the fix skill:
-- Bash: `git rm --cached [file] && rm [file]`
-- PowerShell: `git rm --cached [file]; Remove-Item [file]`
-
-For new files never staged: `rm [file]` (Bash) or `Remove-Item [file]` (PowerShell). Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
+  - Exit 1 = banned pattern — fix it, re-score. Do NOT set `status: "done"` yet; loop back to taste gate after fix.
+  - Exit 2 = script not found; note `taste-gate: skipped (script not found)` in run report, set `status: "done"`. Go to Step 7.
+  - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
 ### Step 7 — Commit and report
 
@@ -224,8 +229,8 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Failing dimension | Visuals score | Page type | Skill to call |
 |---|---|---|---|
 | Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first — `0.75` pushes a generically-safe component toward distinctive (the 13–19 band needs MORE bold, not less; 0.75 is a conservative push toward 1.0=boldest). Adjust to `0.9` for maximum boldness. If Visuals still < 20 after → visual-uplift |
-| Visuals — template/slop | 6–12 | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes to mcp__magic / typeset / animate / colorize / overdrive |
-| Visuals — template/slop | 6–12 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
+| Visuals — template/slop | 6–12 | Landing | Pass 1: `Skill('visual-uplift', args='--execute [file]')`. If still 6–12 after pass 1: score is now ≥ 85 total? → done. Total < 40? → rebuild. Otherwise: `status: "needs-work"` — do not add a 3rd pass. |
+| Visuals — template/slop | 6–12 | Dashboard | Pass 1: `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')`. Same fallback logic as landing. |
 | Visuals — broken or missing | 0–5 AND total < 50 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine in context |
 | Visuals — broken or missing | 0–5 AND total ≥ 50 | Any | `Skill('visual-uplift', args='--execute [file]')` — other dimensions are passing; apply targeted styling only |
 | Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. Do NOT route here for Hook, Clarity, or Function failures. |
@@ -251,13 +256,17 @@ Glob across: `src/components/landing/`, `src/components/sections/`, `src/compone
 
 | ID | Primary patterns | Fallback |
 |---|---|---|
-| `hero-cta` | `*Hero*`, `*hero*` | `**/components/**/Hero*.tsx` |
-| `pricing` | `*Pricing*`, `*pricing*` | `**/components/**/Pric*.tsx` |
-| `nav` | `*Nav*`, `*Header*` | `**/components/**/Nav*.tsx` |
-| `form` | `*Form*`, `*Signup*`, `*Subscribe*` | `**/components/**/*Form*.tsx` |
-| `features` | `*Features*`, `*HowIt*` | `**/components/**/*Feature*.tsx` |
-| `social-proof` | `*Testimonial*`, `*Trust*`, `*Review*` | `**/components/**/*Testimon*.tsx` |
-| `footer` | `*Footer*` | `**/components/**/Footer*.tsx` |
+All globs match `.tsx` and `.jsx`. Add `.vue` and `.svelte` fallbacks for non-React projects.
+
+| ID | Primary patterns | Fallback |
+|---|---|---|
+| `hero-cta` | `*Hero*`, `*hero*` | `**/components/**/Hero*` |
+| `pricing` | `*Pricing*`, `*pricing*` | `**/components/**/Pric*` |
+| `nav` | `*Nav*`, `*Header*` | `**/components/**/Nav*` |
+| `form` | `*Form*`, `*Signup*`, `*Subscribe*` | `**/components/**/*Form*` |
+| `features` | `*Features*`, `*HowIt*` | `**/components/**/*Feature*` |
+| `social-proof` | `*Testimonial*`, `*Trust*`, `*Review*` | `**/components/**/*Testimon*` |
+| `footer` | `*Footer*` | `**/components/**/Footer*` |
 
 | Priority | ID | Label | File pattern |
 |---|---|---|---|
@@ -340,7 +349,7 @@ Discover routes before picking the first area:
 }
 ```
 
-`status` progression: `"pending"` → `"needs-work"` → `"done"`
+`status` progression: `"pending"` → `"done"` (direct, when first fix reaches ≥ 85) OR `"pending"` → `"needs-work"` → `"done"` (when multiple passes needed). `"needs-work"` is not mandatory.
 
 ---
 
@@ -384,7 +393,7 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 - **Moving on at 84.** If the re-score is 84, fix the remaining gap or mark `needs-work`. Do not round up.
 - **Inventing files.** Only add areas to state for components that exist on disk. Skip patterns that return no glob match.
 - **Skipping the taste gate.** A visually polished component that passes slop patterns (bento default, Geist on everything) is not done.
-- **Scope contamination.** After `/web-evolve dashboard`, `last_scope` is updated to the specific route worked on once discovery runs. A bare `/web-evolve` resumes that route — correct, but always print the active scope in the run header so the user isn't surprised.
+- **Scope resume surprise.** After `/web-evolve dashboard`, `last_scope` is the specific route worked on (e.g. `/clients`). A bare `/web-evolve` resumes `/clients`, not `dashboard`. This is correct behaviour — print the active scope in the run header so the user isn't surprised.
 - **Visual scoring without a screenshot.** Scoring Visuals from code alone produces unreliable results — compiled Tailwind class names don't tell you what actually renders. If browser MCP is unavailable: note "Visuals assessed from code only" in the run report and accept that the score has higher uncertainty.
 - **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
 - **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
