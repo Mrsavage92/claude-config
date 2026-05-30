@@ -116,7 +116,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 - Before calling `web-page` (mode:rebuild): halt if `session_skill_calls` ≥ 1 in state.json — `web-page` is the heaviest call and warrants its own fresh context.
 - Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: the calibrate-amplitude + visual-uplift chained pair counts as 1 call. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
 - Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
-  - **If halting before Step 4 (area not yet scored):** Do NOT change status — leave as `"pending"`. The next session will score and fix normally. Only write `pass: 0` to prevent ambiguity.
+  - **If halting before Step 4 (area not yet scored):** Leave `status: "pending"`, `score: null`. Do NOT write partial state — the area has no score to preserve. The next session scores and fixes normally.
   - **If halting after Step 4 (area has a score):** Write full state: `pass`, `score`, `dimensions`, `issues`, `status: "needs-work"`. Next session resumes from the fix step.
   - Do not proceed with the heavy skill call.
 - "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
@@ -195,6 +195,16 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 | 6–12 | Template aesthetic — bento grid, Inter/Geist everywhere, dark navy + gold, undifferentiated card grid, or similar AI-slop patterns. A designer would cringe. |
 | 0–5 | Broken, unstyled, or visually non-existent. |
 
+**Visuals calibration — 6 binary checks:**
+1. Color palette has at least 3 semantic roles (not just one neutral + one accent + white)
+2. Typography has at least one weight contrast (e.g. bold headline + regular body)
+3. Visual hierarchy guides the eye to the primary action (not everything the same size)
+4. Spacing is consistent — values come from a system, not random pixels
+5. Interactive elements have hover/focus/active states
+6. Component would not look identical to a default shadcn template without modification
+
+Score 20–25 if all 6 pass. Score 13–19 if 4–5 pass. Score 6–12 if 2–3 pass. Score 0–5 if 0–1 pass.
+
 ### Clarity (0–25)
 | Range | What it means |
 |---|---|
@@ -247,7 +257,8 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
 | Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')`. After clarify runs, re-evaluate CTA placement: is the primary CTA above the fold? If not, move it up in the component before re-scoring. |
-| Hook 0–5 — no CTA | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — no CTA cannot be patched |
+| Hook 0–5 AND total score < 50 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — fundamentally broken |
+| Hook 0–5 AND total score ≥ 50 | — | Any | `Skill('clarify', args='[file]')` + add a primary CTA element directly — other dimensions are passing, no rebuild needed |
 | Clarity 6–25 — copy/labels unclear | — | Any | `Skill('clarify', args='[file]')` |
 | Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if Clarity re-score is still in the 0–5 band after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
 | Function 13–19 — one state missing | — | Any | Direct fix in file: add the missing empty/loading/error state component |
@@ -263,6 +274,8 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 ### Landing (`/web-evolve landing`)
 
 Glob paths: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`, `app/components/`, `components/`, `src/pages/`. Pick the highest-line-count file when multiple match. All globs match `.tsx`, `.jsx`, `.vue`, and `.svelte`. Log all matches.
+
+**Deduplication:** After enumeration, if the same file path appears in two area entries (e.g. `PricingHero.tsx` matching both `hero-cta` and `pricing`), keep only the higher-priority entry (lower priority number). Remove the duplicate.
 
 | Priority | ID | Label | Primary patterns | Fallback (if primary returns nothing) |
 |---|---|---|---|---|
@@ -282,7 +295,7 @@ Skip any ID whose patterns (primary and fallback) return no files. Do not create
 
 Discover routes before picking the first area:
 1. **React Router / TanStack Router (config-based)** — read `src/App.tsx`, `src/router.tsx`, or `src/routes.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal).
-2. **TanStack Start / TanStack Router (file-based)** — glob `src/routes/**/*.tsx` or `app/routes/**/*.tsx`. Each file is a route; filter out files containing `createRootRoute` (root layout, not a page) and marketing routes. The route path is derived from the filename (`_authenticated.dashboard.tsx` → `/dashboard`).
+2. **TanStack Start / TanStack Router (file-based)** — glob `src/routes/**/*.tsx` or `app/routes/**/*.tsx`. Each file is a route; filter out files containing `createRootRoute` (root layout, not a page) and marketing routes. Route path derivation rule: split filename by `.`, remove `_`-prefixed segments (layout groups like `_authenticated`), remove `index` suffix, join remaining with `/`. Examples: `_authenticated.dashboard.tsx` → `/dashboard`, `_authenticated.clients.$id.tsx` → `/clients/:id`, `_authenticated.audit.new.tsx` → `/audit/new`.
 3. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
 4. **Remix** — read `app/routes/`. Extract authenticated routes by looking for auth guard imports.
 5. **Astro** — read `src/pages/`. Filter out marketing pages.
@@ -327,7 +340,8 @@ Discover routes before picking the first area:
       "issues": ["no animation on scan submit", "sub-headline generic"],
       "fixes": ["added loading state animation", "rewrote sub-headline"],
       "run": 2,
-      "pass": 1
+      "pass": 1,
+      "taste_verified": true
     },
     {
       "id": "pricing",
@@ -405,6 +419,7 @@ Start a fresh session and run /web-evolve to resume.
 - **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
 - **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
 - **Incrementing `run_counter` during a regression revert.** A revert does not count as a new run. Do not increment `run_counter` when reverting; it only increments on first-score of a new area.
+- **`session_skill_calls` not reset when scope switches mid-session.** If you run `/web-evolve landing` then continue with `/web-evolve /clients` in the same conversation, `session_skill_calls` carries over — it should stay as-is since the context budget is still shared. Do not reset it on scope change. It only resets at the start of a new conversation (Step 1 fresh run).
 - **Routing by skill name rather than dimension.** Calling `overdrive` because you want animation doesn't mean the Visuals dimension is failing. Check the score first. Calling `clarify` for a Visuals failure makes no sense. Always route by the lowest-scoring dimension, not by what sounds good.
 
 ---
