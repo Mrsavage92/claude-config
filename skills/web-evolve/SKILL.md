@@ -117,7 +117,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Context budget check:**
 - Before calling `web-page` (mode:rebuild): halt if `session_skill_calls` ≥ 1 in state.json — `web-page` is the heaviest call and warrants its own fresh context.
-- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: the calibrate-amplitude + visual-uplift chained pair counts as 1 call. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
+- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: `calibrate-amplitude` immediately followed by `visual-uplift` on the same Visuals dimension in the same pass counts as 1 skill call (chained pair).
 - Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
   - Write full state before halting: `pass`, `score`, `dimensions`, `issues`, `fixes` (partial list so far), `session_skill_calls`, `status: "needs-work"`. Context budget halts only occur in Step 5, entered after Step 4 has already written the score.
   - Do not proceed with the heavy skill call.
@@ -139,7 +139,8 @@ Apply the same rubric. Four mutually exclusive outcomes:
 
 **C — Lower than the immediately preceding score (regression):**
   - Do NOT increment `run_counter`. A revert is not a new scoring event.
-  - For modified files: `git checkout -- [file]`
+  - For modified files: `git checkout -- [file]`. If the checkout fails (locked file, merge conflict): halt with `REVERT_FAILED: [file] — resolve manually`. Do NOT commit with a revert message if the revert itself failed. Set `status: "needs-work"` with note `revert-failed: [file]`.
+  - For newly staged files:
   - For newly created files staged by the fix skill — Bash: `git rm --cached [file] && rm [file]`; PowerShell: `git rm --cached [file]; Remove-Item [file]`
   - For new files never staged: `rm [file]` (Bash) or `Remove-Item [file]` (PowerShell)
   - Re-score after revert. If score is back to pre-fix level: set `status: "needs-work"` with note `fix-regressed-all-passes`. If score is still above original but below pre-pass-2 level: set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`.
@@ -148,7 +149,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
 **D — ≥ 85:** Run the taste gate:
   - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-  - Exit 1 = banned pattern — fix it, increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 taste gate iterations (`taste_gate_attempts` ≤ 2). If banned pattern persists after 2 attempts: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern name]` and go to Step 7. Do not loop indefinitely.
+  - Exit 1 = banned pattern — the fix for attempt 2 MUST target a different change than attempt 1 (if the same fix re-introduces the same banned pattern, it is a no-op — escalate to `needs-work` immediately without a second attempt). Increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 iterations. If pattern persists: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern]` and go to Step 7.
   - Exit 2 = script not found; set `status: "done"`, add `"taste_verified": false` to area state, note `taste-gate: skipped (script not found)` in run report. Go to Step 7.
   - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
@@ -256,7 +257,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 | Failing dimension | Visuals score | Page type | Skill to call |
 |---|---|---|---|
-| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first — `0.75` pushes a generically-safe component toward distinctive (the 13–19 band needs MORE bold, not less; 0.75 is a conservative push toward 1.0=boldest). Adjust to `0.9` for maximum boldness. If Visuals still < 20 after → visual-uplift |
+| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first. **If BOTH motion and amplitude are root causes, use calibrate-amplitude first — it's cheaper and may resolve both.** If Visuals still < 20 after → visual-uplift. Calibrate-amplitude + visual-uplift chain counts as 1 skill call. |
 | Visuals — template/slop | 6–12 | Landing | Pass 1: `Skill('visual-uplift', args='--execute [file]')`. If still 6–12 after pass 1: score is now ≥ 85 total? → done. Total < 40? → rebuild. Otherwise: `status: "needs-work"` — do not add a 3rd pass. |
 | Visuals — template/slop | 6–12 | Dashboard | Pass 1: `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')`. Same fallback logic as landing. |
 | Visuals — broken or missing | 0–5 AND total < 50 | Landing | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine |
@@ -388,7 +389,8 @@ Discover routes before picking the first area:
 Area:    [label]
 File:    [primary file]
 
-Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])   [re-work: use score from state.json | new area: null — write as "null" not "unscored"]
+Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])
+  ↳ Re-work area: use score already in state.json. New area: write "null".
 Issues:
   - [specific problem 1]
   - [specific problem 2]
@@ -415,7 +417,8 @@ Context budget halt format:
 ```
 ⛔ CONTEXT_BUDGET_EXCEEDED
 Skill: [skill name] | Area: [area label] | Pass: [N]
-State written: status=needs-work, pass=[N], score=[N or null]
+Budget: session_skill_calls=[current value] (threshold: [1 for web-page / 2 for others])
+State written: status=needs-work, pass=[N], score=[N]
 Start a fresh session and run /web-evolve to resume.
 ```
 

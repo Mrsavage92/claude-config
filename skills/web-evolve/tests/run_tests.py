@@ -105,8 +105,28 @@ check("Taste gate has max iteration limit", "taste_gate_attempts" in text and "M
 check("run_counter vs area.run explicitly separated",
       "Two separate" in text or "two separate" in text or "do not conflate" in text.lower())
 
+# 16. Execution-path: regression revert must not increment run_counter
+check("Regression revert must NOT increment run_counter",
+      "Do NOT increment `run_counter`. A revert" in text)
+
+# 17. Execution-path: revert failure is handled
+check("Revert failure halts with message",
+      "REVERT_FAILED" in text or "revert.*failed" in text.lower())
+
+# 18. Execution-path: taste gate no-op detection
+check("Taste gate no-op prevented",
+      "different change" in text or "no-op" in text)
+
+# 19. area.pass reset on needs-work re-entry
+check("area.pass reset on needs-work re-entry",
+      "reset `area.pass` to 0" in text or "reset area.pass" in text.lower())
+
+# 20. halt message includes session_skill_calls value
+check("Halt message includes session_skill_calls",
+      "session_skill_calls=" in text or "session_skill_calls=[" in text)
+
 # Summary
-print(f"\n{len(failures)} failure(s) out of {12 + 9} checks.")
+print(f"\n{len(failures)} failure(s) out of 26 checks.")
 if failures:
     for f in failures:
         print(f)
