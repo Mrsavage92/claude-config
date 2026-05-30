@@ -166,7 +166,7 @@ git commit -m "fix([area-id]): [label] [old]→[new score]"
 # REVERT_FAILED:                 "wip([id]): [label] revert-failed — manual fix required"
 ```
 
-If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
+If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. **`run_counter` was already incremented in Step 4 before the commit** — do NOT decrement it if the commit fails. `run_counter` is a monotonic count of scoring events, not of commits. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
 
 Output the Run Report (see Output Format), then stop.
 
@@ -214,7 +214,7 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 
 Score 20–25 if all 6 pass. Score 13–19 if 4–5 pass. Score 6–12 if 2–3 pass. Score 0–5 if 0–1 pass.
 
-**Visuals code-only cap:** If no screenshot was taken (no browser MCP), cap Visuals score at 19/25. Set `visuals_screenshot: false` in state.
+**Visuals code-only cap:** See Step 4 write instructions — cap applies there at write time.
 
 ### Clarity (0–25)
 | Range | What it means |
@@ -262,7 +262,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Failing dimension | Visuals score | Page type | Skill to call |
 |---|---|---|---|
 | Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first. **If BOTH motion and amplitude are root causes, use calibrate-amplitude first — it's cheaper and may resolve both.** If Visuals still < 20 after → visual-uplift. Calibrate-amplitude + visual-uplift chain counts as 1 skill call. |
-| Visuals — template/slop | 6–12 | Landing | Pass 1: `Skill('visual-uplift', args='--execute [file]')`. If still 6–12 after pass 1: score is now ≥ 85 total? → done. Total < 40? → rebuild. Otherwise: `status: "needs-work"` — do not add a 3rd pass. |
+| Visuals — template/slop | 6–12 | Landing | **If motion is the primary cause** (no animations at all): use `web-animations` → `animate` row instead. **Otherwise** (color, layout, components): Pass 1: `Skill('visual-uplift', args='--execute [file]')`. If still 6–12 after pass 1 and total ≥ 85 → done; total < 40 → rebuild; otherwise → `status: "needs-work"`. |
 | Visuals — template/slop | 6–12 | Dashboard | Pass 1: `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')`. Same fallback logic as landing. |
 | Visuals — broken or missing | 0–5 AND total < 50 | Landing | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine |
 | Visuals — broken or missing | 0–5 AND total < 50 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
@@ -289,7 +289,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 Glob paths: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`, `app/components/`, `components/`, `src/pages/`. Pick the highest-line-count file when multiple match. All globs match `.tsx`, `.jsx`, `.vue`, and `.svelte`. Log all matches.
 
-**Deduplication:** After enumeration, if the same file path appears in two area entries (e.g. `PricingHero.tsx` matching both `hero-cta` and `pricing`), keep only the higher-priority entry (lower priority number). Remove the duplicate.
+**Deduplication:** After enumeration, if the same file path appears in multiple area entries (e.g. `PricingHero.tsx` matching both `hero-cta` and `pricing`), keep only the highest-priority entry (lowest priority number). Remove all duplicates regardless of how many patterns matched the same file.
 
 | Priority | ID | Label | Primary patterns | Fallback (if primary returns nothing) |
 |---|---|---|---|---|
@@ -441,6 +441,7 @@ Start a fresh session and run /web-evolve to resume.
 - **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
 - **Incrementing `run_counter` during a regression revert.** A revert does not count as a new run. Do not increment `run_counter` when reverting; it only increments on first-score of a new area.
 - **Resetting `session_skill_calls` on scope switch.** Within the same conversation, multiple `/web-evolve` invocations share the context budget. `session_skill_calls` must NOT be reset when scope changes — only a new conversation (new context window) resets it.
+- **Decrementing `run_counter` when a commit fails.** `run_counter` is a monotonic count of scoring events, not commits. A failed commit does not un-score the area — do not decrement.
 - **Routing by skill name rather than dimension.** Calling `overdrive` because you want animation doesn't mean the Visuals dimension is failing. Check the score first. Calling `clarify` for a Visuals failure makes no sense. Always route by the lowest-scoring dimension, not by what sounds good.
 
 ---
