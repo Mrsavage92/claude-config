@@ -53,7 +53,11 @@ Read `.web-evolve/state.json` at the project root.
 
 Create the state directory: run `mkdir -p .web-evolve/` before any file write.
 
-Enumerate areas for the current scope (see Area Enumeration). Write `.web-evolve/state.json` with all areas at `status: "pending"`. Then go to Step 2.
+Enumerate areas for the current scope (see Area Enumeration). 
+
+**Zero-match guard:** If all globs returned no files, do NOT write an empty state.json — an empty state causes Step 2 to report false completion. Instead halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths against your project structure and re-run.`
+
+Write `.web-evolve/state.json` with all areas at `status: "pending"` and `"last_scope": "[current scope arg]"`. Then go to Step 2.
 
 ### Step 2 — Pick target
 
@@ -66,7 +70,7 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 ### Step 3 — Inspect
 
 1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
-2. Read the component file(s) from the area's `files` list
+2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. Fix operations apply to whichever file owns the failing dimension. Commit all changed files.
 3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`, continue.
 
 ### Step 4 — Score
@@ -90,7 +94,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
-Max 2 full fix passes per run. Still < 85 after pass 2: set `status: "needs-work"`, note the specific blocker, commit current state, exit. Next run retries this area.
+When all failing dimensions have been addressed (or max 2 passes reached): go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome.
 
 **Taste gate:** Before declaring ≥ 85 done, run:
 - Windows: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
@@ -102,11 +106,12 @@ Exit 1 = banned pattern present, fix before committing. Exit 2 = script not foun
 
 Re-read all files in `area.files` plus any new `.tsx`/`.jsx` files created in the same directories by the fix skill. Re-screenshot if browser MCP available.
 
-Apply the same rubric. 
+Apply the same rubric.
 
-- Re-score **higher** than pre-fix and ≥ 85: `status: "done"`.
-- Re-score **higher** but < 85: `status: "needs-work"`, note remaining blocker, continue to Step 7.
-- Re-score **lower** than pre-fix: the fix made things worse. Run `git checkout -- [changed files]` to revert. Set `status: "needs-work"` with note `fix-regressed: [dimension]`. Commit only the reverted state. Exit — do not retry in this session.
+- **≥ 85:** `status: "done"`. Go to Step 7.
+- **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
+- **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
+- **Lower than pre-fix (regression):** Run `git checkout -- [changed files]` to revert. Set `status: "needs-work"` with note `fix-regressed: [dimension] [score before → score after]`. Go to Step 7 with reverted files only. Do not retry in this session.
 
 ### Step 7 — Commit and report
 
@@ -191,9 +196,15 @@ When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json `
 | Visuals — broken or missing | 0–5 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — score too low to refine |
 | Motion weak or missing | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')` |
 | Motion — push further | — | Any | `Skill('overdrive', args='[file]')` |
-| Hook, copy, CTA | — | Any | `Skill('clarify', args='[file]')` |
+| Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
+| Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')` then re-evaluate CTA placement in layout |
+| Hook 0–5 — no CTA | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — no CTA cannot be patched |
+| Clarity 6–25 — copy/labels unclear | — | Any | `Skill('clarify', args='[file]')` |
+| Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if still failing after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
+| Function 13–19 — one state missing | — | Any | Direct fix in file: add the missing empty/loading/error state component |
+| Function 6–12 — multiple gaps | — | Any | `Skill('a11y-audit', args='[file]')` + direct fix for missing states |
+| Function 0–5 — broken/inaccessible | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` |
 | Personality, delight missing | — | Any | `Skill('delight', args='[file]')` |
-| Function — accessibility | — | Any | `Skill('a11y-audit', args='[file]')` — find dev server port from `package.json` scripts.dev |
 | Total score < 40 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
 
 ---
@@ -260,6 +271,7 @@ Set `last_scope` to the specific route worked on (e.g. `/clients`), not `"dashbo
       "status": "done",
       "score": 91,
       "dimensions": { "hook": 24, "visuals": 22, "clarity": 23, "function": 22 },
+      "function_verified": true,
       "issues": ["no animation on scan submit", "sub-headline generic"],
       "fixes": ["added loading state animation", "rewrote sub-headline"],
       "run": 2
