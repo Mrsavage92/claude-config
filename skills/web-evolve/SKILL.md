@@ -27,6 +27,18 @@ Re-run to pick the next area. You never decide what to work on.
 
 ---
 
+## Definitions
+
+- **Project root** — the directory containing `package.json`. Run `git rev-parse --show-toplevel` if in doubt.
+- **Scope** — the page group being worked on: `landing`, `dashboard`, or a specific route string like `/clients`.
+- **Area** — one logical UI unit (hero section, pricing table, nav, etc.) with a `page` field matching the scope.
+- **`run` counter** — the sequential run number that first scored this area. Set once on first score, never updated on re-score.
+- **`forbidden_additions`** — field in `tokens.lock.json` listing visual patterns absent from the reference site. No fix may introduce them.
+
+**Multi-scope coexistence:** `state.json` holds areas from all scopes simultaneously. Running `/web-evolve /clients` only operates on areas where `page === "/clients"`. A pending `landing` area is unaffected. `last_scope` tracks the most recently active scope so a bare `/web-evolve` resumes it.
+
+---
+
 ## Per-run flow
 
 ### Step 1 — Read state
@@ -119,6 +131,20 @@ Output the Run Report (see Output Format), then stop.
 | 6–12 | Value buried or CTA easy to miss |
 | 0–5 | No clear value prop or no CTA |
 
+**Hook calibration — 10 sales-page tests (each is pass/fail, use to anchor your score):**
+1. What you do is above the fold — H1 + primary CTA visible on 1440×900 without scrolling
+2. Outcome not process — headline says what the buyer gets, not how you do it
+3. Specific not generic — numbers/names dominate over vague adjectives (>2:1)
+4. One primary CTA per fold — no competing calls-to-action
+5. Evidence before claim — testimonials or numbers anchor every assertion
+6. Friction-free next step — form asks only what's needed to proceed
+7. Problem-aware before solution — visitor sees their problem named before the pitch
+8. Trust signals visible — credibility without scrolling to footer
+9. Mobile CTA reachable — primary action reachable with thumb on mobile
+10. Every section earns its place — no section that could be cut without changing the message
+
+Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 pass. Score 0–5 if ≤ 2 pass.
+
 ### Visuals (0–25)
 | Range | What it means |
 |---|---|
@@ -153,17 +179,22 @@ Pass `lock: tokens.lock.json` as a first arg to every skill when `tokens.lock.js
 
 **If a skill is unavailable:** apply the fix directly in code. For Visuals: apply Tailwind class improvements and replace with a 21st.dev component via `mcp__magic__21st_magic_component_builder` directly. For Hook: edit copy in the file. For Function: fix the specific broken behaviour in code.
 
-| Failing dimension | Page type | Skill to call |
-|---|---|---|
-| Visuals | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes internally to mcp__magic / typeset / animate / colorize / calibrate-amplitude / overdrive |
-| Visuals | Dashboard / app route | `Skill('dashboard-design', args='[file]')` for the right pattern first → `Skill('visual-uplift', args='--execute [file]')` |
-| Motion weak or missing | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')` |
-| Motion needs to be ambitious | Any | `Skill('overdrive', args='[file]')` |
-| Amplitude wrong (too loud / quiet / generic) | Any | `Skill('calibrate-amplitude', args='dial:[0.0-1.0] [file]')` |
-| Hook, copy, CTA | Any | `Skill('clarify', args='[file]')` |
-| Personality, delight missing | Any | `Skill('delight', args='[file]')` |
-| Function — accessibility gaps | Any | `Skill('a11y-audit', args='[file]')` — find dev server port from `package.json` scripts.dev before running |
-| Total score < 40 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
+When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json ` to every skill's args. Example: `Skill('visual-uplift', args='lock:tokens.lock.json --execute src/components/Hero.tsx')`.
+
+`forbidden_additions` is a field in `tokens.lock.json` listing visual patterns the reference site does not use (e.g. gradient_mesh, hover_scale). No fix skill may introduce those patterns.
+
+| Failing dimension | Visuals score | Page type | Skill to call |
+|---|---|---|---|
+| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.6 [file]')` first; if still failing → visual-uplift |
+| Visuals — template/slop | 6–12 | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes to mcp__magic / typeset / animate / colorize / overdrive |
+| Visuals — template/slop | 6–12 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
+| Visuals — broken or missing | 0–5 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — score too low to refine |
+| Motion weak or missing | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')` |
+| Motion — push further | — | Any | `Skill('overdrive', args='[file]')` |
+| Hook, copy, CTA | — | Any | `Skill('clarify', args='[file]')` |
+| Personality, delight missing | — | Any | `Skill('delight', args='[file]')` |
+| Function — accessibility | — | Any | `Skill('a11y-audit', args='[file]')` — find dev server port from `package.json` scripts.dev |
+| Total score < 40 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — full rebuild |
 
 ---
 
@@ -294,10 +325,6 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 
 ## References
 
-Active files used by this skill:
+This skill is self-contained — all logic lives in this SKILL.md.
 
-- `references/sales-page-checklist.md` — calibration for the Hook dimension (what makes a CTA pass vs fail)
-- `references/decisions.md` — design decisions log for this skill
-- `references/fix-routing.md` — supplementary routing guidance for edge cases not covered by the routing table
-
-`references/archive/` contains the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F, Awwwards tier contracts, critique briefings). Archived 2026-05-29 when the skill was rebuilt. Do not invoke files from archive/.
+`references/archive/` contains the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F, Awwwards tier contracts, critique briefings, fix-routing table, decisions log). Archived 2026-05-29. Do not invoke files from archive/.
