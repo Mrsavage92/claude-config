@@ -52,7 +52,7 @@ Read `.web-evolve/state.json` at the project root.
 - **Missing:** First run. Go to Step 1A.
 - **Legacy v1 state (contains `"phases"`, `"trajectory"`, or `"loop_state"` keys):** Rename to `.web-evolve/state.json.v1`, log `⚠ v1 state detected — bootstrapping fresh v2 state`, then go to Step 1A.
 - **Malformed JSON:** Rename to `.web-evolve/state.json.corrupt`, log `⚠ state.json corrupt — bootstrapping from scratch`, then go to Step 1A.
-- **Present:** Reset `session_skill_calls` to `0` in state.json (start of a fresh run). Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
+- **Present:** Do NOT reset `session_skill_calls` — it persists across multiple runs within the same conversation. Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
 
 **Step 1A — Bootstrap**
 
@@ -96,6 +96,8 @@ Score each dimension independently (see Scoring Rubric). Write to state:
 - `area.run`: **First score only** — set to the post-increment `run_counter` value (e.g. `3`). **Re-score of a needs-work area** — keep the existing value (still `3`). These are two separate writes; do not conflate them.
 - `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
 - `taste_verified`: set to `null` now — updated to `true` (taste gate exit 0) or `false` (exit 2, script missing) in Step 6.
+- `taste_gate_attempts`: set to `0` now — incremented in Step 6 outcome D on each Exit 1.
+- `visuals_screenshot`: set to `true` if a screenshot was taken in Step 3, `false` otherwise. Written now from the Step 3 observation.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
 - `pass`: keep existing value (already set to 0 at bootstrap); do not reset on re-score.
@@ -136,6 +138,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
 **B — Higher but < 85, pass 2:** Set `status: "needs-work"`, note the specific remaining blocker. Go to Step 7.
 
 **C — Lower than the immediately preceding score (regression):**
+  - Do NOT increment `run_counter`. A revert is not a new scoring event.
   - For modified files: `git checkout -- [file]`
   - For newly created files staged by the fix skill — Bash: `git rm --cached [file] && rm [file]`; PowerShell: `git rm --cached [file]; Remove-Item [file]`
   - For new files never staged: `rm [file]` (Bash) or `Remove-Item [file]` (PowerShell)
@@ -145,7 +148,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
 **D — ≥ 85:** Run the taste gate:
   - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-  - Exit 1 = banned pattern — fix it, re-score, re-run taste gate. Max 2 taste gate iterations. If banned pattern persists after 2 attempts: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern name]` and go to Step 7. Do not loop indefinitely.
+  - Exit 1 = banned pattern — fix it, increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 taste gate iterations (`taste_gate_attempts` ≤ 2). If banned pattern persists after 2 attempts: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern name]` and go to Step 7. Do not loop indefinitely.
   - Exit 2 = script not found; set `status: "done"`, add `"taste_verified": false` to area state, note `taste-gate: skipped (script not found)` in run report. Go to Step 7.
   - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
@@ -154,7 +157,8 @@ Apply the same rubric. Four mutually exclusive outcomes:
 ```bash
 git add [changed files] .web-evolve/state.json
 git commit -m "fix([area-id]): [label] [old]→[new score]"
-# If first-score (old score was null): use format "fix([id]): [label] new:91"
+# First-score (old score null): "fix([id]): [label] new:[score]"
+# Regression revert:           "revert([id]): [label] pass-[N]-regressed"
 ```
 
 If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
@@ -205,6 +209,8 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 
 Score 20–25 if all 6 pass. Score 13–19 if 4–5 pass. Score 6–12 if 2–3 pass. Score 0–5 if 0–1 pass.
 
+**Visuals code-only cap:** If no screenshot was taken (no browser MCP), cap Visuals score at 19/25. Set `visuals_screenshot: false` in state.
+
 ### Clarity (0–25)
 | Range | What it means |
 |---|---|
@@ -253,8 +259,9 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first — `0.75` pushes a generically-safe component toward distinctive (the 13–19 band needs MORE bold, not less; 0.75 is a conservative push toward 1.0=boldest). Adjust to `0.9` for maximum boldness. If Visuals still < 20 after → visual-uplift |
 | Visuals — template/slop | 6–12 | Landing | Pass 1: `Skill('visual-uplift', args='--execute [file]')`. If still 6–12 after pass 1: score is now ≥ 85 total? → done. Total < 40? → rebuild. Otherwise: `status: "needs-work"` — do not add a 3rd pass. |
 | Visuals — template/slop | 6–12 | Dashboard | Pass 1: `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')`. Same fallback logic as landing. |
-| Visuals — broken or missing | 0–5 AND total < 50 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine in context |
-| Visuals — broken or missing | 0–5 AND total ≥ 50 | Any | `Skill('visual-uplift', args='--execute [file]')` — other dimensions are passing; apply targeted styling only |
+| Visuals — broken or missing | 0–5 AND total < 50 | Landing | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine |
+| Visuals — broken or missing | 0–5 AND total < 50 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
+| Visuals — broken or missing | 0–5 AND total ≥ 50 | Any | `Skill('visual-uplift', args='--execute [file]')` — other dimensions pass; targeted styling only |
 | Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use ONLY when motion is the PRIMARY cause (no animations at all, or clearly wrong timing). If the component has other template-slop issues (color, layout, components) alongside motion issues, use visual-uplift first — it handles motion as part of its routing. Do NOT route here for Hook, Clarity, or Function failures. |
 | Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
@@ -341,11 +348,11 @@ Discover routes before picking the first area:
       "function_verified": true,
       "taste_verified": true,
       "visuals_screenshot": true,
+      "taste_gate_attempts": 1,
       "issues": ["no animation on scan submit", "sub-headline generic"],
       "fixes": ["added loading state animation", "rewrote sub-headline"],
       "run": 2,
-      "pass": 1,
-      "taste_verified": true
+      "pass": 1
     },
     {
       "id": "pricing",
@@ -357,6 +364,9 @@ Discover routes before picking the first area:
       "score": null,
       "dimensions": null,
       "function_verified": null,
+      "taste_verified": null,
+      "visuals_screenshot": null,
+      "taste_gate_attempts": 0,
       "issues": [],
       "fixes": [],
       "run": null,
@@ -423,7 +433,7 @@ Start a fresh session and run /web-evolve to resume.
 - **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
 - **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
 - **Incrementing `run_counter` during a regression revert.** A revert does not count as a new run. Do not increment `run_counter` when reverting; it only increments on first-score of a new area.
-- **`session_skill_calls` not reset when scope switches mid-session.** If you run `/web-evolve landing` then continue with `/web-evolve /clients` in the same conversation, `session_skill_calls` carries over — it should stay as-is since the context budget is still shared. Do not reset it on scope change. It only resets at the start of a new conversation (Step 1 fresh run).
+- **Resetting `session_skill_calls` on scope switch.** Within the same conversation, multiple `/web-evolve` invocations share the context budget. `session_skill_calls` must NOT be reset when scope changes — only a new conversation (new context window) resets it.
 - **Routing by skill name rather than dimension.** Calling `overdrive` because you want animation doesn't mean the Visuals dimension is failing. Check the score first. Calling `clarify` for a Visuals failure makes no sense. Always route by the lowest-scoring dimension, not by what sounds good.
 
 ---
