@@ -7,7 +7,13 @@
       "name": "bootstrap-creates-correct-state",
       "prompt": "You are running /web-evolve landing for the first time on a project. The project has src/components/landing/HeroSection.tsx (120 lines) and src/components/landing/PricingTable.tsx (95 lines). No .web-evolve/ directory exists. Describe exactly what state.json you would write after Step 1A bootstrap. Include all fields.",
       "files": [],
-      "expected_assertions": ["run_counter: 0", "session_skill_calls: 0", "last_scope: landing", "pass: 0 on all areas", "score: null on all areas"],
+      "expected_assertions": [
+        "run_counter: 0",
+        "session_skill_calls: 0",
+        "last_scope: landing",
+        "pass: 0 on all areas",
+        "score: null on all areas"
+      ],
       "rationale": "Tests that Step 1A bootstrap writes all required v2 fields at correct initial values."
     },
     {
@@ -15,15 +21,22 @@
       "name": "scope-switch-adds-new-areas",
       "prompt": "state.json has last_scope: landing and two landing areas both status: done. User runs /web-evolve /clients. What happens in Step 1 and what does state.json look like after?",
       "files": [],
-      "expected_assertions": ["Step 1 bootstraps /clients areas without removing landing areas", "last_scope becomes /clients", "session_skill_calls reset to 0"],
-      "rationale": "Tests scope-switch mid-project (Present branch, no areas for new scope)."
+      "expected_assertions": [
+        "Step 1 bootstraps /clients areas without removing landing areas",
+        "last_scope becomes /clients",
+        "session_skill_calls is NOT reset \u2014 carries over from prior skill calls in this conversation"
+      ],
+      "rationale": "Tests scope-switch mid-project. session_skill_calls must persist across scope switches within same conversation."
     },
     {
       "id": 2,
       "name": "needs-work-pass-reset",
       "prompt": "An area has status: needs-work, pass: 2, score: 67. Fresh session starts, Step 2 picks this area. When Step 5 begins, what is area.pass and why?",
       "files": [],
-      "expected_assertions": ["area.pass reset to 0 at start of Step 5", "reason references prior session pass being stale"],
+      "expected_assertions": [
+        "area.pass reset to 0 at start of Step 5",
+        "reason references prior session pass being stale"
+      ],
       "rationale": "Tests needs-work re-entry resets pass to 0. Without this, Step 5 immediately exits with zero fix attempts."
     },
     {
@@ -31,8 +44,86 @@
       "name": "context-budget-halt-after-scoring",
       "prompt": "Skill('clarify') was called earlier this session (session_skill_calls=1). In Step 5, need to call Skill('visual-uplift'). Area scored: Hook:18, Visuals:11, Clarity:21, Function:20 (total 70). What happens and what does state.json look like?",
       "files": [],
-      "expected_assertions": ["Halt fires (session_skill_calls >= 2)", "state: status=needs-work, score=70, dimensions written, pass written", "CONTEXT_BUDGET_EXCEEDED message"],
-      "rationale": "Tests context budget halt after scoring — state must be persisted for next session resume."
+      "expected_assertions": [
+        "Halt fires (session_skill_calls >= 2)",
+        "state: status=needs-work, score=70, dimensions written, pass written",
+        "CONTEXT_BUDGET_EXCEEDED message"
+      ],
+      "rationale": "Tests context budget halt after scoring \u00e2\u20ac\u201d state must be persisted for next session resume."
+    },
+    {
+      "id": 4,
+      "name": "regression-revert-step6c",
+      "prompt": "An area scored 71 before fixing. After fix pass 1, re-score gives 65 (lower). What happens? Specifically: which git commands run, what status and pass values are written to state.json, what is the commit message format?",
+      "files": [],
+      "expected_assertions": [
+        "git checkout for modified files",
+        "run_counter NOT incremented",
+        "status: needs-work with fix-regressed note",
+        "commit format: revert([id]): [label] pass-N-regressed"
+      ],
+      "rationale": "Tests Step 6 outcome C (regression revert). Critical for preventing scores going backwards undetected."
+    },
+    {
+      "id": 5,
+      "name": "taste-gate-max-iterations",
+      "prompt": "Area scored 88 (above 85). Taste gate runs, finds banned pattern on pass 1 and pass 2. What happens on the third taste gate check attempt?",
+      "files": [],
+      "expected_assertions": [
+        "Max 2 iterations enforced via taste_gate_attempts counter",
+        "Third attempt does not run",
+        "status: needs-work with taste-gate-failed note",
+        "taste_verified: false in state"
+      ],
+      "rationale": "Tests Step 6D taste gate loop termination. Prevents infinite loop when a fix skill keeps re-introducing banned patterns."
+    },
+    {
+      "id": 6,
+      "name": "zero-match-guard",
+      "prompt": "Running /web-evolve landing on a Remix project. The landing globs (src/components/landing/, src/components/sections/, etc.) all return zero files. What happens?",
+      "files": [],
+      "expected_assertions": [
+        "state.json NOT written",
+        "Halt with warning message naming the scope",
+        "No areas created for empty scope"
+      ],
+      "rationale": "Tests Step 1A zero-match guard. An empty state.json causes Step 2 to report false completion."
+    },
+    {
+      "id": 7,
+      "name": "run-counter-first-vs-rescore",
+      "prompt": "An area has run: 3, status: needs-work, score: 62. A new session begins, step 2 picks this area, step 4 re-scores it at 71. What are run_counter and area.run after the re-score?",
+      "files": [],
+      "expected_assertions": [
+        "run_counter NOT incremented (area was previously scored)",
+        "area.run remains 3 (unchanged)",
+        "Two actions are separate: counter increment only on first-score"
+      ],
+      "rationale": "Tests Step 4 run_counter vs area.run distinction. Critical: conflating them causes wrong run numbers."
+    },
+    {
+      "id": 8,
+      "name": "v1-state-migration",
+      "prompt": "A project has .web-evolve/state.json containing a key \"phases\" from the old v1 engine. User runs /web-evolve landing. What happens in Step 1?",
+      "files": [],
+      "expected_assertions": [
+        "state.json renamed to state.json.v1",
+        "Warning logged: v1 state detected",
+        "Step 1A bootstrap runs to create fresh v2 state"
+      ],
+      "rationale": "Tests v1 state migration guard. Without this, v1 state keys (phases, trajectory) cause downstream step failures."
+    },
+    {
+      "id": 9,
+      "name": "malformed-state-json",
+      "prompt": "state.json exists but contains invalid JSON (truncated mid-object from a prior crash). User runs /web-evolve landing. What happens?",
+      "files": [],
+      "expected_assertions": [
+        "state.json renamed to state.json.corrupt",
+        "Warning logged",
+        "Step 1A bootstrap runs"
+      ],
+      "rationale": "Tests malformed JSON handling in Step 1. Prevents parse errors from blocking all future runs."
     }
   ]
 }

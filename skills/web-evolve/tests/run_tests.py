@@ -94,6 +94,17 @@ check("Taste gate has Bash variant", "~/.claude/skills/taste-skill" in text)
 # 12. context budget uses session_skill_calls (persisted)
 check("Budget check references session_skill_calls", "session_skill_calls" in text.split("## Fix routing")[0])
 
+# 13. session_skill_calls NOT reset on scope switch (spec says Do NOT reset)
+check("session_skill_calls not reset on scope switch",
+      "Do NOT reset" in text and "session_skill_calls" in text[text.find("Do NOT reset")-50:text.find("Do NOT reset")+100])
+
+# 14. taste gate has max iteration tracking
+check("Taste gate has max iteration limit", "taste_gate_attempts" in text and "Max 2" in text)
+
+# 15. run_counter and area.run are explicitly two separate writes
+check("run_counter vs area.run explicitly separated",
+      "Two separate" in text or "two separate" in text or "do not conflate" in text.lower())
+
 # Summary
 print(f"\n{len(failures)} failure(s) out of {12 + 9} checks.")
 if failures:

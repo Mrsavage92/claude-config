@@ -1,7 +1,7 @@
 ---
 name: web-evolve
 disallowed-tools: AskUserQuestion
-description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Use when the user says "improve the site", "web-evolve", "make the landing page better", "improve the dashboard", "iterate on [page]", "level up [page]", "fix [page] visually", "polish the site", "refine the UI", or re-runs after a prior web-evolve session.
+description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Use when the user says "improve the site", "web-evolve", "make the landing page better", "improve the dashboard", "iterate on [page]", "level up [page]", "fix [page] visually", "polish the site", "refine the UI", "evolve [route]", or re-runs after a prior web-evolve session.
 argument-hint: "[landing | dashboard | /route]"
 ---
 
@@ -93,7 +93,7 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 Score each dimension independently (see Scoring Rubric). Write to state:
 - `dimensions` + `score`
 - `run_counter` (global, in state root): **Always** increment by 1 when scoring a new area for the first time. Do NOT increment when re-scoring a `needs-work` area. Example: state had `run_counter: 2`; scoring the third new area → write `run_counter: 3`.
-- `area.run`: **First score only** — set to the post-increment `run_counter` value (e.g. `3`). **Re-score of a needs-work area** — keep the existing value (still `3`). These are two separate writes; do not conflate them.
+- `area.run`: **First score only** — set to the post-increment `run_counter` value (e.g. `3`). **Re-score of a needs-work area** — keep the existing value (still `3`). These are two separate write decisions; do not conflate them — conflating causes wrong run numbers in state history.
 - `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
 - `taste_verified`: set to `null` now — updated to `true` (taste gate exit 0) or `false` (exit 2, script missing) in Step 6.
 - `taste_gate_attempts`: set to `0` now — incremented in Step 6 outcome D on each Exit 1.
@@ -119,7 +119,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 - Before calling `web-page` (mode:rebuild): halt if `session_skill_calls` ≥ 1 in state.json — `web-page` is the heaviest call and warrants its own fresh context.
 - Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: the calibrate-amplitude + visual-uplift chained pair counts as 1 call. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
 - Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
-  - Write full state before halting: `pass`, `score`, `dimensions`, `issues`, `status: "needs-work"`. Context budget halts only occur in Step 5, which is entered after Step 4 has already written the score — there is no pre-score halt path in Step 5.
+  - Write full state before halting: `pass`, `score`, `dimensions`, `issues`, `fixes` (partial list so far), `session_skill_calls`, `status: "needs-work"`. Context budget halts only occur in Step 5, entered after Step 4 has already written the score.
   - Do not proceed with the heavy skill call.
 - "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
 
