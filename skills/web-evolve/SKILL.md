@@ -1,7 +1,7 @@
 ---
 name: web-evolve
 disallowed-tools: AskUserQuestion
-description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Use when the user says "improve the site", "web-evolve", "make the landing page better", "improve the dashboard", "iterate on [page]", "level up [page]", "fix [page] visually", or re-runs after a prior web-evolve session.
+description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Use when the user says "improve the site", "web-evolve", "make the landing page better", "improve the dashboard", "iterate on [page]", "level up [page]", "fix [page] visually", "polish the site", "refine the UI", or re-runs after a prior web-evolve session.
 argument-hint: "[landing | dashboard | /route]"
 ---
 
@@ -89,8 +89,8 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 Score each dimension independently (see Scoring Rubric). Write to state:
 - `dimensions` + `score`
-- `run_counter` (global, in state root): **Always** increment by 1 when scoring a new area for the first time. Do NOT increment when re-scoring a `needs-work` area.
-- `area.run`: **First score only** — set to the post-increment `run_counter` value. **Re-score** — keep the existing value unchanged. These are two separate actions; do not conflate them.
+- `run_counter` (global, in state root): **Always** increment by 1 when scoring a new area for the first time. Do NOT increment when re-scoring a `needs-work` area. Example: state had `run_counter: 2`; scoring the third new area → write `run_counter: 3`.
+- `area.run`: **First score only** — set to the post-increment `run_counter` value (e.g. `3`). **Re-score of a needs-work area** — keep the existing value (still `3`). These are two separate writes; do not conflate them.
 - `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
 - `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
 - `fixes`: set to `[]` — populated in Step 5.
@@ -111,8 +111,8 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Context budget check:**
 - Before calling `web-page` (mode:rebuild): halt if you have called **any** skill earlier in this session — `web-page` is the heaviest call and warrants its own fresh context.
-- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if you have already called **2+** skills in this session.
-- Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the current `pass` value to state.json. Do not proceed.
+- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if you have already called **2+** skills in this session. Exception: `calibrate-amplitude` followed by `visual-uplift` on the same failing Visuals dimension in the same pass counts as **1 skill call** (they are a chained pair, not independent calls).
+- Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`. Before halting, write the full current area state to state.json: `pass`, `score` (if already scored), `dimensions` (if already scored), `issues` (if already populated), `status: "needs-work"`. This ensures the next session resumes with full context. Do not proceed with the heavy skill call.
 - "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
@@ -236,7 +236,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. Do NOT route here for Hook, Clarity, or Function failures. |
 | Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
-| Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')` then re-evaluate CTA placement in layout |
+| Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')`. After clarify runs, re-evaluate CTA placement: is the primary CTA above the fold? If not, move it up in the component before re-scoring. |
 | Hook 0–5 — no CTA | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — no CTA cannot be patched |
 | Clarity 6–25 — copy/labels unclear | — | Any | `Skill('clarify', args='[file]')` |
 | Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if Clarity re-score is still in the 0–5 band after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
@@ -252,33 +252,19 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 
 ### Landing (`/web-evolve landing`)
 
-Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick by highest line count. Log all matches. Fallback globs (used when primary paths return nothing):
+Glob paths: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Pick the highest-line-count file when multiple match. All globs match `.tsx`, `.jsx`, `.vue`, and `.svelte`. Log all matches.
 
-| ID | Primary patterns | Fallback |
-|---|---|---|
-All globs match `.tsx` and `.jsx`. Add `.vue` and `.svelte` fallbacks for non-React projects.
+| Priority | ID | Label | Primary patterns | Fallback (if primary returns nothing) |
+|---|---|---|---|---|
+| 1 | `hero-cta` | Hero / primary CTA | `*Hero*`, `*hero*` | `**/components/**/Hero*` |
+| 2 | `pricing` | Pricing section | `*Pricing*`, `*pricing*` | `**/components/**/Pric*` |
+| 3 | `nav` | Navigation | `*Nav*`, `*Header*` | `**/components/**/Nav*` |
+| 4 | `form` | Primary form | `*Form*`, `*Signup*`, `*Subscribe*` | `**/components/**/*Form*` |
+| 5 | `features` | Features / how-it-works | `*Features*`, `*HowIt*` | `**/components/**/*Feature*` |
+| 6 | `social-proof` | Testimonials / trust | `*Testimonial*`, `*Trust*`, `*Review*` | `**/components/**/*Testimon*` |
+| 7 | `footer` | Footer | `*Footer*` | `**/components/**/Footer*` |
 
-| ID | Primary patterns | Fallback |
-|---|---|---|
-| `hero-cta` | `*Hero*`, `*hero*` | `**/components/**/Hero*` |
-| `pricing` | `*Pricing*`, `*pricing*` | `**/components/**/Pric*` |
-| `nav` | `*Nav*`, `*Header*` | `**/components/**/Nav*` |
-| `form` | `*Form*`, `*Signup*`, `*Subscribe*` | `**/components/**/*Form*` |
-| `features` | `*Features*`, `*HowIt*` | `**/components/**/*Feature*` |
-| `social-proof` | `*Testimonial*`, `*Trust*`, `*Review*` | `**/components/**/*Testimon*` |
-| `footer` | `*Footer*` | `**/components/**/Footer*` |
-
-| Priority | ID | Label | File pattern |
-|---|---|---|---|
-| 1 | `hero-cta` | Hero / primary CTA | `*Hero*`, `*hero*` |
-| 2 | `pricing` | Pricing section | `*Pricing*`, `*pricing*` |
-| 3 | `nav` | Navigation | `*Nav*`, `*Header*` |
-| 4 | `form` | Primary form | `*Form*`, `*Signup*`, `*Subscribe*` |
-| 5 | `features` | Features / how-it-works | `*Features*`, `*HowIt*` |
-| 6 | `social-proof` | Testimonials / trust | `*Testimonial*`, `*Trust*`, `*Review*` |
-| 7 | `footer` | Footer | `*Footer*` |
-
-Skip any pattern that returns no file. Do not create state entries for components that do not exist.
+Skip any ID whose patterns (primary and fallback) return no files. Do not create state entries for components that do not exist.
 
 ### Route / dashboard (`/web-evolve /route` or `dashboard`)
 
@@ -349,7 +335,7 @@ Discover routes before picking the first area:
 }
 ```
 
-`status` progression: `"pending"` → `"done"` (direct, when first fix reaches ≥ 85) OR `"pending"` → `"needs-work"` → `"done"` (when multiple passes needed). `"needs-work"` is not mandatory.
+`status` progression: `"pending"` → `"done"` (direct, when first fix reaches ≥ 85) OR `"pending"` → `"needs-work"` → `"done"` (when multiple passes needed or context budget halts). `"needs-work"` is set automatically by Step 6 outcomes B/C and by context budget halt — it is mandatory in those branches. `"done"` is only set by Step 6 outcome D (≥ 85, taste gate passed).
 
 ---
 
@@ -383,6 +369,14 @@ Next:  [next area label] ([page]) — run /web-evolve to continue
 ```
 
 If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web-evolve /[other-route]).`
+
+Context budget halt format:
+```
+⛔ CONTEXT_BUDGET_EXCEEDED
+Skill: [skill name] | Area: [area label] | Pass: [N]
+State written: status=needs-work, pass=[N], score=[N or null]
+Start a fresh session and run /web-evolve to resume.
+```
 
 ---
 
