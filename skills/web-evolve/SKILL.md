@@ -51,13 +51,17 @@ Read `.web-evolve/state.json` at the project root.
 
 **Step 1A — Bootstrap**
 
-Create the state directory: run `mkdir -p .web-evolve/` before any file write.
+Create the state directory:
+- Mac/Linux: `mkdir -p .web-evolve/`
+- Windows (PowerShell): `New-Item -ItemType Directory -Force -Path ".web-evolve" | Out-Null`
+
+Set `"project"` to the name of the project root directory (e.g. `"audithq-prod-live"`).
 
 Enumerate areas for the current scope (see Area Enumeration). 
 
 **Zero-match guard:** If all globs returned no files, do NOT write an empty state.json — an empty state causes Step 2 to report false completion. Instead halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths against your project structure and re-run.`
 
-Write `.web-evolve/state.json` with all areas at `status: "pending"` and `"last_scope": "[current scope arg]"`. Then go to Step 2.
+Write `.web-evolve/state.json` with all areas at `status: "pending"`, `"last_scope": "[current scope arg]"`, and `"run_counter": 0`. For `dashboard` scope, `last_scope` is initially `"dashboard"` — it is updated to the specific route (e.g. `"/clients"`) after route discovery runs in Area Enumeration. Then go to Step 2.
 
 ### Step 2 — Pick target
 
@@ -75,7 +79,10 @@ Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
 
 ### Step 4 — Score
 
-Score each dimension independently (see Scoring Rubric). Write `dimensions` + `score` to state.
+Score each dimension independently (see Scoring Rubric). Write to state:
+- `dimensions` + `score`
+- `run`: increment `run_counter` in state.json by 1, write that value here. If this area was previously scored (`status: "needs-work"`), keep the existing `run` value — do not increment again.
+- `function_verified`: `true` if browser MCP was used to assess Function, `false` if code-only.
 
 | Dimension | Max | Question |
 |---|---|---|
@@ -90,7 +97,7 @@ Route each failing dimension using the Fix Routing table. **One skill per dimens
 
 **Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
 
-**Context budget check:** Before calling `web-page` or `visual-uplift`, if the session has already consumed > 100k tokens, note the risk in the run report and recommend starting a fresh session for that fix. Do not attempt a heavy skill call when the window is nearly full — an incomplete run produces broken state.
+**Context budget check:** Before calling `web-page`, `visual-uplift`, `overdrive`, or `dashboard-design`, if the session has already consumed > 100k tokens, note the risk in the run report and recommend starting a fresh session for that fix. Do not attempt a heavy skill call when the window is nearly full — an incomplete run produces broken state.
 
 After each skill call: re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
 
@@ -111,7 +118,7 @@ Apply the same rubric.
 - **≥ 85:** `status: "done"`. Go to Step 7.
 - **Higher than pre-fix but < 85, pass 1:** Return to Step 5 for pass 2.
 - **Higher than pre-fix but < 85, pass 2:** `status: "needs-work"`, note remaining blocker. Go to Step 7.
-- **Lower than pre-fix (regression):** Run `git checkout -- [changed files]` to revert. Set `status: "needs-work"` with note `fix-regressed: [dimension] [score before → score after]`. Go to Step 7 with reverted files only. Do not retry in this session.
+- **Lower than immediately preceding score (regression at any pass):** Revert only the most recent fix (`git checkout -- [changed files from that fix]`). Re-score. If score is still higher than original pre-fix: keep the earlier pass's changes, set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`. If score is back to original: revert everything (`git checkout -- [all changed files this run]`), set `status: "needs-work"` with note `fix-regressed-all-passes`. Go to Step 7.
 
 ### Step 7 — Commit and report
 
@@ -194,8 +201,8 @@ When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json `
 | Visuals — template/slop | 6–12 | Landing | `Skill('visual-uplift', args='--execute [file]')` — routes to mcp__magic / typeset / animate / colorize / overdrive |
 | Visuals — template/slop | 6–12 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
 | Visuals — broken or missing | 0–5 | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — score too low to refine |
-| Motion weak or missing | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')` |
-| Motion — push further | — | Any | `Skill('overdrive', args='[file]')` |
+| Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use when animations are absent or wrong, not when layout/color is the core issue. |
+| Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Use when animate tier is too conservative for the page type. |
 | Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
 | Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')` then re-evaluate CTA placement in layout |
 | Hook 0–5 — no CTA | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — no CTA cannot be patched |
@@ -213,7 +220,7 @@ When `tokens.lock.json` exists at project root, prepend `lock:tokens.lock.json `
 
 ### Landing (`/web-evolve landing`)
 
-Glob `src/components/landing/`, `src/components/sections/`, `src/components/layout/`. Map by filename pattern. When a pattern matches multiple files, pick the one whose filename most closely matches the area ID (e.g. `HeroQuickScan.tsx` over `HeroVisual.tsx` for `hero-cta`). Log all matches in the run report so the user can correct if wrong.
+Glob across: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`. Map by filename pattern. When a pattern matches multiple files, pick the one whose filename most closely matches the area ID (e.g. `HeroQuickScan.tsx` over `HeroVisual.tsx` for `hero-cta`). Log all matches in the run report so the user can correct if wrong.
 
 | Priority | ID | Label | File pattern |
 |---|---|---|---|
@@ -316,7 +323,7 @@ Fixes:
 ✅ Done — committed "fix([id]): [label] [before]→[after]"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Next:  [next area label] ([page]) — run /web-evolve [scope] to continue
+Next:  [next area label] ([page]) — run /web-evolve to continue
 ```
 
 If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web-evolve /[other-route]).`
@@ -330,7 +337,8 @@ If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web
 - **Moving on at 84.** If the re-score is 84, fix the remaining gap or mark `needs-work`. Do not round up.
 - **Inventing files.** Only add areas to state for components that exist on disk. Skip patterns that return no glob match.
 - **Skipping the taste gate.** A visually polished component that passes slop patterns (bento default, Geist on everything) is not done.
-- **Scope contamination.** After `/web-evolve dashboard`, `last_scope` is set to the specific route worked on, not `"dashboard"`. A bare `/web-evolve` resumes that route — correct behaviour, but always print the active scope in the run header so the user isn't surprised.
+- **Scope contamination.** After `/web-evolve dashboard`, `last_scope` is updated to the specific route worked on once discovery runs. A bare `/web-evolve` resumes that route — correct, but always print the active scope in the run header so the user isn't surprised.
+- **Visual scoring without a screenshot.** Scoring Visuals from code alone produces unreliable results — compiled Tailwind class names don't tell you what actually renders. If browser MCP is unavailable: note "Visuals assessed from code only" in the run report and accept that the score has higher uncertainty.
 - **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
 
 ---
