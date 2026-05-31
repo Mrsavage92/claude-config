@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Requires Node >=18 (global fetch, top-level await, ESM .mjs).
 // Deterministic HTTP-level verification for a deployed chatbot site.
 // Covers SKILL.md step 5: right build live, correct host, security headers.
 // It does NOT exercise the bot's answers — that needs a browser (steps 6-7),
@@ -46,7 +47,10 @@ const results = [];
 const add = (level, label, detail) => results.push({ level, label, detail });
 
 async function main() {
-  const url = `${cfg.canonicalUrl}${cfg.canonicalUrl.includes("?") ? "&" : "?"}_cb=${Date.now()}`;
+  // Strip any #fragment before appending the cache-bust param, else the param
+  // lands inside the fragment and isn't sent to the server.
+  const cleanUrl = cfg.canonicalUrl.split("#")[0];
+  const url = `${cleanUrl}${cleanUrl.includes("?") ? "&" : "?"}_cb=${Date.now()}`;
   let res, body;
   try {
     res = await fetch(url, { redirect: "follow", headers: { "user-agent": "chatbot-deploy-verify" } });

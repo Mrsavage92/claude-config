@@ -11,8 +11,8 @@
     "SUPABASE_SERVICE_ROLE_KEY",
     "RESEND_API_KEY"
   ],
+  "_selectors_note": "selectors is OPTIONAL — defaults match the shared ChatWidget; override only if a site customised them.",
   "selectors": {
-    "_comment": "Optional. Defaults match the shared ChatWidget; override only if a site customised them.",
     "launcher": "button[aria-label^=\"Chat with\"]",
     "input": "#orbit-chat-input",
     "send": "button[aria-label=\"Send message\"]",

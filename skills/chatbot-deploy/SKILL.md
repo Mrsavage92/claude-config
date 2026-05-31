@@ -126,7 +126,7 @@ was literally a different company's site. Use the customer's real domain (or the
 exact deployment URL Vercel prints), and remember the apex may 301 to the
 canonical host (e.g. `.au` → `.com.au`).
 
-### 6-7. Exercise the bot for real + answer-quality eval (the step that matters)
+### 6. Exercise the bot — is it answering at all? (the step that matters)
 
 The HTTP checks can all pass on a dead bot — they prove the page loads, not that
 the bot *answers*. This is the gate that proves liveness, so it's bundled as a
@@ -137,13 +137,21 @@ node <skill>/scripts/exercise-bot.mjs <path-to-config.json>
 ```
 
 It drives the **real widget** headlessly (server functions have no stable public
-POST path, so we go through the UI), sends each `evalQuestions[].q`, and for each
-asserts: the reply is non-empty, does **not** contain `offlineFallbackMarker`
-(that string means the API key isn't wired — silently dead), and satisfies every
-`mustInclude` / `mustNotInclude`. That last part catches a wrong price, a
-hallucinated claim, or markdown leaking through (`**`) after a content edit or
-model bump — drift that code tests never see. Exit 0 only if every question
-passes; the receipt quotes each reply as evidence.
+POST path, so we go through the UI), sends each `evalQuestions[].q`, and asserts
+the reply is non-empty and does **not** contain `offlineFallbackMarker` — that
+string is the fail-open message, so its presence means the API key isn't wired
+and the bot is silently dead. A timed-out question gets one automatic retry
+before it's recorded as a fail, so a network hiccup doesn't masquerade as a dead
+bot.
+
+### 7. Answer-quality eval — catch content/model drift
+
+The same run also checks *what* the bot says: for each question it asserts every
+`mustInclude` substring is present and every `mustNotInclude` is absent. That
+catches a wrong price, a hallucinated claim, or markdown leaking through (`**`)
+after a content edit or model bump — drift that code tests never see. Exit 0
+only if every question passes both the liveness and the content checks; the
+receipt quotes each reply as evidence.
 
 Needs Playwright once — run from the **site's `repoPath`** (so node resolves
 `playwright` from that project's `node_modules`), not from the skill directory:
@@ -168,6 +176,14 @@ HTTP check (5), the bot-answer + eval gate (6-7) AND the lead path (8) all pass 
 a deploy whose Supabase/Resend secrets are missing will answer fine but silently
 drop every enquiry, so step 8 is part of the gate, not optional. "It deployed"
 is not "it works" — say which, with proof.
+
+## If verification fails after a deploy
+
+If step 6-7 fails on a deploy that previously worked (bot went dead, wrong
+answers), roll back first, then investigate — don't leave the broken version
+serving customers. Cloudflare: `wrangler rollback`. Vercel: redeploy the last
+good deployment (Vercel dashboard → Deployments → ⋯ → Promote, or
+`vercel rollback`). Then diagnose against the preview/local before re-shipping.
 
 ## After a clean run
 

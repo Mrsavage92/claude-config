@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Requires Node >=16 (top-level await, ESM .mjs) and Playwright >=1.40.
 // Live bot-answer verification — SKILL.md steps 6-7, the part that actually
 // proves the chatbot is alive. Drives the REAL widget in a headless browser,
 // sends each config evalQuestion, and asserts the reply is a grounded answer
@@ -87,6 +88,7 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   try {
+    console.log(`[selectors] ${JSON.stringify(sel)}`); // so a selector mismatch is self-diagnosing
     await page.goto(cfg.canonicalUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
 
     // Open the widget.
@@ -98,42 +100,52 @@ async function main() {
       die(`could not open the chat widget (launcher "${sel.launcher}" / input "${sel.input}"). Wrong selectors or the widget isn't on ${cfg.canonicalUrl}.`, 2);
     }
 
-    for (const entry of questions) {
-      const before = (await page.$$eval(sel.replyBubble, (els) => els.length).catch(() => 0));
-      await page.fill(sel.input, entry.q);
+    // Send one question and return the settled reply. Throws if no new reply
+    // bubble appears in time, so the caller can decide whether to retry.
+    async function sendAndAwait(q) {
+      const before = await page.$$eval(sel.replyBubble, (els) => els.length).catch(() => 0);
+      await page.fill(sel.input, q);
       await page.click(sel.send);
-
-      // Wait for a NEW reply bubble (model takes a few seconds), then let it settle.
-      let reply = "";
-      try {
-        await page.waitForFunction(
-          ([selector, prev]) => {
-            const n = document.querySelectorAll(selector).length;
-            if (n <= prev) return false;
-            const last = document.querySelectorAll(selector)[n - 1];
-            return last && !/^thinking/i.test(last.textContent.trim()) && last.textContent.trim().length > 0;
-          },
-          [sel.replyBubble, before],
-          { timeout: 40000 },
-        );
-        // Wait for the reply to STOP growing rather than a fixed delay — a
-        // streaming/slow model can have only a partial sentence rendered after
-        // a flat 400ms, which would false-pass/fail the assertions. Poll until
-        // two consecutive reads (300ms apart) match, or give up after ~6s.
-        let prevText = await latestReplyText(page);
-        for (let i = 0; i < 20; i++) {
-          await page.waitForTimeout(300);
-          const now = await latestReplyText(page);
-          if (now && now === prevText) break;
-          prevText = now;
-        }
-        reply = prevText;
-      } catch {
-        reply = await latestReplyText(page); // capture whatever's there for evidence
+      await page.waitForFunction(
+        ([selector, prev]) => {
+          const n = document.querySelectorAll(selector).length;
+          if (n <= prev) return false;
+          const last = document.querySelectorAll(selector)[n - 1];
+          return last && !/^thinking/i.test(last.textContent.trim()) && last.textContent.trim().length > 0;
+        },
+        [sel.replyBubble, before],
+        { timeout: 40000 },
+      );
+      // Wait for the reply to STOP growing rather than a fixed delay — a slow/
+      // streaming model can have only a partial sentence rendered after a flat
+      // delay. Poll until two reads (300ms apart) match, or give up after ~6s.
+      let prevText = await latestReplyText(page);
+      for (let i = 0; i < 20; i++) {
+        await page.waitForTimeout(300);
+        const now = await latestReplyText(page);
+        if (now && now === prevText) break;
+        prevText = now;
       }
+      return prevText;
+    }
 
+    for (const entry of questions) {
+      let reply = "";
+      let retried = false;
+      try {
+        reply = await sendAndAwait(entry.q);
+      } catch {
+        // One retry on timeout — a network hiccup shouldn't fail a live bot,
+        // but a genuinely dead bot still fails the second attempt.
+        retried = true;
+        try {
+          reply = await sendAndAwait(entry.q);
+        } catch {
+          reply = await latestReplyText(page);
+        }
+      }
       const fails = checkReply(entry, reply);
-      results.push({ q: entry.q, pass: fails.length === 0, fails, reply: reply.slice(0, 280) });
+      results.push({ q: entry.q, pass: fails.length === 0, fails, reply: reply.slice(0, 280), retried });
     }
   } finally {
     await browser.close();
@@ -142,7 +154,7 @@ async function main() {
   // Receipt.
   console.log(`\n=== chatbot-deploy bot-answer verification: ${cfg.name || cfg.canonicalUrl} ===`);
   for (const r of results) {
-    console.log(`\n[${r.pass ? "PASS" : "FAIL"}] Q: ${r.q}`);
+    console.log(`\n[${r.pass ? "PASS" : "FAIL"}] Q: ${r.q}${r.retried ? " (retry 1/1)" : ""}`);
     console.log(`   reply: ${r.reply || "(none)"}`);
     if (!r.pass) for (const f of r.fails) console.log(`   - ${f}`);
   }
