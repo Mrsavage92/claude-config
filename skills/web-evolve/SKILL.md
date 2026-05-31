@@ -156,7 +156,7 @@ Apply the same rubric. Four mutually exclusive outcomes:
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
   - Exit 1 = banned pattern — **first, confirm the fix actually introduced it (diff-awareness).** The script scans the whole file, so it flags pre-existing patterns too. Run `git diff -- [changed-file] | grep '^+'` and check whether the matched token appears in an **added** line. If it does NOT, the pattern is pre-existing — this fix did not introduce it — so treat the gate as **passed**: set `taste_verified: false`, note `taste-gate: pre-existing [pattern] not introduced by this fix (verified via diff)` in the run report, set `status: "done"`, go to Step 7. Also treat as false positives (not banned): `font-black`/`font-extrabold`/`font-*` (these are font *weights*, not the colour `#000000`) and semantic Tailwind colour utilities already in the design system (`text-amber-*`, `text-rose-*`, `bg-emerald-*` used for status/grade encoding, not as a navy+gold hero treatment).
   - Exit 1 AND the pattern IS in an added line (genuinely introduced) — the fix for attempt 2 MUST target a different change than attempt 1 (if the same fix re-introduces the same banned pattern, it is a no-op — escalate to `needs-work` immediately without a second attempt). Increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 iterations. If pattern persists: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern]` and go to Step 7.
-  - Exit 2 = script not found; set `status: "done"`, add `"taste_verified": false` to area state, note `taste-gate: skipped (script not found)` in run report. Go to Step 7.
+  - Exit 2 = script not found (`taste-skill` not installed on this machine). Do **NOT** silently pass — a missing gate is not a passed gate. Run an **inline fallback slop scan** instead: `git diff -- [changed-file] | grep '^+'` and reject the fix if any *added* line introduces a banned slop pattern — `bg-gradient`/`gradient-mesh`, `backdrop-blur` glassmorphism on a hero, dark-navy + gold/amber as a *primary* palette (not semantic status), `Geist`/`Inter`/`Mona Sans` as the only font, bento-grid card-of-equal-squares layout, `hover:scale`, or unprompted `framer-motion` entrance on a static element. If the diff is clean → set `status: "done"`, `taste_verified: false`, note `taste-gate: inline fallback (taste-skill not installed) — diff clean`. If the diff trips a pattern → treat exactly like Exit 1 (diff-aware path above). Never mark `done` on Exit 2 without running the inline scan.
   - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
 ### Step 7 — Commit and report
@@ -216,6 +216,8 @@ Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 
 6. Component would not look identical to a default shadcn template without modification
 
 Score 20–25 if all 6 pass. Score 13–19 if 4–5 pass. Score 6–12 if 2–3 pass. Score 0–5 if 0–1 pass.
+
+**Contrast gate (hard cap — measure, do not eyeball).** "Looks polished" is not contrast-safe. When a screenshot was taken (`visuals_screenshot: true`), MEASURE the WCAG contrast of every visible text element against its *actual rendered background* (read both via `getComputedStyle` + compute the ratio, or use the browser MCP). Any text below **4.5:1** (normal) / **3:1** (large ≥24px or ≥19px bold) is a contrast failure. If ANY text fails: **cap Visuals at 12/25** regardless of the 6 binary checks, add the failing element + measured ratio to `issues`, and route it to a fix (recolor the text or its background to clear the threshold) before the area can reach `done`. A pretty component with 3:1 body text is a fail, not a 22 — this is the exact slop the binary checks miss (Orbit ServiceChooser, cyan at 3.2:1 shipped as "looks right", 2026-05-30).
 
 **Visuals code-only cap:** See Step 4 write instructions — cap applies there at write time.
 
@@ -316,7 +318,7 @@ Discover routes before picking the first area:
 2. **TanStack Start / TanStack Router (file-based)** — glob `src/routes/**/*.tsx` or `app/routes/**/*.tsx`. Each file is a route; filter out files containing `createRootRoute` (root layout, not a page) and marketing routes. Route path derivation rule: split filename by `.`, remove `_`-prefixed segments (layout groups like `_authenticated`), remove `index` suffix, join remaining with `/`. Examples: `_authenticated.dashboard.tsx` → `/dashboard`, `_authenticated.clients.$id.tsx` → `/clients/:id`, `_authenticated.audit.new.tsx` → `/audit/new`.
 3. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
 4. **Remix** — read `app/routes/`. Extract authenticated routes by looking for auth guard imports.
-5. **Astro** — read `src/pages/`. Filter out marketing pages.
+5. **Astro / SvelteKit / Nuxt (file-based pages)** — Astro: glob `src/pages/**/*.astro`. SvelteKit: glob `src/routes/**/+page.svelte` (route = the directory path; a `[param]`/`[...rest]` segment marks the route `renderable: false`). Nuxt: glob `pages/**/*.vue` or `app/pages/**/*.vue` (route = file path minus extension; an `[id].vue`/`[...slug].vue` segment marks it `renderable: false`). Filter out marketing pages in all three.
 6. Create one state group per discovered route. Deduplicate by page file path — if two route strings resolve to the same page component, keep only the one with the shorter route path. If no routes were discovered: halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
 7. **Classify each route by renderability** (write `renderable: true|false` into its state entry):
    - A route is **`renderable: false`** if its path contains a dynamic param (`:id`, `:slug`, `$id`, `[id]`) — it cannot mount without a specific seeded record + auth — OR its page component is wrapped in an auth guard (`ProtectedRoute`, `requireAuth`, a session redirect) AND no auth bypass is available (see the auth-gated playbook below).
@@ -463,6 +465,11 @@ Start a fresh session and run /web-evolve to resume.
 
 ## References
 
-This skill is self-contained — all logic lives in this SKILL.md.
+All run-time logic lives in this SKILL.md. Bundled alongside it:
 
-`references/archive/` contains the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F, Awwwards tier contracts, critique briefings, fix-routing table, decisions log). Archived 2026-05-29. Do not invoke files from archive/.
+- **`tests/`** — structural regression suite for the state machine (run_counter, session_skill_calls, migration guard, budget-halt resume). Run it after editing this SKILL.md to confirm the state rules still hold.
+- **`evals/evals.json`** — scenario evals for the score→fix→commit loop. Run via the skill-creator/skill-forge eval harness before shipping a change to this skill.
+- **`references/schemas/`** — the canonical `state.json` schema; **`references/edge-case-tests/`** — boundary scenarios (zero-match enumeration, corrupt state, scope switch mid-project).
+- **`references/archive/`** — the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F). Archived 2026-05-29. **Do not invoke files from archive/.**
+
+**External prerequisite:** the taste gate (Step 6, outcome D) calls `taste-skill`'s `check_taste.py`. If `taste-skill` is not installed, the gate falls back to the inline slop scan defined in Step 6 (Exit 2) — it never silently passes.
