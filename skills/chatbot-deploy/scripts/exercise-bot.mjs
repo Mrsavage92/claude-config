@@ -116,8 +116,18 @@ async function main() {
           [sel.replyBubble, before],
           { timeout: 40000 },
         );
-        await page.waitForTimeout(400);
-        reply = await latestReplyText(page);
+        // Wait for the reply to STOP growing rather than a fixed delay — a
+        // streaming/slow model can have only a partial sentence rendered after
+        // a flat 400ms, which would false-pass/fail the assertions. Poll until
+        // two consecutive reads (300ms apart) match, or give up after ~6s.
+        let prevText = await latestReplyText(page);
+        for (let i = 0; i < 20; i++) {
+          await page.waitForTimeout(300);
+          const now = await latestReplyText(page);
+          if (now && now === prevText) break;
+          prevText = now;
+        }
+        reply = prevText;
       } catch {
         reply = await latestReplyText(page); // capture whatever's there for evidence
       }

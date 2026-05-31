@@ -145,7 +145,10 @@ hallucinated claim, or markdown leaking through (`**`) after a content edit or
 model bump — drift that code tests never see. Exit 0 only if every question
 passes; the receipt quotes each reply as evidence.
 
-Needs Playwright once: `npm i -D playwright && npx playwright install chromium`.
+Needs Playwright once — run from the **site's `repoPath`** (so node resolves
+`playwright` from that project's `node_modules`), not from the skill directory:
+`cd <repoPath> && npm i -D playwright && npx playwright install chromium`. Then
+invoke the script by its absolute skill path against your config.
 The widget selectors default to the shared ChatWidget component; override them
 in `config.selectors` if a site customised them. If Playwright isn't available,
 fall back to driving the puppeteer / chrome-devtools MCP by hand with the same
@@ -160,8 +163,11 @@ This proves the Supabase + Resend secrets are wired, not just the Claude key.
 ## Output: a PASS/FAIL receipt
 
 Summarise as a checklist with a verdict per step and the evidence (status codes,
-header values, quoted bot replies). Do not declare the deploy done unless steps
-5, 6 and 7 all pass. "It deployed" is not "it works" — say which, with proof.
+header values, quoted bot replies). Do not declare the deploy done unless the
+HTTP check (5), the bot-answer + eval gate (6-7) AND the lead path (8) all pass —
+a deploy whose Supabase/Resend secrets are missing will answer fine but silently
+drop every enquiry, so step 8 is part of the gate, not optional. "It deployed"
+is not "it works" — say which, with proof.
 
 ## After a clean run
 
