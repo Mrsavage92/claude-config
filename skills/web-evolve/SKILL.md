@@ -15,6 +15,8 @@ Re-run to pick the next area. You never decide what to work on.
 
 `disallowed-tools: AskUserQuestion` — this skill never asks the user for decisions. It picks the next area, scope, and fix automatically. Any prompt that would require user input is a spec gap, not a permission to ask.
 
+**The one escape (no ask, still no silent improvisation):** if you hit a genuine fork the spec cannot resolve — e.g. a `dashboard` scope where every route is `renderable: false` and no harness exists, or two equally-valid target routes — do NOT silently improvise a path and present it as if the spec chose it. Pick the **safest documented default** (renderable target rule → code-only fallback → first alphabetically) and record the fork + the assumption you made in the run report under a `⚠ Assumption:` line, so the user can correct it on the next run. Silent improvisation that reads as spec-driven is the failure this clause prevents.
+
 ---
 
 ## Invocation
@@ -152,7 +154,8 @@ Apply the same rubric. Four mutually exclusive outcomes:
 **D — ≥ 85:** Run the taste gate:
   - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
   - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-  - Exit 1 = banned pattern — the fix for attempt 2 MUST target a different change than attempt 1 (if the same fix re-introduces the same banned pattern, it is a no-op — escalate to `needs-work` immediately without a second attempt). Increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 iterations. If pattern persists: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern]` and go to Step 7.
+  - Exit 1 = banned pattern — **first, confirm the fix actually introduced it (diff-awareness).** The script scans the whole file, so it flags pre-existing patterns too. Run `git diff -- [changed-file] | grep '^+'` and check whether the matched token appears in an **added** line. If it does NOT, the pattern is pre-existing — this fix did not introduce it — so treat the gate as **passed**: set `taste_verified: false`, note `taste-gate: pre-existing [pattern] not introduced by this fix (verified via diff)` in the run report, set `status: "done"`, go to Step 7. Also treat as false positives (not banned): `font-black`/`font-extrabold`/`font-*` (these are font *weights*, not the colour `#000000`) and semantic Tailwind colour utilities already in the design system (`text-amber-*`, `text-rose-*`, `bg-emerald-*` used for status/grade encoding, not as a navy+gold hero treatment).
+  - Exit 1 AND the pattern IS in an added line (genuinely introduced) — the fix for attempt 2 MUST target a different change than attempt 1 (if the same fix re-introduces the same banned pattern, it is a no-op — escalate to `needs-work` immediately without a second attempt). Increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 iterations. If pattern persists: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern]` and go to Step 7.
   - Exit 2 = script not found; set `status: "done"`, add `"taste_verified": false` to area state, note `taste-gate: skipped (script not found)` in run report. Go to Step 7.
   - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
 
@@ -276,6 +279,7 @@ When `tokens.lock.json` exists at project root (and was successfully read in Ste
 | Clarity 6–25 — copy/labels unclear | — | Any | `Skill('clarify', args='[file]')` |
 | Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if Clarity re-score is still in the 0–5 band after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
 | Function 13–19 — one state missing | — | Any | Direct fix in file: add the missing empty/loading/error state component |
+| Function 13–25 — touch-target / sizing a11y | — | Any | Direct fix in file: raise interactive elements to ≥44px tap height (WCAG 2.5.8 AA min 24px; 44px = AAA) via `min-h-[44px]` + negative margin to avoid layout growth. Measure before/after height in the browser; do NOT route to a rebuild skill for sizing. |
 | Function 6–12 — multiple gaps | — | Any | `Skill('a11y-audit', args='[file]')` + direct fix for missing states |
 | Function 0–5 — broken/inaccessible | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` |
 | Personality, delight missing | — (only when total ≥ 60) | Any | `Skill('delight', args='[file]')` — do not add delight when the component has structural failures; fix those first |
@@ -314,7 +318,17 @@ Discover routes before picking the first area:
 4. **Remix** — read `app/routes/`. Extract authenticated routes by looking for auth guard imports.
 5. **Astro** — read `src/pages/`. Filter out marketing pages.
 6. Create one state group per discovered route. Deduplicate by page file path — if two route strings resolve to the same page component, keep only the one with the shorter route path. If no routes were discovered: halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
-7. Pick the first route alphabetically with `status: "pending"`. This is the `last_scope` value Step 1A will write. Log the picked route in the run report.
+7. **Classify each route by renderability** (write `renderable: true|false` into its state entry):
+   - A route is **`renderable: false`** if its path contains a dynamic param (`:id`, `:slug`, `$id`, `[id]`) — it cannot mount without a specific seeded record + auth — OR its page component is wrapped in an auth guard (`ProtectedRoute`, `requireAuth`, a session redirect) AND no auth bypass is available (see the auth-gated playbook below).
+   - A route is **`renderable: true`** if it is a static authenticated path with no param, OR a dev-preview harness exists for it (glob `**/dev/**Preview*.{tsx,jsx}`, `**/*.stories.{tsx,jsx}` — these mount the page's components with mock data and no auth; record the harness path in the route's `files`).
+8. **Pick the first target by renderability, then alphabetically:** among `status: "pending"` routes, take the alphabetically-first **`renderable: true`** route. Only if ZERO renderable routes exist, fall back to the alphabetically-first route and note `render-blocked: code-only scoring` in the run report. This is the `last_scope` value Step 1A writes. Log the picked route + why (`renderable` / `harness:<path>` / `code-only fallback`) in the run report.
+   - Rationale: blindly alphabetical lands on `/audit/:id`-style param routes that cannot render, forcing low-confidence code-only scores (the Visuals cap, the Function code-only flag). Picking a renderable target first is the difference between a scored screenshot and a guess.
+   - **Array order:** write the route areas to `state.json` sorted **renderable-first, then alphabetically**, so Step 2's "first pending" pick stays consistent with this rule across later runs.
+
+**Auth-gated route playbook** (use before settling for code-only on a `renderable: false` route):
+- **Dev-preview harness** — most apps ship a `/dev/*-preview` route or Storybook story that mounts the authenticated page's components with mock data behind `import.meta.env.DEV`. Glob for it; if found, screenshot *that* URL and record it in `files`. This is the cheapest path and needs no credentials.
+- **Seed a session** — if a local dev login or seed script exists (`npm run seed`, a test user in `.env.test`), use it to reach the real route. Only when the harness path fails.
+- **Last resort** — code-only assessment with the Visuals cap and `function_verified: false`, flagged loudly in the run report. Never silently treat a code-only score as render-verified.
 
 **When scope is a specific `/route`:**
 
@@ -348,6 +362,7 @@ Discover routes before picking the first area:
       "priority": 1,
       "files": ["src/components/landing/HeroQuickScan.tsx"],
       "status": "done",
+      "renderable": true,
       "score": 91,
       "dimensions": { "hook": 24, "visuals": 22, "clarity": 23, "function": 22 },
       "function_verified": true,
