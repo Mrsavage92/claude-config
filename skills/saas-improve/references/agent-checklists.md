@@ -280,7 +280,7 @@ If Regulatory Compliance (WHS):
 - [ ] LIGHT-MODE DESIGN — dark hero for a WHS/HR tool is automatic P1 failure. FlourishDx, SafetyCulture, Donesafe, Riskware all use light mode. Dark mode signals "developer tool."
 - [ ] Hazard count visible: "X psychosocial hazard types" — FlourishDx shows 50+. Anything under 14 (Safe Work Australia's published count) looks incomplete.
 - [ ] Per-user-band pricing shown (up to 5/20/unlimited users) — this is the expected model from all WHS tools
-- [ ] "Now compliant with WHS legislation + Respect@Work + IR legislation" — triple compliance statement FlourishDx uses that signals full coverage
+- [ ] "Now compliant with WHS legislation + Respect@Work + IR legislation" — triple compliance statement FlourishDx uses that signals full coverage across all obligations
 - [ ] "Pure SaaS" speed positioning — FlourishDx mixes software with org psychology consulting (slow, expensive). If copy says "build your psychosocial risk register in 2 weeks, no consultant needed" — this is HazardIQ's structural advantage over the category leader. Must appear in hero or how-it-works.
 
 If Procurement Intelligence:
