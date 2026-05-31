@@ -1,0 +1,33 @@
+{
+  "name": "site-slug",
+  "canonicalUrl": "https://example.com",
+  "host": "vercel",
+  "repoPath": "C:/Users/Adam/example-repo",
+  "expectedContent": "a unique string only this build renders (hero headline, etc.)",
+  "offlineFallbackMarker": "offline right now",
+  "requiredSecrets": [
+    "ANTHROPIC_API_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "RESEND_API_KEY"
+  ],
+  "selectors": {
+    "_comment": "Optional. Defaults match the shared ChatWidget; override only if a site customised them.",
+    "launcher": "button[aria-label^=\"Chat with\"]",
+    "input": "#orbit-chat-input",
+    "send": "button[aria-label=\"Send message\"]",
+    "replyBubble": "[role=\"dialog\"] .bg-card"
+  },
+  "evalQuestions": [
+    {
+      "q": "how much is it / what does it cost?",
+      "mustInclude": ["$"],
+      "mustNotInclude": ["**", "offline right now", "I don't know"]
+    },
+    {
+      "q": "ask about one specific service/area the bot should know",
+      "mustInclude": ["expected fact"],
+      "mustNotInclude": ["**", "not sold separately"]
+    }
+  ]
+}

@@ -101,6 +101,7 @@
     "audit",
     "autopilot",
     "calibrate-amplitude",
+    "chatbot-deploy",
     "clarify",
     "codebase-untangler",
     "colorize",
@@ -214,6 +215,6 @@
   "counts": {
     "commands": 68,
     "agents": 21,
-    "skills": 115
+    "skills": 116
   }
 }
