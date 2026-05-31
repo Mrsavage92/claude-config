@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-31",
+  "last_updated": "2026-06-01",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -74,6 +74,7 @@
   "agents": {
     "agent-designer.md": "2a93049ce26d6e4522c54b4f5f163a5c",
     "api-design-reviewer.md": "97b5878809c43e1cb0aca10fbcc95a15",
+    "audithq-sales.md": "eb895a134bec514fc08def8359c2c8a5",
     "codebase-onboarding.md": "5d24a46fb8e9b384d4a084668cff85bc",
     "cto-architect.md": "b53d13bb9c1cdf6a79799317d3a1da78",
     "database-designer.md": "6c4608acd779f18a14843256720c7633",
@@ -99,6 +100,9 @@
     "ai-image-generation",
     "animate",
     "audit",
+    "audithq-convert",
+    "audithq-outbound",
+    "audithq-pipeline",
     "autopilot",
     "calibrate-amplitude",
     "chatbot-deploy",
@@ -214,7 +218,7 @@
   ],
   "counts": {
     "commands": 68,
-    "agents": 21,
-    "skills": 116
+    "agents": 22,
+    "skills": 119
   }
 }
