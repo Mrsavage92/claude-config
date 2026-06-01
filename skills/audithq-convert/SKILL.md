@@ -24,12 +24,18 @@ So before writing anything, **check what's deployed** in `C:\Users\Adam\audit-ge
 
 Every email must reference **their** specific domain, score, and at least one of their actual findings. A generic nurture email is a failure here — the whole edge is that you're holding their real results.
 
-| Day | Job of the email | Angle | Subject pattern | Pitch level |
+**This table reflects what the deployed `quick-scan-drip` actually sends (verified 2026-06-01) — not an idealised version. When you change copy, change the deployed function, and keep this table in sync.**
+
+| Day | Job of the email | Angle (deployed) | Subject pattern (deployed) | Pitch level |
 |---|---|---|---|---|
-| **0** (on capture) | Confirm + recap what they saw; plant the "3 of 9" seed | *Here's what we found — and it's 3 of your 9 suites* | "What we found on {domain}" | none |
-| **3** | One-finding deep-dive — the single worst thing, why it costs them | *The one thing holding {domain} back* | "The one thing slowing {domain} down" | none, pure value |
-| **7** | Benchmark — their score vs similar businesses; create gap-awareness | *Sites like yours usually score X* | "How does {domain} compare?" | soft |
-| **14** | Soft offer — the full 9-suite picture, price anchor, clear CTA | *Want the other 6 suites?* | "The rest of {domain}'s audit" | direct, A$49/mo |
+| **0** (capture-email) | Confirm + recap; plant the "3 of 9" seed | *Here's what we found* | (in `quick-scan/capture-email`) | none |
+| **3** | One-finding deep-dive **+ CTA** | *Here's how to fix "{lead finding}"* | `{domain}: how to fix "{finding}"` | **already pitches** (CTA + price) |
+| **7** | Benchmark vs industry avg (hard-coded 72) **+ CTA** | *Sites like yours score 72, you're at {score}* | `{domain}: {score}/100 vs 72 — the {gap}-point gap` | pitches (CTA + price) |
+| **14** | Hidden-findings count, last reminder **+ CTA** | *{N}+ findings still hidden* | `{domain}: {N}+ findings still hidden — last reminder` | direct, final |
+
+**Pricing in every CTA is DUAL (verified deployed):** "A$99 one-time · A$49/mo subscription · cancel anytime". Do not write "A$49/mo only" — the one-time A$99 is a real, live entry point and dropping it loses the price-sensitive buyer who won't subscribe.
+
+Note the deployed reality differs from a textbook "no-pitch-until-Day-14" drip: **Day 3 and Day 7 already carry the CTA + price.** That's a legitimate choice (paid-first SMB SaaS pitches earlier). If you want to test pulling the pitch out of Day 3, that's an A/B change to the function — don't just describe it here.
 
 **Principles across all four:**
 - **Specificity is the conversion.** "Your contact page loads in 6 seconds" converts; "improve your site speed" doesn't.
@@ -79,17 +85,19 @@ Merge fields in `{braces}` are filled from the lead's own scan row. This is the 
 >
 > Worth knowing where the other 6 areas sit too? That's the full picture. More on that in a few days. {footer}
 
-**Day 14 — "The rest of harborlinefamilylaw.com.au's audit"  [CTA: A$49/mo Solo]**
+**Day 14 — "{N}+ findings still hidden on harborlinefamilylaw.com.au — last reminder"  [CTA: A$99 one-time / A$49/mo]**
 > Hi {first_name},
 >
-> You've seen 3 of your 9 areas. Here's what the other 6 cover — and on a 54, they're usually where the surprises are:
-> • Security • Privacy • Reputation • Social presence • Hiring/employer signals • AI-readiness
+> Two weeks ago your scan showed {surface_count} surface issues. The full audit estimated **{est_min}–{est_max} total findings** — which means **{hidden}+ are still hidden** from you. Some are minor; some are quietly losing leads, breaking AI citation, or leaking customer data.
 >
-> The full 9-area report gives you every finding, a fix-it-in-order action plan, and a PDF you can keep — for **A$49/month**, cancel anytime. One fixed finding usually pays for it.
+> You won't get this email again — one last nudge. The full audit runs in about 3 minutes: evidence per finding, business impact, a 30/60/90 plan, and a PDF you can keep.
 >
-> See your full report: {upgrade_url}
+> See the full report: {scan_url}
+> **A$99 one-time · A$49/mo subscription · cancel anytime.**
 >
 > {footer}
+
+*(This matches the deployed Day-14 "hidden findings count" angle and dual pricing. The earlier "the other 6 suites" framing is also valid — but the deployed function uses the hidden-count angle, so that's the one to A/B against, not silently replace.)*
 
 Notice what makes these convert: every email names the real domain and the real 54/39 numbers, the gap (6 unseen areas) is concrete and repeated, there's zero manufactured urgency, and only Day 14 pitches. Replicate that pattern with each lead's own data.
 
@@ -115,11 +123,16 @@ The result page is the highest-leverage surface in the whole funnel — it's whe
 
 For a full structural teardown, delegate to `Skill('market-funnel')` (whole-funnel) or `Skill('page-cro')` (single page) — pass them this funnel logic so they don't redesign the locked Option-C structure.
 
-## Compliance
+## Compliance — LIVE GAP, fix before scaling sends
 
-Every email in the sequence needs a functional unsubscribe link + sender identification (business name + postal address) — Australian Spam Act 2003. Inbound leads consented by entering their email, so risk is lower than cold outbound, but the legal requirement is identical. The live `quick-scan-drip` function already renders a footer; **verify it's present** when you touch the templates, and never ship a drip email without it.
+Every email in the sequence needs a functional unsubscribe link + sender identification (business name + postal address) — Australian Spam Act 2003. Inbound leads consented by entering their email, so the consent risk is lower than cold outbound, but the §18/§19 footer requirements are identical.
 
-Standard footer:
+**Verified 2026-06-01 — the deployed `quick-scan-drip` does NOT meet this.** Its `wrap()` footer renders only `— AuditHQ · audithq.com.au` — **no unsubscribe link and no postal address.** Every Day 3/7/14 email currently going out is missing both. This is a real Spam Act gap, not a hypothetical. Before the drip is scaled to meaningful volume:
+
+1. **Add an unsubscribe link** — needs an unsubscribe token per lead + a handler route (mirror the outbound side's `growth-unsubscribe`), plus a `List-Unsubscribe` header on the Resend send.
+2. **Add the postal address** to the `wrap()` footer.
+
+This is a code change to the edge function — hand it to `cto-architect` / `senior-backend`; this skill flags it and refuses to call the drip "compliant" until the deployed footer actually carries both. Target footer:
 
 ```
 —

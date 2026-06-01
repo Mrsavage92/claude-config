@@ -43,7 +43,7 @@ Read live state — do not summarise from docs. Gather:
 - **n8n:** are the 4 workflows present and active? Last execution? Is there a scheduler/cron, or are they passive webhooks? Is `system_flags.growth_send_test_mode` true? Use the n8n cloud API (key at `~/.n8n-cloud-api-key`) or the n8n MCP tools.
 - **Edge functions:** which of the 4 are actually deployed? Use `npx supabase functions list` (CLI is linked) or the Supabase MCP `list_edge_functions`.
 - **Crons:** are `audithq-outbound-batch-scan` / `-generate-email` / `-send-email` active in `cron.job`? (Query via Supabase MCP `execute_sql`.)
-- **Secrets present?** Especially `GOOGLE_PLACES_API_KEY` — without it `outbound-discover` throws immediately and the whole chain is dead.
+- **Secrets present?** Check `npx supabase secrets list`. As of 2026-06-01 all six required secrets are set (`GOOGLE_PLACES_API_KEY`, `AUDITHQ_INTERNAL_SECRET`, `AUDITHQ_LEGACY_SERVICE_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ANTHROPIC_API_KEY`) — re-verify, don't assume. Note values aren't readable locally, so manual curls need Adam to supply `AUDITHQ_INTERNAL_SECRET`.
 - **Data state:** counts in `growth_accounts` by status, `growth_proof_drafts` by status, `growth_suppressions` size.
 
 **Identifier verification is BLOCKING (not a formality).** The IDs and project ref in the "Known identifiers" section above are transcribed and go stale. Before you report any state, confirm each is real:
@@ -108,7 +108,7 @@ If any fail: **refuse to enable**, show the exact gap and the file/line to fix, 
 ### 4. Activation sequence (only after gate passes)
 
 For the edge-function path, in order:
-1. Set `GOOGLE_PLACES_API_KEY` if missing: `npx supabase secrets set GOOGLE_PLACES_API_KEY=...`
+1. **Secrets — verify, don't assume.** As of 2026-06-01 all six are already set in Supabase (`npx supabase secrets list`): `GOOGLE_PLACES_API_KEY`, `AUDITHQ_INTERNAL_SECRET`, `AUDITHQ_LEGACY_SERVICE_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ANTHROPIC_API_KEY`. So the chain is *not* secret-blocked. **But the secret values are not readable from the local repo `.env`** — so to fire the manual curls (Step 5) you need Adam to paste `AUDITHQ_INTERNAL_SECRET` for this run, or have Adam run the curls. A Claude session cannot self-serve this; ask once, don't guess a value.
 2. **Test-to-self first.** Run discover → batch-scan → generate-email manually (Step 5), approve one draft, and send it **to Adam's own inbox** to confirm the footer/unsubscribe render correctly in a real client. Verify the received email visually.
 3. Only after a clean self-test: activate the three crons:
    ```sql
