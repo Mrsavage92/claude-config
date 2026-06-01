@@ -30,6 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from _rate_lib import (  # noqa: E402
     HIGH_SCORE_EVIDENCE_THRESHOLD,
+    evidence_region,
     extract_score,
     is_quoted_reference,
     iter_phrase_matches,
@@ -215,8 +216,9 @@ def check_high_score_evidence(text: str, banned: dict) -> CheckResult:
             f"N/A (score={score}, threshold={HIGH_SCORE_EVIDENCE_THRESHOLD})",
         )
     patterns = banned.get("evidence_markers_for_high_scores", {}).get("regex_patterns", [])
+    region = evidence_region(text)  # exclude Path-to-100 + Verdict (forward-looking prose)
     for p in patterns:
-        if re.search(p, text):
+        if re.search(p, region):
             return CheckResult(
                 "high-score-evidence",
                 True,

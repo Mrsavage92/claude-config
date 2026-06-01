@@ -14,6 +14,8 @@ Test coverage:
     T5a grade_evals.py runs without crash even when no rating outputs exist for some evals
     T5b grade_evals.py and check_rating.py agree on quote-aware logic (no graders-disagree)
     T6  Bulleted P0 items are detected by check_p0_has_time_estimates
+    T7  cost_guard.py on a missing target exits 2 / HALT (not a silent "OK")
+    T8  90+ evidence gate is NOT satisfied by a marker token in the Verdict prose
 
 Usage:
     python run_tests.py
@@ -31,6 +33,7 @@ from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 GRADER = SKILL_ROOT / "scripts" / "check_rating.py"
+COST_GUARD = SKILL_ROOT / "scripts" / "cost_guard.py"
 GRADE_EVALS = SKILL_ROOT / "evals" / "grade_evals.py"
 EVALS_JSON = SKILL_ROOT / "evals" / "evals.json"
 FIXTURES = SKILL_ROOT / "tests" / "fixtures"
@@ -268,6 +271,77 @@ assertion(
     out,
 )
 Path(bul_path).unlink(missing_ok=True)
+
+# --- T7: cost_guard on a missing target must HALT (exit 2), not silently pass ---
+print("[T7] cost_guard.py on a missing target should exit 2 / HALT")
+missing = str(SKILL_ROOT / "this-path-does-not-exist-zzz")
+rc, out = run([str(COST_GUARD), missing])
+assertion(
+    "T7: missing target -> exit 2 + HALT (not '[cost_guard OK]')",
+    rc == 2 and "HALT" in out and "[cost_guard OK]" not in out,
+    f"rc={rc}\n{out}",
+)
+
+# --- T8: 90+ evidence gate must NOT be satisfied by a marker token in the Verdict ---
+print("[T8] 90+ evidence marker buried in the Verdict should NOT satisfy the gate")
+bypass = """# T8 bypass fixture — cold rating: **96/100**
+
+Headline with no measured evidence in the assessment itself.
+
+---
+
+## What 100/100 looks like
+
+1. one
+2. two
+3. three
+4. five
+5. six
+6. seven
+7. eight
+
+---
+
+## Area-by-area
+
+| Area | Score | Evidence |
+|---|---|---|
+| A | **95** | foo.md:1 |
+| B | **96** | foo.md:2 |
+| C | **95** | foo.md:3 |
+| D | **96** | foo.md:4 |
+| E | **95** | foo.md:5 |
+
+---
+
+## Path to 100
+
+### P0 — Required (96 -> ~98)
+
+- **Fix.** Specific change. ~30 min. [foo.md](foo.md).
+
+### P1 — Nice-to-have (98 -> ~100)
+
+- **Polish.** ~1 hr. [foo.md](foo.md).
+
+---
+
+## Verdict
+
+96/100. This needs convergence testing eventually and a 200 ms latency check.
+"""
+with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False, encoding="utf-8") as tf:
+    tf.write(bypass)
+    bypass_path = tf.name
+
+rc, out = run([str(GRADER), bypass_path])
+ev_line = next((ln for ln in out.splitlines() if "high-score-evidence" in ln), "")
+assertion(
+    "T8: marker in Verdict does NOT unlock a 96 (gate must FAIL)",
+    "[FAIL]" in ev_line and "high-score-evidence" in ev_line,
+    out,
+)
+Path(bypass_path).unlink(missing_ok=True)
 
 # --- summary ---
 print()

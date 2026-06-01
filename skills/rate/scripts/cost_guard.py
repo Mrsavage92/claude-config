@@ -77,28 +77,35 @@ def count_dir_files(root: Path) -> tuple[int, list[str]]:
     return count, sample
 
 
-def evaluate(target: Path) -> tuple[bool, str]:
-    """Return (warn, message)."""
+def evaluate(target: Path) -> tuple[str, str]:
+    """Return (status, message) where status is one of "ok", "warn", "halt".
+
+    "halt" means the target cannot be inspected at all (missing path, or a path
+    that is neither a regular file nor a directory — e.g. a broken symlink or a
+    device node). SKILL.md commits to exit 2 / NEEDS_HUMAN in that case; the
+    previous version returned a falsey warn and printed "[cost_guard OK] target
+    not found", which silently passed the guard. Fixed 2026-06-01.
+    """
     if not target.exists():
-        return False, f"target not found: {target}"
+        return "halt", f"target not found or unreadable: {target}"
 
     if target.is_file():
         loc = count_loc(target)
         if loc > FILE_LOC_THRESHOLD:
-            return True, (
+            return "warn", (
                 f"Target {target.name} is {loc:,} LOC (threshold: {FILE_LOC_THRESHOLD:,}).\n"
                 "A single rating will undersample this file. Options:\n"
                 "  - narrow the rating to a specific section / class\n"
                 "  - use /full-audit or /parallel-audit for whole-file coverage\n"
                 "  - proceed if the user explicitly wants a strategic 1-page overview"
             )
-        return False, f"file size OK ({loc:,} LOC, threshold {FILE_LOC_THRESHOLD:,})"
+        return "ok", f"file size OK ({loc:,} LOC, threshold {FILE_LOC_THRESHOLD:,})"
 
     if target.is_dir():
         count, sample = count_dir_files(target)
         if count > DIR_FILE_THRESHOLD:
             sample_text = ", ".join(sample) + ("..." if count > len(sample) else "")
-            return True, (
+            return "warn", (
                 f"Target {target.name}/ contains {count} rateable files "
                 f"(threshold: {DIR_FILE_THRESHOLD}). Sample: {sample_text}\n"
                 "A single /rate produces ONE strategic rating; it will undersample a repo of this size.\n"
@@ -107,9 +114,9 @@ def evaluate(target: Path) -> tuple[bool, str]:
                 "  - /parallel-audit  - run multiple audit suites in parallel\n"
                 "  - narrow the target to a specific subdirectory or top-level file"
             )
-        return False, f"directory size OK ({count} rateable files, threshold {DIR_FILE_THRESHOLD})"
+        return "ok", f"directory size OK ({count} rateable files, threshold {DIR_FILE_THRESHOLD})"
 
-    return False, f"target is neither file nor directory: {target}"
+    return "halt", f"target is neither file nor directory: {target}"
 
 
 def main() -> int:
@@ -120,12 +127,18 @@ def main() -> int:
 
     target = Path(args.target)
     try:
-        warn, message = evaluate(target)
+        status, message = evaluate(target)
     except OSError as e:
-        print(f"[cost_guard] could not inspect target: {e}", file=sys.stderr)
+        print(f"[cost_guard HALT] could not inspect target: {e}", file=sys.stderr)
+        print("NEEDS_HUMAN: target is unreadable. Verify the path before rating.", file=sys.stderr)
         return 2
 
-    if warn:
+    if status == "halt":
+        print("[cost_guard HALT]", file=sys.stderr)
+        print(message, file=sys.stderr)
+        print("NEEDS_HUMAN: cannot rate a target that does not exist. Check the path.", file=sys.stderr)
+        return 2
+    if status == "warn":
         print("[cost_guard WARNING]")
         print(message)
         return 1

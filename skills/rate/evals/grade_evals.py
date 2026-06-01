@@ -48,6 +48,7 @@ _SKILL_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(_SKILL_ROOT / "scripts"))
 from _rate_lib import (  # noqa: E402
     HIGH_SCORE_EVIDENCE_THRESHOLD,
+    evidence_region,
     extract_score,
     is_quoted_reference,
     load_banned as _load_banned,
@@ -180,8 +181,9 @@ def _check_score_band_or_external_evidence(text: str, max_unsubstantiated: int) 
         return True, f"score={score} <= {max_unsubstantiated} (no evidence required)"
     banned = _load_banned()
     markers = banned.get("evidence_markers_for_high_scores", {}).get("regex_patterns", [])
+    region = evidence_region(text)  # exclude Path-to-100 + Verdict (forward-looking prose)
     for mk in markers:
-        if re.search(mk, text):
+        if re.search(mk, region):
             return True, f"score={score} substantiated by '{mk[:60]}'"
     return False, f"score={score} > {max_unsubstantiated} but no evidence marker found"
 

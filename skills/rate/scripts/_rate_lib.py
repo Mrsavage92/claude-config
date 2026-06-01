@@ -39,6 +39,25 @@ def extract_score(text: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
+def evidence_region(text: str) -> str:
+    """Return the portion of a rating where evidence for the CURRENT score must live.
+
+    Evidence that substantiates a 90+ score belongs in the assessment — the headline,
+    the "What 100/100 looks like" criteria, and the Area-by-area table — NOT in the
+    forward-looking "Path to 100" ladder or the closing Verdict, where measured-metric
+    tokens naturally appear as *future* work ("run Lighthouse", "needs convergence
+    testing"). Counting those toward the gate let a stray token unlock a 96. So the
+    evidence region is everything before the "## Path to 100" heading.
+
+    Falls back to the whole document if that heading is absent (a malformed rating
+    will already fail the section-presence checks).
+
+    Added 2026-06-01 to close the high-score-evidence bypass.
+    """
+    m = re.search(r"^##\s+Path to 100", text, re.MULTILINE)
+    return text[: m.start()] if m else text
+
+
 def is_quoted_reference(text: str, start: int, end: int) -> bool:
     """Return True if the match at [start, end] is a quoted reference rather than a used quality claim.
 
