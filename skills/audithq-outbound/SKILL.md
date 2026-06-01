@@ -13,7 +13,7 @@ You draft. The human sends. This skill never sends anything autonomously — it 
 
 - **Product:** AuditHQ scans a website across 9 suites (~516 checks). Positioning, verbatim where it matters: *"Code finds the issues. Evidence proves them. AI explains them."* The engine finds problems with code; AI only writes the explanation. **Never** call it "AI-powered" or imply AI does the finding.
 - **ICP:** SMB owners with a website who don't pay a digital marketer — sole traders, small SaaS founders, e-commerce operators, professional services (lawyers, accountants, dentists, clinics, trades). Global product, Australia is the beachhead. English-language sites only for now.
-- **The offer you link to:** the **free 3-suite Quick Scan at `/free-scan`** (Marketing + Technical + GEO — score + top-5 findings, no PDF, no signup). The full 9-suite report is paid (A$49/mo Solo). **Never offer the full report for free.** The visible "you're seeing 3 of 9" gap is the hook, not a thing to give away.
+- **The offer you hand over:** you've **already run their scan** (Step 3) — so the CTA is **their own result link**, `https://audithq.com.au/scan/{public_token}`, not "go run a scan yourself." Never make the prospect do homework; you did the work, the link is the payoff. The result page is gated correctly per Decision 20: it shows their real scores + sample findings + an estimated total-issue range, and the **full report + PDF + 30/60/90 action plan is paid** (A$49/mo Solo or A$99 one-time). So sharing the link cannibalises nothing — it's a real, useful, shareable sample that ends at the paywall. **Never** offer the full report/PDF free. (Naming note: the live product calls the free tier the "3-suite scan" and the result page shows several scored buckets — match whatever the live `/scan/{token}` page actually displays for that prospect rather than asserting a suite count yourself; the product owns that copy, not this skill.)
 - **No dev jargon in any message.** Banned in customer-facing copy: "deterministic", "synthesis", "agentic", "architecture", "crawl", "headers", "schema markup" (translate the last three to plain English). The reader runs a business; they are not a developer.
 
 ## When this fires
@@ -26,15 +26,19 @@ Work one prospect at a time, in this order. Each step gates the next — don't d
 
 ### 1. ICP fit check (do this BEFORE scanning — a scan costs time and API budget)
 
-Score the candidate 0–5. Add one point for each that's true:
+**Hard size floor — applied BEFORE the 0–5 score (founder decision, 2026-06-01).** A 1–2 person business will not reliably pay for this; do not scan them no matter how broken the site is. **Auto-skip** any candidate that is a solo operator, a "[Name] + me" two-person shop, a sole trader with no staff, or a personal-brand freelancer. Tells of too-small: first-person-singular About page ("I help…"), no team page, single mobile number as the only contact, "ABN sole trader," home-address registration. When unsure of size, err toward skipping — a wasted scan on a too-small business is worse than missing one.
 
-1. **Has a real website** they appear to own and care about (not a Facebook page, not a Linktree, not a parked domain).
-2. **No in-house marketer / agency on retainer** — solo, family business, or small team. (Tell: generic `info@` email, owner's name on the About page, no "marketing@" contact, site clearly built once and left alone.)
-3. **Money depends on the website** — it takes bookings, sells, or is the main way customers find them. A dentist's booking page qualifies; a hobby blog doesn't.
-4. **Reachable** — you can find a name + either a contact email or a LinkedIn profile for the owner/principal.
-5. **Plausibly fixable problems** — the site looks dated, slow, or thin on first glance. (You'll confirm with the scan; this is the eyeball pre-check.)
+**Target the band above that:** established multi-person SMBs with real revenue and a budget mindset — multi-partner professional-services firms (law, accounting, medical/dental groups), trades/field-service businesses with a team and vehicles, e-commerce doing real volume, multi-location operators, B2B service firms with ~5–50 staff. Big enough to pay without flinching at A$49–149/mo, not so big they have an in-house marketing team (that fails the core premise — AuditHQ wins where nobody is watching the site).
 
-**Score 4–5:** proceed. **Score 3:** proceed only if reachability is strong. **Score ≤2:** skip and say why — don't burn a scan. Enterprises, agencies, other audit tools, and anyone already running an obvious marketing stack are auto-skips.
+Then score the surviving candidate 0–5, one point each:
+
+1. **Has a real website** they own and clearly invest in (not a Facebook page, Linktree, or parked domain).
+2. **Multi-person business with budget signals** — a team/staff page, multiple locations, active job ads, "our team of…", paid tools in the footer, or a registered company (Pty Ltd) rather than a sole trader. This is the point that used to reward "solo / family business" — it now does the opposite: size and budget-capacity score the point.
+3. **Money depends on the website** — it drives bookings, leads, or sales and is a real channel, not a brochure they ignore.
+4. **Reachable at a decision-maker** — you can find a named principal/partner/owner + a contact email or LinkedIn. A `partners@` or named-person email beats a generic `info@`.
+5. **Plausibly fixable problems** — site looks dated, slow, or thin on first glance (confirmed by the scan).
+
+**Score 4–5:** proceed. **Score 3:** proceed only if it clears the size floor AND reachability is strong. **Score ≤2, or fails the size floor:** skip and say why — don't burn a scan. Auto-skips: solo/2-person shops, enterprises with in-house marketing teams, agencies (parked channel until A$2K MRR), other audit tools, and anyone already running an obvious marketing stack.
 
 ### 2. Discover prospects (only if the user didn't supply one)
 
@@ -93,12 +97,12 @@ One hook leads the message. The other two are the proof that you actually looked
 
 ### 5. Draft the two messages
 
-Produce **both** a LinkedIn DM and an email for every prospect. Each opens with the specific observation (never a generic "I help businesses with their websites"), names the business or domain, states the lead finding and its cost, optionally stacks one more, and ends with a single low-friction CTA: the free 3-suite scan link. Honest, specific, short.
+Produce **both** a LinkedIn DM and an email for every prospect. Each opens with the specific observation (never a generic "I help businesses with their websites"), names the business or domain, states the lead finding and its cost, optionally stacks one more, and ends with a single low-friction CTA: **their own scan result link** (`https://audithq.com.au/scan/{public_token}` from Step 3) — "I put your results here" / "here's the full breakdown I ran." You did the work for them; the link is the payoff, not a chore. Honest, specific, short.
 
 - **LinkedIn DM:** under ~120 words, no link dump, conversational. Not subject to the Spam Act, but it must still be honest and non-spammy — no fake "we already work together" framing.
 - **Email:** subject line + body under ~180 words. **Must pass the compliance gate in Step 5a before you present it as ready.**
 
-For final wordsmithing of the email body, delegate to `Skill('cold-email')` — pass it the findings, the hook, the CTA (free 3-suite scan), and the no-jargon rule. For LinkedIn phrasing/formatting, delegate to `Skill('linkedin-post')`. This skill owns *what to say* (the scan→finding→cost mapping); those skills polish *how it reads*.
+For final wordsmithing of the email body, delegate to `Skill('cold-email')` — pass it the findings, the hook, the CTA (the prospect's own `/scan/{public_token}` result link), and the no-jargon rule. For LinkedIn phrasing/formatting, delegate to `Skill('linkedin-post')`. This skill owns *what to say* (the scan→finding→cost mapping); those skills polish *how it reads*.
 
 #### 5a. Spam Act compliance gate (HARD BLOCK — email only)
 
@@ -173,7 +177,7 @@ If COMPLIANCE is BLOCKED, the email is not presented as ready — list the fix a
 **Hooks:** lead with the one a lawyer feels — *"When someone in Geelong asks ChatGPT or Google for a family lawyer, your firm doesn't come up — your site isn't readable to those tools yet."* Supporting: slow on mobile (people bounce before intake), and search engines guessing your pages.
 
 **LinkedIn DM:**
-> Hi Megan — I run AuditHQ and I scanned harborlinefamilylaw.com.au this morning (I do this for firms I think are leaving enquiries on the table). Two things stood out: when someone asks Google or ChatGPT for a family lawyer in Geelong, your site doesn't surface yet, and on a phone it takes about 6 seconds to load — most people leave first. I put the free 3-suite scan here if you want to see it yourself: audithq.app/free-scan. No pitch, genuinely thought you'd want to know.
+> Hi Megan — I run AuditHQ and I scanned harborlinefamilylaw.com.au this morning (I do this for firms I think are leaving enquiries on the table). Two things stood out: when someone asks Google or ChatGPT for a family lawyer in Geelong, your site doesn't surface yet, and on a phone it takes about 6 seconds to load — most people leave first. I saved your full results here: audithq.com.au/scan/{public_token}. No pitch, genuinely thought you'd want to see it.
 
 **Email — COMPLIANCE: PASS**
 > Subject: Geelong family lawyer searches aren't finding harborlinefamilylaw.com.au
@@ -184,7 +188,7 @@ If COMPLIANCE is BLOCKED, the email is not presented as ready — list the fix a
 >
 > Two others worth knowing: it takes about 6 seconds to load on a phone (most people leave before it finishes), and your practice-area pages don't tell Google what they're about, so they get skipped in search.
 >
-> You can run the same free 3-suite scan yourself in about a minute: audithq.app/free-scan. Happy to point you at what to fix first.
+> I saved your full results here so you can see exactly what I found: audithq.com.au/scan/{public_token}. Happy to point you at what to fix first.
 >
 > Best,
 >
@@ -218,7 +222,7 @@ If COMPLIANCE is BLOCKED, the email is not presented as ready — list the fix a
 >
 > Two more: product pages are slow to load because the images are full-size, and there's nothing capturing emails from people who leave without buying — that's repeat revenue walking out the door.
 >
-> Same free 3-suite scan you can run yourself in a minute: audithq.app/free-scan. It'll show you exactly which page throws the warning.
+> Your full results are here — it shows exactly which page throws the warning: audithq.com.au/scan/{public_token}.
 >
 > —
 > Adam Savage, AuditHQ
