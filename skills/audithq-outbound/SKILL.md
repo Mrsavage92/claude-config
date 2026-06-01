@@ -38,30 +38,41 @@ Score the candidate 0–5. Add one point for each that's true:
 
 ### 2. Discover prospects (only if the user didn't supply one)
 
-You're looking for: **business name + website URL + a contact path (owner name + email OR LinkedIn).** Sources, in rough order of yield:
+You're looking for: **business name + website URL + a contact path (owner name + email OR LinkedIn).** Sources, in rough order of yield — each with how to actually extract the contact, not just where to look:
 
-- **Google Maps / local directories** — search a vertical + suburb (`"bookkeeper Ipswich QLD"`, `"family law Geelong"`). Local SMBs with thin sites cluster here. Capture name, site, and the listed email.
-- **LinkedIn** — search the owner title + region (`"founder" "Sunshine Coast" accountant`). Best for a warm DM path and a real human name.
-- **Industry association / member lists** — e.g. a state law society directory, a trades register. High ICP density.
-- **WebSearch** for `"{vertical} {city}" -site:linkedin.com` to surface independent sites directly.
+- **Google Maps / local directories** — search a vertical + suburb (`"bookkeeper Ipswich QLD"`, `"family law Geelong"`). *Extract:* the listing's website link → open the site → grab the email from the contact/footer; the owner's name is usually on the About page. If only a generic `info@` exists, that's still a valid send target — note "no named owner" in the tracker.
+- **LinkedIn** — search the owner title + region (`"founder" "Sunshine Coast" accountant`). *Extract:* the person's name + company from the profile; cross-reference their company website for the email. The profile itself is the DM path (no email needed for the LinkedIn variant).
+- **Industry association / member lists** — a state law society directory, a trades register, a chamber-of-commerce member page. *Extract:* these list business name + site + often a direct email in one place — highest yield per minute.
+- **WebSearch** for `"{vertical} {city}" -site:linkedin.com -site:facebook.com` to surface independent sites directly. *Extract:* open each result, pull email from the contact page, owner name from About.
 
-Use the `WebSearch` tool for live queries. Record each candidate as a row in the tracker (Step 6) before scanning.
+Use the `WebSearch` tool for live queries. Record each candidate as a row in the tracker (Step 6) before scanning. If you cannot find any contact path after checking the site + one search, skip the candidate (an unreachable prospect fails fit-check item 4).
 
 ### 3. Run a live Quick Scan on their site
 
 The finding is the whole pitch, so this step is non-negotiable — **never fabricate a finding.** Detect the available method, in order:
 
-1. **Public free-scan flow (concrete endpoint).** The free scan is a public, no-auth POST — the same call `/free-scan` makes from the browser:
+1. **Derive the live endpoint from the product source (do this first — don't trust a memorised URL).** The free scan is a public, no-auth POST. Get the real base + request/response shape by reading the caller in the AuditHQ repo, because a hard-coded project ref goes stale silently:
 
    ```bash
-   curl -X POST https://nstpbwflegwmknwcmsey.supabase.co/functions/v1/quick-scan \
-     -H "Content-Type: application/json" \
-     -d '{"url":"https://prospect-domain.com"}'
-   # → { "scanId": "...", "token": "...", "status": "queued" }
+   # The endpoint base and the exact fetch live here — read them, don't guess:
+   #   C:\Users\Adam\audit-genius\src\lib\constants.ts   → API_BASE (= {SUPABASE_URL}/functions/v1)
+   #   C:\Users\Adam\audit-genius\src\lib\quickScan.ts   → startQuickScan(): method, body shape, response fields
+   #   C:\Users\Adam\audit-genius\src\lib\supabase.ts    → which env var holds SUPABASE_URL
    ```
 
-   It returns a `token`; poll the result at `GET .../functions/v1/quick-scan/{token}` until status is complete, then read the suite scores + findings. Endpoint base is defined in `C:\Users\Adam\audit-genius\src\lib\constants.ts` (`API_BASE`) and the caller is `src\lib\quickScan.ts` — re-read those if the project ref ever changes rather than trusting this literal.
-2. **Browser the public page.** If no API is reachable from this environment, open `https://audithq.app/free-scan` (or the current canonical domain — verify, don't assume), submit the URL, and read the rendered result.
+   Then call it. **Verified live 2026-06-01** — the endpoint requires the Supabase anon key (it's public — shipped to every browser — so this is safe; read it from `VITE_SUPABASE_ANON_KEY` in the repo `.env`, never paste a literal here). Without the auth header you get `401 Missing authorization header`; `turnstile_token:null` is accepted (only a present-but-invalid token 403s):
+
+   ```bash
+   ANON=$(grep -oE 'VITE_SUPABASE_ANON_KEY=[A-Za-z0-9._-]+' C:/Users/Adam/audit-genius/.env | cut -d= -f2)
+   curl -X POST {API_BASE}/quick-scan \
+     -H "Content-Type: application/json" \
+     -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+     -d '{"url":"https://prospect-domain.com","turnstile_token":null}'
+   # → 200 { "public_token": "...", ... }
+   ```
+
+   The response field is **`public_token`**. Read the scan result at `{API_BASE}/quick-scan/{public_token}` (same data the page at `/scan/{public_token}` renders) — that's where the suite scores + findings live. The endpoint IP-rate-limits, so don't loop it hard. **If you could not read the caller files / .env** (repo moved/unreadable), do not invent a URL or key — drop to method 2 or 3.
+2. **Browser the public page.** If the API isn't reachable from this environment, open the live free-scan page (confirm the canonical domain from `audithq.app` / the repo's deploy config — don't assume), submit the URL, and read the rendered result.
 3. **Graceful manual fallback.** If neither works here, output the exact steps for Adam to run the scan in his browser and paste back the 3 findings + score. Do **not** invent results to keep moving — a made-up finding detonates the entire trust premise of the motion. Stop and ask.
 
 Capture: overall score, the three suite scores (Marketing/Technical/GEO), and the top findings with their severity.
@@ -111,17 +122,21 @@ Don't want to hear from me again? Just reply STOP and you're off the list.
 
 Never say "sent" or "ready to send" — say **"ready for your review."** The human approves, edits, or rejects. On approval, you update the tracker; you do not fire any send mechanism (that's `audithq-pipeline`'s job, and only after compliance + a test batch).
 
-Maintain a lightweight tracker at `C:\Users\Adam\Documents\Claude\outputs\audithq-outbound-tracker.md` (there's no CRM). Read it at the start of every run and surface anyone overdue for a bump. State machine:
+Maintain a lightweight tracker at `C:\Users\Adam\Documents\Claude\outputs\audithq-outbound-tracker.md` (there's no CRM). **On the first run, if the file doesn't exist, create it** with the header row below, then append. Read it at the start of every run and surface anyone overdue for a bump. State machine:
 
 `Identified → Scanned → Drafted → Approved → Sent → Replied → Closed-Won / Closed-Lost`
 
-Tracker row format:
+Tracker format (header + one example row so the shape is unambiguous):
 
 ```
-| Date | Business | URL | Fit | Lead finding | Stage | Next action (date) |
+| Date       | Business            | URL                        | Fit | Lead finding                    | Stage   | Next action (date)        |
+|------------|---------------------|----------------------------|-----|---------------------------------|---------|---------------------------|
+| 2026-06-01 | Harborline Family Law | harborlinefamilylaw.com.au | 5/5 | Not found in AI/Google search   | Drafted | Send on approval (06-01)  |
 ```
 
 **Follow-up rule:** if a prospect is `Sent` with no reply after 3 business days, surface them and draft a one-line bump that adds a *second* finding from the same scan ("forgot to mention — your site also..."). One bump only; if still silent after that, mark `Closed-Lost` and move on. Persistence past two touches reads as spam and isn't worth the reputation cost.
+
+**Cadence guardrail (protect deliverability).** Cold email from a young/low-volume sending domain gets throttled or spam-foldered if you spike. Cap **cold founder sends at ~20/day** and ramp slowly; keep the one-bump-max rule above. LinkedIn DMs: cap ~20–25/day to stay under LinkedIn's automation radar. If a run would exceed the cap, queue the overflow in the tracker as `Drafted` for the next day rather than presenting them all as send-ready today.
 
 ## Output format
 

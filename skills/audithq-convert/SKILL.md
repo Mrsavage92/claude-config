@@ -37,7 +37,61 @@ Every email must reference **their** specific domain, score, and at least one of
 - **No manufactured urgency.** No fake countdowns, no "price goes up tonight." The motivation is *their own curiosity about their own site*, which is more durable.
 - **One CTA per email.** Day 0–7: "see your scan again" / "read the finding." Day 14: "unlock the full 9-suite report — A$49/mo."
 
-Delegate the actual sentence-level copy to `Skill('market-emails')` — pass it this table, the specific findings, and the no-jargon rule. This skill owns the *sequence logic and angle*; market-emails owns the *prose*.
+**Success signal (optimise toward this, don't guess).** The drip is working if it hits roughly: email-capture → Day-14-click ≥ 8–12%, and capture → paid ≥ 2–4% (paid-first SMB SaaS norms). Track open rate per step to find the drop-off email; if Day 3 opens but Day 7 doesn't, the benchmark angle is the weak link — rewrite that one, not the whole sequence. If capture→paid sits below ~1.5% after 50+ leads, the problem is usually the Day-14 offer clarity or the visible-gap strength, not the earlier emails.
+
+Delegate the actual sentence-level copy to `Skill('market-emails')` — pass it this table, the specific findings, and the no-jargon rule. This skill owns the *sequence logic and angle*; market-emails owns the *prose*. The worked example below is the voice target — match it.
+
+### Worked drip — example domain `harborlinefamilylaw.com.au` (score 54, GEO 39)
+
+Merge fields in `{braces}` are filled from the lead's own scan row. This is the on-brand voice all four emails should hit:
+
+**Day 0 — "What we found on harborlinefamilylaw.com.au"**
+> Hi {first_name},
+>
+> Here's your scan: **harborlinefamilylaw.com.au scored 54/100.** The three things we checked:
+> • Marketing 48 • Technical 51 • Getting found in search/AI 39
+>
+> That last one is the weak spot — when someone asks Google or ChatGPT for a family lawyer in your area, your site doesn't come up the way it should.
+>
+> One thing to know: this covers **3 of the 9 areas** we check. The other 6 (security, privacy, reputation, social, hiring, and AI-readiness) aren't in this scan — and on a 54, there's usually more in there worth seeing.
+>
+> Your full findings are saved here: {scan_url}
+>
+> {footer}
+
+**Day 3 — "The one thing slowing harborlinefamilylaw.com.au down"**
+> Hi {first_name},
+>
+> Following up on your scan with the single fix I'd do first.
+>
+> Right now your site isn't readable to Google and AI search the way newer sites are — that's the 39/100 on "getting found." In practice: someone searches "family lawyer near me," and you're not in the answer. For a firm that gets clients through search, that's the most expensive gap on the page.
+>
+> The fix isn't a rebuild — it's telling search engines what each page is and who it's for. Most sites like yours get this sorted in a day.
+>
+> No pitch today — just the one that matters. {footer}
+
+**Day 7 — "How does harborlinefamilylaw.com.au compare?"**
+> Hi {first_name},
+>
+> Quick context on your 54. Family-law and professional-services sites we scan usually land around 68–72. You're at 54, and the gap is almost entirely in two areas: getting found (39) and a few technical basics (51).
+>
+> The good news is that's the fixable kind of gap — it's not that your site is bad, it's that a handful of specific things aren't switched on. {scan_url} still has your three areas.
+>
+> Worth knowing where the other 6 areas sit too? That's the full picture. More on that in a few days. {footer}
+
+**Day 14 — "The rest of harborlinefamilylaw.com.au's audit"  [CTA: A$49/mo Solo]**
+> Hi {first_name},
+>
+> You've seen 3 of your 9 areas. Here's what the other 6 cover — and on a 54, they're usually where the surprises are:
+> • Security • Privacy • Reputation • Social presence • Hiring/employer signals • AI-readiness
+>
+> The full 9-area report gives you every finding, a fix-it-in-order action plan, and a PDF you can keep — for **A$49/month**, cancel anytime. One fixed finding usually pays for it.
+>
+> See your full report: {upgrade_url}
+>
+> {footer}
+
+Notice what makes these convert: every email names the real domain and the real 54/39 numbers, the gap (6 unseen areas) is concrete and repeated, there's zero manufactured urgency, and only Day 14 pitches. Replicate that pattern with each lead's own data.
 
 ## Free → paid upgrade nudges (in-product + result page)
 

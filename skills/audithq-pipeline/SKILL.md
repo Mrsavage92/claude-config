@@ -46,9 +46,35 @@ Read live state — do not summarise from docs. Gather:
 - **Secrets present?** Especially `GOOGLE_PLACES_API_KEY` — without it `outbound-discover` throws immediately and the whole chain is dead.
 - **Data state:** counts in `growth_accounts` by status, `growth_proof_drafts` by status, `growth_suppressions` size.
 
+**Identifier verification is BLOCKING (not a formality).** The IDs and project ref in the "Known identifiers" section above are transcribed and go stale. Before you report any state, confirm each is real:
+- Each of the 4 workflow IDs must resolve to an existing workflow in the n8n API response. A missing ID → **HALT**, report which ID is gone, do not present a confident state table built on a stale ID.
+- The Supabase project ref must match the live project (read `VITE_SUPABASE_URL` from the AuditHQ repo `.env`, currently `nstpbwflegwmknwcmsey` — re-read, don't trust this literal).
+- If you cannot reach the n8n API or Supabase at all from this environment, say so explicitly and HALT — a state report you couldn't verify is worse than none, because it gets acted on.
+
 ### 2. State report (what Adam sees first, every run)
 
-Present a table, not prose:
+Present a table, not prose. **Last live DETECT (2026-06-01) returned this — re-run it; do not quote this snapshot as current:**
+
+```
+SYSTEM B — edge functions (all ACTIVE / deployed)
+| Function               | Deployed | Version | Cron     |
+|------------------------|----------|---------|----------|
+| outbound-discover      | yes      | 5       | (verify) |
+| outbound-batch-scan    | yes      | 4       | (verify) |
+| outbound-generate-email| yes      | 4       | (verify) |
+| outbound-send-email    | yes      | 3       | (verify) |
+(quick-scan-drip v7 + lead-capture v18 also ACTIVE — these are the inbound funnel, not outbound.)
+
+SYSTEM A — n8n  [BLOCKED: §18/§19 + funnel CTA]
+| Workflow              | ID               | Active |
+|-----------------------|------------------|--------|
+| Ingest Prospects      | MX7h74Dkeq0CrCtD | true   |
+| Compose Email Draft   | hafxzPaJ18FQYXlR | false  |
+| Send Approved Draft   | M9t2ZocLithBk4dI | false  |
+| Resend Events         | veGJAhXsJqj0DgDq | true   |
+```
+
+The shape your own run should produce:
 
 ```
 SYSTEM B — edge functions
@@ -91,6 +117,28 @@ For the edge-function path, in order:
    ```
 4. Start with a **tiny** first batch (`max_accounts: 5`, `max_sends: 1`) and watch it before scaling.
 
+**First-batch success criteria (check ALL before scaling past 1 send/day).** A batch "worked" only if:
+- The received email rendered the **unsubscribe link + sender-ID + postal address** in a real inbox (not just "send returned 200").
+- The CTA links the **free 3-suite scan**, not a full report (funnel correctness held at send time).
+- `growth_suppressions` was checked at send (confirm in logs) and the recipient wasn't already suppressed.
+- No bounce/complaint came back within ~1 hour, and `growth_proof_drafts.status` moved to `sent` / account to `emailed` cleanly.
+- The draft you approved is the one that actually sent (no swap). If any of these fail, do **not** scale — return to the compliance gate.
+
+### 4a. Rollback (if a live batch misbehaves)
+
+If anything looks wrong after activation — wrong recipient, missing footer, bounce spike, or a draft sending that you didn't approve — return the system to dormant immediately:
+
+```sql
+-- Deactivate all three outbound crons (stops new sends; in-flight ones still finish)
+SELECT cron.alter_job(jobid, active := false) FROM cron.job
+WHERE jobname IN ('audithq-outbound-batch-scan','audithq-outbound-generate-email','audithq-outbound-send-email');
+
+-- Re-enable n8n send test-mode as a belt-and-braces guard if that path is also live
+UPDATE system_flags SET value = 'true' WHERE key = 'growth_send_test_mode';
+```
+
+Then suppress anyone wrongly contacted (insert into `growth_suppressions`) and only re-activate after the cause is fixed and a fresh test-to-self passes. Dormant-and-debugging always beats live-and-leaking.
+
 ### 5. Manual trigger reference (testing / first runs)
 
 ```bash
@@ -130,7 +178,7 @@ Read the real `SUPABASE_URL` + secrets from the AuditHQ repo env — never hardc
 | generate-email produces no draft | `quick_scans.preview_findings` shape drifted / empty | inspect a recent `quick_scans` row; if shape changed, fix the field read before proceeding |
 | send rejected by gateway (bad JWT) | using auto-injected service key | use `AUDITHQ_LEGACY_SERVICE_KEY` |
 | send with no footer/unsubscribe | template regression | STOP — re-run compliance gate, do not send |
-| recipient re-emailed after opt-out | suppression not checked / no auto-suppress on bounce | verify send-time suppression check; add bounce→`growth_suppressions` wiring before scaling |
+| recipient re-emailed after opt-out | suppression not checked / no auto-suppress on bounce | verify send-time suppression check; the auto-suppress-on-bounce wiring is a code change — hand to `cto-architect`/`senior-backend` with the `growth_suppressions` table + the Resend bounce webhook, before scaling past the test batch |
 
 ## What this skill owns vs delegates
 
