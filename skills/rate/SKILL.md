@@ -27,13 +27,17 @@ Produces a calibrated, unprimed rating for any target with a concrete path to 10
 
 8. **Path-to-100 must be ordered by cost-to-fix vs value.** Not by severity, not by area — by what closes the biggest gap per hour.
 
-9. **Post-output grader is mandatory.** After producing a rating, run the structural grader before returning to the user. It validates shape, banned phrases, the 90+-needs-evidence rule, and (when the original prompt is supplied) the priming-acknowledgement rule. If it fails, revise the output until it passes — do not return failing output.
+9. **Post-output grader is enforced by a Stop hook — not honor-system.** A `Stop` hook (`~/.claude/hooks/rate-grade-gate.ps1`) reads the rating you actually emitted from the transcript, and if it is a `/rate` output (score headline + marker) it runs the structural grader against that exact text. If the grader fails (exit 1), the turn is **blocked** and the failures are fed back so you revise before ending — you cannot ship a failing rating even if you forget to grade it. The user prompt is auto-captured by a `UserPromptSubmit` hook (`rate-capture-prompt.ps1` → `.last-prompt.txt`), so the priming-acknowledgement check always runs against the real prompt without you passing `--prompt`. The gate fails **open** on any infra error (no Python, grader missing, transcript unreadable) — it only ever blocks on a genuine grader exit-1 against a genuine rating.
+
+   You can still run it manually (e.g. mid-draft):
 
    ```bash
    python ~/.claude/skills/rate/scripts/check_rating.py <path-to-rating.md> [--prompt "<user-prompt>"]
    ```
 
    Exit 0 = ship. Exit 1 = revise. Exit 2 = grader misconfigured (file missing) — surface to user, do not silently skip.
+
+   The grader validates shape, banned phrases, the 90+-needs-evidence rule (evidence must sit in the assessment, before `## Path to 100` — not in the forward-looking ladder), and the priming-acknowledgement rule.
 
 ## Cost guard (pre-rating)
 
