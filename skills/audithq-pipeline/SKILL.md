@@ -27,12 +27,12 @@ Neither system has ever completed a production send end-to-end. So the first rea
 - Resend Events — `veGJAhXsJqj0DgDq`
 
 **Edge functions** (`supabase/functions/` in `C:\Users\Adam\audit-genius\`):
-- `outbound-discover` (Google Places → `growth_accounts`; needs `GOOGLE_PLACES_API_KEY`)
+- `outbound-discover` (free OpenStreetMap Overpass/Nominatim → `growth_accounts`; **no Google Places key — pivoted to OSM 2026-05-28, v5 live**)
 - `outbound-batch-scan` (claims `discovered` rows, runs quick-scan, checks `growth_suppressions`)
 - `outbound-generate-email` (worst finding → Claude draft → `growth_proof_drafts`)
 - `outbound-send-email` (approved drafts → Resend, renders unsubscribe + footer)
 
-**Auth/secrets these need:** `AUDITHQ_INTERNAL_SECRET`, `GOOGLE_PLACES_API_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY`, plus `AUDITHQ_LEGACY_SERVICE_KEY` (the auto-injected service key is rejected by the gateway). Business address comes from `system_flags.audithq_business_address`.
+**Auth/secrets these need:** `AUDITHQ_INTERNAL_SECRET`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY`, plus `AUDITHQ_LEGACY_SERVICE_KEY` (the auto-injected service key is rejected by the gateway). **No `GOOGLE_PLACES_API_KEY` — discover is free OSM since 2026-05-28; do not re-introduce it as a requirement.** Business address comes from `system_flags.audithq_business_address` (which currently holds an EMAIL, not a postal address — a real §18 gap, see compliance gate).
 
 ## The procedure
 
@@ -43,7 +43,7 @@ Read live state — do not summarise from docs. Gather:
 - **n8n:** are the 4 workflows present and active? Last execution? Is there a scheduler/cron, or are they passive webhooks? Is `system_flags.growth_send_test_mode` true? Use the n8n cloud API (key at `~/.n8n-cloud-api-key`) or the n8n MCP tools.
 - **Edge functions:** which of the 4 are actually deployed? Use `npx supabase functions list` (CLI is linked) or the Supabase MCP `list_edge_functions`.
 - **Crons:** are `audithq-outbound-batch-scan` / `-generate-email` / `-send-email` active in `cron.job`? (Query via Supabase MCP `execute_sql`.)
-- **Secrets present?** Six are required: `GOOGLE_PLACES_API_KEY`, `AUDITHQ_INTERNAL_SECRET`, `AUDITHQ_LEGACY_SERVICE_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ANTHROPIC_API_KEY`. Check with `npx supabase secrets list` — but note this command needs a Supabase **access token** (`supabase login` or `SUPABASE_ACCESS_TOKEN`), which a headless Claude session usually lacks (`functions list` works on the linked project ref; `secrets list` does not). If the token is missing you **cannot** confirm the secrets from here — say so and ask Adam to run `npx supabase secrets list` rather than asserting they're set. Without `GOOGLE_PLACES_API_KEY`, `outbound-discover` throws immediately and the chain is dead, so this is the one to confirm first.
+- **Secrets present?** Five are required: `AUDITHQ_INTERNAL_SECRET`, `AUDITHQ_LEGACY_SERVICE_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ANTHROPIC_API_KEY`. (**Not** `GOOGLE_PLACES_API_KEY` — discover is free OSM, no key.) Check with `npx supabase secrets list` — but that command needs a Supabase **access token** (`supabase login` / `SUPABASE_ACCESS_TOKEN`), which a headless Claude session usually lacks (`functions list` works on the linked project ref; `secrets list` does not). If the token is missing you **cannot** confirm secrets from here — say so and ask Adam to run it rather than asserting they're set. The chain is not secret-blocked for discovery (OSM is free); the real send-time secrets are `RESEND_*` + `ANTHROPIC_API_KEY`.
 - **Data state:** counts in `growth_accounts` by status, `growth_proof_drafts` by status, `growth_suppressions` size.
 
 **Identifier verification is BLOCKING (not a formality).** The IDs and project ref in the "Known identifiers" section above are transcribed and go stale. Before you report any state, confirm each is real:
@@ -108,7 +108,7 @@ If any fail: **refuse to enable**, show the exact gap and the file/line to fix, 
 ### 4. Activation sequence (only after gate passes)
 
 For the edge-function path, in order:
-1. **Secrets — verify, don't assume.** Confirm the six secrets are set with `npx supabase secrets list`. This needs a Supabase access token a Claude session usually lacks — if the command errors with "Access token not provided," **you have not verified the secrets**; ask Adam to run it and report, don't claim they're set. Two separate blockers for the manual curls (Step 5): (a) `GOOGLE_PLACES_API_KEY` must exist or `outbound-discover` dies, and (b) the secret *values* aren't in the local repo `.env`, so Adam must paste `AUDITHQ_INTERNAL_SECRET` for the run or run the curls himself. Ask once; never guess a value.
+1. **Secrets — verify, don't assume.** Confirm the five secrets (above) are set with `npx supabase secrets list`. This needs a Supabase access token a Claude session usually lacks — if the command errors with "Access token not provided," **you have not verified the secrets**; ask Adam to run it and report, don't claim they're set. Discovery is NOT secret-blocked (free OSM, no Places key). The one operational gotcha for the manual curls (Step 5): the secret *values* aren't in the local repo `.env`, so Adam must paste `AUDITHQ_INTERNAL_SECRET` for the run or run the curls himself. Ask once; never guess a value.
 2. **Test-to-self first.** Run discover → batch-scan → generate-email manually (Step 5), approve one draft, and send it **to Adam's own inbox** to confirm the footer/unsubscribe render correctly in a real client. Verify the received email visually.
 3. Only after a clean self-test: activate the three crons:
    ```sql
@@ -174,7 +174,7 @@ Read the real `SUPABASE_URL` + secrets from the AuditHQ repo env — never hardc
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| discover throws instantly | `GOOGLE_PLACES_API_KEY` unset | set the secret (Step 4.1) |
+| discover returns 0 prospects | thin OSM coverage for that suburb/category, or location didn't resolve | query by suburb name not postcode; OSM AU coverage is dense in cities, thin in rural — 5-30 results is normal, sometimes 0. NOT a key problem (no Places key exists) |
 | generate-email produces no draft | `quick_scans.preview_findings` shape drifted / empty | inspect a recent `quick_scans` row; if shape changed, fix the field read before proceeding |
 | send rejected by gateway (bad JWT) | using auto-injected service key | use `AUDITHQ_LEGACY_SERVICE_KEY` |
 | send with no footer/unsubscribe | template regression | STOP — re-run compliance gate, do not send |
