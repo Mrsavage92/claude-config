@@ -5,8 +5,8 @@ Shared source of truth for Claude Code configuration across all machines.
 ## What's in here
 
 - `commands/` — 68 slash commands (installed to `~/.claude/commands/`)
-- `agents/` — 21 specialist agents (installed to `~/.claude/agents/`)
-- `skills/` — 116 skills (installed to `~/.claude/skills/`)
+- `agents/` — 22 specialist agents (installed to `~/.claude/agents/`)
+- `skills/` — 120 skills (installed to `~/.claude/skills/`)
 - `rules/` — language/domain rulebooks (installed to `~/.claude/rules/`)
 - `settings-template.json` — settings structure without secrets
 - `sync.sh` — Mac/Linux sync script
