@@ -1,13 +1,18 @@
 ---
 name: remotion-best-practices
-description: Best practices for Remotion - Video creation in React
+description: Domain knowledge for building videos in Remotion (programmatic video in React). Use when creating, editing, or rendering a Remotion video, animating with useCurrentFrame/interpolate, scaffolding a project with create-video, working in src/Root.tsx or a Composition, rendering an MP4/GIF/still, or adding captions, audio, transitions, or voiceover to a Remotion project. Triggers - "build a Remotion video", "create-video", "animate this in Remotion", "render an MP4 in React", "Remotion composition won't render". NOT for - generic React/CSS UI work (these animation rules are render-only and forbid CSS/Tailwind animation), non-Remotion video editing, or ffmpeg-only tasks with no Remotion project.
 metadata:
   tags: remotion, video, react, animation, composition
 ---
 
 ## When to use
 
-Use this skills whenever you are dealing with Remotion code to obtain the domain-specific knowledge.
+Use this skill whenever you are working with Remotion code, for the domain-specific knowledge it carries. Concretely, reach for it when:
+
+- Scaffolding, editing, or rendering a Remotion video (`create-video`, `remotion studio`, `remotion still/render`).
+- Animating any property — Remotion animates via `useCurrentFrame()` + `interpolate()`, never CSS/Tailwind animation.
+- Adding captions, audio, transitions, fonts, 3D, GIFs, or voiceover to a composition (load the matching `rules/*.md`).
+- Defining or debugging a `<Composition>` in `src/Root.tsx`, or computing duration/dimensions dynamically.
 
 ## New project setup
 
@@ -17,14 +22,14 @@ When in an empty folder or workspace with no existing Remotion project, scaffold
 npx create-video@latest --yes --blank --no-tailwind my-video
 ```
 
-Replace `my-video` with a suitable project name.
+Replace `my-video` with a suitable project name. The `--no-tailwind` flag keeps the starter minimal; drop it (or add Tailwind later — see [rules/tailwind.md](rules/tailwind.md)) if you want TailwindCSS for static styling. Note Tailwind *animation* classes still will not render — animate with `useCurrentFrame()`/`interpolate()` regardless.
 
 ## Designing a video
 
 Animate properties using `useCurrentFrame()` and `interpolate()`. Use Easing to customize the timing of the animation.
 
 ```tsx
-import { useCurrentFrame, Easing } from "remotion";
+import { useCurrentFrame, useVideoConfig, interpolate, Easing } from "remotion";
 
 export const FadeIn = () => {
   const frame = useCurrentFrame();
@@ -94,7 +99,14 @@ To limit the duration of an element, use `durationInFrames` of `<Sequence>`.
 `<Sequence>` by default is an absolute fill. For inline content, use `layout="none"`.
 
 ```tsx
-import { Sequence } from "remotion";
+import {
+  AbsoluteFill,
+  Sequence,
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+} from "remotion";
 
 export const Title = () => {
   const frame = useCurrentFrame();
