@@ -82,7 +82,7 @@ Run these checks and abort with a clear error if any fail:
 **Step 4 — Update Notion via REST API**
 - Token: `<read from $env:NOTION_INTERNAL_TOKEN env var — never hardcode>`
 - Notion hub page ID: `32a116e8-bef2-8030-a0f6-d0be522bf917`
-- Child pages: Agents (`32a116e8-bef2-815d-8b38-f37eaa467ec5`), Slash Commands (`32a116e8-bef2-8118-9f49-e6d790a56bd1`), Skills Library (`32a116e8-bef2-8196-b2d3-e630d645984a`)
+- Child pages: Agents (`32a116e8-bef2-815d-8b38-f37eaa467ec5`), Slash Commands (`32a116e8-bef2-8118-9f49-e6d790a56bd1`), Skills Library (`373116e8-bef2-8142-8a74-fbf72f5fdab3`)
 - Clear all blocks then rewrite each page completely (do not append — always full rewrite)
 - Use `PATCH https://api.notion.com/v1/blocks/{page_id}/children` with chunks of 100 blocks max
 - Use `DELETE https://api.notion.com/v1/blocks/{block_id}` to clear (loop until no blocks remain)

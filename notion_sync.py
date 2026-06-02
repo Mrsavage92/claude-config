@@ -7,7 +7,7 @@ BASE = 'https://api.notion.com/v1'
 PAGES = {
     'commands': '32a116e8-bef2-8118-9f49-e6d790a56bd1',
     'agents':   '32a116e8-bef2-815d-8b38-f37eaa467ec5',
-    'skills':   '32a116e8-bef2-8196-b2d3-e630d645984a',
+    'skills':   '373116e8-bef2-8142-8a74-fbf72f5fdab3',
 }
 
 home = os.environ['USERPROFILE']
