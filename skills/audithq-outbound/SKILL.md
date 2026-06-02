@@ -1,19 +1,21 @@
 ---
 name: audithq-outbound
-description: "Founder-led, audit-anchored outbound for AuditHQ. Finds ICP-fit SMB prospects, runs a live AuditHQ quick-scan on each prospect's website, extracts the 3 most damaging findings, and drafts a personalised LinkedIn DM and compliance-ready email anchored on those real findings. Human-in-the-loop — presents drafts for approval, never sends autonomously. Triggers: 'find me prospects', 'who should I reach out to', 'outbound for AuditHQ', 'build my prospect list', 'personalised DM', 'audit-anchored cold email', 'LinkedIn message for AuditHQ', 'cold outreach with a scan', 'find SMBs to contact', 'prospect for AuditHQ customers'. NOT for: activating or scheduling the n8n automation pipeline (use audithq-pipeline); writing a drip sequence for people who already signed up (use audithq-convert); generic cold email with no scan data (use cold-email)."
+description: "Founder-led, audit-anchored outbound for AuditHQ, targeting DIGITAL MARKETING AGENCIES / SEO freelancers / marketing consultants (white-label ICP, locked 2026-06-02 Decision 42 — NOT end-SMBs). Finds ICP-fit agency prospects, runs a live AuditHQ quick-scan on a sample/client site to prove the white-label deliverable, and drafts a personalised LinkedIn connection-note and compliance-ready email pitching the productized audit (A$499–799) + white-label subscription. Human-in-the-loop — presents drafts for approval, never sends autonomously. Triggers: 'find me prospects', 'who should I reach out to', 'outbound for AuditHQ', 'build my prospect list', 'find agencies to contact', 'personalised DM', 'audit-anchored cold email', 'LinkedIn message for AuditHQ', 'prospect for AuditHQ customers'. NOT for: activating or scheduling the n8n automation pipeline (use audithq-pipeline); writing a drip sequence for people who already signed up (use audithq-convert); generic cold email with no scan data (use cold-email)."
 ---
 
 # AuditHQ Outbound — Founder-Led, Audit-Anchored Prospecting
 
-This is AuditHQ's primary acquisition motion while MRR is below A$2K. The premise is simple and load-bearing: **a real finding from the prospect's own website beats any benefit claim.** You are not selling "a website audit tool" — you are showing a business owner something concretely broken on *their* site that is costing them customers, and offering the fastest way to see the rest. The live scan IS the pitch.
+This is AuditHQ's primary acquisition motion. The premise is load-bearing: **a real, branded audit beats any benefit claim.** You are selling a digital marketing agency / freelance SEO consultant a *white-label deliverable* — a finished, 9-suite, client-ready audit report in THEIR name that they use to win new clients, retain existing ones, and surface upsell work. The live scan IS the pitch: you run AuditHQ on a real site (one of their clients, a sample, or their own) and show them the depth and polish of the report they'd be handing over. They already pay for Ahrefs/SEMrush and assemble audits by hand; you hand them a finished one in minutes.
+
+**ICP REVERSAL — locked 2026-06-02 (Decision 42).** This skill formerly targeted SMB owners directly. That motion produced A$0 MRR over a year and is RETIRED. The buyer is now the **agency/marketer**, never the end-SMB. Do not target SMB owners; do not auto-skip agencies — they are the target.
 
 You draft. The human sends. This skill never sends anything autonomously — it produces approval-ready drafts and tracks who's where in the follow-up sequence.
 
 ## Locked context (do not re-derive or contradict)
 
 - **Product:** AuditHQ scans a website across 9 suites (~516 checks). Positioning, verbatim where it matters: *"Code finds the issues. Evidence proves them. AI explains them."* The engine finds problems with code; AI only writes the explanation. **Never** call it "AI-powered" or imply AI does the finding.
-- **ICP:** SMB owners with a website who don't pay a digital marketer — sole traders, small SaaS founders, e-commerce operators, professional services (lawyers, accountants, dentists, clinics, trades). Global product, Australia is the beachhead. English-language sites only for now.
-- **The offer you hand over:** you've **already run their scan** (Step 3) — so the CTA is **their own result link**, `https://audithq.com.au/scan/{public_token}`, not "go run a scan yourself." Never make the prospect do homework; you did the work, the link is the payoff. The result page is gated correctly per Decision 20: it shows their real scores + sample findings + an estimated total-issue range, and the **full report + PDF + 30/60/90 action plan is paid** (A$49/mo Solo or A$99 one-time). So sharing the link cannibalises nothing — it's a real, useful, shareable sample that ends at the paywall. **Never** offer the full report/PDF free. (Naming note: the live product calls the free tier the "3-suite scan" and the result page shows several scored buckets — match whatever the live `/scan/{token}` page actually displays for that prospect rather than asserting a suite count yourself; the product owns that copy, not this skill.)
+- **ICP:** digital marketing agencies, SEO/web freelancers, and consultants (1–10 people) who do client-facing website work and would white-label an audit deliverable. Sweet spot = small enough to lack an in-house audit stack, established enough to have paying clients and tool budget (they already buy Ahrefs/SEMrush ~US$120–200/mo). Global — AU + UK + US English-speaking markets. **Not** big agencies with their own audit tooling; **not** end-SMBs.
+- **The offer you hand over:** the **productized "Certified Site Audit" (A$499 single / A$799 with a 30-min white-label debrief)** — you run the full 9-suite audit on their client's site, they get a branded PDF to put in a client proposal. Each sale seeds a subscription upsell (their client wants ongoing monitoring → agency upgrades to **Studio A$149 / Agency A$299 / Scale A$499/mo** white-label plan). The cold-open proof is a **live scan you ran** (`https://audithq.com.au/scan/{public_token}`) on a sample or one of their client sites — "this is the report, branded as you, in minutes." Lead with the deliverable, not "your own site is broken." Full plan: `audit-genius/docs/GTM-90-DAY-2026-06-02.md`.
 - **No dev jargon in any message.** Banned in customer-facing copy: "deterministic", "synthesis", "agentic", "architecture", "crawl", "headers", "schema markup" (translate the last three to plain English). The reader runs a business; they are not a developer.
 
 ## When this fires
@@ -26,28 +28,28 @@ Work one prospect at a time, in this order. Each step gates the next — don't d
 
 ### 1. ICP fit check (do this BEFORE scanning — a scan costs time and API budget)
 
-**Hard size floor — applied BEFORE the 0–5 score (founder decision, 2026-06-01).** A 1–2 person business will not reliably pay for this; do not scan them no matter how broken the site is. **Auto-skip** any candidate that is a solo operator, a "[Name] + me" two-person shop, a sole trader with no staff, or a personal-brand freelancer. Tells of too-small: first-person-singular About page ("I help…"), no team page, single mobile number as the only contact, "ABN sole trader," home-address registration. When unsure of size, err toward skipping — a wasted scan on a too-small business is worse than missing one.
+**You are qualifying an AGENCY, not the business being audited.** The candidate is a digital marketing agency / SEO or web freelancer / marketing consultant. The site you scan to make the pitch is one of *their clients'* (or a sample), not the agency's own product.
 
-**Target the band above that:** established multi-person SMBs with real revenue and a budget mindset — multi-partner professional-services firms (law, accounting, medical/dental groups), trades/field-service businesses with a team and vehicles, e-commerce doing real volume, multi-location operators, B2B service firms with ~5–50 staff. Big enough to pay without flinching at A$49–149/mo, not so big they have an in-house marketing team (that fails the core premise — AuditHQ wins where nobody is watching the site).
+**Hard fit floor.** Skip candidates that are: big agencies likely to have an in-house audit stack (50+ staff, named enterprise clients), pure-play tools/SaaS that compete with AuditHQ, or anyone with no evidence of paying clients (a parked "agency" landing page with no portfolio/case studies). When unsure, a small established agency or working freelance consultant with a visible client list is the target.
 
 Then score the surviving candidate 0–5, one point each:
 
-1. **Has a real website** they own and clearly invest in (not a Facebook page, Linktree, or parked domain).
-2. **Multi-person business with budget signals** — a team/staff page, multiple locations, active job ads, "our team of…", paid tools in the footer, or a registered company (Pty Ltd) rather than a sole trader. This is the point that used to reward "solo / family business" — it now does the opposite: size and budget-capacity score the point.
-3. **Money depends on the website** — it drives bookings, leads, or sales and is a real channel, not a brochure they ignore.
-4. **Reachable at a decision-maker** — you can find a named principal/partner/owner + a contact email or LinkedIn. A `partners@` or named-person email beats a generic `info@`.
-5. **Plausibly fixable problems** — site looks dated, slow, or thin on first glance (confirmed by the scan).
+1. **Is a real agency/consultant** — has a professional site positioning website/SEO/marketing *services* (not a product, not an SMB selling to consumers).
+2. **Has paying clients** — visible portfolio, case studies, client logos, testimonials, or a "/work" / "/clients" page. This proves they have accounts to white-label reports for.
+3. **Right size (1–10 people)** — small enough to lack in-house audit tooling and to feel the value of a done-for-you deliverable; freelancers and boutique agencies score here. Solo consultants who resell audits DO score (they're tool-buyers, not the SMB we retired).
+4. **Reachable at a decision-maker** — named founder/principal + email or LinkedIn. Owner-operated is ideal (they make the buy decision).
+5. **Audit-relevant offering** — they already sell SEO/audits/web work, so a 9-suite white-label report (esp. the AI-readiness/GEO angle they probably don't offer yet) plugs straight into their services.
 
-**Score 4–5:** proceed. **Score 3:** proceed only if it clears the size floor AND reachability is strong. **Score ≤2, or fails the size floor:** skip and say why — don't burn a scan. Auto-skips: solo/2-person shops, enterprises with in-house marketing teams, agencies (parked channel until A$2K MRR), other audit tools, and anyone already running an obvious marketing stack.
+**Score 4–5:** proceed. **Score 3:** proceed if reachability is strong. **Score ≤2:** skip and say why. Auto-skips: 50+ staff agencies with in-house stacks, competing audit tools, "agencies" with no client evidence, and end-SMBs (retired ICP).
 
 ### 2. Discover prospects (only if the user didn't supply one)
 
 You're looking for: **business name + website URL + a contact path (owner name + email OR LinkedIn).** Sources, in rough order of yield — each with how to actually extract the contact, not just where to look:
 
-- **Google Maps / local directories** — search a vertical + suburb (`"bookkeeper Ipswich QLD"`, `"family law Geelong"`). *Extract:* the listing's website link → open the site → grab the email from the contact/footer; the owner's name is usually on the About page. If only a generic `info@` exists, that's still a valid send target — note "no named owner" in the tracker.
-- **LinkedIn** — search the owner title + region (`"founder" "Sunshine Coast" accountant`). *Extract:* the person's name + company from the profile; cross-reference their company website for the email. The profile itself is the DM path (no email needed for the LinkedIn variant).
-- **Industry association / member lists** — a state law society directory, a trades register, a chamber-of-commerce member page. *Extract:* these list business name + site + often a direct email in one place — highest yield per minute.
-- **WebSearch** for `"{vertical} {city}" -site:linkedin.com -site:facebook.com` to surface independent sites directly. *Extract:* open each result, pull email from the contact page, owner name from About.
+- **LinkedIn (primary)** — search `"digital marketing agency"` / `"SEO consultant"` / `"SEO freelancer"` + region (AU/UK/US), filter under ~10 staff. *Extract:* founder/principal name from the profile; the connection-request-with-note is the DM path (see §5 — you cannot cold-DM non-connections for free).
+- **Agency directories / marketplaces** — Clutch, DesignRush, Semrush Agency Partners, GoodFirms, Sortlist; filter by SEO/digital-marketing + small team. *Extract:* agency name + site + often a contact email in one place — highest yield per minute.
+- **SEO/marketing communities** — public member lists or active posters in r/SEO, r/digital_marketing, r/agency, SEO Discords/Slacks, "SEO Freelancers" Facebook groups. *Extract:* their linked site → contact page.
+- **WebSearch** for `"digital marketing agency" {city} -site:clutch.co` or `"freelance SEO consultant" {country}` to surface independent agency sites directly. *Extract:* email from contact page, founder name from About; note one of their visible *client* sites as the scan target for the cold-open.
 
 Use the `WebSearch` tool for live queries. Record each candidate as a row in the tracker (Step 6) before scanning. If you cannot find any contact path after checking the site + one search, skip the candidate (an unreachable prospect fails fit-check item 4).
 
@@ -83,7 +85,7 @@ Capture: overall score, the three suite scores (Marketing/Technical/GEO), and th
 
 ### 4. Map the 3 worst findings → a plain-English hook
 
-Pick the three findings that are (a) highest severity, (b) most concrete (has a number or a named, checkable thing), and (c) most obviously tied to *losing business*. Then translate each into one sentence a business owner feels in their gut. The pattern: **what's broken → what it costs them**, no jargon.
+You ran the scan on one of the agency's **client sites** (or a sample). Pick the three findings that are (a) highest severity, (b) most concrete, and (c) most obviously tied to *losing business*. Translate each into one plain-English sentence — these are exactly the lines the agency would relay to their own client, so they double as proof of how client-ready the white-label report is. Favour the **AI-readiness / GEO** finding when present — it's the angle the agency probably can't audit today and the strongest door-opener. The pattern: **what's broken → what it costs the client**, no jargon.
 
 | Raw finding (engine language) | Plain-English hook (use this) |
 |---|---|
@@ -97,12 +99,12 @@ One hook leads the message. The other two are the proof that you actually looked
 
 ### 5. Draft the two messages
 
-Produce **both** a LinkedIn DM and an email for every prospect. Each opens with the specific observation (never a generic "I help businesses with their websites"), names the business or domain, states the lead finding and its cost, optionally stacks one more, and ends with a single low-friction CTA: **their own scan result link** (`https://audithq.com.au/scan/{public_token}` from Step 3) — "I put your results here" / "here's the full breakdown I ran." You did the work for them; the link is the payoff, not a chore. Honest, specific, short.
+Produce **both** a LinkedIn message and an email for every agency prospect. Each opens with a specific observation (never "I help businesses with their websites"), names the agency and the client site you scanned, shows the lead finding as proof of the report's depth, and ends with a single low-friction CTA: **the white-label offer** — "want the full branded report for {client} to put in your next pitch?" or the productized **Certified Site Audit (A$499)**. The scan link (`https://audithq.com.au/scan/{public_token}`) is the *proof*, not the ask. Lead with what the agency gains (a finished, branded, client-ready deliverable + the AI-readiness angle they can't offer yet), not "your site is broken." Honest, specific, short.
 
-- **LinkedIn DM:** under ~120 words, no link dump, conversational. Not subject to the Spam Act, but it must still be honest and non-spammy — no fake "we already work together" framing.
+- **LinkedIn:** you cannot cold-DM a non-connection for free — send a **connection request with a one-line personalised note** (≤300 chars, mention the client-site finding), then send the full message *after they accept*. Both under ~120 words, conversational, non-spammy. Not subject to the Spam Act.
 - **Email:** subject line + body under ~180 words. **Must pass the compliance gate in Step 5a before you present it as ready.**
 
-For final wordsmithing of the email body, delegate to `Skill('cold-email')` — pass it the findings, the hook, the CTA (the prospect's own `/scan/{public_token}` result link), and the no-jargon rule. For LinkedIn phrasing/formatting, delegate to `Skill('linkedin-post')`. This skill owns *what to say* (the scan→finding→cost mapping); those skills polish *how it reads*.
+For final wordsmithing of the email body, delegate to `Skill('cold-email')` — pass it the findings, the white-label angle, the CTA (productized audit / branded report), and the no-jargon rule. For LinkedIn phrasing, delegate to `Skill('linkedin-post')`. This skill owns *what to say* (the scan→finding→white-label-value mapping); those skills polish *how it reads*.
 
 #### 5a. Spam Act compliance gate (HARD BLOCK — email only)
 
@@ -133,27 +135,29 @@ Maintain a lightweight tracker at `C:\Users\Adam\Documents\Claude\outputs\audith
 Tracker format (header + one example row so the shape is unambiguous):
 
 ```
-| Date       | Business            | URL                        | Fit | Lead finding                    | Stage   | Next action (date)        |
-|------------|---------------------|----------------------------|-----|---------------------------------|---------|---------------------------|
-| 2026-06-01 | Harborline Family Law | harborlinefamilylaw.com.au | 5/5 | Not found in AI/Google search   | Drafted | Send on approval (06-01)  |
+| Date       | Agency              | Site / contact             | Fit | Client site scanned + lead finding        | Stage   | Next action (date)        |
+|------------|---------------------|----------------------------|-----|-------------------------------------------|---------|---------------------------|
+| 2026-06-02 | Brightpost SEO (4-person, Sydney) | brightpostseo.com.au / Mia (LI) | 5/5 | scanned client {x} — not AI-citable       | Drafted | Conn-request on approval (06-02) |
 ```
 
 **Follow-up rule:** if a prospect is `Sent` with no reply after 3 business days, surface them and draft a one-line bump that adds a *second* finding from the same scan ("forgot to mention — your site also..."). One bump only; if still silent after that, mark `Closed-Lost` and move on. Persistence past two touches reads as spam and isn't worth the reputation cost.
 
-**Cadence guardrail (protect deliverability).** Cold email from a young/low-volume sending domain gets throttled or spam-foldered if you spike. Cap **cold founder sends at ~20/day** and ramp slowly; keep the one-bump-max rule above. LinkedIn DMs: cap ~20–25/day to stay under LinkedIn's automation radar. If a run would exceed the cap, queue the overflow in the tracker as `Drafted` for the next day rather than presenting them all as send-ready today.
+**Cadence guardrail (protect deliverability + account).** Cold email from a young/low-volume sending domain gets throttled or spam-foldered if you spike — cap **cold founder sends at ~20/day** and ramp slowly; keep the one-bump-max rule. LinkedIn: **~15–20 connection requests/day** (LinkedIn soft-caps ~100–200/week before flagging); send the full pitch only after accept (~25–40% accept on a personalised note) → ~3–6 real conversations/day. Do NOT mass-DM. If a run exceeds the cap, queue overflow in the tracker as `Drafted` for the next day. Compliance gate B1 (postal address) blocks all email until fixed — until then, run the LinkedIn channel only.
 
 ## Output format
 
 For each prospect, return exactly this block:
 
 ```
-### {Business name} — fit {N}/5
-**URL:** {url}   **Scanned:** {overall score}/100 (M {x} · T {y} · GEO {z})
-**Lead finding:** {plain-English hook}
-**Supporting:** {finding 2}; {finding 3}
+### {Agency name} — fit {N}/5
+**Agency:** {agency site} · **Contact:** {name / LinkedIn / email}
+**Client site scanned:** {client url} → {score}/100, lead finding: {plain-English hook}
 
-**LinkedIn DM:**
-{draft}
+**LinkedIn connection note (≤300 chars):**
+{one-line note referencing the client-site finding}
+
+**LinkedIn message (send after accept):**
+{draft — white-label value + productized-audit CTA}
 
 **Email** — COMPLIANCE: {PASS / BLOCKED: missing X}
 Subject: {subject}
@@ -166,74 +170,41 @@ If COMPLIANCE is BLOCKED, the email is not presented as ready — list the fix a
 
 ---
 
-## Worked example 1 — suburban law firm
+## Worked example — boutique SEO agency (the new ICP)
 
-**Candidate:** Harborline Family Law, Geelong VIC. Found via Google Maps ("family law Geelong"). Site `harborlinefamilylaw.com.au`, About page names the principal "Megan Doyle", contact is `info@harborlinefamilylaw.com.au`. LinkedIn profile found for Megan.
+**Candidate:** Brightpost SEO, a 4-person SEO/content agency in Sydney. Found via LinkedIn ("SEO agency" + Sydney, <10 staff). Site `brightpostseo.com.au` has a `/work` page listing client logos; founder "Mia Tran" reachable on LinkedIn; `hello@brightpostseo.com.au` on the contact page.
 
-**Fit check:** real site ✓, no marketer (generic info@, owner-run) ✓, money depends on it (intake comes through the site) ✓, reachable (email + LinkedIn) ✓, looks dated ✓ → **5/5, proceed.**
+**Fit check:** real agency selling SEO services ✓, has paying clients (visible /work logos) ✓, right size (4 people, no in-house audit stack) ✓, reachable (founder on LinkedIn + email) ✓, audit-relevant (sells SEO, doesn't yet offer AI-readiness) ✓ → **5/5, proceed.**
 
-**Scan:** 54/100 (Marketing 48 · Technical 51 · GEO 39). Top findings: (1) no meta descriptions on practice-area pages; (2) mobile load 6.1s; (3) not citable by AI search / no structured data.
+**Scan (run on ONE of their client sites, not the agency's own):** picked a client from their /work page, ran AuditHQ → 58/100. Lead finding: *that client isn't AI-citable — when someone asks ChatGPT/Perplexity for their category, they don't come up.* Supporting: slow on mobile; thin metadata. (This is proof of the deliverable's depth — and an angle Brightpost can sell their client.)
 
-**Hooks:** lead with the one a lawyer feels — *"When someone in Geelong asks ChatGPT or Google for a family lawyer, your firm doesn't come up — your site isn't readable to those tools yet."* Supporting: slow on mobile (people bounce before intake), and search engines guessing your pages.
+**LinkedIn connection note (≤300 chars):**
+> Hi Mia — ran a deep audit on one of Brightpost's clients and found something you could turn into an easy upsell (they're invisible to ChatGPT/Perplexity). Mind if I send it over? It's a white-label report you could brand as Brightpost.
 
-**LinkedIn DM:**
-> Hi Megan — I run AuditHQ and I scanned harborlinefamilylaw.com.au this morning (I do this for firms I think are leaving enquiries on the table). Two things stood out: when someone asks Google or ChatGPT for a family lawyer in Geelong, your site doesn't surface yet, and on a phone it takes about 6 seconds to load — most people leave first. I saved your full results here: audithq.com.au/scan/{public_token}. No pitch, genuinely thought you'd want to see it.
+**LinkedIn message (after accept):**
+> Thanks Mia. Quick context: I run AuditHQ — agencies use it to hand clients a finished, branded 9-suite audit (SEO + technical + security + the AI-readiness piece most tools skip) in minutes instead of building it by hand. I ran it on {client} so you can see the output: audithq.com.au/scan/{public_token}. The "not findable by AI" angle is a clean upsell into your retainers. Two ways agencies use it: a one-off branded audit (A$499) to win a pitch, or a white-label plan from A$149/mo across your client roster. Want me to send the full {client} report branded as Brightpost so you can see the deliverable?
 
-**Email — COMPLIANCE: PASS**
-> Subject: Geelong family lawyer searches aren't finding harborlinefamilylaw.com.au
+**Email — COMPLIANCE: PASS (assuming postal address present; otherwise BLOCKED)**
+> Subject: an easy upsell hiding in one of Brightpost's client sites
 >
-> Hi Megan,
+> Hi Mia,
 >
-> I run AuditHQ — we check websites for the things quietly costing businesses enquiries. I scanned harborlinefamilylaw.com.au and one thing jumped out: when someone asks Google or ChatGPT for a family lawyer in Geelong, your site doesn't come up, because it isn't readable to those tools yet. That's fixable.
+> I run AuditHQ — agencies white-label it to hand clients a finished 9-suite audit report (SEO, technical, security, privacy, and the AI-readiness piece most audit tools don't cover yet) in their own branding, in minutes.
 >
-> Two others worth knowing: it takes about 6 seconds to load on a phone (most people leave before it finishes), and your practice-area pages don't tell Google what they're about, so they get skipped in search.
+> I ran it on one of your clients so you can judge the output, not take my word for it: audithq.com.au/scan/{public_token}. The standout — they're not citable by ChatGPT or Perplexity yet, which is a clean upsell into a retainer.
 >
-> I saved your full results here so you can see exactly what I found: audithq.com.au/scan/{public_token}. Happy to point you at what to fix first.
->
-> Best,
->
-> —
-> Adam Savage, AuditHQ
-> {postal address}
-> Don't want to hear from me again? Just reply STOP and you're off the list.
-
-**Tracker:** Drafted → next: send on approval (2026-06-01)
-
----
-
-## Worked example 2 — small e-commerce store
-
-**Candidate:** Fern & Flask, online candle/homewares store, `fernandflask.com`. Found via WebSearch for independent Shopify-style stores. Owner "Priya" named in Instagram bio linked from the site; contact `hello@fernandflask.com`. No LinkedIn found, but email is solid.
-
-**Fit check:** real site ✓, owner-run, no agency ✓, revenue = the site ✓, reachable (email) ✓, looks fixable ✓ → **5/5, proceed.**
-
-**Scan:** 61/100 (Marketing 58 · Technical 49 · GEO 66). Top findings: (1) "not secure" warning path on a product page (mixed content); (2) no abandoned-cart / email capture; (3) images uncompressed, slow product pages.
-
-**Hooks:** lead with the one that directly blocks a sale — *"On at least one product page customers hit a 'not secure' warning before they can check out — that kills purchases."* Supporting: slow product pages, and no way to win back people who leave without buying.
-
-**LinkedIn DM:** *(no LinkedIn profile found — skip DM, email only, and note it in the tracker)*
-
-**Email — COMPLIANCE: PASS**
-> Subject: a "not secure" warning is showing on Fern & Flask checkout
->
-> Hi Priya,
->
-> I run AuditHQ — we scan online stores for the things quietly costing sales. I ran Fern & Flask and the one I'd fix today: on at least one product page, customers get a browser "not secure" warning before they can pay. Most people won't put their card in after seeing that.
->
-> Two more: product pages are slow to load because the images are full-size, and there's nothing capturing emails from people who leave without buying — that's repeat revenue walking out the door.
->
-> Your full results are here — it shows exactly which page throws the warning: audithq.com.au/scan/{public_token}.
+> Agencies use it two ways: a one-off branded "Certified Site Audit" (A$499) to win a pitch, or a white-label plan from A$149/mo across the client roster. Happy to send the full branded report for that client so you can see exactly what you'd be handing over.
 >
 > —
 > Adam Savage, AuditHQ
 > {postal address}
 > Don't want to hear from me again? Just reply STOP and you're off the list.
 
-**Tracker:** Drafted (email-only, no LI) → next: send on approval (2026-06-01)
+**Tracker:** Drafted → next: connection-request on approval (2026-06-02)
 
 ---
 
 ## What this skill owns vs delegates
 
-- **Owns:** ICP fit scoring, the scan→finding→cost mapping, the compliance gate decision, follow-up state.
+- **Owns:** agency ICP fit scoring, the scan→finding→white-label-value mapping, the compliance gate decision, follow-up state.
 - **Delegates:** email body polish → `cold-email`; LinkedIn phrasing → `linkedin-post`; if the user pivots to "automate sending this at volume" → `audithq-pipeline`; if they want to nurture free-scan signups → `audithq-convert`.
