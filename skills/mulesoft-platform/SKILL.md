@@ -23,6 +23,7 @@ Operate Anypoint Platform like a platform admin — deploy apps, manage credenti
 - Building flows — use `/mulesoft-flow`
 - DataWeave transforms — use `/mulesoft-dataweave`
 - BDR project tracking — use `/mulesoft-bdr`
+- **Omni Gateway / Agent Fabric / MCP / LLM Proxy / Agentforce — use `/mulesoft-agentfabric`.** Omni Gateway is Flex Gateway extended for agentic traffic; it is NOT the classic Anypoint Platform admin covered here. Classic REST API Manager policies still live in this skill.
 
 ## The Platform Stack
 

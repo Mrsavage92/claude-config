@@ -27,6 +27,7 @@ Entry point for MuleSoft integration work. Reads the request, identifies which s
 | `/mulesoft-flow` | Flow construction, triggers, error handling, idempotency |
 | `/mulesoft-dataweave` | DataWeave 2.0 transforms, field mapping |
 | `/mulesoft-platform` | Anypoint Platform ops, deploy, monitoring, Secrets Manager |
+| `/mulesoft-agentfabric` | AI & agents layer — Agent Fabric, Omni Gateway, MCP tools, LLM Proxy, Agentforce bridge |
 
 ## Routing Logic
 
@@ -37,6 +38,7 @@ Entry point for MuleSoft integration work. Reads the request, identifies which s
 | "Build / debug a flow" / "Add error handling" | `mulesoft-flow` |
 | "Map these fields" / "Transform JSON to XML" | `mulesoft-dataweave` |
 | "Deploy" / "Secrets Manager" / "CloudHub alerts" | `mulesoft-platform` |
+| "AI agents" / "MCP server/tool" / "Omni Gateway" / "LLM proxy" / "Agentforce" / "agent network" | `mulesoft-agentfabric` |
 
 ## Multi-Step Workflows
 
@@ -77,7 +79,7 @@ Future phases (per Enterprise strategy docs Phase 1-6):
 - Phase 3: Use case catalogue
 - Phase 4: Multi-system implementation
 - Phase 5: Governance & observability
-- Phase 6: AI & advanced automation
+- Phase 6: AI & advanced automation → `/mulesoft-agentfabric` (Agent Fabric / Agentforce). Two hard gates first: BDR entitlement for Agent Fabric (NOT confirmed in "Integration Advanced" tier) + a concrete agent use case.
 
 ## Core Principles (apply across all subskills)
 

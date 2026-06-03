@@ -20,6 +20,9 @@ Is it about transforming data between systems?
 Is it about deploying, monitoring, or platform admin?
   YES → /mulesoft-platform
 
+Is it about AI agents, MCP servers/tools, Omni Gateway, LLM Proxy, or Agentforce?
+  YES → /mulesoft-agentfabric  (check entitlement + use-case gates first)
+
 Is it multi-step spanning several areas?
   YES → /mulesoft (this orchestrator)
 

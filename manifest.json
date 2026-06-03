@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-02",
+  "last_updated": "2026-06-03",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -59,7 +59,7 @@
     "social-content.md": "c94a19fb2539de55dd12b7ffdb6427e5",
     "sprint-health.md": "8d7d0a7ae19acc589f3639a1de1f0cc3",
     "standup.md": "17624eca8e8eab139f0fe71688025cac",
-    "sync-knowledge-base.md": "9b5408083253fe5bb95bf70423addc33",
+    "sync-knowledge-base.md": "c1e79023f9d73f1f6b41d2b0233c8be8",
     "system-health.md": "790c42eabef4f604b71bb4a129f334e0",
     "tdd.md": "45e07a83d3f7fba85f49a1962b2602cb",
     "tech-debt.md": "a76aabdd12d02b7c8ed3bb5bde51092a",
@@ -135,6 +135,7 @@
     "market-seo",
     "market-social",
     "mulesoft",
+    "mulesoft-agentfabric",
     "mulesoft-bdr",
     "mulesoft-connector",
     "mulesoft-dataweave",
@@ -220,6 +221,6 @@
   "counts": {
     "commands": 68,
     "agents": 22,
-    "skills": 120
+    "skills": 121
   }
 }
