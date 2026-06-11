@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LOG=~/.claude/sync-errors.log; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md && [ -d rules ] && cp -r rules/ ~/.claude/rules/) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git fetch origin && git reset --hard origin/main) 2>>$LOG || true",
+            "command": "LOG=~/.claude/sync-errors.log; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md && [ -d rules ] && cp -r rules/ ~/.claude/rules/) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git fetch origin && git reset --hard origin/main) 2>>$LOG; python3 ~/.claude/fetch-notion-context.py 2>>$LOG || true",
             "async": true
           }
         ]
@@ -79,5 +79,8 @@
       }
     }
   },
-  "model": "sonnet"
+  "model": "sonnet",
+  "env": {
+    "NOTION_TOKEN": "ntn_ROTATED_REMOVED"
+  }
 }
