@@ -82,7 +82,7 @@ See `~/Documents/Claude/retrospectives/validator-learnings.md` — every new KIL
 
 ## Machine Context
 
-- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. No Homebrew, no Node (use npx for one-off tools).
+- **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. Homebrew available. Node v25.8.1 via Homebrew (/opt/homebrew/bin/node). npm 11.11.0. vercel 54.12.2 (npm global).
 - **PC** — Windows, VS Code extension. Config synced from GitHub.
 
 ## Sync Architecture
