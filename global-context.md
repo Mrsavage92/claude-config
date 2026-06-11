@@ -140,7 +140,7 @@ Claude Max has a finite token budget per period. Route subagents to the cheapest
 
 **New conversation nudge:** When you detect the user is switching to an unrelated topic (different project, different domain, or a quick question unrelated to the current work), append a one-liner: `💡 This is a new topic — starting a fresh conversation would save your token budget.` Don't block the work — answer first, nudge after.
 
-**Token conservation tactics (Opus 4.7 burns tokens fast — these are mandatory):**
+**Token conservation tactics (Opus 4.8 burns tokens fast — these are mandatory):**
 - Run `/compact` after any large output (audit results, long code gen, big file reads) before continuing
 - Keep responses short — no summaries of what you just did, no recaps unless asked
 - When reading files, only read the lines you need (`offset`/`limit`), never the whole file unless necessary

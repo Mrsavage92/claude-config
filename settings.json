@@ -1,126 +1,14 @@
 {
-  "env": {
-    "ENABLE_PROMPT_CACHING_1H": "1"
-  },
   "permissions": {
-    "allow": [
-      "Bash(*)",
-      "Read(*)",
-      "Write(*)",
-      "Edit(*)",
-      "WebFetch",
-      "WebSearch",
-      "Skill",
-      "mcp__*"
-    ],
-    "defaultMode": "bypassPermissions",
-    "additionalDirectories": [
-      "C:\\Users\\Adam",
-      "C:\\Users\\Adam\\Documents\\Git\\claude-config",
-      "C:\\Users\\Adam\\.claude\\skills",
-      "C:\\Users\\Adam\\.claude\\projects",
-      "\\\\wsl.localhost\\Ubuntu\\home\\adam"
-    ]
+    "defaultMode": "bypassPermissions"
   },
-  "enabledMcpjsonServers": [
-    "notion",
-    "magic",
-    "cloudflare",
-    "vercel",
-    "supabase",
-    "lucid"
-  ],
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Read|Write|Edit|MultiEdit|AskUserQuestion|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\pretool-router.ps1\"",
-            "timeout": 8000
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\precompact-snapshot.ps1\"",
-            "timeout": 5000,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\build-context-inject.ps1\"",
-            "timeout": 5000,
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\project-context-inject.ps1\"",
-            "timeout": 3000,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\log-tools.ps1\"",
-            "timeout": 3000,
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\start-dev-server.ps1\"",
-            "timeout": 5000,
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -File \"%USERPROFILE%\\.claude\\hooks\\format-on-save.ps1\"",
-            "timeout": 5000,
-            "async": true
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\safe-session-start.ps1\"",
-            "timeout": 15000,
-            "async": true
-          },
-          {
-            "type": "command",
-            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\ref-check.ps1\"",
-            "timeout": 5000,
+            "command": "LOG=~/.claude/sync-errors.log; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md && [ -d rules ] && cp -r rules/ ~/.claude/rules/) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git fetch origin && git reset --hard origin/main) 2>>$LOG || true",
             "async": true
           }
         ]
@@ -131,8 +19,29 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NonInteractive -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.claude\\hooks\\safe-session-stop.ps1\"",
-            "timeout": 15000,
+            "command": "MACHINE=$(hostname -s); LOG=~/.claude/sync-errors.log; MSG=\"auto-sync: $MACHINE $(date +%Y-%m-%d)\"; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp ~/.claude/commands/*.md commands/ && cp ~/.claude/agents/*.md agents/ && [ -f ~/.claude/CLAUDE.md ] && cp ~/.claude/CLAUDE.md global-context.md && [ -d ~/.claude/rules ] && cp -r ~/.claude/rules/. rules/; git add commands/ agents/ global-context.md rules/ && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git add -A && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG || true",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "write|edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] $CLAUDE_TOOL_NAME: $CLAUDE_FILE_PATH\" >> ~/.claude/tool-use.log",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] bash: $(echo $CLAUDE_BASH_COMMAND | head -c 200)\" >> ~/.claude/tool-use.log",
             "async": true
           }
         ]
@@ -140,8 +49,7 @@
     ]
   },
   "enabledPlugins": {
-    "stripe@claude-plugins-official": true,
-    "supabase@claude-plugins-official": true
+    "vercel-plugin@vercel-vercel-plugin": true
   },
   "extraKnownMarketplaces": {
     "claude-plugins-official": {
@@ -149,7 +57,27 @@
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
       }
+    },
+    "vercel-vercel-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/savages/.cache/plugins/github.com-vercel-vercel-plugin"
+      }
     }
   },
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true,
+  "mcpServers": {
+    "notion": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@notionhq/notion-mcp-server"
+      ],
+      "env": {
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer ntn_ROTATED_REMOVED\", \"Notion-Version\": \"2022-06-28\"}"
+      }
+    }
+  },
+  "model": "sonnet"
 }
