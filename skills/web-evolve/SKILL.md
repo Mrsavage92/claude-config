@@ -1,21 +1,26 @@
 ---
 name: web-evolve
+disable-model-invocation: true
 disallowed-tools: AskUserQuestion
-description: Session-scoped website improvement loop. One run = one area scored /100 (Hook + Visuals + Clarity + Function), fixed to ≥85, confirmed, persisted. Re-run to advance to the next area automatically. Zero decisions required. Use when the user says "improve the site", "web-evolve", "make the landing page better", "improve the dashboard", "iterate on [page]", "level up [page]", "fix [page] visually", "polish the site", "refine the UI", "evolve [route]", or re-runs after a prior web-evolve session.
-argument-hint: "[landing | dashboard | /route]"
+description: One coherent design pass over a full page (or one full system-wide change), verified against THIS project's CLAUDE.md brand system. After every change, screenshot at 375px and 1440px with Playwright and self-critique against the brand bar; do not proceed until the change passes. Explicit-invocation only. Use when the user runs /web-evolve on a route, the landing page, the dashboard, or names a system-wide change.
+argument-hint: "[/route | landing | dashboard | \"system change\"]"
 ---
 
 # /web-evolve
 
-One area. Score it. Fix it. Confirm ≥ 85. Remember it. Stop.
+One scope. One coherent design pass. Verify every change against the project's brand system. Commit. Stop.
 
-Re-run to pick the next area. You never decide what to work on.
+A "run" is **not** one tweak. A run is a complete, coherent design pass over a **full page** — or **one full system-wide change** (e.g. "apply the new type scale everywhere", "unify every card to the brand card"). Make all the changes that pass requires; the only gate between changes is verification, not a quota.
 
-**NOT for:** initial builds → `/web-page`; one-off surgical visual fixes without state → `/visual-uplift`; full-site gap analysis → `/saas-improve`. When the user says "just fix this one thing" with no intent to track progress, use `/visual-uplift` or `/refine`, not this skill. Note: web-evolve's Fix Routing table does dispatch to `/visual-uplift` and related skills internally — that dispatch is unaffected by this NOT-for list, which governs user-facing triggers only.
+The bar is **not** generic quality (Awwwards, 21st.dev, "looks polished"). The bar is **this project's brand system as written in its CLAUDE.md**. On-brand-and-correct beats impressive-and-off-brand, every time.
 
-`disallowed-tools: AskUserQuestion` — this skill never asks the user for decisions. It picks the next area, scope, and fix automatically. Any prompt that would require user input is a spec gap, not a permission to ask.
+**NOT for:** initial builds → `/web-page`; brand-new project → `/web-scaffold`. This skill evolves an existing, brand-defined surface.
 
-**The one escape (no ask, still no silent improvisation):** if you hit a genuine fork the spec cannot resolve — e.g. a `dashboard` scope where every route is `renderable: false` and no harness exists, or two equally-valid target routes — do NOT silently improvise a path and present it as if the spec chose it. Pick the **safest documented default** (renderable target rule → code-only fallback → first alphabetically) and record the fork + the assumption you made in the run report under a `⚠ Assumption:` line, so the user can correct it on the next run. Silent improvisation that reads as spec-driven is the failure this clause prevents.
+`disallowed-tools: AskUserQuestion` — this skill does not ask the user to make decisions. It reads the brand bar, decides the pass, and verifies its own work. The one thing it may do instead of guessing is **HALT** (see below).
+
+**The two halts (never silently improvise):**
+- **No brand system.** If the project has no CLAUDE.md brand system (no design tokens, no Section D design decisions, no brand DNA to critique against), HALT with `NEEDS_HUMAN: no brand system found at [path] — web-evolve critiques against the project brand, not generic taste. Define the brand (tokens + CLAUDE.md design section) first.` Do **not** fall back to generic design opinions — that defeats the purpose of this skill.
+- **Unresolvable fork.** If you hit a genuine fork the scope cannot resolve (two equally-valid target routes, every route render-blocked), pick the safest documented default and record it under a `⚠ Assumption:` line in the run report. Silent improvisation presented as if the brand chose it is the failure this prevents.
 
 ---
 
@@ -23,328 +28,132 @@ Re-run to pick the next area. You never decide what to work on.
 
 | Command | Behaviour |
 |---|---|
-| `/web-evolve` | Resume `last_scope` from state.json (specific route like `/clients`, not `dashboard`), or default to `landing` on first run |
-| `/web-evolve landing` | Work through landing page areas in priority order |
-| `/web-evolve dashboard` | Work through all authenticated app routes |
-| `/web-evolve /clients` | Laser-focus on the `/clients` route only |
-| `/web-evolve /audit/new` | Laser-focus on that specific route |
-| `/web-evolve [anything else]` | Halt: `⚠ Unrecognised scope "[arg]". Use: landing, dashboard, or a route starting with /` |
+| `/web-evolve` | Resume `last_scope` from state.json, or default to `landing` on first run |
+| `/web-evolve landing` | One coherent design pass over the whole landing page |
+| `/web-evolve /clients` | One coherent design pass over the `/clients` route |
+| `/web-evolve dashboard` | Pick the most-impactful renderable app route, pass over the whole page |
+| `/web-evolve "unify all cards to the brand card"` | One system-wide change applied + verified across every surface it touches |
+| `/web-evolve [unrecognised]` | Treat any leading non-`/` arg as a system-change description; if it is a single bare word that is not `landing`/`dashboard`, halt: `⚠ Ambiguous scope "[arg]". Use a /route, landing, dashboard, or a quoted system-change description.` |
 
 ---
 
-## Definitions
+## Step 0 — Load the brand bar (mandatory, before anything else)
 
-- **Project root** — the directory containing `package.json`. Run `git rev-parse --show-toplevel` if in doubt.
-- **Scope** — the page group being worked on: `landing`, `dashboard`, or a specific route string like `/clients`.
-- **Area** — one logical UI unit (hero section, pricing table, nav, etc.) with a `page` field matching the scope.
-- **`run_counter`** — global integer in state.json, incremented by 1 each time a new area is first scored. Starts at 0.
-- **`run` (per-area)** — the value of `run_counter` at the time this area was first scored. Set once, never updated.
-- **`forbidden_additions`** — field in `tokens.lock.json` listing visual patterns absent from the reference site. No fix may introduce them.
+The **brand bar** is the concrete, project-specific standard every change is judged against. Build it once per run:
 
-**Multi-scope coexistence:** `state.json` holds areas from all scopes simultaneously. Running `/web-evolve /clients` only operates on areas where `page === "/clients"`. A pending `landing` area is unaffected. `last_scope` tracks the most recently active scope so a bare `/web-evolve` resumes it.
+1. **Project root** — directory containing `package.json` (`git rev-parse --show-toplevel` if unsure).
+2. **Read the project's `CLAUDE.md`** at the root. Extract the design/brand system: brand colours (exact hex/OKLCH), type system (families, scale, weights), spacing system, voice/copy rules, and any **Section D** locked design decisions.
+3. **Read the design tokens** — `tokens.lock.json`, `tokens.json`, the CSS custom-property block (`:root`), or the Tailwind theme. Record exact token values. Note `forbidden_additions` if `tokens.lock.json` defines them.
+4. **Read any referenced brand docs** the CLAUDE.md points to (design DNA, brand guidelines, style-mirror lock).
+
+Compose these into the **brand bar**: the palette + its semantic roles, the type scale, the spacing scale, the motion stance, the voice, and the **banned patterns** for this project (from `forbidden_additions` + CLAUDE.md's banned reflexes — e.g. no em dash, no navy+gold if the brand is violet, no bento default).
+
+If none of 2–4 yields a brand system → the **No brand system** halt above. Do not continue.
 
 ---
 
-## Per-run flow
+## Step 1 — Scope and enumerate
 
-### Step 1 — Read state
+**Page/route scope** (`landing`, `/route`, `dashboard`): identify the surfaces (components) that make up the page.
+- Landing: glob `src/components/landing/`, `src/components/sections/`, `app/(marketing)/`, `components/` for `*.{tsx,jsx,vue,svelte}`. Order them top-to-bottom as they render (nav → hero → … → footer).
+- A specific `/route`: find the page file (`**/pages/[slug]*`, `**/app/*[slug]*/page.tsx`, `src/routes/**`), read it, list the components it renders, in render order.
+- `dashboard`: discover authenticated routes (React/TanStack/Next/Remix/Astro/SvelteKit/Nuxt router conventions), exclude marketing routes, pick the alphabetically-first **renderable** route (static path, or a `**/dev/**Preview*` / `*.stories.*` harness exists). If only render-blocked routes exist, take the first and note `render-blocked: code-only` in the report.
 
-Read `.web-evolve/state.json` at the project root.
+**System-change scope** (quoted description): grep the codebase for every surface the change touches (e.g. all `<Card`, all heading elements, every file importing the old token). The "page" is the union of affected files; the pass is the change applied consistently across all of them.
 
-- **Missing:** First run. Go to Step 1A.
-- **Legacy v1 state (contains `"phases"`, `"trajectory"`, or `"loop_state"` keys):** Rename to `.web-evolve/state.json.v1`, log `⚠ v1 state detected — bootstrapping fresh v2 state`, then go to Step 1A.
-- **Malformed JSON:** Rename to `.web-evolve/state.json.corrupt`, log `⚠ state.json corrupt — bootstrapping from scratch`, then go to Step 1A.
-- **Present:** Do NOT reset `session_skill_calls` — it persists across multiple runs within the same conversation. Filter areas by current scope. If no areas exist for the current scope (scope was switched mid-project, e.g. first time running `dashboard` when only `landing` areas were bootstrapped): execute Step 1A to bootstrap the new scope areas and add them to state.json, then go to Step 2.
+Write the enumerated surfaces to `.web-evolve/state.json` (see schema). One state object per run scope.
 
-**Step 1A — Bootstrap**
+---
 
-Create the state directory:
-- Mac/Linux: `mkdir -p .web-evolve/`
-- Windows (PowerShell): `New-Item -ItemType Directory -Force -Path ".web-evolve" | Out-Null`
+## Step 2 — Baseline capture + plan the pass
 
-Set `"project"` to the name of the project root directory (e.g. `"audithq-prod-live"`).
+1. **Start the dev server** if not running (read `package.json` scripts: `dev`/`start`). Record the local URL.
+2. **Baseline screenshots** — for the target page (and, for a system change, a representative sample of affected surfaces), capture **375px and 1440px** via the Playwright procedure below. Save to `.web-evolve/shots/`.
+3. **Self-critique against the brand bar.** For each surface, list every specific way it deviates from the brand bar or fails a universal gate (contrast, responsive, states). Write these to `area.issues`. This is the FIND-BUGS pass — be specific (`"hero H1 uses Inter, brand type is Söhne"`, `"CTA is #2563eb, brand primary is violet #7c3aed"`, `"pricing card body text 3.1:1 on the tinted bg — fails 4.5:1"`, `"overflows horizontally at 375px"`).
+4. **Plan the coherent pass** — the ordered list of changes that brings the whole page onto the brand bar. This is the unit of work. There is **no one-change limit**; the plan is as large as the page needs.
 
-Execute the Area Enumeration procedure (see Area Enumeration section) for `[current scope]`. After enumeration is fully complete:
+---
 
-**Zero-match guard:** If enumeration produced zero areas, do NOT write state.json. Halt with: `⚠ No components found for scope [scope]. Check Area Enumeration glob paths and re-run.`
+## Step 3 — Execute the pass, verify every change
 
-Otherwise, write `.web-evolve/state.json` **once** with:
-- All discovered areas at `status: "pending"`, `"pass": 0`, `"function_verified": null`, `"issues": []`, `"fixes": []`, `"run": null`
-- `"last_scope"`: for `landing` scope, write `"landing"`; for `dashboard` scope, write the specific first-picked route (e.g. `"/clients"`); for `/route` scope, write the route string.
-- `"run_counter": 0`
+Work the plan in order. For **each change**:
 
-One write, after enumeration is complete. Then go to Step 2.
+1. Make the edit (direct edits to bring the surface onto the brand bar: correct tokens, type, spacing, states, copy). Prefer editing toward the brand tokens over inventing new values.
+2. **Re-screenshot the changed surface at 375px and 1440px** (Playwright procedure below).
+3. **Verify against the pass gate** (next section). The change PASSES only if all gates hold.
+4. **Do not proceed to the next change until this one passes.**
+   - Fails a gate but fixable → fix it now, re-screenshot, re-verify.
+   - Made it worse / introduced a banned pattern / broke render → **revert** this change (`git checkout -- [file]` for modified, `rm` for newly created) and try a different approach. Never carry a regression forward.
+   - Genuinely stuck after a second approach → record the specific blocker in `area.issues`, leave the surface in its last-passing state, move on.
+5. Append a one-line description of what changed to `area.fixes`.
 
-### Step 2 — Pick target
+A change with no visible diff at either viewport is **VOID** — it did not happen. Either it resolved to the same rendered value (revert it, it's noise) or the edit didn't land (investigate). Do not count void changes as progress. This is the invisible-change veto.
 
-1. First area with `status: "pending"` (never reviewed) — take it. Proceed to Step 3.
-2. None pending: lowest-scored area with `status: "needs-work"` — take it. Tiebreaker on equal scores: lower `priority` value first.
-   - **Budget-halt re-entry:** If the area has a non-null `score` already (was budget-halted after scoring): skip Step 4 entirely and go directly to Step 5 to resume the fix. Re-scoring a halted area wastes tokens and may produce a different score.
-   - Otherwise (halted before scoring, `score: null`): proceed through Steps 3 and 4 normally.
-3. All `status: "done"` (≥ 85): report completion, suggest next scope, exit
+---
 
-Log: `▶ Target: [label] | [page] | [pending / needs-work: score]`
+## The pass gate (what "passes" means)
 
-### Step 3 — Inspect
+A change passes only when **all** of these hold. The first four are the brand bar; the rest are universal and non-negotiable.
 
-0. **Stale files check:** Before reading, verify every path in `area.files` exists on disk. If a file is missing (renamed or deleted since bootstrap): update `area.files` with the new path if you can find it (grep for the component name), or set `status: "needs-work"` with note `source-file-moved: [old path]` and go to Step 7.
-1. Screenshot the area if browser MCP available (puppeteer or chrome-devtools). If browser MCP disconnects mid-step: continue with code-only assessment, note `browser-mcp: unavailable` in state, do not abandon the run.
-2. Read the component file(s) from the area's `files` list. When `files` contains multiple entries: screenshot the first file (primary component), read all files. **Fix ownership rule:** Hook and Clarity issues → fix the file containing the most copy (highest text node density). Visuals issues → fix the file with the most CSS classes. Function issues → fix the file containing the event handlers or state logic. When in doubt, fix the first file in the `files` list. Commit all changed files.
-3. Read `tokens.lock.json` if present at project root — note `forbidden_additions`. If malformed: skip replication mode, log `⚠ tokens.lock.json malformed — proceeding without lock`. Treat as if `forbidden_additions` contains the common defaults (gradient_mesh, hover_scale, fade_up, glassmorphism, grain, grid_lines) to avoid introducing patterns that are typically locked out. **Enforcement:** When choosing a fix skill in Step 5, check the skill's output against `forbidden_additions` — do not call visual-uplift if it will likely add gradient_mesh (e.g. reference has `gradient_mesh: false`). Pass the lock arg so the skill self-enforces.
+1. **On-palette** — colours used are the project's brand tokens in their correct semantic roles. No off-brand colour, no banned palette (per the brand bar).
+2. **On-type** — font family, scale step, and weight come from the brand type system. No stray font, no arbitrary px size outside the scale.
+3. **On-spacing / on-motion** — spacing values come from the system; motion matches the brand's stated stance (no unprompted entrance animation if the brand is restrained; no missing motion if the brand is kinetic).
+4. **No banned pattern** — the change introduces nothing in `forbidden_additions` or the CLAUDE.md banned-reflex list. Run a diff-aware check: `git diff -- [file] | grep '^+'` — only patterns in **added** lines count as introduced by this change.
+5. **Contrast (hard gate, measure — do not eyeball).** Every text element changed (or whose background changed) must clear WCAG against its **actual rendered background**: ≥ 4.5:1 normal, ≥ 3:1 large (≥24px, or ≥19px bold). Measure from the screenshot pixels or `getComputedStyle` + computed ratio — gradient/transparent backgrounds report `transparent`, so composite against what actually renders or sample the screenshot. A pretty element at 3.2:1 is a fail, not "looks right".
+6. **Responsive** — no horizontal overflow at 375px; interactive targets ≥ 44px tap height; layout intact at both viewports.
+7. **States** — for interactive/data surfaces, empty/loading/error states render (not a blank box, not a frozen UI, not a silent failure); hover/focus/active present.
+8. **Renders** — no console error, no broken layout, at both viewports.
 
-### Step 4 — Score
+---
 
-Score each dimension independently (see Scoring Rubric). Write to state:
-- `dimensions` + `score`
-- `run_counter` (global, in state root): **Always** increment by 1 when scoring a new area for the first time. Do NOT increment when re-scoring a `needs-work` area. Example: state had `run_counter: 2`; scoring the third new area → write `run_counter: 3`.
-- `area.run`: **First score only** — set to the post-increment `run_counter` value (e.g. `3`). **Re-score of a needs-work area** — keep the existing value (still `3`). These are two separate write decisions; do not conflate them — conflating causes wrong run numbers in state history.
-- `function_verified`: boolean — `true` if browser MCP was used to assess Function, `false` if code-only.
-- `taste_verified`: set to `null` now — updated to `true` (taste gate exit 0) or `false` (exit 2, script missing) in Step 6.
-- `taste_gate_attempts`: set to `0` now — incremented in Step 6 outcome D on each Exit 1.
-- `visuals_screenshot`: set to `true` if a screenshot was taken in Step 3, `false` otherwise. Written now from the Step 3 observation.
-- **Visuals cap:** If `visuals_screenshot` is `false`, cap the Visuals dimension score at 19/25 before writing `dimensions`. Compute as: `visuals = min(visuals_raw, 19)`.
-- `issues`: list every specific problem found (one string per issue, e.g. `"no hover state on primary CTA"`, `"pricing table overflows on 375px"`).
-- `fixes`: set to `[]` — populated in Step 5.
-- `pass`: keep existing value (already set to 0 at bootstrap); do not reset on re-score.
+## Step 4 — Final whole-page verification
 
-| Dimension | Max | Question |
-|---|---|---|
-| **Hook** | 25 | Does this area make the user act, lean in, or immediately understand the value? |
-| **Visuals** | 25 | Does it look like 21st.dev / Awwwards quality, or like a shadcn default? |
-| **Clarity** | 25 | Is every label, heading, and action obvious without thinking? |
-| **Function** | 25 | Works on mobile, keyboard-accessible, all states handled (empty / loading / error)? |
+After the plan is complete, verify the **whole page** as one composition (not just the individual diffs):
 
-### Step 5 — Fix (score < 85)
+1. Full-page screenshot at 375px and 1440px.
+2. Walk the entire pass gate over the composed page — palette/type/spacing coherence across surfaces, contrast on every text element, no overflow, states present, brand voice consistent.
+3. If any gate fails at the page level → return to Step 3 for that surface. **Loop until the whole page passes.** Do not declare done on a page that fails its own gate.
 
-Route each failing dimension using the Fix Routing table. **One skill per dimension. Complete it before moving to the next.** After each skill call, append a one-line description of what changed to `area.fixes` in state.
+---
 
-**Fix order:** largest gap first (lowest dimension score first). If tied: `clarify` before `visual-uplift` before `overdrive` — cheaper fixes before heavier ones.
-
-**Context budget check:**
-- Before calling `web-page` (mode:rebuild): halt if `session_skill_calls` ≥ 1 in state.json — `web-page` is the heaviest call and warrants its own fresh context.
-- Before calling `visual-uplift`, `overdrive`, `dashboard-design`, or `calibrate-amplitude`: halt if `session_skill_calls` ≥ 2 in state.json. Exception: `calibrate-amplitude` immediately followed by `visual-uplift` on the same Visuals dimension in the same pass counts as 1 skill call (chained pair).
-- Halt message: `CONTEXT_BUDGET_EXCEEDED: start a fresh session to call [skill name]`.
-  - Write full state before halting: `pass`, `score`, `dimensions`, `issues`, `fixes` (partial list so far), `session_skill_calls`, `status: "needs-work"`. Context budget halts only occur in Step 5, entered after Step 4 has already written the score.
-  - Do not proceed with the heavy skill call.
-- "This session" = this conversation. The counter resets at the start of each new conversation (fresh context window). Re-invoking `/web-evolve` in a new conversation starts the skill-call counter at 0.
-
-After each skill call: increment `session_skill_calls` in state.json by 1. Re-screenshot (if browser MCP available). Visible change required — if none, try the next skill in the dimension's list.
-
-Track the pass number in `area.pass` in state. **On first entry to Step 5 for a `needs-work` area (re-run from a prior session): reset `area.pass` to 0 first** — the prior session's pass count is stale. Increment `area.pass` by 1 at the start of each pass within this session. When all failing dimensions have been addressed for this pass, or `area.pass` reaches 2: go to Step 6. **Never exit from Step 5 directly** — always pass through Step 6 re-score then Step 7 commit, regardless of outcome. Persisting `pass` to state means a context flush mid-fix does not reset the counter.
-
-### Step 6 — Re-score
-
-Re-read all files in `area.files` plus any new `.tsx`/`.jsx` files created in the same directories by the fix skill. Re-screenshot if browser MCP available.
-
-Apply the same rubric. Four mutually exclusive outcomes:
-
-**A — Higher but < 85, pass 1:** Return to Step 5 for pass 2. (Do not go to Step 7 yet.)
-
-**B — Higher but < 85, pass 2:** Set `status: "needs-work"`, note the specific remaining blocker. Go to Step 7.
-
-**C — Lower than the immediately preceding score (regression):**
-  - Do NOT increment `run_counter`. A revert is not a new scoring event.
-  - For modified files: `git checkout -- [file]`. If the checkout fails (locked file, merge conflict): halt with `REVERT_FAILED: [file] — resolve manually`. Do NOT commit with a revert message if the revert itself failed. Set `status: "needs-work"` with note `revert-failed: [file]`.
-  - For newly staged files:
-  - For newly created files staged by the fix skill — Bash: `git rm --cached [file] && rm [file]`; PowerShell: `git rm --cached [file]; Remove-Item [file]`
-  - For new files never staged: `rm [file]` (Bash) or `Remove-Item [file]` (PowerShell)
-  - Re-score after revert. If score is back to pre-fix level: set `status: "needs-work"` with note `fix-regressed-all-passes`. If score is still above original but below pre-pass-2 level: set `status: "needs-work"` with note `fix-regressed-at-pass-[N]`.
-  - Go to Step 7.
-
-**D — ≥ 85:** Run the taste gate:
-  - PowerShell: `python "$env:USERPROFILE\.claude\skills\taste-skill\data\check_taste.py" [changed-file]`
-  - Bash (Mac/Linux/Git Bash/WSL): `python ~/.claude/skills/taste-skill/data/check_taste.py [changed-file]`
-  - Exit 1 = banned pattern — **first, confirm the fix actually introduced it (diff-awareness).** The script scans the whole file, so it flags pre-existing patterns too. Run `git diff -- [changed-file] | grep '^+'` and check whether the matched token appears in an **added** line. If it does NOT, the pattern is pre-existing — this fix did not introduce it — so treat the gate as **passed**: set `taste_verified: false`, note `taste-gate: pre-existing [pattern] not introduced by this fix (verified via diff)` in the run report, set `status: "done"`, go to Step 7. Also treat as false positives (not banned): `font-black`/`font-extrabold`/`font-*` (these are font *weights*, not the colour `#000000`) and semantic Tailwind colour utilities already in the design system (`text-amber-*`, `text-rose-*`, `bg-emerald-*` used for status/grade encoding, not as a navy+gold hero treatment).
-  - Exit 1 AND the pattern IS in an added line (genuinely introduced) — the fix for attempt 2 MUST target a different change than attempt 1 (if the same fix re-introduces the same banned pattern, it is a no-op — escalate to `needs-work` immediately without a second attempt). Increment `area.taste_gate_attempts` in state, re-score, re-run taste gate. Max 2 iterations. If pattern persists: set `status: "needs-work"` with note `taste-gate-failed: [banned pattern]` and go to Step 7.
-  - Exit 2 = script not found (`taste-skill` not installed on this machine). Do **NOT** silently pass — a missing gate is not a passed gate. Run an **inline fallback slop scan** instead: `git diff -- [changed-file] | grep '^+'` and reject the fix if any *added* line introduces a banned slop pattern — `bg-gradient`/`gradient-mesh`, `backdrop-blur` glassmorphism on a hero, dark-navy + gold/amber as a *primary* palette (not semantic status), `Geist`/`Inter`/`Mona Sans` as the only font, bento-grid card-of-equal-squares layout, `hover:scale`, or unprompted `framer-motion` entrance on a static element. If the diff is clean → set `status: "done"`, `taste_verified: false`, note `taste-gate: inline fallback (taste-skill not installed) — diff clean`. If the diff trips a pattern → treat exactly like Exit 1 (diff-aware path above). Never mark `done` on Exit 2 without running the inline scan.
-  - Exit 0 = passed. Set `status: "done"`. Go to Step 7.
-
-### Step 7 — Commit and report
+## Step 5 — Commit, persist, report
 
 ```bash
-git add [changed files] .web-evolve/state.json
-git commit -m "fix([area-id]): [label] [old]→[new score]"
-# First-score (old score null):  "fix([id]): [label] new:[score]"
-# Regression revert:             "revert([id]): [label] pass-[N]-regressed"
-# REVERT_FAILED:                 "wip([id]): [label] revert-failed — manual fix required"
+git add [changed files] .web-evolve/state.json .web-evolve/shots/
+git commit -m "evolve([scope]): brand pass — [N] surfaces onto brand bar"
+# system change:  "evolve([scope]): [change] applied across [N] surfaces"
 ```
 
-If the commit is rejected by a pre-commit hook: fix the hook failure first. Do not update `status` to `"done"` until the commit succeeds. **`run_counter` was already incremented in Step 4 before the commit** — do NOT decrement it if the commit fails. `run_counter` is a monotonic count of scoring events, not of commits. A `status: "done"` entry with no corresponding commit means the state is ahead of git — the next run will re-score it and find the same issues.
+If a pre-commit hook fails: fix the underlying issue (never `--no-verify`). Do not set `status: "done"` until the commit succeeds — state is only authoritative when git agrees.
 
-Output the Run Report (see Output Format), then stop.
-
----
-
-## Scoring rubric
-
-### Hook (0–25)
-| Range | What it means |
-|---|---|
-| 20–25 | Clear value, compelling CTA, user knows exactly what to do next |
-| 13–19 | Value present but CTA weak or copy generic |
-| 6–12 | Value buried or CTA easy to miss |
-| 0–5 | No clear value prop or no CTA |
-
-**Hook calibration — 10 sales-page tests (each is pass/fail, use to anchor your score):**
-1. What you do is above the fold — H1 + primary CTA visible on 1440×900 without scrolling
-2. Outcome not process — headline says what the buyer gets, not how you do it
-3. Specific not generic — numbers/names dominate over vague adjectives (>2:1)
-4. One primary CTA per fold — no competing calls-to-action
-5. Evidence before claim — testimonials or numbers anchor every assertion
-6. Friction-free next step — form asks only what's needed to proceed
-7. Problem-aware before solution — visitor sees their problem named before the pitch
-8. Trust signals visible — credibility without scrolling to footer
-9. Mobile CTA reachable — primary action reachable with thumb on mobile
-10. Every section earns its place — no section that could be cut without changing the message
-
-Score 20–25 if ≥ 8 pass. Score 13–19 if 5–7 pass. Score 6–12 if 3–4 pass. Score 0–5 if ≤ 2 pass.
-
-### Visuals (0–25)
-| Range | What it means |
-|---|---|
-| 20–25 | Specific, opinionated, polished — looks like it belongs on Awwwards or 21st.dev. A designer would say "that's intentional." |
-| 13–19 | Designed but safe — shadcn/Tailwind defaults with a colour on top. Would look identical to 50 other SaaS products. See Fix Routing for the calibrate-amplitude → visual-uplift path. |
-| 6–12 | Template aesthetic — bento grid, Inter/Geist everywhere, dark navy + gold, undifferentiated card grid, or similar AI-slop patterns. A designer would cringe. |
-| 0–5 | Broken, unstyled, or visually non-existent. |
-
-**Visuals calibration — 6 binary checks:**
-1. Color palette has at least 3 semantic roles (not just one neutral + one accent + white)
-2. Typography has at least one weight contrast (e.g. bold headline + regular body)
-3. Visual hierarchy guides the eye to the primary action (not everything the same size)
-4. Spacing is consistent — values come from a system, not random pixels
-5. Interactive elements have hover/focus/active states
-6. Component would not look identical to a default shadcn template without modification
-
-Score 20–25 if all 6 pass. Score 13–19 if 4–5 pass. Score 6–12 if 2–3 pass. Score 0–5 if 0–1 pass.
-
-**Contrast gate (hard cap — measure, do not eyeball).** "Looks polished" is not contrast-safe. When a screenshot was taken (`visuals_screenshot: true`), MEASURE the WCAG contrast of every visible text element against its *actual rendered background* (read both via `getComputedStyle` + compute the ratio, or use the browser MCP). Any text below **4.5:1** (normal) / **3:1** (large ≥24px or ≥19px bold) is a contrast failure. If ANY text fails: **cap Visuals at 12/25** regardless of the 6 binary checks, add the failing element + measured ratio to `issues`, and route it to a fix (recolor the text or its background to clear the threshold) before the area can reach `done`. A pretty component with 3:1 body text is a fail, not a 22 — this is the exact slop the binary checks miss (Orbit ServiceChooser, cyan at 3.2:1 shipped as "looks right", 2026-05-30).
-
-**Visuals code-only cap:** See Step 4 write instructions — cap applies there at write time.
-
-### Clarity (0–25)
-| Range | What it means |
-|---|---|
-| 20–25 | Every label obvious without context, hierarchy sharp, user knows what to click without reading twice. A non-technical user could navigate unaided. |
-| 13–19 | Mostly clear, one label or message needs a second read |
-| 6–12 | Multiple labels require context to decode, or hierarchy misleads attention |
-| 0–5 | A first-time visitor would be stuck or confused about what to do |
-
-**Clarity calibration — 6 tests:**
-1. Every button label says what it does — not "Submit", "OK", "Click here"
-2. Every input has a visible label, not just placeholder text
-3. Error messages say what went wrong and what to do next — not "An error occurred"
-4. Empty states tell the user why it's empty and what action to take
-5. Section headers tell the visitor what they're about to read — not vague decorative phrases
-6. CTAs use active verbs ("Start free scan", not "Free scan" or "Learn more")
-
-Score 20–25 if ≥ 5 pass. Score 13–19 if 3–4 pass. Score 6–12 if 1–2 pass. Score 0–5 if 0 pass.
-
-### Function (0–25)
-| Range | What it means |
-|---|---|
-| 20–25 | Mobile: renders without horizontal overflow at 375px viewport, all interactive elements ≥ 44×44px touch target. Keyboard: all actions reachable by Tab + Enter. All states handled and visually rendered: empty state shows a placeholder/message (not a blank white box), loading state shows a spinner/skeleton (not a frozen UI), error state shows an error message (not a silent failure). |
-| 13–19 | Works but one state missing |
-| 6–12 | Multiple functional gaps |
-| 0–5 | Broken or inaccessible |
-
-If Function cannot be verified (no dev server, no browser MCP): assess from code only. Mark `"function_verified": false` in state. A code-only Function score ≥ 20 still counts toward done — but flag it in the run report.
-
-If Visuals cannot be verified (no browser MCP, no screenshot): assess from code only. **Cap the Visuals score at 19/25 maximum** — rendered appearance cannot be confirmed from Tailwind class names alone. Flag `"visuals_screenshot": false` in the run report.
+Set the scope `status: "done"` (page passed Step 4) or `"needs-work"` (a surface left with a recorded blocker). Update `last_scope`. Output the run report, then stop.
 
 ---
 
-## Fix routing
+## Screenshot procedure — Playwright, dual viewport
 
-Pass `lock:tokens.lock.json` as a first arg to every skill when `tokens.lock.json` exists at project root.
+Capture **375px** and **1440px** for every verification. Preferred mechanism is Playwright; the chrome-devtools/puppeteer MCP is the fallback.
 
-**If a skill is unavailable:**
-- `clarify`, `delight`, `a11y-audit`, `animate`, `colorize`, `typeset`, `layout`: apply targeted code edits directly — these are focused skills with clear, substitutable actions.
-- `visual-uplift`, `calibrate-amplitude`, `dashboard-design`: use `mcp__magic__21st_magic_component_builder` directly with a description of the component needed.
-- `web-page` or `overdrive`: **HALT with NEEDS_HUMAN** — no inline substitute. These require their own context window.
+Write `.web-evolve/shot.mjs` once per project:
 
-When `tokens.lock.json` exists at project root (and was successfully read in Step 3), prepend `lock:tokens.lock.json ` to every skill's args — e.g. `Skill('visual-uplift', args='lock:tokens.lock.json --execute src/components/Hero.tsx')`. If Step 3 logged a malformed warning, do not prepend the lock arg.
+```js
+import { chromium } from 'playwright'
+const [url, slug] = process.argv.slice(2)
+const browser = await chromium.launch()
+for (const [width, tag] of [[375, 'mobile'], [1440, 'desktop']]) {
+  const page = await browser.newPage({ viewport: { width, height: 900 } })
+  await page.goto(url, { waitUntil: 'networkidle' })
+  await page.screenshot({ path: `.web-evolve/shots/${slug}-${tag}.png`, fullPage: true })
+  await page.close()
+}
+await browser.close()
+```
 
-| Failing dimension | Visuals score | Page type | Skill to call |
-|---|---|---|---|
-| Visuals — generic/amplitude off | 13–19 | Any | `Skill('calibrate-amplitude', args='dial:0.75 [file]')` first. **If BOTH motion and amplitude are root causes, use calibrate-amplitude first — it's cheaper and may resolve both.** If Visuals still < 20 after → visual-uplift. Calibrate-amplitude + visual-uplift chain counts as 1 skill call. |
-| Visuals — template/slop | 6–12 | Landing | **If motion is the primary cause** (no animations at all): use `web-animations` → `animate` row instead. **Otherwise** (color, layout, components): Pass 1: `Skill('visual-uplift', args='--execute [file]')`. If still 6–12 after pass 1 and total ≥ 85 → done; total < 40 → rebuild; otherwise → `status: "needs-work"`. |
-| Visuals — template/slop | 6–12 | Dashboard | Pass 1: `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')`. Same fallback logic as landing. |
-| Visuals — broken or missing | 0–5 AND total < 50 | Landing | `Skill('web-page', args='route:[route] mode:rebuild')` — too broken to refine |
-| Visuals — broken or missing | 0–5 AND total < 50 | Dashboard | `Skill('dashboard-design', args='[file]')` → `Skill('visual-uplift', args='--execute [file]')` |
-| Visuals — broken or missing | 0–5 AND total ≥ 50 | Any | `Skill('visual-uplift', args='--execute [file]')` — other dimensions pass; targeted styling only |
-| Visuals 6–19 AND primary cause is motion | — | Any | `Skill('web-animations', args='[file]')` to pick tier → `Skill('animate', args='[file]')`. Use ONLY when motion is the PRIMARY cause (no animations at all, or clearly wrong timing). If the component has other template-slop issues (color, layout, components) alongside motion issues, use visual-uplift first — it handles motion as part of its routing. Do NOT route here for Hook, Clarity, or Function failures. |
-| Visuals 6–19 AND motion needs to be ambitious | — | Any | `Skill('overdrive', args='[file]')` — shaders, spring physics, scroll-driven. Do NOT route here for copy or layout failures. |
-| Hook 13–19 — copy weak | — | Any | `Skill('clarify', args='[file]')` |
-| Hook 6–12 — value buried | — | Any | `Skill('clarify', args='[file]')`. After clarify runs, re-evaluate CTA placement: is the primary CTA above the fold? If not, move it up in the component before re-scoring. |
-| Hook 0–5 AND total score < 50 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` — fundamentally broken |
-| Hook 0–5 AND total score ≥ 50 | — | Any | `Skill('clarify', args='[file]')` + add a primary CTA element directly — other dimensions are passing, no rebuild needed |
-| Clarity 6–25 — copy/labels unclear | — | Any | `Skill('clarify', args='[file]')` |
-| Clarity 0–5 — confusing/blocking | — | Any | `Skill('clarify', args='[file]')` — if Clarity re-score is still in the 0–5 band after 1 pass, escalate to `Skill('web-page', args='route:[route] mode:rebuild')` |
-| Function 13–19 — one state missing | — | Any | Direct fix in file: add the missing empty/loading/error state component |
-| Function 13–25 — touch-target / sizing a11y | — | Any | Direct fix in file: raise interactive elements to ≥44px tap height (WCAG 2.5.8 AA min 24px; 44px = AAA) via `min-h-[44px]` + negative margin to avoid layout growth. Measure before/after height in the browser; do NOT route to a rebuild skill for sizing. |
-| Function 6–12 — multiple gaps | — | Any | `Skill('a11y-audit', args='[file]')` + direct fix for missing states |
-| Function 0–5 — broken/inaccessible | — | Any | `Skill('web-page', args='route:[route] mode:rebuild')` |
-| Personality, delight missing | — (only when total ≥ 60) | Any | `Skill('delight', args='[file]')` — do not add delight when the component has structural failures; fix those first |
-| Total score < 40 | — | Any | `Skill('web-page', args='route:[route] mode:rebuild [lock:tokens.lock.json if lock exists]')` — full rebuild |
+Run: `node .web-evolve/shot.mjs http://localhost:<port>/<route> <slug>`
+If Playwright is not installed: `npx --yes playwright@latest install chromium` then run, or use a project-local Playwright config if one exists.
+**MCP fallback** (Playwright unavailable): chrome-devtools — `resize_page` to 375, `take_screenshot` (fullPage, filePath into `.web-evolve/shots/`), then `resize_page` to 1440 and screenshot again. Saving to a file path is zero token cost; never read screenshots back as base64 unless you must reason over pixels.
 
----
-
-## Area enumeration
-
-### Landing (`/web-evolve landing`)
-
-Glob paths: `src/components/landing/`, `src/components/sections/`, `src/components/layout/`, `src/app/(marketing)/`, `app/(marketing)/`, `app/components/`, `components/`, `src/pages/`. Pick the highest-line-count file when multiple match. All globs match `.tsx`, `.jsx`, `.vue`, and `.svelte`. Log all matches.
-
-**Deduplication:** After enumeration, if the same file path appears in multiple area entries (e.g. `PricingHero.tsx` matching both `hero-cta` and `pricing`), keep only the highest-priority entry (lowest priority number). Remove all duplicates regardless of how many patterns matched the same file.
-
-| Priority | ID | Label | Primary patterns | Fallback (if primary returns nothing) |
-|---|---|---|---|---|
-| 1 | `hero-cta` | Hero / primary CTA | `*Hero*`, `*hero*` | `**/components/**/Hero*` |
-| 2 | `pricing` | Pricing section | `*Pricing*`, `*pricing*` | `**/components/**/Pric*` |
-| 3 | `nav` | Navigation | `*Nav*`, `*Header*` | `**/components/**/Nav*` |
-| 4 | `form` | Primary form | `*Form*`, `*Signup*`, `*Subscribe*` | `**/components/**/*Form*` |
-| 5 | `features` | Features / how-it-works | `*Features*`, `*HowIt*` | `**/components/**/*Feature*` |
-| 6 | `social-proof` | Testimonials / trust | `*Testimonial*`, `*Trust*`, `*Review*` | `**/components/**/*Testimon*` |
-| 7 | `footer` | Footer | `*Footer*` | `**/components/**/Footer*` |
-
-Skip any ID whose patterns (primary and fallback) return no files. Do not create state entries for components that do not exist.
-
-### Route / dashboard (`/web-evolve /route` or `dashboard`)
-
-**When scope is `dashboard` (all app routes):**
-
-Discover routes before picking the first area:
-1. **React Router / TanStack Router (config-based)** — read `src/App.tsx`, `src/router.tsx`, or `src/routes.tsx`. Extract every `path=` or `<Route path=` value that is NOT in the public/marketing set (landing, pricing, about, contact, legal).
-2. **TanStack Start / TanStack Router (file-based)** — glob `src/routes/**/*.tsx` or `app/routes/**/*.tsx`. Each file is a route; filter out files containing `createRootRoute` (root layout, not a page) and marketing routes. Route path derivation rule: split filename by `.`, remove `_`-prefixed segments (layout groups like `_authenticated`), remove `index` suffix, join remaining with `/`. Examples: `_authenticated.dashboard.tsx` → `/dashboard`, `_authenticated.clients.$id.tsx` → `/clients/:id`, `_authenticated.audit.new.tsx` → `/audit/new`.
-3. **Next.js (App Router)** — glob `app/**/page.tsx` excluding `(marketing)/` route group. Each directory is a route.
-4. **Remix** — read `app/routes/`. Extract authenticated routes by looking for auth guard imports.
-5. **Astro / SvelteKit / Nuxt (file-based pages)** — Astro: glob `src/pages/**/*.astro`. SvelteKit: glob `src/routes/**/+page.svelte` (route = the directory path; a `[param]`/`[...rest]` segment marks the route `renderable: false`). Nuxt: glob `pages/**/*.vue` or `app/pages/**/*.vue` (route = file path minus extension; an `[id].vue`/`[...slug].vue` segment marks it `renderable: false`). Filter out marketing pages in all three.
-6. Create one state group per discovered route. Deduplicate by page file path — if two route strings resolve to the same page component, keep only the one with the shorter route path. If no routes were discovered: halt with `⚠ No app routes found for dashboard scope. Check router config path and re-run.` — do not write empty state.
-7. **Classify each route by renderability** (write `renderable: true|false` into its state entry):
-   - A route is **`renderable: false`** if its path contains a dynamic param (`:id`, `:slug`, `$id`, `[id]`) — it cannot mount without a specific seeded record + auth — OR its page component is wrapped in an auth guard (`ProtectedRoute`, `requireAuth`, a session redirect) AND no auth bypass is available (see the auth-gated playbook below).
-   - A route is **`renderable: true`** if it is a static authenticated path with no param, OR a dev-preview harness exists for it (glob `**/dev/**Preview*.{tsx,jsx}`, `**/*.stories.{tsx,jsx}` — these mount the page's components with mock data and no auth; record the harness path in the route's `files`).
-8. **Pick the first target by renderability, then alphabetically:** among `status: "pending"` routes, take the alphabetically-first **`renderable: true`** route. Only if ZERO renderable routes exist, fall back to the alphabetically-first route and note `render-blocked: code-only scoring` in the run report. This is the `last_scope` value Step 1A writes. Log the picked route + why (`renderable` / `harness:<path>` / `code-only fallback`) in the run report.
-   - Rationale: blindly alphabetical lands on `/audit/:id`-style param routes that cannot render, forcing low-confidence code-only scores (the Visuals cap, the Function code-only flag). Picking a renderable target first is the difference between a scored screenshot and a guess.
-   - **Array order:** write the route areas to `state.json` sorted **renderable-first, then alphabetically**, so Step 2's "first pending" pick stays consistent with this rule across later runs.
-
-**Auth-gated route playbook** (use before settling for code-only on a `renderable: false` route):
-- **Dev-preview harness** — most apps ship a `/dev/*-preview` route or Storybook story that mounts the authenticated page's components with mock data behind `import.meta.env.DEV`. Glob for it; if found, screenshot *that* URL and record it in `files`. This is the cheapest path and needs no credentials.
-- **Seed a session** — if a local dev login or seed script exists (`npm run seed`, a test user in `.env.test`), use it to reach the real route. Only when the harness path fails.
-- **Last resort** — code-only assessment with the Visuals cap and `function_verified: false`, flagged loudly in the run report. Never silently treat a code-only score as render-verified.
-
-**When scope is a specific `/route`:**
-
-1. Find the page file: glob `**/pages/[slug]*.tsx` and `**/app/*[slug]*/page.tsx`
-2. Read it, extract all named imports from `src/` (one level deep only)
-3. Group into logical areas:
-
-| Priority | ID | Label | What to look for |
-|---|---|---|---|
-| 1 | `[route]-data` | Primary data view | Component rendering the main list / table / grid |
-| 2 | `[route]-stats` | Stats / metrics row | Stat cards, metric counts |
-| 3 | `[route]-action` | Primary action | "New X" button, primary CTA |
-| 4 | `[route]-filters` | Filters / controls | Filter bar, search, sort |
-| 5 | `[route]-empty` | Empty state | Empty state component |
+Screenshots are evidence the user can open. The user cannot see MCP screenshot tool output — saved files in `.web-evolve/shots/` are the proof a change landed.
 
 ---
 
@@ -354,122 +163,69 @@ Discover routes before picking the first area:
 {
   "project": "audithq-prod-live",
   "last_scope": "landing",
-  "run_counter": 2,
-  "session_skill_calls": 0,
-  "areas": [
+  "brand_bar_source": ["CLAUDE.md#design", "tokens.lock.json"],
+  "scopes": [
     {
-      "id": "hero-cta",
-      "label": "Hero / primary CTA",
-      "page": "landing",
-      "priority": 1,
-      "files": ["src/components/landing/HeroQuickScan.tsx"],
+      "scope": "landing",
       "status": "done",
-      "renderable": true,
-      "score": 91,
-      "dimensions": { "hook": 24, "visuals": 22, "clarity": 23, "function": 22 },
-      "function_verified": true,
-      "taste_verified": true,
-      "visuals_screenshot": true,
-      "taste_gate_attempts": 1,
-      "issues": ["no animation on scan submit", "sub-headline generic"],
-      "fixes": ["added loading state animation", "rewrote sub-headline"],
-      "run": 2,
-      "pass": 1
-    },
-    {
-      "id": "pricing",
-      "label": "Pricing section",
-      "page": "landing",
-      "priority": 2,
-      "files": ["src/components/landing/PricingSection.tsx"],
-      "status": "pending",
-      "score": null,
-      "dimensions": null,
-      "function_verified": null,
-      "taste_verified": null,
-      "visuals_screenshot": null,
-      "taste_gate_attempts": 0,
-      "issues": [],
-      "fixes": [],
-      "run": null,
-      "pass": 0
+      "surfaces": ["src/components/landing/Hero.tsx", "src/components/landing/Pricing.tsx"],
+      "issues": ["hero H1 off-brand font", "pricing body text 3.1:1"],
+      "fixes": ["hero H1 → brand display type", "pricing body recolored to brand ink, 7.2:1"],
+      "shots": [".web-evolve/shots/landing-mobile.png", ".web-evolve/shots/landing-desktop.png"],
+      "verified": { "contrast": true, "responsive": true, "states": true, "screenshot": true }
     }
   ]
 }
 ```
 
-`status` progression: `"pending"` → `"done"` (direct, when first fix reaches ≥ 85) OR `"pending"` → `"needs-work"` → `"done"` (when multiple passes needed or context budget halts). `"needs-work"` is set automatically by Step 6 outcomes B/C and by context budget halt — it is mandatory in those branches. `"done"` is only set by Step 6 outcome D (≥ 85, taste gate passed).
+State is for resume + evidence, not a quota engine. If state is missing/corrupt/legacy: rename the old file to `.web-evolve/state.json.bak`, log it, and bootstrap fresh.
 
 ---
 
 ## Output format
 
 ```
-▶ web-evolve — run #[run_counter value] | scope: [last_scope] [append "(re-work)" if this is a needs-work area]
+▶ web-evolve — scope: [scope]  (brand bar: [sources])
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Area:    [label]
-File:    [primary file]
+Surfaces in scope:  [N]
+Off-brand / failing before:
+  - [specific deviation 1]
+  - [specific deviation 2]
 
-Before:  [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])
-  ↳ Re-work area: use score already in state.json. New area: write "null".
-Issues:
-  - [specific problem 1]
-  - [specific problem 2]
+Pass applied:
+  - [change 1 → on-brand result]
+  - [change 2 → on-brand result]
 
-[after fixing:]
-After:   [N]/100  (Hook [N] | Visuals [N] | Clarity [N] | Function [N])
-Fixes:
-  - [what changed 1]
-  - [what changed 2]
+Verification (375px + 1440px, every change):
+  Contrast: ✅ all text ≥ threshold   Responsive: ✅ no 375px overflow   States: ✅   Renders: ✅
+  Shots: .web-evolve/shots/[scope]-mobile.png · [scope]-desktop.png
 
-✅ Done — committed "fix([id]): [label] [before]→[after]"  [pass: N]
-⚠ Needs more work — [specific blocker]. Re-run to retry.   ← use this line instead when status is needs-work
-State: [N done] / [N needs-work] / [N pending] in scope [last_scope]
-[if function_verified:false] ⚠ Function scored from code only — verify on a real device before shipping.
-[if Visuals scored without screenshot] ⚠ Visuals scored from code only — confirm rendered output before treating as done.
-
+✅ Done — whole page on brand bar. Committed "evolve([scope]): …"
+⚠ Needs more work — [specific blocker on surface X]. Re-run to continue.   ← use when status=needs-work
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Next:  [next area label] ([page]) — run /web-evolve to continue
-```
-
-If all areas done: `All [scope] areas ≥ 85. Try /web-evolve dashboard (or /web-evolve /[other-route]).`
-
-Context budget halt format:
-```
-⛔ CONTEXT_BUDGET_EXCEEDED
-Skill: [skill name] | Area: [area label] | Pass: [N]
-Budget: session_skill_calls=[current value] (threshold: [1 for web-page / 2 for others])
-State written: status=needs-work, pass=[N], score=[N]
-Start a fresh session and run /web-evolve to resume.
+Next:  /web-evolve [next route] — or re-run to resume this scope
 ```
 
 ---
 
 ## Anti-patterns
 
-- **Declaring done before re-scoring.** Always re-apply the rubric after fixes — do not assume the fix worked.
-- **Fixing adjacent things.** Fix only the specific issues identified in the failing dimension. Don't refactor the whole file because one button lacked a hover state. The fix scope is the issue, not the component.
-- **Moving on at 84.** If the re-score is 84, fix the remaining gap or mark `needs-work`. Do not round up.
-- **Inventing files.** Only add areas to state for components that exist on disk. Skip patterns that return no glob match.
-- **Skipping the taste gate.** A visually polished component that passes slop patterns (bento default, Geist on everything) is not done.
-- **Scope resume surprise.** After `/web-evolve dashboard`, `last_scope` is the specific route worked on (e.g. `/clients`). A bare `/web-evolve` resumes `/clients`, not `dashboard`. This is correct behaviour — print the active scope in the run header so the user isn't surprised.
-- **Visual scoring without a screenshot.** Scoring Visuals from code alone produces unreliable results — compiled Tailwind class names don't tell you what actually renders. If browser MCP is unavailable: note "Visuals assessed from code only" in the run report and accept that the score has higher uncertainty.
-- **Setting `status: "done"` before the commit succeeds.** State is only authoritative when git agrees. If the commit fails, revert the status and fix the commit blocker first.
-- **Using stale `area.files`.** If a source file has been renamed or deleted since the area was bootstrapped, the files list is stale. Before Step 3, verify each path in `area.files` exists. If missing: update `area.files` with the new path, or mark `status: "needs-work"` with note `source-file-moved`.
-- **Incrementing `run_counter` during a regression revert.** A revert does not count as a new run. Do not increment `run_counter` when reverting; it only increments on first-score of a new area.
-- **Resetting `session_skill_calls` on scope switch.** Within the same conversation, multiple `/web-evolve` invocations share the context budget. `session_skill_calls` must NOT be reset when scope changes — only a new conversation (new context window) resets it.
-- **Decrementing `run_counter` when a commit fails.** `run_counter` is a monotonic count of scoring events, not commits. A failed commit does not un-score the area — do not decrement.
-- **Routing by skill name rather than dimension.** Calling `overdrive` because you want animation doesn't mean the Visuals dimension is failing. Check the score first. Calling `clarify` for a Visuals failure makes no sense. Always route by the lowest-scoring dimension, not by what sounds good.
+- **Judging against generic quality.** "Looks like Awwwards / 21st.dev / polished" is not the bar. The brand bar (this project's CLAUDE.md + tokens) is the only bar. On-brand-and-correct > impressive-and-off-brand.
+- **Proceeding on an unverified change.** Every change is screenshot at 375 + 1440 and run through the pass gate before the next change. No exceptions — this is the load-bearing discipline.
+- **Eyeballing contrast.** Measure WCAG against the actual rendered background. A faint-but-pretty label is the exact failure this gate exists to stop.
+- **Invisible changes counted as progress.** A token swap that resolves to the same rendered value is VOID. State the rendered before→after or it didn't happen.
+- **Carrying a regression forward.** If a change makes a surface worse or introduces a banned pattern, revert it and try another approach — never build on top of a regression.
+- **Declaring done on a page that fails its own gate.** Step 4 loops until the whole composition passes.
+- **Inventing a brand.** No brand system → HALT NEEDS_HUMAN. Never substitute generic design opinions for a missing brand bar.
+- **`--no-verify` on a failing hook.** Fix the hook; never bypass it. State is authoritative only when git agrees.
 
 ---
 
 ## References
 
-All run-time logic lives in this SKILL.md. Bundled alongside it:
+All run-time logic lives in this SKILL.md.
 
-- **`tests/`** — structural regression suite for the state machine (run_counter, session_skill_calls, migration guard, budget-halt resume). Run it after editing this SKILL.md to confirm the state rules still hold.
-- **`evals/evals.json`** — scenario evals for the score→fix→commit loop. Run via the skill-creator/skill-forge eval harness before shipping a change to this skill.
-- **`references/schemas/`** — the canonical `state.json` schema; **`references/edge-case-tests/`** — boundary scenarios (zero-match enumeration, corrupt state, scope switch mid-project).
-- **`references/archive/`** — the previous v1 engine (multi-phase bash-script orchestrator, Phases A–F). Archived 2026-05-29. **Do not invoke files from archive/.**
+- **`tests/`, `evals/`, `references/`** — bundled from the previous area-per-run engine. They assert the old `run_counter` / `session_skill_calls` / area state machine and **do not cover this brand-pass model**. Regenerate them via `skill-creator` before treating them as a gate for this skill.
+- **`references/archive/`** — older engine versions. Do not invoke files from `archive/`.
 
-**External prerequisite:** the taste gate (Step 6, outcome D) calls `taste-skill`'s `check_taste.py`. If `taste-skill` is not installed, the gate falls back to the inline slop scan defined in Step 6 (Exit 2) — it never silently passes.
+**External:** the screenshot procedure needs Playwright (`npx playwright install chromium`) or a connected chrome-devtools/puppeteer MCP. The brand bar needs the project's CLAUDE.md design section + design tokens — without them the skill halts by design.

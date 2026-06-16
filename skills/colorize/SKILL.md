@@ -1,9 +1,11 @@
 ---
 name: colorize
+disable-model-invocation: true
 description: Reference-anchored color refinement. Builds a craft invocation that produces a complete OKLCH token system rewrite from extracted reference colors + taste-skill Section 3.2 + memorable_choice. Generic palettes are BANNED — must receive a source.
-version: 3.0.0
-user-invocable: true
 argument-hint: "reference:<url> | extract:<path> | taste_section:<id> | memorable_choice:<str>"
+metadata:
+  version: 3.0.0
+  user-invocable: true
 ---
 
 # /colorize (v3.0)

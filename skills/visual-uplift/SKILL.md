@@ -1,5 +1,6 @@
 ---
 name: visual-uplift
+disable-model-invocation: true
 description: "Diagnoses visual quality issues on an existing site and routes each issue to the correct tool (/typeset, /animate, /polish, /calibrate-amplitude, /overdrive, /delight, mcp__magic__21st_magic_component_inspiration, mcp__magic__21st_magic_component_refiner, mcp__magic__logo_search). Memory-aware: refuses to recommend banned moves (Geist/Inter, dark navy + gold, bento default, custom cursor on service brands) without surfacing the rule that bans it. Produces a gated plan first; executes opt-in with before/after SSIM verification. Use when the user says 'make this look better', 'visual uplift', 'improve the design', 'this looks mid', 'level up the visuals', 'better hero', 'fix the typography', 'this looks AI-template', or asks for surgical visual fixes WITHOUT a full /web-evolve rebuild loop. NOT for: initial scaffold (use /web-scaffold), whole-site autonomous rebuild (use /web-evolve), diagnostic-only critique (use /critique), single-axis adjustment when the axis is already known (call the axis skill directly)."
 argument-hint: "[path-or-url] | --execute | --tier:90|95|98"
 ---

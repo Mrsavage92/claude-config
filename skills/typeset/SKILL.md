@@ -1,9 +1,11 @@
 ---
 name: typeset
+disable-model-invocation: true
 description: Reference-anchored typography refinement. Builds a craft invocation that produces a complete type system rewrite from extracted reference tokens + taste-skill Section 3.1/8.6 + memorable_choice. Use when fonts/scale/hierarchy/weight are off. Generic-mode is BANNED — must receive a source.
-version: 3.0.0
-user-invocable: true
 argument-hint: "reference:<url> | extract:<path> | taste_section:<id> | memorable_choice:<str>"
+metadata:
+  version: 3.0.0
+  user-invocable: true
 ---
 
 # /typeset (v3.0)

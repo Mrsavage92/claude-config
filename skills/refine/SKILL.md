@@ -1,5 +1,6 @@
 ---
 name: refine
+disable-model-invocation: true
 description: Single entry point for all visual refinement. Diagnoses which dimension is most off (typography, layout, color, motion, delight, clarity), loads context once, then routes to the right specialist. Use when something looks wrong but you are not sure which specialist to invoke, or when the user says "make this better", "refine this", "improve the design", "something feels off".
 argument-hint: "[target]"
 ---

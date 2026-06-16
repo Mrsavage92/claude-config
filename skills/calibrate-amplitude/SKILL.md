@@ -1,9 +1,11 @@
 ---
 name: calibrate-amplitude
+disable-model-invocation: true
 description: Reference-anchored visual-amplitude refinement. ONE dial covering the full spectrum from quietest (0.0) to boldest (1.0) — replaces the legacy /bolder + /distill + /quieter trio. Builds a craft invocation that pushes the existing design toward the dial value using taste-skill Section 3 + memorable_choice. Generic-mode is BANNED.
-version: 1.0.0
-user-invocable: true
 argument-hint: "dial:<0.0-1.0> | reference:<url> | extract:<path> | taste_section:<id> | memorable_choice:<str>"
+metadata:
+  version: 1.0.0
+  user-invocable: true
 ---
 
 # /calibrate-amplitude (v1.0)
@@ -57,7 +59,7 @@ No source → HALT: `"calibrate-amplitude requires reference / extract / taste_s
 - Just scaling up the H1 to 8rem — generic AI-display-tell
 - Saturating the accent to `oklch(70% 0.3 H)` — neon-on-dark territory
 - Adding a gradient blob behind the hero — see /impeccable absolute_bans
-- Adding glow shadows to every CTA — generic "premium SaaS dark mode" tell
+- Adding glow shadows to every CTA — generic "high-end SaaS dark mode" tell
 - ALL CAPS subhead — see /typeset reflex-rejects
 
 The legitimate moves come from the source (reference / extract / taste section), not from these reflex patterns.

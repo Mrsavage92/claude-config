@@ -1,11 +1,21 @@
 ---
 name: critique
+disable-model-invocation: true
 description: Evaluate design from a UX perspective, assessing visual hierarchy, information architecture, emotional resonance, cognitive load, and overall quality with quantitative scoring, persona-based testing, automated anti-pattern detection, and actionable feedback. Use when the user asks to review, critique, evaluate, or give feedback on a design or component.
 argument-hint: "[area (feature, page, component...)]"
 metadata:
   version: 2.1.1
   user-invocable: true
 ---
+
+## What this skill does
+
+Produces a structured UX critique of a design surface (page, component, screen, or full route). Two invocation paths:
+
+- **Interactive** — user runs `/critique`. Skill follows Steps 1–5 below: gather assessments, present a Design Health Score table + persona walkthrough + priority issues, ask the user to pick scope, recommend follow-up commands. Output is a markdown report.
+- **Orchestrator (Web-evolve Targeted Mode)** — `/web-evolve` calls with `output_format: json` or `mode: web-evolve`. Skill skips the interactive steps, scores routes against the 10-rule Sales-Page Checklist + Nielsen heuristics + AI Slop Detection, and returns structured JSON with `verdict: REBUILD | REFINE | KEEP` per route. See "Web-evolve Targeted Mode" below.
+
+**Output contract (both paths):** every critique passes three mandatory gates — structured-output, hallucinated-stats, banned-phrase. Prose-only "looks good" responses are blocked by design.
 
 ## Mandatory gates (run BEFORE returning critique output)
 
@@ -19,7 +29,7 @@ Three gates must pass before the critique artifact is shown to the user OR retur
 
 If any gate exits non-zero, the critique is incomplete. Fix the artifact and re-run the gates. Do not return prose-only "looks good" responses — those are the failure mode this skill exists to prevent.
 
-### Falsifiability rule (source: `[[forge-sources]]` Source 3 — scientific-critical-thinking)
+### Falsifiability rule (source: [.forge-sources.md](.forge-sources.md) Source 3 — scientific-critical-thinking)
 
 Every quantitative or claim-of-fact in the artifact must be **verifiable from evidence the artifact itself cites**. If a reader cannot trace a numeric score back to a specific dimension definition + observation in the artifact, the claim is unfalsifiable and must be stripped or re-grounded.
 
@@ -342,18 +352,18 @@ For each issue, tag with **P0-P3 severity** (consult [heuristics-scoring](refere
 - **[P?] What**: Name the problem clearly
 - **Why it matters**: How this hurts users or undermines goals
 - **Fix**: What to do about it (be concrete)
-- **Suggested command**: Which command could address this (from: /animate, /quieter, /shape, /optimize, /adapt, /clarify, /layout, /distill, /delight, /audit, /harden, /polish, /bolder, /typeset, /critique, /colorize, /overdrive)
+- **Suggested command**: Which command could address this (from: /animate, /quieter, /shape, /optimize, /adapt, /clarify, /layout, /distill, /delight, /audit, /polish, /bolder, /typeset, /critique, /colorize, /overdrive)
 
 #### Persona Red Flags
-> *Consult [personas](reference/personas.md)*
+> *Consult [personas](references/personas.md)*
 
-Auto-select 2-3 personas most relevant to this interface type (use the selection table in the reference). If `.github/copilot-instructions.md` contains a `## Design Context` section from `impeccable teach`, also generate 1-2 project-specific personas from the audience/brand info.
+Auto-select 1-2 personas whose ICP matches the target (Sarah, James, Priya, Tom, Aisha, Marcus, Lena, David). Cite the persona's pain points by line number from `references/personas.md`. If `.github/copilot-instructions.md` contains a `## Design Context` section from `impeccable teach`, also generate 1-2 project-specific personas from the audience/brand info.
 
 For each selected persona, walk through the primary user action and list specific red flags found:
 
-**Alex (Power User)**: No keyboard shortcuts detected. Form requires 8 clicks for primary action. Forced modal onboarding. High abandonment risk.
+**Sarah (SMB owner, trades)** — pain #2 from personas.md:16: "generic stock photos of happy professionals — flags as fake". Hero uses stock-shot of smiling man in polo shirt. She bounces in <10s.
 
-**Jordan (First-Timer)**: Icon-only nav in sidebar. Technical jargon in error messages ("404 Not Found"). No visible help. Will abandon at step 2.
+**James (Solo SaaS founder)** — pain #3 from personas.md:29: "pricing pages that hide tiers behind 'contact sales'". Pricing CTA goes to a Calendly link. He won't book a call before seeing a number.
 
 Be specific. Name the exact elements and interactions that fail each persona. Don't write generic persona descriptions; write what broke for them.
 
@@ -407,7 +417,7 @@ List recommended commands in priority order, based on the user's answers:
 ...
 
 **Rules for recommendations**:
-- Only recommend commands from: /animate, /quieter, /shape, /optimize, /adapt, /clarify, /layout, /distill, /delight, /audit, /harden, /polish, /bolder, /typeset, /critique, /colorize, /overdrive
+- Only recommend commands from: /animate, /quieter, /shape, /optimize, /adapt, /clarify, /layout, /distill, /delight, /audit, /polish, /bolder, /typeset, /critique, /colorize, /overdrive
 - Order by the user's stated priorities first, then by impact
 - Each item's description should carry enough context that the command knows what to focus on
 - Map each Priority Issue to the appropriate command

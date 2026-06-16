@@ -1,5 +1,6 @@
 ---
 name: clarify
+disable-model-invocation: true
 description: Improve unclear UX copy, error messages, microcopy, labels, and instructions to make interfaces easier to understand. Use when the user mentions confusing text, unclear labels, bad error messages, hard-to-follow instructions, or wanting better UX writing.
 argument-hint: "[target]"
 metadata:
