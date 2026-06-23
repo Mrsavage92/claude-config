@@ -268,6 +268,10 @@ Next: /web-supabase (if backend) → /web-page (landing first)
 - `NotFoundPage` MUST be generated in every scaffold and registered as the `path="*"` catch-all route
 - Auth, settings, and onboarding pages MUST set `noIndex: true` in useSeo
 - `public/site.webmanifest` MUST be generated at scaffold time
+- **`/llms.txt` route MUST be generated at scaffold time** — AI tools check this before reading the site. Without it they parse minified JS bundles. See `references/seo-setup.md` for framework-specific implementation.
+- **`/llms-full.txt` route MUST be generated at scaffold time** — full content dump for deep AI reads. Both routes serve `text/plain; charset=utf-8`.
+- **All `og:url` and `canonical` values MUST be absolute URLs** — relative paths (`/services/x`) are silently dropped by Open Graph parsers and AI crawlers. Pattern: `https://[domain][path]` not `[path]`.
+- **`robots.txt` MUST reference `/llms.txt` and `/llms-full.txt`** so crawlers discover them.
 
 ---
 

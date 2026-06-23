@@ -130,7 +130,7 @@ Before writing any `/setup` or `/onboarding` route, **invoke `Skill('web-onboard
 
 **4c. Per-page self-review (two passes — not one)**
 
-Pass 1 — checklist: for dashboard pages, run the 28-item Pre-Ship Checklist from the dashboard-design skill (as specified in Phase 4b dashboard detection) — not the standard 13-item checklist. For all other pages, run the 13-item checklist from premium-website.md. Fix any failures inline before moving on.
+Pass 1 — checklist: for dashboard pages, run the 28-item Pre-Ship Checklist from the dashboard-design skill (as specified in Phase 4b dashboard detection) — not the standard 13-item checklist. For all other pages, run the 13-item checklist from premium-website.md. <!-- lint:allow-banned-phrase=premium --> Fix any failures inline before moving on.
 
 Pass 1.5 — React key hygiene check: grep the page component for `.map(` and verify EVERY render call uses a stable identity key — never `key={index}`. Acceptable: `key={item.id}`, `key={item.slug}`, `key={label}`, `` key={`star-${i}`} ``. If any `.map(` uses `key={i}` or `key={index}`: fix it before marking the page complete.
 

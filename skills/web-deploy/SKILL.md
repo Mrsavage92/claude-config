@@ -1,3 +1,8 @@
+---
+name: web-deploy
+description: Deploy a React/Next.js project to Vercel with environment config, CORS lock, AI readability gate, and smoke testing. Triggers on first deploy or pushing updates to production.
+---
+
 # /web-deploy
 
 Deploy a web project to Vercel with full environment configuration and smoke testing. Default stack: Vite SPA + Supabase — no separate backend service required.
@@ -51,9 +56,33 @@ Pre-Deploy Gate
 [ ] VITE_SENTRY_DSN in .env.example (errors will be silent in prod if missing)
 [ ] /web-review score is 38+/40
 [ ] Landing page exists at "/"
+
+AI Readability Gate (HARD BLOCK — do not skip)
+──────────────────────────────────────
+[ ] /llms.txt route exists and serves text/plain with company name in content
+[ ] /llms-full.txt route exists and serves text/plain with FAQ/service content
+[ ] robots.txt references /llms.txt and /llms-full.txt
+[ ] Root JSON-LD has absolute URL (not relative) in all og:url and canonical fields
+[ ] FAQPage JSON-LD present on /faq (or on any page containing FAQ content)
+[ ] Service/product pages each have Service or Product JSON-LD
+[ ] lang attribute on <html> matches the site's locale (e.g. en-AU not en for AU sites)
+[ ] No duplicate conflicting <meta name="description"> tags in the document head
 ```
 
-If any item fails: fix it before proceeding.
+Verify the AI gate mechanically — do not eyeball:
+```bash
+# Check llms.txt
+curl -s https://<domain>/llms.txt | head -5
+# Check llms-full.txt
+curl -s https://<domain>/llms-full.txt | wc -l
+# Check for relative og:url (should return nothing — any match = fail)
+grep -r 'og:url.*content="/' src/ --include="*.tsx" --include="*.ts"
+```
+
+If any AI Readability Gate item fails: fix it before deploying. These are the signals
+AI tools (Claude web, ChatGPT, Perplexity) use to read and cite the site. A missing
+llms.txt means AI tools parse the minified JS bundle instead of clean content — this
+is how "AI couldn't read the site" failures happen (Orbit Digital, 2026-06-23).
 
 ### Step 3 — CORS (Supabase-only projects: skip this step)
 

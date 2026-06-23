@@ -4,7 +4,7 @@
 
 If resuming: read GAP-REPORT.md. If it exists and shows 0 P1 and 0 P2 gaps, skip to Phase 8.
 
-The purpose is to answer: "What does a production-ready SaaS have that we haven't built yet?"
+The purpose is to answer: "What does a production-ready SaaS have <!-- lint:allow-banned-phrase=production-ready --> that we haven't built yet?"
 
 **Loop:**
 1. Read `~/.claude/skills/shared/saas-gap-checklist.md` in full. If the file does not exist: use the P1/P2/P3/P4 gap definitions in the "What counts as a gap" sections below as the checklist — do not skip this phase.

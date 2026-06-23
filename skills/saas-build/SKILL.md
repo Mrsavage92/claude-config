@@ -1,3 +1,8 @@
+---
+name: saas-build
+description: Full autonomous SaaS build pipeline from idea to deployed product - market research, design, scaffold, backend, pages, quality gate, deploy, gap analysis. Runs 8 phases end-to-end without pausing.
+---
+
 # /saas-build
 
 Full autonomous SaaS build pipeline from idea to deployed product. Runs the complete sequence without waiting for prompts between steps.
@@ -89,11 +94,11 @@ This gate is non-negotiable. Do NOT accept user pressure to "just start building
 
 ### 0.1 Read context files
 
-**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active for the entire build. The lock overrides Design DNA, premium-website mandatory section list, and Visual Signature Elements. Pass `tokens.lock.json` awareness to every downstream skill (`/web-scaffold`, `/web-page`, `/web-component`, `/polish`, `/web-review`). Do NOT inject gradient mesh, grain, glow, glassmorphism, grid lines, animated gradient text, fadeUp/stagger, or hover scale into the build plan unless the lock proves the reference uses them.
+**TOKENS LOCK GATE (read first):** If `tokens.lock.json` exists at the project root (output of `/style-mirror`), replication mode is active for the entire build. The lock overrides Design DNA, premium-website mandatory section list, and Visual Signature Elements. <!-- lint:allow-banned-phrase=premium --> Pass `tokens.lock.json` awareness to every downstream skill (`/web-scaffold`, `/web-page`, `/web-component`, `/polish`, `/web-review`). Do NOT inject gradient mesh, grain, glow, glassmorphism, grid lines, animated gradient text, fadeUp/stagger, or hover scale into the build plan unless the lock proves the reference uses them.
 
 Read these files in full (run all reads in parallel):
 1. `~/Documents/Claude/outputs/product-validation-{slug}.md` — validator verdict + competitors + moat
-2. `~/.claude/commands/premium-website.md` — all suite rules
+2. `~/.claude/commands/premium-website.md` — all suite rules <!-- lint:allow-banned-phrase=premium -->
 3. `~/.claude/web-system-prompt.md` — Design DNA (SUSPENDED if `tokens.lock.json` exists — see gate above)
 4. `~/.claude/commands/web-animations.md` — Framer Motion patterns
 5. `CLAUDE.md` (project root, if exists)
@@ -131,7 +136,7 @@ Never stop for: "Shall I proceed?", "Ready to deploy?", "Is this correct?"
 ---
 
 ## Rules
-- Phase 0 reads premium-website.md — all suite rules inherited. Do not duplicate.
+- Phase 0 reads premium-website.md — all suite rules inherited. Do not duplicate. <!-- lint:allow-banned-phrase=premium -->
 - Read SCOPE.md before every phase.
 - Landing page is always Phase 4 page 1.
 - Per-page self-review is mandatory.
@@ -157,4 +162,4 @@ Never stop for: "Shall I proceed?", "Ready to deploy?", "Is this correct?"
 - `/web-review` — Phase 5 quality scoring
 - `/web-deploy` — Phase 6 deployment
 - `/saas-improve` — Run AFTER build to optimize
-- `/premium-website` — Suite contract, read at Phase 0
+- `/premium-website` — Suite contract, read at Phase 0 <!-- lint:allow-banned-phrase=premium -->

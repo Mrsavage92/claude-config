@@ -5,7 +5,7 @@
 The numbered steps below are a **summary of what `Skill('web-scaffold')` does** (with decisions sourced from SCOPE.md and DESIGN-BRIEF.md), not a substitute for invoking it:
 0. **Read DESIGN-BRIEF.md Component Lock table** — every landing page section has a specific 21st.dev component assigned. Use these during the landing page build. Do NOT re-run MCP queries.
 1. Generate all foundation files (package.json, tsconfig, vite.config, tailwind.config, index.css, main.tsx, App.tsx, CLAUDE.md)
-2. Apply bundle splitting from premium-website performance rules (vendor-react, vendor-motion, vendor-query, vendor-supabase chunks)
+2. Apply bundle splitting from premium-website performance rules <!-- lint:allow-banned-phrase=premium --> (vendor-react, vendor-motion, vendor-query, vendor-supabase chunks)
 3. tsconfig.json MUST include `"types": ["vite/client"]`
 4. CLAUDE.md MUST include: color job definition, design reference site, page inventory summary
 5. AppLayout MUST include skip-nav link as first element. LandingNav (the public landing page header) MUST ALSO include a skip-nav link as its first child, targeting `#main-content`. LandingHero `<section>` MUST have `id="main-content"` on its root element — the skip-nav target must exist.

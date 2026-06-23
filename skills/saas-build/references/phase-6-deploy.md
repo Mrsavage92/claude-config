@@ -3,7 +3,7 @@
 **Action: invoke `Skill('web-deploy')` for the deploy itself.** The mechanical Vercel + smoke test steps below are a checklist of what the skill does — they are NOT a substitute for invoking it. Hand-rolled `npx vercel deploy` without `Skill('web-deploy')` skips its env-var validation, post-deploy verification, and DNS handling.
 
 **6a. Pre-deploy gates**
-Run through the pre-deploy checklist in premium-website.md. All items must pass.
+Run through the pre-deploy checklist in premium-website.md. <!-- lint:allow-banned-phrase=premium --> All items must pass.
 
 **6b. Vercel deploy (GitHub-connected auto-deploy is the primary method)**
 

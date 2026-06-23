@@ -96,6 +96,40 @@ This is the difference between "the code says X" and "the user sees X." All thre
 
 ---
 
+## Stage 5a.8 — AI Readability Gate (MANDATORY — runs before web-review loop)
+
+AI tools (Claude web, ChatGPT, Perplexity) check specific signals before reading a site. Missing these means they parse minified JS instead of content. This gate catches the class of failure where a site ships readable to humans but invisible to AI (Orbit Digital, 2026-06-23).
+
+Run these checks against the local dev server before triggering Stage 5b:
+
+```bash
+# 1. llms.txt exists and contains the product name
+curl -s http://localhost:5173/llms.txt | head -3
+
+# 2. llms-full.txt exists and has meaningful content
+curl -s http://localhost:5173/llms-full.txt | wc -l
+
+# 3. No relative og:url values (should return nothing — any match = fail)
+grep -r 'og:url.*content="/' src/ --include="*.tsx" --include="*.ts" --include="*.jsx"
+
+# 4. robots.txt references llms files
+grep "llms" public/robots.txt
+```
+
+**Gate criteria — all must pass before proceeding to Stage 5b:**
+- [ ] `/llms.txt` serves 200 with company/product name in first 3 lines
+- [ ] `/llms-full.txt` serves 200 with > 50 lines of content
+- [ ] Zero matches for relative `og:url` pattern in source
+- [ ] `robots.txt` contains at least one reference to `llms.txt`
+- [ ] Root `<html>` has `lang` attribute matching the site locale
+- [ ] No duplicate `<meta name="description">` in the document head (grep `name="description"` in root layout — must appear exactly once)
+
+**Fix any failure before proceeding.** AI readability is not a nice-to-have — it is the discoverability layer for any site that will be searched via ChatGPT, Perplexity, or Claude web. Failing this gate at deploy time means fixing it post-launch under pressure.
+
+Log: "Phase 5a.8 — AI readability gate: [PASS/N failures fixed]" to BUILD-LOG.md.
+
+---
+
 ## Stage 5b — web-review loop
 
 **Scoring note:** `/web-review` scores x/40 — visual + a11y + performance. Different from `/review` (x/100) which covers security and correctness. Use web-review here. Optionally run /review separately — its score does not gate deploy.
