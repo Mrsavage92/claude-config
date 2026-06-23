@@ -71,6 +71,54 @@ useSeo({
 
 ---
 
+## `llms.txt` and `llms-full.txt` — AI assistant readability (MANDATORY)
+
+Every public site MUST expose `/llms.txt` (summary) and `/llms-full.txt` (full content dump). AI tools (Claude web, ChatGPT, Perplexity) check this before reading the site. Without it, they attempt to parse rendered HTML which includes hydration scripts, animation wrappers and component boilerplate — this is how "AI couldn't read the site" failures happen.
+
+**For Next.js App Router** — create `app/llms.txt/route.ts` and `app/llms-full.txt/route.ts`:
+
+```ts
+// app/llms.txt/route.ts
+import { NextResponse } from 'next/server'
+import { services, faqs } from '@/lib/content'  // adapt to actual content source
+
+export const dynamic = 'force-dynamic'
+
+export function GET() {
+  const body = [
+    '# [Product Name]',
+    '',
+    '> [One-line description]',
+    '',
+    '[Full description paragraph]',
+    '',
+    '## Services / Features',
+    '',
+    // map from content source
+    '## Key pages',
+    '',
+    '- [Home](https://[domain]/): ...',
+    '- [About](https://[domain]/about): ...',
+    '',
+    `Full content: https://[domain]/llms-full.txt`,
+  ].join('\n')
+
+  return new NextResponse(body, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+  })
+}
+```
+
+**For Vite + TanStack Start** — create `src/routes/llms[.]txt.ts` and `src/routes/llms-full[.]txt.ts` as SSR GET handlers (same pattern as `sitemap[.]xml.ts`).
+
+**llms.txt must include:** company name, one-line description, all services/features with prices, key page links with descriptions, contact details.
+
+**llms-full.txt must include:** everything in llms.txt plus full service descriptions, all FAQs, how-it-works steps, full site map.
+
+**Update `robots.txt`** to reference both files (see robots.txt section below).
+
+---
+
 ## `public/robots.txt`
 
 ```
@@ -78,6 +126,10 @@ User-agent: *
 Allow: /
 
 Sitemap: https://[productdomain].com/sitemap.xml
+
+# AI assistant reading
+# Summary: https://[productdomain].com/llms.txt
+# Full content: https://[productdomain].com/llms-full.txt
 ```
 
 Block auth and app routes from indexing:

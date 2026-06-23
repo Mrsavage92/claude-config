@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-03",
+  "last_updated": "2026-06-23",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -97,6 +97,7 @@
   },
   "skills": [
     "a11y-audit",
+    "ai-exposure-validation",
     "ai-image-generation",
     "animate",
     "audit",
@@ -221,6 +222,6 @@
   "counts": {
     "commands": 68,
     "agents": 22,
-    "skills": 121
+    "skills": 122
   }
 }
