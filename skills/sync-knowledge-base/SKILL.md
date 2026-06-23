@@ -112,7 +112,7 @@ This step previously emitted a runtime Python script that hardcoded the token li
 
 - Token: `notion-call.sh` reads `NOTION_INTERNAL_TOKEN` from env; if unset OR set to the previously-leaked literal, the script halts.
 - Notion hub page ID: `32a116e8-bef2-8030-a0f6-d0be522bf917`
-- Child pages: Agents (`32a116e8-bef2-815d-8b38-f37eaa467ec5`), Slash Commands (`32a116e8-bef2-8118-9f49-e6d790a56bd1`), Skills Library (`373116e8-bef2-8142-8a74-fbf72f5fdab3`)
+- Child pages: Agents (`32a116e8-bef2-815d-8b38-f37eaa467ec5`), Slash Commands (`32a116e8-bef2-8118-9f49-e6d790a56bd1`), Skills Library (`388116e8-bef2-8149-844c-c87b685d5e72`)
 - Clear all blocks then rewrite each page completely (full rewrite — never append). Per the notion skill, this is the GET → DELETE-loop → PATCH procedure:
   ```bash
   WRAP="C:/Users/Adam/.claude/skills/notion/scripts/notion-call.sh"
