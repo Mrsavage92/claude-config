@@ -187,6 +187,8 @@ If unsure between `/rate` and a specific audit skill: prefer the audit skill whe
 
 This SKILL.md should itself be rateable by `/rate`. If you (the rater) find that running `/rate` on this file produces a score below 85, log the gap in the verdict so the skill can be improved.
 
+For self-rates (rating a target you built, modified, or rated before in this session), load the contamination disclosure template at [references/self-rating-disclosure.md](references/self-rating-disclosure.md) and drop the disclosure block immediately after the headline score, before "What 100/100 looks like".
+
 After every rating run, the structural grader at [scripts/check_rating.py](scripts/check_rating.py) must pass. The grader is the contract — if you've written prose that says "I follow the rules" but the grader exits 1, you have not followed the rules. Revise.
 
 ## Related scripts
