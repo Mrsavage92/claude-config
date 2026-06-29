@@ -25,8 +25,8 @@ if [[ -z "${NOTION_INTERNAL_TOKEN:-}" ]]; then
   exit 1
 fi
 
-# Refuse the known-leaked token literal
-if [[ "$NOTION_INTERNAL_TOKEN" == "ntn_ROTATED_REMOVED" ]]; then
+# Refuse the previously-leaked token by hash (literal scrubbed from git history 2026-06-29; no secret stored here)
+if [[ "$(printf '%s' "$NOTION_INTERNAL_TOKEN" | sha256sum | cut -d' ' -f1)" == "596985c38e6ca3b5ef20a1d979c30495ea97ca3f8c39b800290f7e45eb426809" ]]; then
   echo "ERROR: NOTION_INTERNAL_TOKEN is set to the previously-leaked value." >&2
   echo "  Rotate at https://api.notion.com/my-integrations and update settings.json before continuing." >&2
   exit 1
