@@ -72,7 +72,10 @@ if (Test-Path $LegacySkillsGit) {
     Write-Host "Removing legacy skills-library git metadata..."
     Remove-Item -LiteralPath $LegacySkillsGit -Recurse -Force
 }
-Invoke-MirrorCopy -Source $RepoSkillsDir -Destination $SkillsDir
+# ai-exposure-validation is PRIVATE product IP — canonical home is the private
+# orbit-digital-suites repo, never public claude-config. Excluded from the mirror so
+# /MIR neither publishes nor deletes the local runtime copy.
+Invoke-MirrorCopy -Source $RepoSkillsDir -Destination $SkillsDir -ExcludeDirs ".git", "__pycache__", "ai-exposure-validation"
 $skillCount = (Get-ChildItem $SkillsDir -Directory -ErrorAction SilentlyContinue).Count
 Write-Host "Installed $skillCount skill directories." -ForegroundColor Green
 

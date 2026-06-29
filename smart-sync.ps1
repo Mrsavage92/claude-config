@@ -60,6 +60,7 @@ if ($Mode -eq "start") {
                 /XD .git __pycache__ .cache .evolution `
                     web-evolve-workspace skill-miner-workspace `
                     project-triage-workspace skill-creator-workspace node_modules `
+                    ai-exposure-validation `
                 /XF "*.pyc" "*.pyo" ".forge-*.md" "SKILL.md.pre-*" `
                 /NFL /NDL /NJH /NJS /NC /NS /NP `
                 /R:1 /W:1 2>>$LOG | Out-Null
