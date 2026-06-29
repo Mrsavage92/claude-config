@@ -41,6 +41,19 @@ BANNED_PHRASES = [
     "battle-tested",
 ]
 
+# Third-party skills vendored verbatim from anthropics/skills. The banned-phrase
+# self-flattery rule polices OUR authored prose; it must not rewrite upstream
+# content (e.g. "pixel-perfect", "premium design", "comprehensive tool coverage"
+# are legitimate instructional usage). These are exempt from the banned-phrase
+# body scan only — all other checks still apply. Keep in sync with the upstream
+# skill set when re-vendoring.
+VENDORED_SKILLS = frozenset({
+    "algorithmic-art", "brand-guidelines", "canvas-design", "claude-api",
+    "doc-coauthoring", "docx", "frontend-design", "internal-comms",
+    "mcp-builder", "pdf", "pptx", "slack-gif-creator", "theme-factory",
+    "web-artifacts-builder", "webapp-testing", "xlsx",
+})
+
 # Words that are too generic to be useful as skill triggers
 WEAK_DESCRIPTION_PHRASES = [
     "helps with", "assists with", "useful for", "various tasks", "general purpose",
@@ -141,7 +154,7 @@ def lint(skill_path: Path) -> dict[str, Any]:
 
     # The skill-forge skill itself has to LIST the banned phrases as part of its job.
     # Exempt it from its own banned-phrase scan.
-    is_self_exempt = skill_path.name == "skill-forge"
+    is_self_exempt = skill_path.name == "skill-forge" or skill_path.name in VENDORED_SKILLS
 
     # Skip lines that are clearly meta-discussion of the banned-phrase rule rather than
     # self-praise usage. Trigger words: ban / banned / bans / banning / forbidden / forbid /
