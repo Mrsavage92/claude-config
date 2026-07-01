@@ -50,6 +50,6 @@ Always assume this stack unless told otherwise:
 - **Deploy**: Vercel (frontend) + Railway (backend/full-stack)
 - **Payments**: Stripe (Checkout + webhooks + subscriptions)
 - **Email**: Resend
-- **AI**: Claude API (claude-sonnet-4-6)
+- **AI**: Claude API (claude-sonnet-5)
 - **SMS/Calls**: Twilio (GrowLocal)
 - **Repo**: GitHub, conventional commits, PRs to main
