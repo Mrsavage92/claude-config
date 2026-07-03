@@ -115,6 +115,8 @@ Run `/sync-knowledge-base` after adding new skills/commands to update Notion doc
 
 Claude Max has a finite token budget per period. Route subagents to the cheapest model that can do the job.
 
+**Current model aliases (2026-07):** `haiku` → Haiku 4.5 | `sonnet` → Sonnet 5 | `opus` → Opus 4.8. Use aliases, not hardcoded IDs — they auto-resolve on release.
+
 **Use `model: "haiku"` for Agent calls that:**
 - Search/explore codebases (subagent_type: Explore)
 - Look up files, grep for symbols, read configs

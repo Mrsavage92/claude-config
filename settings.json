@@ -1,14 +1,18 @@
 {
+  "env": {
+    "NOTION_TOKEN": "YOUR_NOTION_TOKEN_HERE"
+  },
   "permissions": {
     "defaultMode": "bypassPermissions"
   },
+  "model": "sonnet",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "LOG=~/.claude/sync-errors.log; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md && [ -d rules ] && cp -r rules/ ~/.claude/rules/) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git fetch origin && git reset --hard origin/main) 2>>$LOG; python3 ~/.claude/fetch-notion-context.py 2>>$LOG || true",
+            "command": "LOG=~/.claude/sync-errors.log; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp commands/*.md ~/.claude/commands/ && cp agents/*.md ~/.claude/agents/ && [ -f global-context.md ] && cp global-context.md ~/.claude/CLAUDE.md && [ -d rules ] && cp -r rules/ ~/.claude/rules/ && [ -d skills ] && rsync -a --exclude='.git' skills/ ~/.claude/skills/) 2>>$LOG; python3 ~/.claude/fetch-notion-context.py 2>>$LOG || true",
             "async": true
           }
         ]
@@ -19,7 +23,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "MACHINE=$(hostname -s); LOG=~/.claude/sync-errors.log; MSG=\"auto-sync: $MACHINE $(date +%Y-%m-%d)\"; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp ~/.claude/commands/*.md commands/ && cp ~/.claude/agents/*.md agents/ && [ -f ~/.claude/CLAUDE.md ] && cp ~/.claude/CLAUDE.md global-context.md && [ -d ~/.claude/rules ] && cp -r ~/.claude/rules/. rules/; git add commands/ agents/ global-context.md rules/ && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG; (cd ~/.claude/skills/claude-skills && git add -A && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG || true",
+            "command": "MACHINE=$(hostname -s); LOG=~/.claude/sync-errors.log; MSG=\"auto-sync: $MACHINE $(date +%Y-%m-%d)\"; (cd ~/Documents/Git/claude-config && git fetch origin && git reset --hard origin/main && cp ~/.claude/commands/*.md commands/ && cp ~/.claude/agents/*.md agents/ && [ -f ~/.claude/CLAUDE.md ] && cp ~/.claude/CLAUDE.md global-context.md && [ -d ~/.claude/rules ] && cp -r ~/.claude/rules/. rules/; git add commands/ agents/ global-context.md rules/ && git diff --cached --quiet || git commit -m \"$MSG\" && git push origin main) 2>>$LOG || true",
             "async": true
           }
         ]
@@ -77,7 +81,6 @@
     }
   },
   "skipDangerousModePermissionPrompt": true,
-  "skipAutoPermissionPrompt": true,
   "mcpServers": {
     "notion": {
       "command": "npx",
@@ -86,12 +89,8 @@
         "@notionhq/notion-mcp-server"
       ],
       "env": {
-        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer ntn_ROTATED_REMOVED\", \"Notion-Version\": \"2022-06-28\"}"
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer ntn_K46793192822yLb12pUWso1QC0gaYtsA6dENpcn0xjhfKB\", \"Notion-Version\": \"2022-06-28\"}"
       }
     }
-  },
-  "model": "sonnet",
-  "env": {
-    "NOTION_TOKEN": "ntn_ROTATED_REMOVED"
   }
 }
