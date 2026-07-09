@@ -26,6 +26,15 @@ Extract these before writing anything:
 
 If **asset type** or **surface** is genuinely missing and can't be inferred, ask ONE combined question. Otherwise proceed - the AuditHQ brand context below is already locked, so do not ask about colours, tone, or audience.
 
+### Step 0.5: Is this even an OpenArt job? (the decision that outranks every prompt below)
+
+Before writing a single prompt, decide which of two things the asset is. Getting this wrong is the biggest failure mode - it produces a technically clean recipe that is the wrong artefact entirely.
+
+- **Product-demo / proof video** - the story IS the product working (a scan running, a score landing, a report with evidence, the dashboard). Here **the real screen recording is the spine of the film, and AI generation is confined to brand bookends** (the logo sting, an end card). OpenArt does NOT generate the middle. AuditHQ's entire promise is "real evidence, not an AI guess" - a single AI-hallucinated dashboard or invented score dial destroys that, and stringing atmospheric AI clips (person-typing-into-ChatGPT, glowing scan-lines) in front of the product is exactly the generic filler a real product demo leaves out. If the user wants a demo, your job is a screen-capture shotlist + voiceover + assembly plan, with OpenArt used only where noted.
+- **Brand / atmospheric asset** - a hero loop, a section background, an ad concept with no product UI on screen. This is where OpenArt earns its place: mood, motion, brand ambience, agency-persona scenes.
+
+**Always inventory the real assets first.** Before proposing to generate anything, check what already exists (`~/Documents/AuditHQ/Marketing/` holds screen recordings, dashboard stills, a logo sting, ad stills). Reuse real footage for anything showing the product; only generate what genuinely does not exist. Never propose to AI-generate a shot the user could screen-record for real.
+
 ---
 
 ## AuditHQ brand lock (bake into every prompt - non-negotiable)
@@ -45,9 +54,11 @@ AI models still garble multi-word text. For anything with a real headline or the
 - **Prefer to leave clean negative space** in the composition and tell the user to overlay text in Canva/Figma afterwards. Put this in the UI steps.
 - If text must be baked in, use **Nano Banana Pro** or **GPT Image** (the two strongest text renderers on OpenArt) and keep it to 1-3 short words. Always instruct the user to regenerate if a single letter is wrong - a garbled word is an instant "AI slop" tell.
 
-### Don't fake the product UI
+### Don't fake the product UI, and don't let AI carry a product demo
 
-AI-generated "dashboards" render gibberish charts and fake buttons that read as fake instantly. **Never prompt for a fake AuditHQ dashboard or report screen.** For real product shots, tell the user to screenshot the live app. Use OpenArt for: brand/atmospheric backgrounds, abstract data-motion motifs, agency-persona lifestyle scenes, and hero imagery with room for a real screenshot or text overlay.
+AI-generated "dashboards" render gibberish charts and fake buttons that read as fake instantly. **Never prompt for a fake AuditHQ dashboard, report screen, score dial, or suite grid.** The dashboard is a REAL screenshot or screen recording - composite it or capture it, never let the model draw it (image models garble UI text, numbers, and domain names).
+
+The subtler trap: even when you correctly avoid a fake dashboard, do not make AI-generated *concept* clips the backbone of a video whose whole point is the real product. If the film is a product demo, the real capture is the spine (see Step 0.5) and OpenArt is confined to the logo sting and end card. Use OpenArt as the lead engine only for genuine brand/atmospheric assets: hero loops, section backgrounds, agency-persona lifestyle scenes, and abstract motifs with room for a real screenshot or text overlay.
 
 ---
 
