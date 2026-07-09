@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-29",
+  "last_updated": "2026-07-09",
   "generated_by": "DESKTOP-5VSTN0N",
   "commands": {
     "LOG.md": "84e411f3478c52c2cfbf302ea5ea2abd",
@@ -73,27 +73,27 @@
   },
   "agents": {
     "agent-designer.md": "2a93049ce26d6e4522c54b4f5f163a5c",
-    "api-design-reviewer.md": "97b5878809c43e1cb0aca10fbcc95a15",
+    "api-design-reviewer.md": "769d0de566ede60771cc1f07a8144f53",
     "audithq-sales.md": "eb895a134bec514fc08def8359c2c8a5",
-    "codebase-onboarding.md": "5d24a46fb8e9b384d4a084668cff85bc",
+    "codebase-onboarding.md": "a6bb386d63ba3608a4dd727aeafabc8f",
     "cto-architect.md": "b53d13bb9c1cdf6a79799317d3a1da78",
-    "database-designer.md": "6c4608acd779f18a14843256720c7633",
-    "harness-optimizer.md": "88f98ea9d51438229c12dbf6d4ece138",
+    "database-designer.md": "0b04857fb5f2c02ad43f606e12cbc367",
+    "harness-optimizer.md": "63231d484e57be18faa2888c608e6f13",
     "mcp-server-builder.md": "b5479822d17d6823d78c826c9dd1215e",
     "migration-architect.md": "235a7096e9ebabd0d2f04a5ed3d618fc",
-    "observability-designer.md": "976bc1074ac82a9f67e91f70d0eb835a",
-    "performance-tuner.md": "634c6bdb3a9519f846d43c125760ab00",
-    "pr-review-expert.md": "16ebccd2d8b20efb3db41da69bda53c8",
+    "observability-designer.md": "9b159dffc72faedca164c8abcee9130f",
+    "performance-tuner.md": "3e7876fef122fe9c870ed050f8cad080",
+    "pr-review-expert.md": "932b60cb29a80a5014982f3d3d6886ab",
     "rag-architect.md": "eb601efc77031fbd9439938147660fa3",
-    "refactor-expert.md": "36ec88624406e5f0307403967edb1c46",
-    "root-cause-analyzer.md": "116ae2c88aab1e0729514aa87cbf66fd",
-    "silent-failure-hunter.md": "66715c7a29fa8721369e0523cefa5668",
+    "refactor-expert.md": "30646d298e7ee1d52ce22912d4dd1561",
+    "root-cause-analyzer.md": "39699fa6f2c34011c0c42889f2e2f29d",
+    "silent-failure-hunter.md": "c803aa50c2ab8e0d833d24a7cc948dbb",
     "strategic-cto-mentor.md": "3c11b17075cddc3dda7e2c9427d062a8",
-    "test-engineer.md": "2b7b4f2984584d315e98277576e4fc7a",
-    "web-benchmark.md": "40d6742bc139c5dda5af3aa90f383e1b",
+    "test-engineer.md": "e2cc13c8c3d814fee3a11093d355ee1d",
+    "web-benchmark.md": "ea08fe7c09a2bdbe290598ea0ce21fae",
     "web-patch.md": "919408d71093e552b315508bc9b11fb1",
-    "web-score.md": "5bdb065eed021d8b91f3a7dcdd9ef0f7",
-    "web-screenshot.md": "11182eb69878ae6f0227c73755898875"
+    "web-score.md": "b4a73160d5c1fb6057ec1544839c02bf",
+    "web-screenshot.md": "17a8a0b08b6d184e42fa0d51be819e55"
   },
   "skills": [
     "a11y-audit",
@@ -159,6 +159,7 @@
     "n8n-validation-expert",
     "n8n-workflow-patterns",
     "notion",
+    "openart-studio",
     "overdrive",
     "parallel-audit",
     "pdf",
@@ -239,6 +240,6 @@
   "counts": {
     "commands": 68,
     "agents": 22,
-    "skills": 139
+    "skills": 140
   }
 }
