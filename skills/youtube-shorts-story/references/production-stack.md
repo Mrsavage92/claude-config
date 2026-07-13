@@ -8,7 +8,8 @@ The owner is a business owner, not an editor. Every recipe below must be executa
 
 | Layer | Tool | Cost | Real yield | Why this one |
 |---|---|---|---|---|
-| Video generation (primary) | Krea Pro, Hailuo 02 model | $35/mo (20,000 credits) | ~80cr per 5s clip = ~31 videos/mo at 7 clips each (~$1/video) | Cheapest VERIFIED unit cost; credit costs published in official docs; also bundles Topaz-class upscaling for the 4K master |
+| Keyframe stills (stylized) | Seedream 4 via fal.ai | ~$0.08/still | 6-8 keyframes/video | Better STYLIZED-style-lock than photoreal-biased Nano Banana 2 (verified 2026-07-14); holds the paper-cutout anchor across the set via reference-card trait-locking |
+| Video generation (primary) | Hailuo 02 image-to-video via fal.ai | ~$0.22-0.49/clip | ~6 clips/video (~$1.6/video) | Retains a stylized source keyframe without drifting to generic 3D; keyframe-first pipeline |
 | Video generation (no lock-in alt) | fal.ai pay-as-you-go, Hailuo 02 | ~$0.225/5s clip (~$1.58/video) | $30 buys ~19 videos, zero unused-credit waste | No subscription; mix models per shot (Kling 2.5 Pro $0.35/clip, Seedance, WAN) |
 | Voiceover | OpenAI TTS (gpt-4o-mini-tts) | ~$0.015/min (~$1-2/mo) | - | 10x cheaper than ElevenLabs at near-parity for narration |
 | Music | FREE (YouTube Audio Library, Pixabay) | $0 | - | SFX beats music for retention; music must loop perfectly or be absent anyway |

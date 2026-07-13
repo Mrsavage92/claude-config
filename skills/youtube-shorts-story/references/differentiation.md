@@ -35,6 +35,13 @@ These three are recorded in the channel plan and reused verbatim across every vi
 
 Any "no" is a rework before spending on generation.
 
-## Note on the current pilots
+## LOCKED CHANNEL IDENTITY (2026-07-14, from current-moment research)
 
-The pilots authored before this file used "soft-lit 3D render, warm palette" - which is close to the reference creator's signature look. Before the 20-video run, the channel must lock its OWN visual medium and re-anchor the style phrase used in every generation prompt. This is a brand decision for the owner (pending), not a default to inherit.
+- **Visual medium: layered paper-cutout / collage.** Chosen at the intersection of freshest-yet-proven (2026 "tactile craft" anti-AI-slop trend, under-executed in short-form video) and most-reliably-producible on current tools (the handmade look hides AI wobble; reference-card trait-locking holds it across clips). Deliberately far from the reference creator's oversaturated soft-3D look, and it eliminates photoreal-face generation (the failure class that broke earlier pilots).
+- **Voice register: calm storyteller, neutral, non-American.** Even, unhurried, matter-of-fact while the content is wild - the contrast is the voice. Never the default American TTS narrator every faceless channel uses.
+- **Topic lane: hidden mechanisms of the everyday + nature/survival**, run across the four curiosity sub-lanes for the 20-video data run, data picks the winner.
+
+**Channel style anchor (paste verbatim into EVERY keyframe/generation prompt, the way a brand reuses a logo):**
+> "layered paper-cutout collage animation, hand-cut construction-paper shapes with soft drop shadows, warm textured matte paper, storybook depth, gentle even studio light, no photoreal faces, no text, no watermark"
+
+Keyframe model: Seedream 4 (better stylized-consistency than photoreal-biased Nano Banana 2). Image-to-video: Hailuo 02 / Kling 2.5 Turbo (both retain a stylized source frame). All pilots authored before this lock used "soft-lit 3D warm palette" and MUST be re-anchored to this paper-cutout anchor before generation.
