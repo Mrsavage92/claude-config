@@ -1,6 +1,6 @@
 ---
 name: youtube-shorts-story
-description: Plan YouTube Shorts end-to-end in the curiosity-animation style (Zack D. Films tier) - story structure, retention engineering, and an AI production recipe the owner can execute without editing skill. Produces a complete VIDEO-PLAN.md with 3 hook variants, a closed-loop script timed to TTS pace, a shot-by-shot list, tool-exact production steps (OpenArt/Krea, OpenAI TTS, Suno, DaVinci Resolve, 4K export), and hard compliance gates (originality layer, zero sexual content, general-audience safety). Use this whenever the user mentions the YouTube channel, Shorts, video ideas, hooks, scripts, retention, AVD, storyboards, faceless or AI video content, or asks to plan, write, script, or improve any short-form video - even if they never say the words "skill" or "YouTube Shorts". Also use for reviewing an existing video plan or diagnosing a video's retention graph.
+description: Plan YouTube Shorts end-to-end in the curiosity-animation style (Zack D. Films tier) - story structure, retention engineering, and an AI production recipe the owner can execute without editing skill. Produces a complete VIDEO-PLAN.md with 3 hook variants, a closed-loop script timed to TTS pace, a shot-by-shot list, tool-exact production steps (Seedream 4 keyframes + Hailuo 02 via fal.ai/Krea, OpenAI TTS, free music/SFX, DaVinci Resolve, 1080p->4K upscale), and hard compliance gates (originality layer, zero sexual content, general-audience safety). Use this whenever the user mentions the YouTube channel, Shorts, video ideas, hooks, scripts, retention, AVD, storyboards, faceless or AI video content, or asks to plan, write, script, or improve any short-form video - even if they never say the words "skill" or "YouTube Shorts". Also use for reviewing an existing video plan or diagnosing a video's retention graph.
 ---
 
 # YouTube Shorts Story Planner
@@ -15,7 +15,7 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 - `references/differentiation.md` - the universal-vs-signature split and the channel's own locked identity (visual medium / voice register / topic lane). Read before ideation and before writing any generation prompt - it is what keeps the channel from reading as a clone.
 - `references/story-frameworks.md` - structures (premise-drop spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
 - `references/retention-playbook.md` - first-3-seconds rules, 3-second rule, loop-seam engineering, reading retention graphs. Read for steps 4-5 and any diagnosis task.
-- `references/production-stack.md` - locked tool stack, costs, 4K delivery, recipe template. Read for step 6.
+- `references/production-stack.md` - locked tool stack (the tool source of truth - overrides any stack named elsewhere in this skill), costs, 4K delivery, recipe template. Read for step 6.
 - `references/packaging.md` - titles, burned-in caption styling, Shorts UI safe zones, upload metadata. Read for steps 5-6.
 - `references/compliance-gates.md` - originality layer, content safety, COPPA designation, metadata honesty. Read for step 7, every time.
 
@@ -27,6 +27,8 @@ If given a topic, restate it as a single-sentence question a 10-year-old would u
 
 Kill topics at intake if they cannot be answered honestly in 60 seconds, need imagery AI generation does poorly (precise text, real faces, brand logos), or brush any content-safety gate.
 
+Verify the core factual claim against a credible source before Step 4 (scripting); an unverifiable claim is a kill or a reframe, never a guess. This is the fact-check the ship checklist depends on.
+
 ### Step 2: Hook engineering (always 3 variants)
 
 Write three hooks for the chosen topic, each a different pattern (e.g. one question hook, one result-first/anti-hook, one what-happens-if). Each hook = first line of narration + first-frame visual description + 4-8 word text overlay. Apply the hook quality bar from story-frameworks.md. Mark your recommended variant and say why; the other two are the A/B backlog.
@@ -37,7 +39,7 @@ Default to a **closed loop** on the Zack D. spine (shocking premise -> reveal ->
 
 ### Step 4: Script
 
-Write narration to the word budget (75 words max for 30s; hard physics of TTS at ~2.5 words/sec, table in story-frameworks.md). Rules: first line is the hook verbatim, no windups, sensory verbs, narration never describes what the visual already shows, end on the twist with the final line reconnecting to the opening (the narrative loop). Include the text-overlay track alongside narration; the story must survive muted viewing.
+Write narration to the word budget (82-90 words for 30s; measured TTS pace ~2.9-3.0 words/sec, table in story-frameworks.md). Rules: first line is the hook verbatim, no windups, sensory verbs, narration never describes what the visual already shows, end on the twist with the final line reconnecting to the opening (the narrative loop). Include the text-overlay track alongside narration; the story must survive muted viewing.
 
 ### Step 5: Shot list
 
@@ -45,7 +47,7 @@ Break the script into shots of 1.5-3 seconds. For each shot: duration, visual de
 
 ### Step 6: Production recipe
 
-Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, Suno brief, SFX list, DaVinci assembly order with audio ducking, 4K export settings. Build the upload package (3 title candidates, description, hashtags, audience flag) per packaging.md. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
+Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, music/SFX selections (free library by default; Suno only at the revenue tier), SFX list, DaVinci assembly order with audio ducking, 1080p generation then upscale-master-to-4K export settings. Build the upload package (3 title candidates, description, hashtags, audience flag) per packaging.md. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
 
 ### Step 7: Differentiation + compliance gates (hard stop)
 

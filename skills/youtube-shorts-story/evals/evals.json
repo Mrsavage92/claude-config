@@ -5,7 +5,7 @@
       "id": 0,
       "eval_name": "single-video-plan",
       "prompt": "plan a 30 second short answering why do your ears pop on planes. I want the full thing - script, shots, and the exact steps to make it with my AI tools. remember I'm not an editor",
-      "expected_output": "A complete VIDEO-PLAN: 3 hook variants, a ~75-word script that loops back to the opening, a shot list with per-shot durations <=3s, a production recipe naming the locked stack (OpenArt/Krea, OpenAI TTS, Suno, DaVinci Resolve) with 4K export, and a filled compliance checklist with a named originality layer.",
+      "expected_output": "A complete VIDEO-PLAN: 3 hook variants, an 82-90 word script that loops back to the opening, a shot list with per-shot durations <=3s, a production recipe naming the current stack (Seedream 4 keyframes + Hailuo 02 via fal.ai/Krea, OpenAI TTS, free music/SFX, DaVinci Resolve, 1080p->4K upscale) and NOT naming OpenArt-for-video or Suno-as-default, and a filled compliance checklist with a named originality layer.",
       "files": [],
       "assertions": []
     },

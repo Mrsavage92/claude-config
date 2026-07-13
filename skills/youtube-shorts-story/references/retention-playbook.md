@@ -26,7 +26,7 @@ The documented best case: animator Jake Fellman took average view percentage fro
 - **Bookend technique:** first and last frames are identical or near-identical, so the autoplay restart is imperceptible. The viewer rewatches before deciding to swipe.
 - **Narrative loop:** the final line reconnects to the opening line so the restart feels like a continuation ("...which is exactly why your ears pop." -> loops to -> "Why do your ears pop on planes?").
 - **Audio seam:** music must loop perfectly or be faded under SFX at both ends; an audible hitch exposes the loop and breaks the illusion.
-- Shorter videos loop more (a 25-30s video that loops beats a 45s video that doesn't, for AVD%). Default to the shortest length that delivers the payoff.
+- Shorter videos loop more (a 25-30s video that loops beats a 45s video that doesn't, for AVD%). Default to the shortest length in the 30-40s corpus band that delivers the payoff; go to 25s only when the loop is seamless AND the payoff still fully lands - never trim under 30 at the cost of the payoff.
 
 ## Reading the data (YouTube Studio)
 
