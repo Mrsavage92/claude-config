@@ -11,6 +11,7 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 
 ## References (read before the relevant step)
 
+- `references/reference-corpus.md` - MEASURED system from the channel's top-10 videos (language grammar, cut counts, loudness, ending taxonomy, title rules). Read FIRST for every video; it wins over any other file on conflict.
 - `references/story-frameworks.md` - structures (Zack D. spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
 - `references/retention-playbook.md` - first-3-seconds rules, 3-second rule, loop-seam engineering, reading retention graphs. Read for steps 4-5 and any diagnosis task.
 - `references/production-stack.md` - locked tool stack, costs, 4K delivery, recipe template. Read for step 6.

@@ -4,7 +4,7 @@ Everything upstream can be done right and the video still fails at the packaging
 
 ## Titles
 
-- The title states the QUESTION, never the answer ("Why Do Your Ears Pop on Planes?" not "Air Pressure Explains Ear Popping"). Spoiling the payoff in the title deletes the reason to watch.
+- Titles are CLAIMS or premise noun-phrases with a curiosity gap baked in, not questions (corrected against the measured corpus 2026-07-13: "The Invisible Barrier", "The Scariest Safari Rule", "Catfish Tricks Another Fish Into Adoption" - "Why does..." never appears in the channel's top ten). Never spoil the payoff.
 - Budget 60 characters max, but front-load the first ~40: the Shorts feed and search truncate. The question's key nouns go first.
 - Title, first frame, and hook must make the SAME promise. Mismatch is both a policy risk (misleading metadata) and an audience-trust leak.
 - Plain sentence case or standard title case. No ALL-CAPS words, no emoji stuffing, no "(GONE WRONG)" grammar - that register contradicts the calm-confident brand and ages badly.
