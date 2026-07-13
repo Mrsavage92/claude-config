@@ -46,6 +46,10 @@ Every VIDEO-PLAN.md ends with this section, filled in concretely:
 
 Keep one consistent visual style anchor phrase across all videos so the channel reads as one brand. The style anchor is a channel-level decision made once, not per video.
 
+## Delivery audio spec (measured from the reference, 2026-07-13)
+
+Master loudness **-11 LUFS integrated, LRA ~2-4, true peak <= -1.5 dB** - Shorts are mixed hot and dense. A -16 LUFS master sounds weak next to the feed. Voiceover wall-to-wall at ~3 words/sec with punctuation-placed micro-pauses; SFX and ambience woven continuously under it; music optional and only if it loops seamlessly.
+
 ## Cost discipline
 
 The stack is a self-funding ladder, not a shopping list. Bootstrap tier until the channel earns revenue: Krea Pro $35 (or fal.ai pay-as-you-go ~$30) + OpenAI TTS ~$1-2 + free music/SFX + DaVinci Resolve = **~$32-37/mo for 15-20+ videos, roughly $2/video all-in**. Suno ($8/mo), ElevenLabs voice, native-4K generation credits (Kling Pro/Veo tier), and GPU/API pipelines unlock only from channel revenue, in that order.

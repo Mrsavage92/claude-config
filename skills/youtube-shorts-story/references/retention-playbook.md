@@ -13,8 +13,8 @@ AVD greater than video length means the average viewer watches past one full pla
 
 ## Layer 2: the middle (seconds 3 to N-4)
 
-- **3-second rule:** introduce a new visual event (cut, zoom, camera move, text overlay change) at least every 3 seconds. Identical shot rhythm causes measurable mid-video retention collapse.
-- **One pattern interrupt** around the 25-35s mark in longer shorts: a music drop, angle change, or SFX spike, placed exactly where viewers have "mapped" the video's rhythm and start to leave.
+- **Continuous-flow grammar, not cut grammar (measured 2026-07-13):** a reference Zack D. short contained ONE hard cut in 29.6 seconds. The style is a single continuously evolving camera flow that morphs between story beats - the "new visual event every 3 seconds" requirement is satisfied by motion WITHIN the flow (something always moving, transforming, or revealing), never by cut frequency. Hard cuts and added Ken Burns zooms break the single-shot illusion; assembly-level pans/zooms also introduce jitter that reads as shake. New visual information must come from the generated footage itself.
+- **One pattern interrupt** around the 25-35s mark in longer shorts: a scene morph, angle change within the flow, or SFX spike, placed exactly where viewers have "mapped" the video's rhythm and start to leave.
 - **Muted-viewing insurance:** a large share of feed viewing starts muted. Captions/text overlays must carry the story alone. Test: scrub the plan silently; if the story is lost, add or rewrite overlays.
 - **Sound design over music:** SFX synced to visual beats (a pop, a whoosh, a heartbeat) does more for retention than any background track. Music sits at -18dB under the voiceover or is absent.
 - **Never gate visibility on delayed reveals:** every key visual must be legible the moment it appears; viewers scrubbing back to "see that again" is a rewatch signal, viewers confused is a swipe.

@@ -2,18 +2,24 @@
 
 Every framework below exists to serve one KPI: average view duration (AVD) greater than video length. That only happens when the story earns a full watch AND a rewatch or loop. Pick the framework per video; do not blend three frameworks into one 30-second script.
 
-## Script word budget (hard physics, not style)
+## Script word budget (measured from the reference, 2026-07-13)
 
-TTS narration lands at ~2.5 words/second at natural pace. Zack D. Films-style scripts run 65-95 words for ~30 seconds. Budget:
+A real Zack D. Films short measured 85 words in 28.8s = **2.96 words/second**, wall-to-wall with zero dead air; the only silence was 0.34s after the final payoff. Write to ~2.9-3.0 words/sec delivered pace:
 
-| Target length | Max words | Shots (at 1.5-3s each) |
+| Target length | Word budget | Delivery |
 |---|---|---|
-| 20s | 50 | 8-12 |
-| 30s | 75 | 10-16 |
-| 40s | 100 | 14-20 |
-| 60s | 150 | 20-30 |
+| 20s | 55-60 | continuous |
+| 30s | 82-90 | continuous, payoff lands ~1s before end |
+| 40s | 110-120 | continuous |
+| 60s | 165-180 | continuous |
+
+Pause grammar (measured): 5-7 micro-pauses of 0.4-0.7s per 30s, each placed immediately AFTER a tension beat ("...as people screamed below." [pause] "Two nurses saw him..."), never mid-thought and never for breathing rhythm alone. Direct the TTS with punctuation at exactly those beats.
 
 If the script exceeds budget, cut explanation, never the payoff. A short that explains 70% of something completely beats one that explains 100% of it rushed.
+
+## The peril-story format (the reference's actual winning shape)
+
+The measured reference was not a mechanism explainer - it was a STORY: a person in escalating danger, concrete sensory details ("ripped off her coat", "tore the lining"), and a twist-relief ending ("But somehow, he survived."). Treat peril/survival narrative as a first-class format alongside mechanism explainers in ideation: real documented incidents, retold in ~85 words, cold-opened mid-action. The mechanism lane and the story lane can share the channel; retention data picks the winner.
 
 ## The Zack D. spine (default structure)
 
