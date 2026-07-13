@@ -1,48 +1,53 @@
-# Locked Production Stack (researched 2026-07-13, ~$25-80/mo total)
+# Locked Production Stack (verified per-clip economics, updated 2026-07-13)
 
 The owner is a business owner, not an editor. Every recipe below must be executable by AI tools plus at most 30 minutes of human assembly time per video. If a step needs editing skill, redesign the step.
 
+**Vendor-inflation rule (learned the hard way):** every platform's advertised "X videos per month" assumes its cheapest, lowest-res model. Real yield on a good model (Kling Pro/Master, Veo 3.1, Hailuo 02 at 1080p) is consistently 6-10x LOWER than advertised (verified 2026-07-13: Hailuo native marketed 375 videos, real 56; Vidu marketed 1000, real 100; OpenArt $29 tier = ~3.4 videos). Never subscribe on a headline number; verify credits-per-clip on the model you'll actually use.
+
 ## The stack
 
-| Layer | Tool | Plan | Cost | Why this one |
+| Layer | Tool | Cost | Real yield | Why this one |
 |---|---|---|---|---|
-| Video generation | OpenArt (Advanced) or Krea (Pro) | $12-21/mo | ~150 videos/mo of credits | Aggregators beat stacking native subs; access to Veo 3.1 / Kling 3.0 class models through one credit pool |
-| Voiceover | OpenAI TTS (gpt-4o-mini-tts) | pay-as-you-go | ~$0.015/min (~$1-3/mo) | 10x cheaper than ElevenLabs at near-parity for narration; upgrade to ElevenLabs ($6-22/mo) only if a signature cloned voice becomes the brand |
-| Music | Suno Pro | $8/mo | 500 songs, commercial rights | Owned library beats Epidemic's $300-600/yr rental |
-| SFX | Pixabay / YouTube Audio Library | free | - | Sound design carries retention; see retention-playbook.md |
-| Assembly | DaVinci Resolve (free) | $0 | commercial-safe | CapCut free tier now blocks commercial use; Resolve has no such trap |
-| Programmatic captions | Remotion | $0 (individual license) | - | Only when caption templating gets repetitive across many videos |
-| Upscale | none needed by default | $0 | - | Veo 3.1 and Kling 3.0 output native 4K; Topaz Video AI ($299/yr) only if a chosen model caps at 1080p |
+| Video generation (primary) | Krea Pro, Hailuo 02 model | $35/mo (20,000 credits) | ~80cr per 5s clip = ~31 videos/mo at 7 clips each (~$1/video) | Cheapest VERIFIED unit cost; credit costs published in official docs; also bundles Topaz-class upscaling for the 4K master |
+| Video generation (no lock-in alt) | fal.ai pay-as-you-go, Hailuo 02 | ~$0.225/5s clip (~$1.58/video) | $30 buys ~19 videos, zero unused-credit waste | No subscription; mix models per shot (Kling 2.5 Pro $0.35/clip, Seedance, WAN) |
+| Voiceover | OpenAI TTS (gpt-4o-mini-tts) | ~$0.015/min (~$1-2/mo) | - | 10x cheaper than ElevenLabs at near-parity for narration |
+| Music | FREE (YouTube Audio Library, Pixabay) | $0 | - | SFX beats music for retention; music must loop perfectly or be absent anyway |
+| SFX | Pixabay / YouTube Audio Library | $0 | - | Sound design carries retention; see retention-playbook.md |
+| Assembly | DaVinci Resolve (free) | $0 | - | Commercial-safe; CapCut free tier blocks commercial use |
+| Upscale to 4K | Krea's bundled upscaler or video2x (free) | $0 extra | - | Generate 1080p, upscale the finished master to 4K |
 
-Avoid: Sora (consumer app shut down Apr 2026, API sunsetting), CapCut free tier for monetized content (ToS), stacking multiple native model subscriptions before the channel earns.
+Avoid (verified 2026-07-13): OpenArt for video at any tier (~$8.50/video real cost); PixVerse (worst failed-generation credit-burn sentiment); Kling/Hailuo NATIVE subscriptions (2-7x worse unit economics than the same models via Krea/fal.ai); Sora (consumer app shut down Apr 2026); Revid/Crayo-class generator SaaS (they sell assembly automation this skill already provides).
+
+Scale option only (10+ videos/week): rented GPU (RunPod 4090 ~$0.69/hr) running WAN/Hunyuan open weights ≈ $0.70-0.75/video, but adds ComfyUI pipeline complexity - wrong trade until volume demands it.
 
 ## 4K delivery rule
 
-TVs are a stated target surface. Export 3840x2160 (4K UHD) vertical 9:16 master at 2160x3840, H.264 or H.265, 50+ Mbps, 24 or 30 fps. If the generation model outputs 1080p, generate at the highest native resolution and note the upscale need in the plan rather than silently shipping soft footage.
+TVs are a target surface, but native-4K generation (Veo 3.1, Kling 3.0 Ultra) costs 5-15x more per clip. Bootstrap path: generate 1080p (Hailuo 02 Pro tier), assemble, then upscale the FINISHED master once to 4K (Krea's bundled upscaler or free video2x) and export 2160x3840 vertical, H.265, 50+ Mbps. Upscaling one 30s master beats upscaling 7 clips. Native-4K generation unlocks at the revenue tier of the cost ladder, for hero videos first.
 
 ## Per-video recipe template
 
 Every VIDEO-PLAN.md ends with this section, filled in concretely:
 
-```
+```text
 ## Production recipe
 1. Visuals: for each shot in the shot list, one generation prompt
-   (model: [Veo 3.1 / Kling 3.0 via OpenArt or Krea], duration 5s,
-   aspect 9:16, style anchor: [channel style phrase], no text in frame)
+   (model: Hailuo 02 via Krea or fal.ai, duration 5s, aspect 9:16,
+   style anchor: [channel style phrase], no text in frame)
 2. Voiceover: paste script into OpenAI TTS, voice [name], speed [0.95-1.1],
    export WAV
-3. Music: Suno prompt: [mood, BPM, no vocals, 45s]
+3. Music: free track from YouTube Audio Library [mood] OR none (SFX-only)
 4. SFX list: [moment -> sound, source]
 5. Assembly (DaVinci Resolve): import order, cut points from shot list,
-   captions [style], audio ducking music -18dB under VO
-6. Export: 2160x3840, H.265, 50Mbps, [24/30]fps
-7. Upload: title [<=60 chars, curiosity phrasing], no misleading metadata
+   captions per packaging.md safe zones, audio ducking music -18dB under VO
+6. Upscale finished master to 4K (Krea upscaler / video2x)
+7. Export: 2160x3840, H.265, 50Mbps, [24/30]fps
+8. Upload package per packaging.md
 ```
 
-Keep one consistent visual style anchor phrase across all videos (e.g. "soft-lit 3D render, slightly exaggerated proportions, warm palette") so the channel reads as one brand. The style anchor is a channel-level decision made once, not per video.
+Keep one consistent visual style anchor phrase across all videos so the channel reads as one brand. The style anchor is a channel-level decision made once, not per video.
 
 ## Cost discipline
 
-The stack is a self-funding ladder, not a shopping list. Bootstrap tier until the channel earns revenue: OpenArt Advanced ($12/mo) + OpenAI TTS (~$1-2/mo) + free music/SFX (YouTube Audio Library, Pixabay) + DaVinci Resolve = ~$13-15/mo, under $1/video at 20 videos/mo. Suno, ElevenLabs, higher-cost generation credits (Kling Pro / Veo tier), and API pipelines unlock only from channel revenue, in that order. Never a Revid/Crayo-class generator subscription: those sell assembly automation, which this skill already provides.
+The stack is a self-funding ladder, not a shopping list. Bootstrap tier until the channel earns revenue: Krea Pro $35 (or fal.ai pay-as-you-go ~$30) + OpenAI TTS ~$1-2 + free music/SFX + DaVinci Resolve = **~$32-37/mo for 15-20+ videos, roughly $2/video all-in**. Suno ($8/mo), ElevenLabs voice, native-4K generation credits (Kling Pro/Veo tier), and GPU/API pipelines unlock only from channel revenue, in that order.
 
-A video that needs more than ~10 generation attempts per shot is a prompt problem or a concept problem; fix the prompt or simplify the shot rather than burning credits.
+A video that needs more than ~10 generation attempts per shot is a prompt problem or a concept problem; fix the prompt or simplify the shot rather than burning credits. Failed-generation credit burn is the top complaint against every platform in this category - log regen counts per shot so waste is visible.
