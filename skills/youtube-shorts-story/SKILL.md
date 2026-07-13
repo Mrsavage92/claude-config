@@ -14,6 +14,7 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 - `references/story-frameworks.md` - structures (Zack D. spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
 - `references/retention-playbook.md` - first-3-seconds rules, 3-second rule, loop-seam engineering, reading retention graphs. Read for steps 4-5 and any diagnosis task.
 - `references/production-stack.md` - locked tool stack, costs, 4K delivery, recipe template. Read for step 6.
+- `references/packaging.md` - titles, burned-in caption styling, Shorts UI safe zones, upload metadata. Read for steps 5-6.
 - `references/compliance-gates.md` - originality layer, content safety, COPPA designation, metadata honesty. Read for step 7, every time.
 
 ## Workflow
@@ -38,11 +39,11 @@ Write narration to the word budget (75 words max for 30s; hard physics of TTS at
 
 ### Step 5: Shot list
 
-Break the script into shots of 1.5-3 seconds. For each shot: duration, visual description (concrete enough to be a generation prompt), overlay text, SFX cue. Verify: new visual event at least every 3s; first and last frames bookend (identical or near-identical for the loop seam); total duration matches script length at TTS pace.
+Break the script into shots of 1.5-3 seconds. For each shot: duration, visual description (concrete enough to be a generation prompt), overlay text, SFX cue. Verify: new visual event at least every 3s; first and last frames bookend (identical or near-identical for the loop seam); total duration matches script length at TTS pace. Overlay text obeys the safe zones and styling rules in packaging.md - text under the Shorts engagement rail is the most common postability failure.
 
 ### Step 6: Production recipe
 
-Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, Suno brief, SFX list, DaVinci assembly order with audio ducking, 4K export settings, upload metadata. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
+Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, Suno brief, SFX list, DaVinci assembly order with audio ducking, 4K export settings. Build the upload package (3 title candidates, description, hashtags, audience flag) per packaging.md. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
 
 ### Step 7: Compliance gates (hard stop)
 
