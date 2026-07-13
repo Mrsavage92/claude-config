@@ -49,6 +49,8 @@ Break the script into shots of 1.5-3 seconds. For each shot: duration, visual de
 
 Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, music/SFX selections (free library by default; Suno only at the revenue tier), SFX list, DaVinci assembly order with audio ducking, 1080p generation then upscale-master-to-4K export settings. Build the upload package (3 title candidates, description, hashtags, audience flag) per packaging.md. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
 
+Provenance (traceability): any measured or cost figure the plan states (cut counts, LUFS, per-clip price, monthly budget) names its source reference inline, e.g. "0-3 hard cuts (reference-corpus.md)" or "~$32-37/mo (production-stack.md)". The all-in cost total must equal the sum of its own line items - add them up and check, never state a rounded total that does not reconcile.
+
 ### Step 7: Differentiation + compliance gates (hard stop)
 
 First run the differentiation test from differentiation.md: the video must use the channel's OWN locked visual medium, voice register, and topic angle - never the reference creator's signature look/voice/topics (swap test: could a viewer tell this from the reference by visuals alone?). Then run the ship checklist from compliance-gates.md and include it filled-in. The unique-angle line must name the video's own creative decision - "AI-generated" is not an answer. Any unchecked box or failed differentiation test blocks the plan from shipping.
