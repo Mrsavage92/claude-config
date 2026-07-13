@@ -11,8 +11,9 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 
 ## References (read before the relevant step)
 
-- `references/reference-corpus.md` - MEASURED system from the channel's top-10 videos (language grammar, cut counts, loudness, ending taxonomy, title rules). Read FIRST for every video; it wins over any other file on conflict.
-- `references/story-frameworks.md` - structures (Zack D. spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
+- `references/reference-corpus.md` - MEASURED retention PHYSICS from a top performer's top-10 (language grammar, cut counts, loudness, ending taxonomy, title rules). Read FIRST for every video; wins on conflict. Adopt the physics, not the creator's skin.
+- `references/differentiation.md` - the universal-vs-signature split and the channel's own locked identity (visual medium / voice register / topic lane). Read before ideation and before writing any generation prompt - it is what keeps the channel from reading as a clone.
+- `references/story-frameworks.md` - structures (premise-drop spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
 - `references/retention-playbook.md` - first-3-seconds rules, 3-second rule, loop-seam engineering, reading retention graphs. Read for steps 4-5 and any diagnosis task.
 - `references/production-stack.md` - locked tool stack, costs, 4K delivery, recipe template. Read for step 6.
 - `references/packaging.md` - titles, burned-in caption styling, Shorts UI safe zones, upload metadata. Read for steps 5-6.
@@ -46,9 +47,9 @@ Break the script into shots of 1.5-3 seconds. For each shot: duration, visual de
 
 Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, Suno brief, SFX list, DaVinci assembly order with audio ducking, 4K export settings. Build the upload package (3 title candidates, description, hashtags, audience flag) per packaging.md. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
 
-### Step 7: Compliance gates (hard stop)
+### Step 7: Differentiation + compliance gates (hard stop)
 
-Run the ship checklist from compliance-gates.md and include it filled-in. The originality layer must name the video's unique creative decision - "AI-generated" is not an answer. Any unchecked box blocks the plan from shipping.
+First run the differentiation test from differentiation.md: the video must use the channel's OWN locked visual medium, voice register, and topic angle - never the reference creator's signature look/voice/topics (swap test: could a viewer tell this from the reference by visuals alone?). Then run the ship checklist from compliance-gates.md and include it filled-in. The unique-angle line must name the video's own creative decision - "AI-generated" is not an answer. Any unchecked box or failed differentiation test blocks the plan from shipping.
 
 ## Output format
 

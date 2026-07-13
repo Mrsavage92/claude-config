@@ -1,43 +1,67 @@
 # Compliance Gates (hard, every video, no exceptions)
 
-These gates exist because the channel's two existential risks are policy enforcement and audience trust. A video that fails any gate does not ship, regardless of how strong the hook is.
+Grounded in the actual 2026 YouTube policies (researched 2026-07-14, full detail in the channel KNOWLEDGE-BASE.md). The existential risks are demonetization and clone-perception. A video that fails any gate does not ship.
 
-## Gate 1: Originality layer (YouTube "inauthentic content" policy, July 2025)
+Core principle: **YouTube bans AI slop, not AI.** AI used as production assistance over an ORIGINAL script, with a distinct identity, is treated like any human-made video - no disclosure label, normal monetization. Our safety is original writing + distinct identity + human review before publish.
 
-YouTube's monetization policy targets "mass-produced" and "repetitious/inauthentic" content, enforced CHANNEL-WIDE, not per video. AI-assisted channels have been demonetized and terminated under it (Screen Culture and KH Studio, Dec 2025). AI as a tool is explicitly fine; templated output with no unique perspective is not.
+## Gate 1: Inauthentic-content defense (the terminating clause)
 
-Every video must document its originality layer in the plan:
-- A unique creative decision per video: a specific visual metaphor, an angle on the topic no search result leads with, an original twist ending, or original narrative framing.
-- The channel's consistent visual style anchor plus per-video creative variation (same brand, never the same video twice).
-- Human editorial judgment recorded in the plan (what was rejected and why chosen), which is exactly the evidence trail "mass-produced" channels lack.
+The inauthentic-content policy (renamed from "repetitious content", 15 Jul 2025) prohibits content that is "mass-produced, generic, repetitive, or manipulative," and names the exact risk: "AI-generated content made with generic or unoriginal templates giving the impression of mass production" and "videos where characters are put in the same situation over and over again with the same outcome."
 
-Red flags that fail this gate: script is a paraphrase of one source; visuals are generic stock-style prompts with no art direction; ten consecutive plans are structurally identical with nouns swapped.
+Pass requires ALL:
+- This video's STORY is distinct from every prior video - not the same template with the subject swapped.
+- Genuine structural variation across the channel: vary opening device, structure (consequence chain / hypothetical / mystery / how-to), and pacing between uploads. Ten structurally identical videos = the flag.
+- Original script written for this video, not a paraphrase of one source. Name the unique angle no search result leads with.
+- Real educational or entertainment value beyond "here are some facts" - a point of view, a reframe, a payoff.
 
-## Gate 2: Content safety (locked channel rules)
+## Gate 2: Reused-content / transformative bar
 
-- **Zero sexual content.** Locked owner rule. No innuendo, no suggestive framing, no "technically safe" edge content. If a topic requires it, kill the topic.
-- **Children-to-adult general audience.** Curiosity content safe for a 10-year-old in the room, interesting to an adult. Morbid curiosity is allowed at the "what happens to a swallowed coin" level; never gore, cruelty, real suffering, or fear content aimed at children.
-- **Advertiser-friendly by design:** no profanity in narration or overlays, no graphic medical imagery, no violence framing. This is a revenue rule as much as a values rule; limited ads = no income at Shorts RPM levels.
+Reused content (separate policy) = not clearly your own creation, with no added significant original commentary, substantive modification, or educational/entertainment value. Pass requires:
+- Narration is our OWN original script, never sourced text read verbatim.
+- Visuals are originally generated to our own art direction, not lifted clips.
+- The video adds something a viewer could not get from the source material alone (framing, synthesis, a reveal).
 
-## Gate 3: Audience designation (COPPA / "Made for Kids")
+## Gate 3: Clone-perception defense (learn the physics, not the skin)
 
-The channel is GENERAL AUDIENCE, not "Made for Kids". MFK designation disables personalized ads and comments, collapsing revenue. To keep general-audience status defensible:
-- Do not use kid-directed markers: nursery themes, "hey kids" address, child-branded characters, playground framing.
-- Topics can be understandable by children without being directed at children (the Zack D. positioning exactly).
-- Set channel-level and per-video audience flags to "not made for kids" and keep content genuinely consistent with that.
+Adopting a top performer's RETENTION PHYSICS is safe and correct. Wearing their IDENTITY is both a clone-perception problem and an originality-signal risk. See differentiation.md. Pass requires:
+- Visual medium, voice register, and topic lane are the CHANNEL's own locked identity - not a reproduction of the reference creator's signature look/voice/topics.
+- No reproduction of any specific creator's branding, wording, or thumbnail style.
+The universal devices (premise-drop, chained causality, loops, hot audio) are adopted; the signature skin is not.
 
-## Gate 4: Metadata honesty
+## Gate 4: AI disclosure (know when it applies)
 
-Titles and first frames promise only what the video delivers. Misleading metadata is a strike category on its own (it is what actually terminated the big AI-trailer channels), and a broken curiosity promise also trains viewers to skip the channel. The title states the question; the video answers it. Simple test: would a viewer who watched to the end agree the title was fair?
+The "Altered or synthetic content" label is required ONLY for realistic content a viewer could mistake for a real person/place/event (deepfakes, real-voice clones, synthetic reenactments). Stylized animation is EXEMPT; production-assistance AI is exempt. Disclosure never reduces monetization.
+- Default: our stylized animated shorts need no label.
+- Exception: if a video ever realistically depicts a real named person or real event, toggle the label in Studio. When in doubt on a real-person/real-event video, toggle it - it costs nothing.
 
-## Ship checklist (paste into every VIDEO-PLAN)
+## Gate 5: Content safety (locked channel rules)
 
-```
-- [ ] Originality layer documented (unique decision named, not "AI-generated variety")
+- Zero sexual content. No innuendo, no suggestive framing. If a topic requires it, kill the topic.
+- Children-to-adult general audience: safe for a 10-year-old in the room, interesting to an adult. Morbid curiosity allowed at the corpus level (predation shown bloodless, "stunned"/"knocked out"); never gore, cruelty, or fear-bait aimed at children.
+- Advertiser-friendly: no profanity in narration or overlays, no graphic medical/violent imagery.
+
+## Gate 6: Audience designation (COPPA / not "Made for Kids")
+
+General audience, NOT "Made for Kids" (MFK disables personalized ads and comments, collapsing revenue). No kid-directed markers (nursery themes, "hey kids", child-branded characters). Set channel and per-video audience flags to "not made for kids" and keep content genuinely consistent with that.
+
+## Gate 7: Metadata honesty
+
+Titles and first frames promise only what the video delivers. Misleading metadata is its own strike category and is what actually terminated the big AI channels. Claim titles are fine; deceptive claims are not. Test: would a viewer who watched to the end agree the title was fair?
+
+## Ship checklist (paste into every VIDEO-PLAN, all must be true)
+
+```text
+- [ ] Distinct story, not a prior template reskinned (inauthentic-content gate)
+- [ ] Structure/opening varied vs recent uploads (no repeating template)
+- [ ] Original script + original art direction (reused-content / transformative gate)
+- [ ] Uses the CHANNEL's own identity, not the reference creator's signature skin
+- [ ] Unique angle named (not "AI-generated variety")
+- [ ] AI disclosure toggled IF it realistically depicts a real person/event (else N/A)
 - [ ] Zero sexual content / innuendo
-- [ ] Safe for 10-year-old in the room, no gore or fear-bait
+- [ ] Safe for a 10-year-old, no gore or fear-bait
 - [ ] No profanity in VO or overlays
-- [ ] Not kid-directed (no MFK markers), audience flag = not made for kids
+- [ ] Not kid-directed; audience flag = not made for kids
 - [ ] Title/first frame promise = what the video delivers
-- [ ] Facts verified against at least one credible source before scripting
+- [ ] Facts verified against a credible source before scripting
+- [ ] Human reviewed this plan before any spend (no prompt-to-upload automation)
 ```

@@ -2,6 +2,8 @@
 
 Ten videos, 8.6M-19M views each, torn down with scene detection, loudness metering, and word-level transcription. These are measurements, not opinions. When another rule in this skill contradicts this file, this file wins.
 
+**Read this file as retention PHYSICS, not a style to copy.** Everything here is a universal attention mechanic (premise-drop grammar, causality chains, hot audio, loop-back endings) that is safe and correct to adopt. It is NOT a licence to reproduce the reference creator's visual look, voice, or topic list - that is his signature identity and copying it fails the clone-perception gate. See differentiation.md: adopt the physics, wear your own skin.
+
 ## The invariants (held across all ten regardless of format)
 
 | Dimension | Measured | Rule |
