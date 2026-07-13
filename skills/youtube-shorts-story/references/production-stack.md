@@ -47,9 +47,9 @@ Every VIDEO-PLAN.md ends with this section, filled in concretely:
 
 Keep one consistent visual style anchor phrase across all videos so the channel reads as one brand. The style anchor is a channel-level decision made once, not per video.
 
-## Delivery audio spec (measured from the reference, 2026-07-13)
+## Delivery audio spec (measured 2026-07-13, cross-channel checked 2026-07-14)
 
-Master loudness **-11 LUFS integrated, LRA ~2-4, true peak <= -1.5 dB** - Shorts are mixed hot and dense. A -16 LUFS master sounds weak next to the feed. Voiceover wall-to-wall at ~3 words/sec with punctuation-placed micro-pauses; SFX and ambience woven continuously under it; music optional and only if it loops seamlessly.
+Target master loudness **-11 to -14 LUFS integrated, LRA ~2-4, true peak <= -1.5 dB** for our punchy ~30s curiosity format. Note (cross-channel): hot audio is a CHOICE, not a universal law - Zack D masters at -7.5 to -11.8 (very hot), The Infographics Show at -13.7 to -21.6 (moderate/quiet) on longer explainers. Both work at millions of views. -11 to -14 fits short punchy content; do not treat -11 as mandatory. Voiceover wall-to-wall at ~2.8-3.6 words/sec (cross-channel confirmed universal) with punctuation-placed micro-pauses; SFX and ambience woven continuously under it; music optional and only if it loops seamlessly.
 
 ## Cost discipline
 

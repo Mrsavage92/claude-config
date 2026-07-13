@@ -4,6 +4,26 @@ Ten videos, 8.6M-19M views each, torn down with scene detection, loudness meteri
 
 **Read this file as retention PHYSICS, not a style to copy.** Everything here is a universal attention mechanic (premise-drop grammar, causality chains, hot audio, loop-back endings) that is safe and correct to adopt. It is NOT a licence to reproduce the reference creator's visual look, voice, or topic list - that is his signature identity and copying it fails the clone-perception gate. See differentiation.md: adopt the physics, wear your own skin.
 
+## Cross-channel validation (2026-07-14, N raised from 1 to 3)
+
+The table below was measured from Zack D only. Tearing down the top Shorts of The Infographics Show (narrated explainers, 1.6-2.9M/video) and What If separated the universal physics from Zack-D-specific style. This section overrides the table where they conflict.
+
+**CONFIRMED UNIVERSAL (held across channels - keep as hard rules):**
+- Fast wall-to-wall narration: Infographics measured 2.78-3.65 words/sec (Zack D 2.96). Fast pace is universal.
+- Tiny VO end-gap: Infographics 0.31-0.67s (Zack D 0.65-0.93). Narration ends <1s before the video ends; no outro. Universal.
+- Continuous flow / low cut count: Infographics ran 0 hard cuts on 3 of its 5 top videos (Zack D 0-3). Universal.
+- Tension-beat pauses: 6-14 per video on both channels. Universal.
+
+**NOT UNIVERSAL - Zack-D-specific, previously overstated here (loosen these):**
+- Loudness: Infographics masters run -13.7 to -21.6 LUFS, not Zack D's -7.5 to -11.8. Hot audio is a choice for punchy short curiosity, NOT a law. Keep -11 to -14 for OUR punchy ~30s format; do not state -11 as universal.
+- Titles: Infographics uses question titles freely ("Why is Taiwan's military spending so low?", "Does Taiwan have a secret doomsday plan?") at millions of views. Claim-only titles are Zack D's preference, not a rule. Both work.
+- Opening line: premise-drop (Zack D: "When you're shot...") AND question hooks (Infographics: "Why did Russia switch...") both win at scale. Premise-drop is one strong pattern, not the only one.
+- Length: Infographics runs 29-58s, often 50s+, at 1.6-2.9M. The 30-40s band is Zack-D-specific; deeper explainers can run longer if the pace stays fast.
+
+**Different format entirely (context):** What If's top Shorts are near-silent animation-spectacle loops (transcript ~"thanks for watching" only) - a third viable genre (visual spectacle + music, no narration) we are NOT building. Not all curiosity Shorts are narrated.
+
+**Differentiation bonus:** claim titles are Zack D's signature; question titles are proven elsewhere - so QUESTION titles are available to us as a differentiator from Zack D while staying proven.
+
 ## The invariants (held across all ten regardless of format)
 
 | Dimension | Measured | Rule |

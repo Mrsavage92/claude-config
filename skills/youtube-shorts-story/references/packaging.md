@@ -4,7 +4,7 @@ Everything upstream can be done right and the video still fails at the packaging
 
 ## Titles
 
-- Titles are CLAIMS or premise noun-phrases with a curiosity gap baked in, not questions (corrected against the measured corpus 2026-07-13: "The Invisible Barrier", "The Scariest Safari Rule", "Catfish Tricks Another Fish Into Adoption" - "Why does..." never appears in the channel's top ten). Never spoil the payoff.
+- Titles carry a curiosity gap and never spoil the payoff. Two proven forms (cross-channel validated 2026-07-14): CLAIM/noun-phrase (Zack D: "The Invisible Barrier", "The Scariest Safari Rule") AND QUESTION (The Infographics Show: "Why is Taiwan's military spending so low?", "Does Taiwan have a secret doomsday plan?" - both millions of views). Claim titles are Zack D's signature; question titles are proven elsewhere and are AVAILABLE TO US as a differentiator from Zack D. Pick per video; both work.
 - Budget 60 characters max, but front-load the first ~40: the Shorts feed and search truncate. The question's key nouns go first.
 - Title, first frame, and hook must make the SAME promise. Mismatch is both a policy risk (misleading metadata) and an audience-trust leak.
 - Plain sentence case or standard title case. No ALL-CAPS words, no emoji stuffing, no "(GONE WRONG)" grammar - that register contradicts the calm-confident brand and ages badly.
