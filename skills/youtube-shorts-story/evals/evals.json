@@ -1,0 +1,21 @@
+{
+  "skill_name": "youtube-shorts-story",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "single-video-plan",
+      "prompt": "plan a 30 second short answering why do your ears pop on planes. I want the full thing - script, shots, and the exact steps to make it with my AI tools. remember I'm not an editor",
+      "expected_output": "A complete VIDEO-PLAN: 3 hook variants, a ~75-word script that loops back to the opening, a shot list with per-shot durations <=3s, a production recipe naming the locked stack (OpenArt/Krea, OpenAI TTS, Suno, DaVinci Resolve) with 4K export, and a filled compliance checklist with a named originality layer.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 1,
+      "eval_name": "ideation-and-full-plan",
+      "prompt": "give me 5 curiosity video ideas for the youtube channel and fully plan out the strongest one",
+      "expected_output": "5+ curiosity ideas scored/compared, the strongest one fully planned with all VIDEO-PLAN sections: hooks, timed script, shot list, production recipe, compliance checklist, measurement plan.",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
