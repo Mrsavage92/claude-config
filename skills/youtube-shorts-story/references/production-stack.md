@@ -43,4 +43,6 @@ Keep one consistent visual style anchor phrase across all videos (e.g. "soft-lit
 
 ## Cost discipline
 
-Track spend against the $25-80/mo envelope. A video that needs more than ~10 generation attempts per shot is a prompt problem or a concept problem; fix the prompt or simplify the shot rather than burning credits.
+The stack is a self-funding ladder, not a shopping list. Bootstrap tier until the channel earns revenue: OpenArt Advanced ($12/mo) + OpenAI TTS (~$1-2/mo) + free music/SFX (YouTube Audio Library, Pixabay) + DaVinci Resolve = ~$13-15/mo, under $1/video at 20 videos/mo. Suno, ElevenLabs, higher-cost generation credits (Kling Pro / Veo tier), and API pipelines unlock only from channel revenue, in that order. Never a Revid/Crayo-class generator subscription: those sell assembly automation, which this skill already provides.
+
+A video that needs more than ~10 generation attempts per shot is a prompt problem or a concept problem; fix the prompt or simplify the shot rather than burning credits.
