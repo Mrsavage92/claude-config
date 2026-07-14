@@ -9,7 +9,9 @@ The owner is a business owner, not an editor. Every recipe below must be executa
 | Layer | Tool | Cost | Real yield | Why this one |
 |---|---|---|---|---|
 | Keyframe stills (stylized) | Seedream 4 via fal.ai | ~$0.08/still | 6-8 keyframes/video | Better STYLIZED-style-lock than photoreal-biased Nano Banana 2 (verified 2026-07-14); holds the paper-cutout anchor across the set via reference-card trait-locking |
-| Video generation (primary) | Hailuo 02 image-to-video via fal.ai | ~$0.22-0.49/clip | ~6 clips/video (~$1.6/video) | Retains a stylized source keyframe without drifting to generic 3D; keyframe-first pipeline |
+| Video generation (hero/dramatic) | Veo 3 or Kling 2.5 via fal.ai | Veo ~$0.40/s (~$10-14/multi-shot video); Kling ~$0.35/5s clip (~half) | one DYNAMIC shot per clip, 10-15 shots/video | Real camera movement + dramatic staging - what "gripping" needs. Veo 3 also does native motion/audio |
+| Video generation (AVOID for hero) | Hailuo 02 image-to-video | cheap | gentle drift only | Too weak for drama - its subtle motion is why videos read as "crap little animation". OK only for calm b-roll |
+| Voice | ElevenLabs via fal OR direct API | premade voices free-tier; library voices need paid | - | George (JBFqnCBsd6RMkjVDRZzb) premade British works on Adam's free ElevenLabs key |
 | Video generation (no lock-in alt) | fal.ai pay-as-you-go, Hailuo 02 | ~$0.225/5s clip (~$1.58/video) | $30 buys ~19 videos, zero unused-credit waste | No subscription; mix models per shot (Kling 2.5 Pro $0.35/clip, Seedance, WAN) |
 | Voiceover | OpenAI TTS (gpt-4o-mini-tts) | ~$0.015/min (~$1-2/mo) | - | 10x cheaper than ElevenLabs at near-parity for narration |
 | Music | FREE (YouTube Audio Library, Pixabay) | $0 | - | SFX beats music for retention; music must loop perfectly or be absent anyway |

@@ -16,6 +16,7 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 - `references/differentiation.md` - the universal-vs-signature split and the channel's own locked identity (visual medium / voice register / topic lane). Read before ideation and before writing any generation prompt - it is what keeps the channel from reading as a clone.
 - `references/story-frameworks.md` - structures (premise-drop spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
 - `references/retention-playbook.md` - first-3-seconds rules, 3-second rule, loop-seam engineering, reading retention graphs. Read for steps 4-5 and any diagnosis task.
+- `references/shot-design.md` - THE method: a short is a fast EDIT of 10-15 DISTINCT shots, not one morphing scene. Shot-type vocabulary, cut rhythm, independent-shot generation, hard cuts. Read for step 5 - this is the fix for "boring one-scene" videos.
 - `references/production-stack.md` - locked tool stack (the tool source of truth - overrides any stack named elsewhere in this skill), costs, 4K delivery, recipe template. Read for step 6.
 - `references/packaging.md` - titles, burned-in caption styling, Shorts UI safe zones, upload metadata. Read for steps 5-6.
 - `references/compliance-gates.md` - originality layer, content safety, COPPA designation, metadata honesty. Read for step 7, every time.
@@ -42,13 +43,20 @@ Default to a **closed loop** on the Zack D. spine (shocking premise -> reveal ->
 
 Write narration to the word budget (82-90 words for 30s; measured TTS pace ~2.9-3.0 words/sec, table in story-frameworks.md). Rules: first line is the hook verbatim, no windups, sensory verbs, narration never describes what the visual already shows, end on the twist with the final line reconnecting to the opening (the narrative loop). Include the text-overlay track alongside narration; the story must survive muted viewing.
 
-### Step 5: Shot list
+### Step 5: The EDIT - a shot list of 10-15 DISTINCT shots (read shot-design.md)
 
-Break the script into shots of 1.5-3 seconds. For each shot: duration, visual description (concrete enough to be a generation prompt), overlay text, SFX cue. Verify: new visual event at least every 3s; first and last frames bookend (identical or near-identical for the loop seam); total duration matches script length at TTS pace. Overlay text obeys the safe zones and styling rules in packaging.md - text under the Shorts engagement rail is the most common postability failure.
+NOT one scene stretched to 30s (that is the boring failure). Design the video as a fast EDIT: 10-15 distinct shots, a new composition every ~1.5-3s, cut with rhythm. Vary the shot type every cut (wide -> close -> insert -> POV -> reveal -> climax); never two similar shots in a row. Each shot is generated INDEPENDENTLY (its own image prompt = its own composition/angle, its own dynamic motion prompt) and HARD-CUT together - consistency comes from the shared style anchor + same character/palette in every prompt, NOT from chaining keyframes. Open on the strongest shot (hold ~2s); the final twist/stat shot gets the longest hold (~3s). For each shot: duration, shot-type, image prompt (composition), motion prompt (one clear camera/subject move), caption. Captions obey packaging.md safe zones.
 
 ### Step 6: Production recipe
 
-Fill in the recipe template from production-stack.md concretely: per-shot generation prompts (9:16, 5s clips, channel style anchor phrase, no text baked into frames), TTS settings, music/SFX selections (free library by default; Suno only at the revenue tier), SFX list, DaVinci assembly order with audio ducking, 1080p generation then upscale-master-to-4K export settings. Build the upload package (3 title candidates, description, hashtags, audience flag) per packaging.md. The channel style anchor is set once at channel level; reuse it verbatim in every prompt.
+Fill in the recipe template from production-stack.md concretely: per-shot image prompt + DYNAMIC motion prompt (9:16, channel style anchor, no baked text), TTS settings, music/SFX, hard-cut assembly order, 1080p->4K. Build the upload package (3 titles, description, hashtags, audience flag) per packaging.md. Style anchor reused verbatim in every prompt.
+
+Video model: use a model that can MOVE - Veo 3 (cinematic + native motion) or Kling 2.5 (cheaper, dynamic) for hero content. NOT Hailuo image-to-video for anything that needs drama - its gentle drift is why videos read as "crap little animation". Voice: ElevenLabs (premade voices work on the free API tier; community/library voices need paid Starter).
+
+**Production discipline (hard rules - these exist because ignoring them burned real money on 2 rejected videos):**
+1. **I cannot see motion or hear audio.** NEVER claim a generated video is "smooth/gripping/good" from extracted still frames - stills cannot show jumpy motion, morphing, pacing, or a bad voice. State only what stills CAN show (composition, style, captions). The USER is the sole judge of the played video.
+2. **Test ONE shot before generating the rest.** Generate a single hero shot, put it in front of the user, get their verdict on the MOTION, and only then generate the other 10+. Spend ~$2 to de-risk before ~$12. Never produce a full multi-clip video in an unproven method/model.
+3. **Grip/watchability beats differentiation.** "Is it actually gripping" is the first-order test; "is it strategically distinct" is second-order. Do not let a clever anti-slop style choice ship a boring video.
 
 Provenance (traceability): any measured or cost figure the plan states (cut counts, LUFS, per-clip price, monthly budget) names its source reference inline, e.g. "0-3 hard cuts (reference-corpus.md)" or "~$32-37/mo (production-stack.md)". The all-in cost total must equal the sum of its own line items - add them up and check, never state a rounded total that does not reconcile.
 
