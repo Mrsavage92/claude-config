@@ -12,6 +12,7 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 ## References (read before the relevant step)
 
 - `references/reference-corpus.md` - MEASURED retention PHYSICS from a top performer's top-10 (language grammar, cut counts, loudness, ending taxonomy, title rules). Read FIRST for every video; wins on conflict. Adopt the physics, not the creator's skin.
+- `references/content-direction.md` - WHICH videos to make: the stakes/you/twist rule, the proven high-arousal lanes, the KILL LIST of saturated boring formats, and the arousal score. Read FIRST at ideation - it decides what is even worth planning.
 - `references/differentiation.md` - the universal-vs-signature split and the channel's own locked identity (visual medium / voice register / topic lane). Read before ideation and before writing any generation prompt - it is what keeps the channel from reading as a clone.
 - `references/story-frameworks.md` - structures (premise-drop spine, closed/open loops, start-at-end, anti-hook, A/B storytelling), hook taxonomy, word budgets. Read for steps 2-4.
 - `references/retention-playbook.md` - first-3-seconds rules, 3-second rule, loop-seam engineering, reading retention graphs. Read for steps 4-5 and any diagnosis task.
@@ -23,9 +24,9 @@ Channel context (locked): children-to-adult general audience, zero sexual conten
 
 ### Step 1: Intake or ideation
 
-If given a topic, restate it as a single-sentence question a 10-year-old would understand. If asked for ideas, generate 5-10 candidates from the hook taxonomy (question, what-happens-if, hidden mechanism, expert secret, scale shift, forbidden/impossible) and score each 1-5 on: instant comprehension, surprise-for-adults, visual potential in AI generation, loopability. Recommend the highest total; let the user pick.
+Read content-direction.md FIRST - it decides what is even worth planning. Every idea must have STAKES/wonder + (ideally) second-person "you" immersion + a TWIST payoff. Generate candidates from the proven high-arousal lanes (second-person survival/wonder hypothetical, survival/hidden-dark-rule, animal survival drama, safe-morbid body, real mystery) - NOT from the detached "here's how X works" reflex. Score each on the arousal test (stakes, second-person potential, twist strength, shareability, paper-cutout fit), not the old comprehension/loopability score which selects for safe-but-boring. Recommend the highest total; let the user pick.
 
-Kill topics at intake if they cannot be answered honestly in 60 seconds, need imagery AI generation does poorly (precise text, real faces, brand logos), or brush any content-safety gate.
+Kill topics at intake if: they are on content-direction.md's KILL LIST (detached explainer with no stakes/no you/no twist, listicle, fact-dump, "neat" not "wait WHAT"); they cannot be answered honestly in 60 seconds; they need imagery AI generation does poorly (precise text, real faces, brand logos); or they brush any content-safety gate. A merely-interesting fact with no stakes and no twist is a KILL, however true.
 
 Verify the core factual claim against a credible source before Step 4 (scripting); an unverifiable claim is a kill or a reframe, never a guess. This is the fact-check the ship checklist depends on.
 

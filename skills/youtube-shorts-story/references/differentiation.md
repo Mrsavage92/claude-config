@@ -22,7 +22,7 @@ A differentiated channel owns a distinct VISUAL MEDIUM + VOICE REGISTER + TOPIC 
 
 **Voice register** (borrow an emotional tone, never a person's actual voice): British-documentary hushed-drop, calm-storyteller, conspiratorial-whisper, warm-and-wry. AVOID the default American TTS narrator (both off-brand and the sound every faceless channel already uses).
 
-**Topic lane** (niche-stack for defensibility): pick two axes so the lane is ownable, e.g. "hidden mechanisms of everyday objects", "animal survival tactics", "one-decision survival scenarios", "object-personification origin stories", "history through a modern conversational lens". Object-personification and animated micro-science are called out as underserved on YouTube Shorts.
+**Topic lane** (LOCKED 2026-07-14, see content-direction.md): HIGH-AROUSAL second-person immersion + stakes, NOT detached explainers. The lanes: second-person survival/wonder hypotheticals ("you're caught in a rip current", "you fall into the deepest place on Earth"), hidden-dark-rules of real systems, animal survival drama, safe-morbid body. The saturated "here's how X works" fact-explainer is KILLED (it's what made the first script draft boring). Second-person "you" framing is itself part of the signature.
 
 These three are recorded in the channel plan and reused verbatim across every video, the way a brand reuses a logo. Consistency of an OWN identity is itself a monetization originality signal.
 
