@@ -37,6 +37,20 @@ Breakout of the last 60 days: **AI time-traveller / historical POV** (modern per
 
 Kling 3.0 via fal.ai (best value dynamic model, ~$2-4/video) - see production-stack.md + [[reference_ai_video_gen_real_costs]].
 
+## PROVEN template + hard-won lessons (video 06 "quicksand", founder-approved 2026-07-14 - "funny, informative, high quality, smooth")
+
+The first fully successful video. Repeat this recipe; it works.
+
+**The validated formula:** claymation recurring everyman ("Pip", red-beanie brand mark) + second-person survival hypothetical + dark tide-style twist (the danger you fear isn't the killer; the one you didn't see is) + ElevenLabs "George" expressive voice + word-by-word animated captions + terse tempo-matched SFX. Ended on dread, ~26s.
+
+**Lessons that change how to build the NEXT one:**
+1. **Keep the recurring character IN every shot.** Pure object/hand inserts (a lone boot, a disembodied hand) read as "out of place" and break immersion (founder flagged both). If you need a detail shot, keep it clearly the character's hand/body in context.
+2. **Set video duration from the MEASURED VO length, never the word-count estimate.** Expressive TTS (George/eleven-v3) reads ~2.5-2.7 w/s, slower than the 2.9 estimate - 64 words ran 24.7s, not 22s. The assembler trims audio to video length and will SILENTLY guillotine the ending. Measure the VO, then set total = VO + ~1.5-2s tail.
+3. **Character consistency is the wall.** Independently-generated stills/clips drift into a "new guy" - even good keyframes spawn a second character when animated. Mitigations that worked: generate 12, keep the ~7 where the character holds, TRIM each clip to ~2-5s (drift appears later), cut around the breaks. Real fix next time: lock the character (Kling Elements / one reference image). See [[feedback_ai_video_character_consistency]].
+4. **Salvage beats forcing it.** When shots break, cut to the clean ones and tighten the story. Dropping the broken "escape" beats made quicksand darker and better (pure dread, no survival-instruction = also policy-safer).
+5. **The loop, not length, is the AVD lever.** ~26s is fine (25-45s sweet spot); don't pad to hit a number - padding/repeating lowers completion. Engineer a seamless end-to-start loop for rewatches instead.
+6. **Pipeline specifics (now handled in code):** fal intermittently 403s "exhausted balance / user locked" on real credit - RETRY, don't top up (see [[reference_fal_exhausted_balance_glitch]]); eleven-v3 returns CHARACTER-level timestamps (fold to words for captions); ElevenLabs sound-effects needs TERSE prompts ("wet sand suction", not a full sentence).
+
 ## Sources note
 
 Two HARD verified data points: the July 13 2026 policy update (Tubefilter) and the Jan-June 2026 AI-slop enforcement wave (IBTimes: 16 channels / 35M subs / 4.7B views removed). Most granular stats (exact retention %, "30-45s sweet spot") are vendor-blog consensus - directional, not YouTube-primary. Re-verify before treating as fact.
