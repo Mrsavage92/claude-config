@@ -50,6 +50,7 @@ The first fully successful video. Repeat this recipe; it works.
 4. **Salvage beats forcing it.** When shots break, cut to the clean ones and tighten the story. Dropping the broken "escape" beats made quicksand darker and better (pure dread, no survival-instruction = also policy-safer).
 5. **The loop, not length, is the AVD lever.** ~26s is fine (25-45s sweet spot); don't pad to hit a number - padding/repeating lowers completion. Engineer a seamless end-to-start loop for rewatches instead.
 6. **Pipeline specifics (now handled in code):** fal intermittently 403s "exhausted balance / user locked" on real credit - RETRY, don't top up (see [[reference_fal_exhausted_balance_glitch]]); eleven-v3 returns CHARACTER-level timestamps (fold to words for captions); ElevenLabs sound-effects needs TERSE prompts ("wet sand suction", not a full sentence).
+7. **Description SEO:** front-load the main topic keyword(s) AND the character name into the FIRST 200 characters - YouTube description-score tools penalize a keyword-less opening and a missing character/brand mention (scored 50/100 until fixed). Repeat keywords naturally in the body, end with an engagement question, and promote the topic keyword into the top hashtags (e.g. #quicksand alongside #shorts). Channel = "Poor Pip", character = Pip.
 
 ## Sources note
 
