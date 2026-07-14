@@ -30,6 +30,14 @@ Reverse-engineered from his output and his own scriptwriter job listing: **shock
 - The visual carries the discomfort or wonder; the narration carries the facts. If narration describes what the viewer can already see, delete the line.
 - End on the twist, not on a summary. Never end with "so that's why...".
 
+## Answer the "wait, how?" head-on - and make it the best beat (learned building Pip Ep2, 2026-07-14)
+
+If the premise has a survival/logic hole the viewer spots instantly ("how does he survive 7 miles down where submarines implode?"), do NOT hand-wave it or hope they miss it. Put the exact question in the script as a mid-video re-engagement hook ("So how is Pip fine?") and pay it off with the REAL mechanism - ideally the science reveal itself. Deepest-ocean example: deep-sea pressure only crushes trapped AIR (lungs, a sub's hull), so Pip, a solid lump of clay with no air, is fine - the same reason deep-sea life survives. The hole becomes the strongest beat. A recurring character's own nature (Pip is clay) is a legitimate, charming survival mechanism; lean into the medium.
+
+## End on the biggest TRUE "wow" - never a preachy cliché or a downer
+
+The ending is the payoff; it must land a gut-drop, not deflate. **BANNED endings:** the environmental-message cliché ("even in the most remote place on Earth, there's our plastic/trash") - it is overused, preachy, AND anticlimactic after a wonder journey; and any downer that trades the awe for a bummer. Instead end on a fact-defensible reveal that is (a) a gut-drop, (b) visual/showable, (c) recontextualizes the whole video. **Scale reveals are gold:** "sink Mount Everest into this trench and you would never see its peak again" beats "and there was a plastic bag" every time. Wonder episodes pay off in awe, not moralizing. (Adam, 2026-07-14: "plastic bag is shit.")
+
 ## Closed loop (streamlined storyline, the default)
 
 One question, opened in the first 2 seconds, answered by the end, with the final beat visually or verbally reconnecting to the opening. This is the workhorse: self-contained, satisfying, and it sets up the rewatch loop (see retention-playbook.md). Test: can you state the video's question in one sentence? If it takes two sentences, split into two videos.
