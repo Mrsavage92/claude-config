@@ -6,13 +6,19 @@ Core principle: **YouTube bans AI slop, not AI.** AI used as production assistan
 
 ## Gate 1: Inauthentic-content defense (the terminating clause)
 
-The inauthentic-content policy (renamed from "repetitious content", 15 Jul 2025) prohibits content that is "mass-produced, generic, repetitive, or manipulative," and names the exact risk: "AI-generated content made with generic or unoriginal templates giving the impression of mass production" and "videos where characters are put in the same situation over and over again with the same outcome."
+The inauthentic-content policy (renamed from "repetitious content", 15 Jul 2025; **renamed again to "Generic or Repetitive Content" 13 Jul 2026** per Tubefilter) prohibits content that is "mass-produced, generic, repetitive, or manipulative," and names the exact risk: "AI-generated content made with generic or unoriginal templates giving the impression of mass production" and "videos where characters are put in the same situation over and over again with the same outcome." Enforcement is real, not theoretical: Jan-Jun 2026 YouTube removed 16 channels / ~35M subs / 4.7B lifetime views for exactly this (IBTimes, 2 Jun 2026).
+
+**The July 13 2026 update names three distinct monetization blockers - all three must be cleared:**
+1. **Templated / mass-production look** - the original clause above. Distinct story + structural variation per upload.
+2. **Shock-value / emotional manipulation** - content engineered purely to bait an emotional reaction (rage, fear, disgust) for views is non-monetizable. Our stakes/twist hooks must pay off with genuine value, not just yank a reaction. A hook that only shocks and delivers nothing = flagged.
+3. **AI personas posing as human experts** - an AI narrator/character presented as a credentialed authority on **health, legal, financial, or political** topics is explicitly non-monetizable. This directly touches our survival/safety lane: the narrator must NEVER be framed as a doctor/lawyer/expert giving authoritative advice. Frame as storytelling + "what happens" curiosity, cite that danger is real, and keep the character a storyteller, not an expert. (See Gate 5 invited-action safety.)
 
 Pass requires ALL:
 - This video's STORY is distinct from every prior video - not the same template with the subject swapped.
 - Genuine structural variation across the channel: vary opening device, structure (consequence chain / hypothetical / mystery / how-to), and pacing between uploads. Ten structurally identical videos = the flag.
 - Original script written for this video, not a paraphrase of one source. Name the unique angle no search result leads with.
-- Real educational or entertainment value beyond "here are some facts" - a point of view, a reframe, a payoff.
+- Real educational or entertainment value beyond "here are some facts" - a point of view, a reframe, a payoff. Not pure shock-bait.
+- The narrator/recurring character is a storyteller, never a posed expert on health/legal/financial/political matters.
 
 ## Gate 2: Reused-content / transformative bar
 
@@ -53,6 +59,8 @@ Titles and first frames promise only what the video delivers. Misleading metadat
 
 ```text
 - [ ] Distinct story, not a prior template reskinned (inauthentic-content gate)
+- [ ] Delivers genuine value, not pure shock-bait (July 2026 emotional-manipulation blocker)
+- [ ] Narrator/character is a storyteller, NOT a posed health/legal/financial/political expert (July 2026 AI-persona blocker)
 - [ ] Structure/opening varied vs recent uploads (no repeating template)
 - [ ] Original script + original art direction (reused-content / transformative gate)
 - [ ] Uses the CHANNEL's own identity, not the reference creator's signature skin
