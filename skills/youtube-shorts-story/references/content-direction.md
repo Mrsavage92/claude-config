@@ -7,7 +7,7 @@ The retention physics (reference-corpus.md) tell you how to build a video. This 
 An idea only survives ideation if it has at least two of these, ideally all three:
 1. **Stakes or wonder** - tension the viewer feels: danger, a body pushed to a limit, a mystery, an awe-scale reveal. Not "here is how it works" but "here is what happens to YOU."
 2. **Second-person immersion** - the viewer is IN it. "You're swimming and the water starts pulling you out." The proven top performers put you inside the scenario (the 18M "imagine you wake up and everyone on your flight is unconscious").
-3. **A twist / reframe payoff** - the ending flips the premise: the danger was the safety, the villain was the hero, the thing you fear is the thing that saves you. Not a summary.
+3. **A twist / reframe payoff** - the ending flips the premise: the danger was the safety, the villain was the hero, the thing you fear is the thing that saves you. Not a summary. TWO hard rules (cold-review finding 2026-07-14): (a) the FINAL line must reveal something NEW or land the emotional peak - never restate or paraphrase what the viewer already knows ("the way to survive is to stop fighting it" just re-says the instruction; "the people who drown aren't the ones who can't swim, they're the ones who wouldn't stop fighting" reveals who dies). (b) The single strongest line in the whole script goes LAST - a common failure is burying the best, most visceral line in the middle.
 
 If an idea is a calm walkthrough of a mechanism with no stakes, no "you", and no twist - it is KILLED at intake, however true or neat it is.
 
@@ -35,6 +35,11 @@ No topic is virgin territory - differentiation is the PACKAGE, held consistent e
 - **Voice:** calm storyteller, non-American - unsettling-calm while the content is wild; the contrast is the signature.
 - **Framing:** default to SECOND PERSON ("you") where the lane allows - it is both higher-arousal AND a consistent POV that becomes recognizable.
 - **Title:** question OR claim (both proven); question titles double as a Zack-D differentiator.
+
+## Freshness + fact-defensibility (cold-review finding 2026-07-14)
+
+- **Avoid the most-recycled internet factoids.** "We've mapped more of Mars than the ocean floor" and its cousins read as stock (a hundred videos use them) AND are usually the most fact-check-vulnerable line (they rest on an unstated, contestable definition). Prefer a specific, checkable, non-generic detail - a real name, a real number, a concrete found object ("they found a plastic bag at the bottom").
+- **Never dramatize a fact into an overreach for a cheap visual.** "The plane flies straight through the middle of the storm" is false (flights route around cells) and a pedant will nail it. Keep the wow, keep it true.
 
 ## The arousal test (run at ideation, before scripting)
 

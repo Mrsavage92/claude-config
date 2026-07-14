@@ -74,9 +74,11 @@ Pick topics where the QUESTION is instantly understood by a 10-year-old but the 
 
 ## Hook quality bar
 
-A hook passes only if all five are true:
+A hook passes only if all seven are true:
 1. Complete within 2.5 seconds (the drop-off cliff is at 3s).
 2. Phrased in words a 10-year-old knows.
 3. The first FRAME alone (no audio) makes someone stop scrolling; it doubles as the de facto thumbnail.
 4. The video actually answers it. Curiosity gap, never clickbait; a broken promise trains the audience to skip the channel.
 5. **The opening line is a premise-drop, not a question to camera** (measured corpus rule, see reference-corpus.md): "When the fish lays an egg, a catfish will come to eat it" beats "Why do catfish steal eggs?". The question forms in the viewer's head; the narrator never asks it. The hook-pattern taxonomy above still drives IDEATION (which curiosity gap to build on) - but the scripted first line always converts the chosen pattern into mid-action premise form.
+6. **No "Imagine you..." crutch** (cold-review finding 2026-07-14): "Imagine" asks for imagination instead of dropping the viewer into the sensation. Use a flat present-tense claim that IS the scene - "You're swimming, and the water starts pulling you out" beats "Imagine you're caught in a current".
+7. **Never defuse the tension in the hook sentence itself.** "Your plane just got struck by lightning, and nothing happened" kills the scroll-stop before it builds. State the danger, hold it for at least one more beat, THEN resolve: "Your plane just got struck by lightning. You didn't feel a thing." keeps the "wait, what?" open.
