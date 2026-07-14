@@ -20,6 +20,10 @@ Ranked by measured ceiling in the corpus:
 - **Safe-morbid "what happens to your body if..."** - the viewer's own body made strange, kept bloodless.
 - **Real mystery** - an anonymized true unsolved event, atmosphere-first ("She Vanished..." 9.3M). Emotionally heavy, never gory.
 
+## Vary the PAYOFF across the channel (not just danger/dread)
+
+A recurring-character channel dies if every episode is the same feeling. "Stakes" includes WONDER and CURIOSITY, not only danger - and the payoff should rotate: relief (survived it), awe (the scale/reveal), delight (the playful what-if), fascination (the tiny world), and dread only occasionally. A channel that is all-death/all-dread is one-note AND trips the Generic/Repetitive-Content policy. For a recurring character (e.g. Poor Pip), the character MOSTLY survives/discovers/is-amazed; getting killed every time makes him a gimmick, not someone to subscribe to. Rotate content pillars (survival, your-body, wonder/scale, tiny-worlds, playful what-if) and never run two of the same feeling back to back. See the channel bible (`youtube-channel/POOR-PIP-CHANNEL.md`) for the locked pillar set.
+
 ## The KILL LIST (never the flagship; occasional filler at most)
 
 - Detached "here's how X works" explainers with no stakes, no you, no twist (my honey/ants/noise-cancelling drafts were exactly this - competent and boring).
