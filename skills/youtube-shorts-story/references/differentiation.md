@@ -39,7 +39,7 @@ Any "no" is a rework before spending on generation.
 
 - **Visual medium: layered paper-cutout / collage.** Chosen at the intersection of freshest-yet-proven (2026 "tactile craft" anti-AI-slop trend, under-executed in short-form video) and most-reliably-producible on current tools (the handmade look hides AI wobble; reference-card trait-locking holds it across clips). Deliberately far from the reference creator's oversaturated soft-3D look, and it eliminates photoreal-face generation (the failure class that broke earlier pilots).
 - **Voice register: calm storyteller, neutral, non-American.** Even, unhurried, matter-of-fact while the content is wild - the contrast is the voice. Never the default American TTS narrator every faceless channel uses.
-- **Topic lane: hidden mechanisms of the everyday + nature/survival**, run across the four curiosity sub-lanes for the 20-video data run, data picks the winner.
+- **Topic lane: high-arousal second-person immersion + stakes** (see content-direction.md) - second-person survival/wonder hypotheticals, hidden-dark-rules of real systems, animal survival drama, safe-morbid body. The detached "here's how X works" mechanism explainer is KILLED, not a lane. Run across these sub-lanes for the 20-video data run; data picks the winner.
 
 **Channel style anchor (paste verbatim into EVERY keyframe/generation prompt, the way a brand reuses a logo):**
 > "layered paper-cutout collage animation, hand-cut construction-paper shapes with soft drop shadows, warm textured matte paper, storybook depth, gentle even studio light, no photoreal faces, no text, no watermark"
