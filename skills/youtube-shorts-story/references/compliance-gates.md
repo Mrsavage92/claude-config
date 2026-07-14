@@ -47,9 +47,16 @@ The "Altered or synthetic content" label is required ONLY for realistic content 
 - Advertiser-friendly: no profanity in narration or overlays, no graphic medical/violent imagery.
 - **Invited-action safety (cold-review finding 2026-07-14):** if the script dares or invites the viewer to DO something ("try holding your breath until you pass out"), and that thing is dangerous in a plausible context, either put the caveat FIRST or reframe the whole video as a WARNING, not an invitation. A hook that dares the viewer to do the exact thing the video says kills people is a liability even if the caveat appears at the end. Default to warning-framing ("every summer, strong swimmers drown doing X") over dare-framing.
 
-## Gate 6: Audience designation (COPPA / not "Made for Kids")
+## Gate 6: Audience designation (COPPA / not "Made for Kids") - deep-researched 2026-07-15
 
-General audience, NOT "Made for Kids" (MFK disables personalized ads and comments, collapsing revenue). No kid-directed markers (nursery themes, "hey kids", child-branded characters). Set channel and per-video audience flags to "not made for kids" and keep content genuinely consistent with that.
+**ALWAYS "Not Made for Kids", general audience, targeting teens 13-17 + 18-34.** This is the proven model (Zack D. Films = #1 US-teen creator, not flagged kids; Shorts skew 18-34). Made-for-Kids is a **50-80% revenue cut** (kills personalized ads) AND disables comments, notifications, end screens, memberships - collapsing both money and the engagement signals the algorithm feeds on.
+
+The classification is decided by **DESIGN, not the toggle**: a cute character alone does NOT force Made-for-Kids (FTC: "bright colours or animated characters" don't auto-trigger COPPA). Subject matter + adult-register language + intended audience dominate. So a science/curiosity premise in grown-up language is legitimately general-audience. Requirements to keep it that way:
+- **Explicitly set "Not Made for Kids" at every upload** (leaving it blank is the only time YouTube's auto-classifier can override you).
+- **Grown-up framing:** no "hey kids", no nursery music, no sing-alongs, no toys/play-acting. The recurring character is an everyman in real scenarios, not a toddler doing kid things.
+- **Kid-SAFE, not kid-DIRECTED:** advertiser-friendly (no gore/profanity/sexual content) so it is family-safe without being aimed at children. Kids who love the character watch on a parent's (adult) account anyway = bonus, not target.
+- The label must be HONEST (Disney fined $10M in Sept 2025 for mislabeling child-directed content as not-MFK). Monitor Analytics age data (skews 13-34) as the defense if ever auto-flagged.
+- Category: Education or Science & Technology; the Education academic sub-fields (Type/Level/Exam/Problems) are for formal coursework - leave them blank for a curiosity short.
 
 ## Gate 7: Metadata honesty
 

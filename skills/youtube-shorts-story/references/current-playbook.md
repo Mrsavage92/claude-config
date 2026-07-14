@@ -53,6 +53,16 @@ The first fully successful video. Repeat this recipe; it works.
 7. **Description SEO:** front-load the main topic keyword(s) AND the character name into the FIRST 200 characters - YouTube description-score tools penalize a keyword-less opening and a missing character/brand mention (scored 50/100 until fixed). Repeat keywords naturally in the body, end with an engagement question, and promote the topic keyword into the top hashtags (e.g. #quicksand alongside #shorts). Channel = "Poor Pip", character = Pip.
 8. **Captions: burned-in ONLY - never also upload a separate .srt.** The video already has burned-in animated word captions; uploading an .srt caption track on top shows DOUBLE text for any viewer with CC on. Keep the burned-in (better: styled, always visible), skip the uploaded track. Transcript indexing comes from title/description/tags, not a caption file - and retention (clean single caption) beats transcript SEO. Set the video language to English regardless. Ignore SEO-tool title/description SUGGESTIONS entirely (they're generic clickbait templates - "Ultimate Guide to YouTube Success" - that walk straight into the generic-content trap); use the tool only for mechanical hints (keyword-in-first-200, on-topic tags).
 
+## The success recipe + scorecard (deep research 2026-07-15)
+
+**What drives views (ranked):** (1) HOOK - first 1s, the swipe-away gate; (2) COMPLETION rate; (3) RELATABILITY; (4) shareability. Shorts are FEED-driven, not search - so description/tags/category are MINOR levers (fill sensibly, ignore the vanity "SEO score"; YouTube itself says tags play a minimal role).
+
+**Relatability > novelty.** Topics people have personally FELT (ears pop, brain freeze) lower swipe-away, raise completion, and COMPOUND; exotic/spectacle (deepest ocean, quicksand) is high-variance one-off. Own data confirmed it: ears-pop (relatable) out-performed the exotic ones. LEAD with relatable-body/everyday topics; use wonder/survival as variety swings.
+
+**Winning emotional register:** NOT funny-alone or wholesome-alone (weak - a 2025 study n=387k found joy IMPEDES sharing; awe/anxiety/surprise accelerate it; Berger 2012: arousal drives shares, not mood). WINNER = the cute character carrying HIGH-AROUSAL tension (awe + a thread of dread) + real science, resolved, with humour as PUNCTUATION not the engine (the Kurzgesagt / Zack D. Films pattern). "Dread" = setup tension resolved into relief/awe, NOT the character dying. The cuteness is also what keeps it advertiser-safe; the tension+science is what keeps it general-audience (not kids). The edge is the moat.
+
+**The scorecard - score every idea 1-5 before making it:** Relatability · Curiosity · Hook · Tension · Payoff · Shareability · Loop. **Kill anything under 3 on Relatability OR Hook** (the two gates).
+
 ## Sources note
 
 Two HARD verified data points: the July 13 2026 policy update (Tubefilter) and the Jan-June 2026 AI-slop enforcement wave (IBTimes: 16 channels / 35M subs / 4.7B views removed). Most granular stats (exact retention %, "30-45s sweet spot") are vendor-blog consensus - directional, not YouTube-primary. Re-verify before treating as fact.
