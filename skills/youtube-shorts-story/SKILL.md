@@ -92,6 +92,15 @@ After 48-72h check: retention graph shape target = flat first third, end spike p
 
 When asked why a published video underperformed, read retention-playbook.md and map the retention graph to the failing layer: early cliff = hook (first 2s), mid sag = 3-second rule/pacing, no end spike = loop seam. Recommend ONE variable to change in the next video, never three.
 
+## Anti-patterns (do NOT do these)
+
+- **Opening with a question to camera** ("Why do your ears pop?"). The corpus rule is a premise-drop; the narrator never asks the question, the premise creates it in the viewer's head. See reference-corpus.md.
+- **Wearing the reference creator's skin** - soft-3D look, default American TTS voice, or his topic rotation. The channel's locked identity (paper-cutout collage + calm non-American narrator) is non-negotiable; a swap-test fail is a rework before any generation spend. See differentiation.md.
+- **Naming an avoided tool** - OpenArt-for-video, Suno-as-default, or native Kling/Hailuo subscriptions. production-stack.md is the tool source of truth and lists what to avoid and why.
+- **Asserting a measured number without provenance** - cut counts, LUFS, per-clip price, or monthly budget stated with no source reference, or an all-in cost total that does not equal the sum of its line items.
+- **Underfilling the word budget** - a 30s script at ~75 words reads as dead air next to the feed. Measured pace is 2.9-3.0 words/sec = 82-90 words for 30s. Cut explanation before payoff, never pad.
+- **Overlay text under the Shorts engagement rail** - the most common postability failure; keep text out of the bottom ~300px and right ~140px. See packaging.md.
+
 ## Scope limits
 
 This skill plans stories and production recipes; it does not generate the actual video/audio assets (execute the recipe in the named tools), does not schedule uploads, and does not decide channel strategy (niche, cadence, monetization roadmap are owner decisions logged elsewhere). For AuditHQ/Orbit marketing videos, use openart-studio instead - different brand rules apply.
