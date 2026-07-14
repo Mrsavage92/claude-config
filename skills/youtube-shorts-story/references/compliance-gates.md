@@ -39,6 +39,7 @@ The "Altered or synthetic content" label is required ONLY for realistic content 
 - Zero sexual content. No innuendo, no suggestive framing. If a topic requires it, kill the topic.
 - Children-to-adult general audience: safe for a 10-year-old in the room, interesting to an adult. Morbid curiosity allowed at the corpus level (predation shown bloodless, "stunned"/"knocked out"); never gore, cruelty, or fear-bait aimed at children.
 - Advertiser-friendly: no profanity in narration or overlays, no graphic medical/violent imagery.
+- **Invited-action safety (cold-review finding 2026-07-14):** if the script dares or invites the viewer to DO something ("try holding your breath until you pass out"), and that thing is dangerous in a plausible context, either put the caveat FIRST or reframe the whole video as a WARNING, not an invitation. A hook that dares the viewer to do the exact thing the video says kills people is a liability even if the caveat appears at the end. Default to warning-framing ("every summer, strong swimmers drown doing X") over dare-framing.
 
 ## Gate 6: Audience designation (COPPA / not "Made for Kids")
 
