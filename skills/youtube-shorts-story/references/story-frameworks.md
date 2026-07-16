@@ -83,7 +83,7 @@ Pick topics where the QUESTION is instantly understood by a 10-year-old but the 
 ## Hook quality bar
 
 A hook passes only if all seven are true:
-1. Complete within 1 SECOND (current-playbook.md: the first 1s is the swipe-away gate and the #1 ranked view-driver). 2.5s is the OLD bar and is superseded - the 3s cliff is where you are already dead, not the target.
+1. Complete by ~2.0 SECONDS (arithmetic: hook word count / 2.9 w/s <= 2.0s, see compliance-gates.md Gate 8). The evidenced data is "under 2s correlates with higher AVD, hard cliff at 3s" (retention-playbook.md); there is no data proving a faster deadline, so do not claim sub-1s is required. 3s is where you are already dead, not the target.
 2. Phrased in words a 10-year-old knows.
 3. The first FRAME alone (no audio) makes someone stop scrolling; it doubles as the de facto thumbnail.
 4. The video actually answers it. Curiosity gap, never clickbait; a broken promise trains the audience to skip the channel.

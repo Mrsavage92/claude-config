@@ -1,3 +1,5 @@
+> **SUPERSEDING BANNER (2026-07-15): the $0 TIER IS THE DEFAULT** per current-playbook.md's locked production model ("Build every video at $0 unless Adam explicitly approves spend"). This file was last updated 2026-07-13, BEFORE that lock. Everything below describes the **PAID UPGRADE TIER ONLY**, gated on explicit per-video founder approval. Any line below calling a paid model "the default", and the "~$32-37/mo" baseline, refer to the paid tier and are NOT the current default. $0 stack: free ffmpeg still-motion + edge-tts + reused/sourced SFX + local assembly.
+
 # Locked Production Stack (verified per-clip economics, updated 2026-07-13)
 
 The owner is a business owner, not an editor. Every recipe below must be executable by AI tools plus at most 30 minutes of human assembly time per video. If a step needs editing skill, redesign the step.
@@ -8,8 +10,8 @@ The owner is a business owner, not an editor. Every recipe below must be executa
 
 | Layer | Tool | Cost | Real yield | Why this one |
 |---|---|---|---|---|
-| Keyframe stills (stylized) | Seedream 4 via fal.ai | ~$0.08/still | 6-8 keyframes/video | Better STYLIZED-style-lock than photoreal-biased Nano Banana 2 (verified 2026-07-14); holds the channel's current style anchor (claymation - paper-cutout RETIRED) across the set via reference-card trait-locking |
-| Video generation (PRIMARY workhorse) | Kling 3.0 via fal.ai | ~$0.03/s = ~$2-4 per 12-shot video | one DYNAMIC shot per clip, 10-15 shots/video | Current best value (2026-07). Native multi-shot "AI Director" + character-lock "Elements 3.0" + 4K. This is the default. |
+| Keyframe stills (stylized) | Seedream 4 via fal.ai | ~$0.03/still | 6-8 keyframes/video | Better STYLIZED-style-lock than photoreal-biased Nano Banana 2 (verified 2026-07-14); holds the channel's current style anchor (claymation - paper-cutout RETIRED) across the set via reference-card trait-locking |
+| Video generation (PAID, character shots only) | Kling 1.6 Elements via fal.ai | ~$0.07/s ($0.28/5s clip) | one DYNAMIC shot per clip, 10-15 shots/video | Current best value (2026-07). Native multi-shot "AI Director" + character-lock "Elements 3.0" + 4K. PAID UPGRADE TIER - requires explicit per-video founder approval. NOT the default (see the $0 banner at the top of this file). |
 | Video generation (hero shot only) | Veo 3.1 via fal.ai | ~$0.40/s (10x Kling) | the ONE audio-critical/realism shot | Best color/audio realism; too pricey for every shot |
 | Video generation (AVOID for hero) | Hailuo 02 image-to-video | cheap | gentle drift only | Too weak for drama - its subtle motion is why videos read as "crap little animation". OK only for calm b-roll |
 | Voice | ElevenLabs via fal OR direct API | premade voices free-tier; library voices need paid | - | George (JBFqnCBsd6RMkjVDRZzb) premade British works on Adam's free ElevenLabs key |
@@ -26,7 +28,7 @@ Scale option only (10+ videos/week): rented GPU (RunPod 4090 ~$0.69/hr) running 
 
 ## 4K delivery rule
 
-TVs are a target surface, but native-4K generation (Veo 3.1, Kling 3.0 Ultra) costs 5-15x more per clip. Bootstrap path: generate 1080p (Hailuo 02 Pro tier), assemble, then upscale the FINISHED master once to 4K (Krea's bundled upscaler or free video2x) and export 2160x3840 vertical, H.265, 50+ Mbps. Upscaling one 30s master beats upscaling 7 clips. Native-4K generation unlocks at the revenue tier of the cost ladder, for hero videos first.
+TVs are a target surface, but native-4K generation (Veo 3.1, Kling native-4K tier) costs 5-15x more per clip. Bootstrap path: generate 1080p (the $0 stack (or paid Kling on approval)), assemble, then upscale the FINISHED master once to 4K (Krea's bundled upscaler or free video2x) and export 2160x3840 vertical, H.265, 50+ Mbps. Upscaling one 30s master beats upscaling 7 clips. Native-4K generation unlocks at the revenue tier of the cost ladder, for hero videos first.
 
 ## Per-video recipe template
 
@@ -34,17 +36,23 @@ Every VIDEO-PLAN.md ends with this section, filled in concretely:
 
 ```text
 ## Production recipe
-1. Visuals: for each shot in the shot list, one generation prompt
-   (model: Hailuo 02 via Krea or fal.ai, duration 5s, aspect 9:16,
-   style anchor: [channel style phrase], no text in frame)
-2. Voiceover: DEFAULT $0 = edge-tts (gen-vo-edge.py, en-GB-RyanNeural, rate +15% to hit ~2.9 w/s). Upgrade tier only on explicit founder approval = ElevenLabs George. (Legacy: OpenAI TTS, voice [name], speed [0.95-1.1],
-   export WAV
+1. Visuals: for each shot in the shot list, one generation prompt.
+   DEFAULT $0: still image (reused/existing keyframe, or new via free Pollinations -
+   see current-playbook.md's $0 lock), animated with ffmpeg zoompan
+   (push-in/pull-out/drift/hard-cut/flash only - see shot-design.md's $0 vocabulary).
+   PAID (explicit approval only): Kling 1.6 Elements via fal.ai, duration 5s, aspect 9:16,
+   style anchor: [channel style phrase], no text in frame. Never Hailuo 02 for a
+   shot that needs drama (see "Avoid" above) - Veo 3.1 for the one hero shot only.
+2. Voiceover: DEFAULT $0 = edge-tts (gen-vo-edge.py, en-GB-RyanNeural, rate +15%
+   to hit ~2.9 w/s). PAID (explicit approval only) = ElevenLabs George, via fal
+   or direct API.
 3. Music: free track from YouTube Audio Library [mood] OR none (SFX-only)
 4. SFX list: [moment -> sound, source]
-5. Assembly (DaVinci Resolve): import order, cut points from shot list,
+5. Assembly (DaVinci Resolve, free): import order, cut points from shot list,
    captions per packaging.md safe zones, audio ducking music -18dB under VO
-6. Upscale finished master to 4K (Krea upscaler / video2x)
-7. Export: 2160x3840, H.265, 50Mbps, [24/30]fps
+6. Upscale finished master to 4K (Krea upscaler or free video2x)
+7. Export: 2160x3840, H.265, 50Mbps, [24/30]fps ($0 tier may deliver 1080p if
+   the upscale step is skipped - name which was used)
 8. Upload package per packaging.md
 ```
 

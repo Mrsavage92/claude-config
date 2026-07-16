@@ -4,7 +4,8 @@ AVD greater than video length means the average viewer watches past one full pla
 
 ## Layer 1: the first 3 seconds
 
-- Deliver the complete hook within 1 SECOND (superseded 2026-07-15; current-playbook.md ranks the first 1s as the swipe-away gate and #1 view-driver). Older guidance said 2-2.5s. Aggregated creator data puts a hard drop-off cliff at 3s; hooks that land under 2s correlate with materially higher AVD (directional stat from creator-tool blogs, not a YouTube-published study, but consistent across sources).
+- **What is actually evidenced:** hooks that land under 2s correlate with materially higher AVD; there is a hard drop-off cliff at 3s. # source: https://gitnux.org/facebook-video-views-statistics/ (secondary/directional citation, no primary study locatable - see .forge-sources.md #11; treat as directional, not proven)
+- **Our internal target:** land the hook as fast as the sentence allows, aiming under ~2.0s by arithmetic (hook word count / 2.9 w/s - see compliance-gates.md Gate 8). This is a design choice built on top of the evidenced 2s/3s numbers above, NOT a claim that a sub-1s deadline is itself data-backed - a prior version of this skill asserted 1.0s as "arithmetic not opinion" while citing only the 2s/3s figures above, which was circular. Treat 2.0s as the hard gate; faster is better but not separately evidenced.
 - **Three-channel rule:** hit all three simultaneously in frame one:
   - Visual: motion, a face, or a striking object already mid-action
   - Audio: the first spoken words ARE the point; no intro music swell, no "so..."

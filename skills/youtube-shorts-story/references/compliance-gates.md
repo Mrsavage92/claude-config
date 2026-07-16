@@ -80,7 +80,37 @@ Titles and first frames promise only what the video delivers. Misleading metadat
 - [ ] Title/first frame promise = what the video delivers
 - [ ] Facts verified against a credible source before scripting
 - [ ] Human reviewed this plan before any spend (no prompt-to-upload automation)
-- [ ] INDEPENDENT Gate 8 review completed by a fresh unprimed agent, score >= 70 (see Gate 8). Self-graded prose does NOT satisfy this. Under 70 = rework, do not generate.
+- [ ] INDEPENDENT Gate 8 review completed by TWO fresh unprimed agents, each scored against the Gate 8b rubric + a holistic 0-100 (see Gate 8). MIN of the two holistic scores >= 70. Self-graded prose does NOT satisfy this. MIN under 70 = rework, do not generate. A second rework cycle still under 70 = HALT to the founder, do not reroll a third pair.
+```
+
+## Gate 8b: SCORED craft rubric (1-5 each, kill threshold) # source: https://scale.com/blog/rubrics-as-rewards
+
+Structure-completeness is NOT quality. The documented anti-pattern is a real TikTok script prompt that enforces format slots then says "make it the most engaging video possible" with no rubric, no scoring, no self-check (https://github.com/friuns2/BlackFriday-GPTs-Prompts/blob/main/gpts/tiktok-video-script-generator.md). This skill committed that exact error: 15 compliance boxes, zero scored craft items. "The more specific your rubric, the more useful the critique."
+
+Score each 1-5. **Any dimension <= 2 = REWORK. Total < 24/35 = REWORK.** Write the number and one line of evidence.
+
+**ANCHORS (a number without an anchor is vibes with a decimal point). The 1s below are the ACTUAL rejected videos of 2026-07-15 - calibrate against them:**
+
+| Dim | 1 = REWORK | 3 = borderline | 5 = ship |
+|---|---|---|---|
+| ANTAGONIST | No adversary at all. "Here's how hiccups work." | An abstract force (gravity, time, entropy) | A named adversary actively working against something the viewer cares about: "your own brain is trying to kill the thing keeping you alive" |
+| STAKES | Nothing is lost. "It does nothing, isn't that sad" (the hiccups video) | Mild discomfort or inconvenience | Death, injury, or irreversible loss the viewer can feel in their body |
+| HOOK GAP | No gap opened. "Those bumps on your arm?" | Generic curiosity ("here's something weird") | A specific named gap the viewer cannot leave unclosed |
+| PAYOFF | Wistful fade. "Every hic is a fish, still trying" (the hiccups video) | Answers the question, flatly | Snaps shut on the EXACT gap the hook opened, and reframes it |
+| VISUAL DISCOMFORT (frame 0) | Calm or pleasant. A man lying in bed (the hypnic-jerk video) | Mildly striking but comfortable | Visceral - the viewer flinches or leans in to resolve it |
+| PERSONALITY | None. Zero persona anywhere (both rejected videos) | One dry aside | A final-beat flash worth screenshotting |
+| REWATCH/LOOP | Ends dead | Loops mechanically back to shot 1 | The last line rewrites the meaning of the first |
+
+
+```text
+- [ ] ANTAGONIST/CONFLICT strength     _/5  evidence:
+- [ ] STAKES (what is lost/threatened) _/5  evidence:
+- [ ] HOOK gap specificity             _/5  evidence:
+- [ ] PAYOFF closes the hook's gap     _/5  evidence:
+- [ ] VISUAL discomfort at frame 0     _/5  evidence:
+- [ ] PERSONALITY (final-beat flash)   _/5  evidence:
+- [ ] REWATCH/loop pull                _/5  evidence:
+TOTAL _/35   (<24 = rework, do not generate)
 ```
 
 ## Gate 8: The entertainment gate (hard stop - added 2026-07-15 after a 38/100 cold review)
@@ -88,7 +118,13 @@ Titles and first frames promise only what the video delivers. Misleading metadat
 Every gate above tests whether the video is LEGAL. None tested whether it is WATCHABLE, so plans passed all 15 boxes and shipped dull. These are hard stops with the same authority as the safety boxes: an unchecked box blocks the plan.
 
 ```text
-- [ ] HOOK LANDS IN 1 SECOND (arithmetic, not opinion): hook word count / 2.9 w/s <= 1.0s -> so the spoken hook is <= ~3 words, OR the premise lands on the FIRST FRAME + overlay alone. Write the arithmetic here. A 3.3s spoken hook fails.
+- [ ] GAP MATCH (Loewenstein information-gap theory - the betrayal test). # source: https://www.cmu.edu/dietrich/sds/docs/golman/golman_loewenstein_curiosity.pdf
+      Write BOTH here: (a) the exact gap the hook opens, in one line; (b) the exact line in the script that CLOSES that same gap.
+      They must be the SAME gap. A hook promising a specific revelation whose payoff is vague or obvious is a BETRAYAL, and betrayal is **worse than a boring video with no hook** - "Betrayed viewers don't just leave; they leave with negative sentiment." Mismatch = rework.
+- [ ] ANTAGONIST NAMED: who/what is the adversary and what is at stake? "The topic is interesting" fails. An explainer with no adversary is a KILL (see SKILL.md Step 1 antagonist test).
+- [ ] HOOK LANDS BY ~2.0 SECONDS (arithmetic against the measured pace): hook word count / 2.9 w/s <= 2.0s -> so the spoken hook is <= ~6 words, OR the premise lands on the FIRST FRAME + overlay alone. Write the arithmetic here. **What this number is and isn't:** the evidenced data is "under 2s correlates with higher AVD, hard cliff at 3s" (retention-playbook.md, # source: https://gitnux.org/facebook-video-views-statistics/, secondary/directional). 2.0s is our design target built on that evidence; there is no data proving a sub-1s deadline, and an earlier version of this gate claimed 1.0s was "arithmetic not opinion" while citing only the 2s/3s figures - that was circular. A hook landing after 3s fails outright; a hook over 2s is a rework, not an automatic fail.
+- [ ] FRAME 0 CARRIES VISUAL DISCOMFORT. # source: https://ivideonow.com/blog/why-zack-d-films-dominates-youtube-shorts-with-unsettling-3d-animation-content-en
+      Name the visceral tension in the opening IMAGE (not the line). "The uncomfortable visual tone itself is a retention tool. When something feels slightly off, people keep watching to resolve that tension." A calm, pleasant or merely competent first image fails. A man lying in bed = fail.
 - [ ] FRAME 0 IS NOT A FADE: the first frame is the strongest image, never a fade-in from white/black - platforms grab frame 0 as the preview. Verify with signalstats YAVG (white ~235+ = fail).
 - [ ] WILD-OR-DARK CONTENT: quote the single most surprising, charged or dark line in the script VERBATIM here, and name why it is not generic fact-recitation. "It's interesting" is not an answer.
       -> The channel voice is CALM DEADPAN DELIVERY ON TOP OF WILD OR DARK CONTENT (reference-corpus.md). Deadpan over GENTLE content is just flat. If the most charged line is wistful or merely tidy, the topic is a KILL.
@@ -100,6 +136,10 @@ Every gate above tests whether the video is LEGAL. None tested whether it is WAT
 
 **Gate 8 MUST NOT be self-graded (added after the gate itself failed review).** The agent that wrote the plan cannot score the plan - measured on 2026-07-15, self-assessment of this very skill came in at 67/100 against an independent cold score of 38/100, a 29-point inflation. Filling these boxes in with plausible prose is not passing them.
 
-**Required mechanism:** before any generation spend, route the finished VIDEO-PLAN.md through an INDEPENDENT pass - `Skill('rate')` or a fresh `general-purpose` Agent that has NOT seen the planning conversation - asking one question: *"would this hold a 15-year-old on Shorts? Score 0-100, be harsh."* **Under 70 = rework the plan, do not generate.** Do not prime the reviewer (no prior scores, no "after fixes", no defending the plan). See [[feedback_never_prime_reviewers]].
+**Required mechanism:** before any generation spend, route the finished VIDEO-PLAN.md through TWO INDEPENDENT passes - `Skill('rate')` or a fresh `general-purpose` Agent that has NOT seen the planning conversation, run twice with no shared context between the two runs. Give EACH reviewer both (a) this Gate 8b rubric table verbatim, to score 1-5 per dimension with evidence, and (b) the holistic question: *"would this hold a 15-year-old on Shorts? Score 0-100, be harsh."* Passing the rubric to the reviewer (not just the planner) is what stops one weak dimension hiding behind a passing holistic vibe.
+
+**Take the MIN of the two holistic scores, never the average or the higher one. MIN under 70 = rework the plan, do not generate.** Do not prime either reviewer (no prior scores, no "after fixes", no defending the plan, no telling reviewer A what reviewer B said). See [[feedback_never_prime_reviewers]].
+
+**Anti score-shopping:** if the plan reworks, fix it once and route it to a NEW pair of fresh reviewers. If that second pair's MIN is still under 70, HALT - present the plan and both score sets to the founder instead of spawning a third pair. Rerolling reviewers until one lucky pair clears 70 defeats the entire point of an independent gate.
 
 **Failure this gate exists to catch (2026-07-15):** two videos passed every compliance box and were rejected outright by the founder ("just fucking awful... boring content I would wipe"). Both had deadpan delivery over gentle content, no recurring character, no stakes, and an unresolved wistful ending. Every one of those is now a blocking box above.

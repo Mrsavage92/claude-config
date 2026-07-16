@@ -28,7 +28,6 @@ The table below was measured from Zack D only. Tearing down the top Shorts of Th
 
 | Dimension | Measured | Rule |
 |---|---|---|
-| Hard cuts | **[SUPERSEDED - see line 14, do NOT cite]** 0-3 per video (three had ZERO; one screen-record subformat had 14) | Continuous morphing camera flow; cuts only at act boundaries |
 | Loudness | -7.5 to -11.8 LUFS, LRA 1.0-3.6 | Master hot: -11 LUFS floor, compression heavy |
 | Speech rate | TARGET ~2.9 w/s (universal band 2.78-3.65; this row's older median ~2.6 is superseded) | 30s script = 82-90 words; 40s = 110-120 |
 | Pauses | 4-11 per 30-40s, 0.4-0.7s each, after tension beats | Punctuation-placed, never rhythmic filler |

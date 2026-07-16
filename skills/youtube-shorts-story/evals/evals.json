@@ -5,17 +5,92 @@
       "id": 0,
       "eval_name": "single-video-plan",
       "prompt": "plan a 30 second short answering why do your ears pop on planes. I want the full thing - script, shots, and the exact steps to make it with my AI tools. remember I'm not an editor",
-      "expected_output": "A complete VIDEO-PLAN: 3 hook variants, an 82-90 word script that loops back to the opening, a shot list with per-shot durations <=3s, a production recipe naming the current stack (Seedream 4 keyframes + Kling 3.0 via fal.ai/Krea, OpenAI TTS, free music/SFX, DaVinci Resolve, 1080p->4K upscale) and NOT naming OpenArt-for-video or Suno-as-default, and a filled compliance checklist with a named originality layer.",
+      "expected_output": "A complete VIDEO-PLAN: 3 hook variants, an 82-90 word script that loops back to the opening, a shot list with per-shot durations <=3s, a production recipe naming the current $0-default stack (ffmpeg zoompan still-motion + edge-tts, with Kling 1.6 Elements/ElevenLabs named only as the paid upgrade tier) and NOT naming Hailuo 02 or OpenArt-for-video as a default, and a filled compliance checklist (Gate 8 + Gate 8b) with a named originality layer and a MIN-of-two independent review score >= 70.",
       "files": [],
-      "assertions": []
+      "assertions": [
+        {
+          "id": "gate-8b-total-parses-and-passes",
+          "text": "Gate 8b's TOTAL line parses to a number >= 24 out of 35",
+          "check_type": "regex",
+          "pattern": "TOTAL\\s+(2[4-9]|3[0-5])\\s*/\\s*35"
+        },
+        {
+          "id": "no-unchecked-boxes",
+          "text": "No unchecked markdown checkbox remains anywhere in the delivered plan (all Gate 8 and ship-checklist boxes are [x])",
+          "check_type": "regex_not_present",
+          "pattern": "\\[ \\]"
+        },
+        {
+          "id": "checklist-boxes-actually-checked",
+          "text": "At least 20 checked boxes are present (proxy for Gate 8 + ship checklist + Gate 8b items all being filled, not omitted)",
+          "check_type": "min_occurrences",
+          "pattern": "\\[x\\]",
+          "min": 20
+        },
+        {
+          "id": "hook-arithmetic-line-present",
+          "text": "A hook-timing arithmetic line is present: word count / 2.9 w/s = a computed seconds value",
+          "check_type": "regex",
+          "pattern": "\\d+(\\.\\d+)?\\s*/\\s*2\\.9\\s*w/s\\s*=\\s*\\d+(\\.\\d+)?s"
+        },
+        {
+          "id": "independent-review-min-score-passing",
+          "text": "An 'Independent review' line is present naming both reviewer scores and the MIN, and MIN is >= 70",
+          "check_type": "regex",
+          "pattern": "Independent review[\\s\\S]{0,300}?MIN\\s*=\\s*(7\\d|8\\d|9\\d|100)\\b"
+        },
+        {
+          "id": "no-hailuo-as-default",
+          "text": "Hailuo is not named as the default/only video model (paid-tier mentions of Kling 1.6 Elements as the upgrade are fine; Hailuo must not appear as what the $0 plan actually uses)",
+          "check_type": "regex_not_present",
+          "pattern": "(?i)Hailuo[\\s\\S]{0,40}(default|via Krea or fal\\.ai, duration 5s)"
+        },
+        {
+          "id": "recurring-character-named",
+          "text": "A named recurring character is present and confirmed in every non-anatomy shot",
+          "check_type": "contains",
+          "pattern": "## Character"
+        }
+      ]
     },
     {
       "id": 1,
       "eval_name": "ideation-and-full-plan",
       "prompt": "give me 5 curiosity video ideas for the youtube channel and fully plan out the strongest one",
-      "expected_output": "5+ curiosity ideas scored/compared, the strongest one fully planned with all VIDEO-PLAN sections: hooks, timed script, shot list, production recipe, compliance checklist, measurement plan.",
+      "expected_output": "5+ curiosity ideas scored/compared, the strongest one fully planned with all VIDEO-PLAN sections: hooks, timed script, shot list, production recipe, compliance checklist, measurement plan, and a passing MIN-of-two independent review.",
       "files": [],
-      "assertions": []
+      "assertions": [
+        {
+          "id": "gate-8b-total-parses-and-passes",
+          "text": "Gate 8b's TOTAL line parses to a number >= 24 out of 35",
+          "check_type": "regex",
+          "pattern": "TOTAL\\s+(2[4-9]|3[0-5])\\s*/\\s*35"
+        },
+        {
+          "id": "no-unchecked-boxes",
+          "text": "No unchecked markdown checkbox remains anywhere in the delivered plan",
+          "check_type": "regex_not_present",
+          "pattern": "\\[ \\]"
+        },
+        {
+          "id": "hook-arithmetic-line-present",
+          "text": "A hook-timing arithmetic line is present: word count / 2.9 w/s = a computed seconds value",
+          "check_type": "regex",
+          "pattern": "\\d+(\\.\\d+)?\\s*/\\s*2\\.9\\s*w/s\\s*=\\s*\\d+(\\.\\d+)?s"
+        },
+        {
+          "id": "independent-review-min-score-passing",
+          "text": "An 'Independent review' line is present naming both reviewer scores and the MIN, and MIN is >= 70",
+          "check_type": "regex",
+          "pattern": "Independent review[\\s\\S]{0,300}?MIN\\s*=\\s*(7\\d|8\\d|9\\d|100)\\b"
+        },
+        {
+          "id": "ideas-scored-before-plan",
+          "text": "5+ ideas are scored/compared before the full plan (arousal test / scorecard), not just listed",
+          "check_type": "contains_any",
+          "patterns": ["arousal test", "scorecard", "Relatability"]
+        }
+      ]
     }
   ]
 }
