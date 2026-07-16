@@ -58,6 +58,19 @@ The first fully successful video. Repeat this recipe; it works.
 11. **Two pipeline bugs fixed in code 2026-07-15:** (a) fal's default `fal-ai/elevenlabs/sound-effects` passes a DEPRECATED model id (`eleven_text_to_sound_v0`) that now 400s - use `/v2` (now the gen-sfx.mjs default). (b) assemble-simple.mjs used `plan.totalDur` (summed word-count estimates) as video length and TRIMMED the VO to it, silently guillotining the final line when the measured VO ran longer (98-word script: plan 40.5s vs George 43.0s). Now it probes the VO and sets total = max(plan, VO+tail), holding the final shot to absorb the overflow so earlier shots stay synced. The "duration from measured VO" rule is now ENFORCED in code.
 12. **George VO with no direct ElevenLabs key:** route through fal with `TTS_MODEL=fal-ai/elevenlabs/tts/eleven-v3` + `TTS_PARAMS_JSON='{"voice":"George",...,"timestamps":true}'` on `generate.mjs --stage=audio` (uses FAL_KEY). Char-level timestamps fold to words in the assembler. The direct api.elevenlabs.io path (gen-vo-elevenlabs.mjs) needs ELEVENLABS_KEY, which is NOT persisted in .env.
 
+## THE $0 PRODUCTION MODEL (locked 2026-07-15 - default while pre-traction)
+
+Founder constraint: "until we have followers and views hitting better numbers I need almost free output." Agent time is free; fal spend is not. **Build every video at $0 unless Adam explicitly approves spend.**
+
+- **VO = FREE neural TTS via edge-tts**, not ElevenLabs. `pipeline/gen-vo-edge.py` (built 2026-07-15): `pip install edge-tts`, then pipe the plan narration in. Voices: `en-GB-RyanNeural` (default, closest to George's warm British storyteller), `en-GB-ThomasNeural`, `en-AU-WilliamMultilingualNeural`. Pace matches ElevenLabs almost exactly (87 words = 37.2s vs George 43s/98 words), so scripts transfer with no re-timing. **Gotcha:** `edge_tts.Communicate(..., boundary="WordBoundary")` is REQUIRED - it defaults to `SentenceBoundary` and you get no per-word cues (silently empty captions). Emits `{timestamps:[{word,start,end}]}`, which assemble-simple.mjs already accepts natively.
+- **Motion = FREE ffmpeg kinetic still-motion** on keyframes. Go ALL-IN, never mix with Kling: the earlier cut was rejected because 6 fluid Kling shots next to 5 static ones reads as broken. **Consistency is what sells it** - a fully-kinetic still-motion cut (hard punch-ins on impacts, slow pushes on calm beats, white-flash hits on zaps) reads as a deliberate style.
+- **SFX = reuse the library.** heartbeat/whoosh/drone/zap/gasp/hush recur every episode. assemble-simple.mjs re-times SFX from the shot table via cue `n`, so reusing files across plans costs nothing.
+- **Keyframes = reuse** the existing character/anatomy library; only generate when genuinely new.
+
+**FRAME 0 IS THE PREVIEW.** Never start the opening clip with a `fade=t=in:...:color=white` - platforms grab frame 0 as the thumbnail and you ship a white rectangle. Verify with `signalstats` YAVG (white ~235+; real image ~90-150). Keep flash hits for MID-video beats only.
+
+**n<10 videos is NOISE.** Do not A/B style/character/topic on <1000 views - at 100 views everything is indistinguishable from noise. This was a real mistake on 2026-07-15 (a whole session spent debating claymation-vs-realistic on n=3). Cold start needs 20-50+ uploads before anything is readable. The three free levers that actually move views: **hook-first opens** (premise-drop in second 1, arresting frame 0 - mood opens = swipe), **volume** (daily, which only $0 production allows), and **3 surfaces per asset** (YouTube Shorts + TikTok + Reels).
+
 ## The success recipe + scorecard (deep research 2026-07-15)
 
 **What drives views (ranked):** (1) HOOK - first 1s, the swipe-away gate; (2) COMPLETION rate; (3) RELATABILITY; (4) shareability. Shorts are FEED-driven, not search - so description/tags/category are MINOR levers (fill sensibly, ignore the vanity "SEO score"; YouTube itself says tags play a minimal role).
