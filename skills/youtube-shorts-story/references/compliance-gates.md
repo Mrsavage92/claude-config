@@ -143,3 +143,32 @@ Every gate above tests whether the video is LEGAL. None tested whether it is WAT
 **Anti score-shopping:** if the plan reworks, fix it once and route it to a NEW pair of fresh reviewers. If that second pair's MIN is still under 70, HALT - present the plan and both score sets to the founder instead of spawning a third pair. Rerolling reviewers until one lucky pair clears 70 defeats the entire point of an independent gate.
 
 **Failure this gate exists to catch (2026-07-15):** two videos passed every compliance box and were rejected outright by the founder ("just fucking awful... boring content I would wipe"). Both had deadpan delivery over gentle content, no recurring character, no stakes, and an unresolved wistful ending. Every one of those is now a blocking box above.
+
+## Gate 9: Get-pushed + survive-the-purge (pre-publish, sourced 2026-07-16)
+
+Aligns the video to what actually gets PUSHED and what avoids the inauthentic-content purge (16 channels / 35M subs / 4.7B views removed Jan 2026; Neal Mohan named "AI slop" a 2026 priority - blog.youtube/inside-youtube/the-future-of-youtube-2026, OFFICIAL).
+
+**PUSH SIGNALS ranked (OFFICIAL where marked - support.google.com/youtube/answer/11914225):**
+1. AVG % VIEWED / retention (OFFICIAL, dominant) - front-load the payoff; cut anything that doesn't earn its second.
+2. SWIPE-AWAY in the first seconds (OFFICIAL) - cold-open on the hook, no logo/intro.
+3. SESSION-TIME contribution - a loop-back / next-video hook beats a hard stop.
+4. RE-WATCH / loop (vendor-consensus) - last frame reconnects to the first.
+5. SHARES, esp. off-platform DM (OFFICIAL signal; vendor says ~3x likes) - build one nameable "send this to..." moment.
+6-7. Comments + likes (OFFICIAL, secondary; comments weaker on YT Shorts than TikTok).
+8. SEED-TEST is mostly NON-SUBS (~74% of Shorts views) - cold-audience retention is what scales you; don't over-index on sub callouts.
+9. First-hour VELOCITY (vendor) - post when your audience is active; concentrate promotion early.
+10. THUMBNAILS/CTR: NO in the swipe feed (autoplay, no click), YES for Search + Home surfaces.
+
+**SURVIVE THE PURGE (what the survivors do - Kurzgesagt, Simon Whistler's stable, Wendover/Infographics/RealLifeLore):** "AI as AMPLIFIER survives; AI as REPLACER gets purged." Human editorial judgment on topic/hook/cut every upload; format VARIATION not template cloning; original research not scrape-to-TTS; editorial cadence not 12+/day; a recurring OWNABLE identity.
+
+**SOBERING NUANCE (flag for Adam, 2026-07-16):** the current environment is rewarding VISIBLE HUMAN PRESENCE generally - faceless creators report demonetization even WITHOUT AI (Doctor NOS, on-record), and the research could NOT verify a single AI-voice/visual channel PUSHED post-purge with growth data. Every clear survivor is a human-team-researched faceless channel that predates the AI-slop category. Faceless-AI is a real headwind; the durable edge is strong originality + human editorial judgment + a distinct recurring identity - and adding some human presence may eventually be necessary.
+
+**6-ITEM PRE-PUBLISH CHECKLIST (all must be true):**
+```text
+- [ ] Hook lands in the first 1-2s; no intro/logo before the payoff
+- [ ] Ends on a loop-back or explicit next-content hook, not a hard stop
+- [ ] One specific, nameable "send this to..." moment exists
+- [ ] The editorial choice for THIS upload is stateable in one sentence (it varies from the last 5)
+- [ ] A human decided topic + hook placement + final cut (not a zero-touch AI pipeline)
+- [ ] If any shot could be mistaken for a real person/place/event, the "Altered or synthetic content" box is ticked
+```
