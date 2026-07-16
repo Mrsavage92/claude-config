@@ -43,7 +43,7 @@ Every VIDEO-PLAN.md ends with this section, filled in concretely:
    PAID (explicit approval only): Kling 1.6 Elements via fal.ai, duration 5s, aspect 9:16,
    style anchor: [channel style phrase], no text in frame. Never Hailuo 02 for a
    shot that needs drama (see "Avoid" above) - Veo 3.1 for the one hero shot only.
-2. Voiceover: DEFAULT $0 = edge-tts (gen-vo-edge.py, en-GB-RyanNeural, rate +15%
+2. Voiceover: DEFAULT $0 = edge-tts (gen-vo-edge.py, en-GB-RyanNeural, rate +30%
    to hit ~2.9 w/s). PAID (explicit approval only) = ElevenLabs George, via fal
    or direct API.
 3. Music: free track from YouTube Audio Library [mood] OR none (SFX-only)
