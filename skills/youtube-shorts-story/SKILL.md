@@ -1,13 +1,13 @@
 ---
 name: youtube-shorts-story
-description: Plan YouTube Shorts end-to-end in the curiosity-animation style (Zack D. Films tier) - story structure, retention engineering, and an AI production recipe the owner can execute without editing skill. Produces a complete VIDEO-PLAN.md with 3 hook variants, a closed-loop script timed to TTS pace, a shot-by-shot list, tool-exact production steps (Seedream 4 keyframes + Kling 3.0 via fal.ai, ElevenLabs expressive voice, free music/SFX, word-by-word animated captions, 1080p->4K upscale), and hard compliance gates (originality layer, zero sexual content, general-audience safety). Use this whenever the user mentions the YouTube channel, Shorts, video ideas, hooks, scripts, retention, AVD, storyboards, faceless or AI video content, or asks to plan, write, script, or improve any short-form video - even if they never say the words "skill" or "YouTube Shorts". Also use for reviewing an existing video plan or diagnosing a video's retention graph.
+description: Plan YouTube Shorts end-to-end in the curiosity-animation style (Zack D. Films tier) - story structure, retention engineering, and an AI production recipe the owner can execute without editing skill. Produces a complete VIDEO-PLAN.md with 3 hook variants, a closed-loop script timed to TTS pace, a shot-by-shot list, tool-exact production steps (Seedream 4 keyframes + Kling 3.0 via fal.ai, ElevenLabs expressive voice, free music/SFX, word-by-word animated captions, 1080p-to-4K upscale), and hard compliance gates (originality layer, zero sexual content, general-audience safety). Use this whenever the user mentions the YouTube channel, Shorts, video ideas, hooks, scripts, retention, AVD, storyboards, faceless or AI video content, or asks to plan, write, script, or improve any short-form video - even if they never say the words "skill" or "YouTube Shorts". Also use for reviewing an existing video plan or diagnosing a video's retention graph.
 ---
 
 # YouTube Shorts Story Planner
 
 Plan curiosity-driven animated Shorts for a faceless, AI-produced channel. The owner is a business owner, not an editor: every output must be executable by AI tools plus at most ~30 minutes of assembly. The single KPI is **AVD > video length** (average view duration above 100%, achieved via loops and rewatches).
 
-Channel context (locked): children-to-adult general audience, zero sexual content, short-form first, 4K export, production budget $25-80/mo. Long-term: passive income, sponsorships, hired editors once revenue supports them.
+Channel context (locked): **NOT Made for Kids** - general audience targeting teens 13-17 + 18-34 (compliance-gates.md Gate 6; Made-for-Kids = a 50-80% revenue cut). Kid-SAFE, never kid-DIRECTED. Zero sexual content, short-form first, 4K export, production budget $25-80/mo. Long-term: passive income, sponsorships, hired editors once revenue supports them.
 
 ## References (read before the relevant step)
 
@@ -42,7 +42,7 @@ Default to a **closed loop** on the Zack D. spine (shocking premise -> reveal ->
 
 ### Step 4: Script
 
-Write narration to the word budget (82-90 words for 30s; measured TTS pace ~2.9-3.0 words/sec, table in story-frameworks.md). Rules: first line is the hook verbatim, no windups, sensory verbs, narration never describes what the visual already shows, end on the twist with the final line reconnecting to the opening (the narrative loop). Include the text-overlay track alongside narration; the story must survive muted viewing.
+Write narration to the word budget. **CANONICAL PACE (one number, 2026-07-15):** every measured winning channel narrates FAST - 2.78-3.65 w/s across three channels, Zack D at 2.96. Fast pace is UNIVERSAL. Our TTS at default reads ~2.4-2.5 w/s, which is SLOWER THAN EVERY MEASURED WINNER - that is a defect to correct, not a target to write to. **Raise the TTS rate (edge-tts `--rate=+15%`, ElevenLabs speed ~1.15) to land ~2.9 w/s**, then write to **82-90 words per 30s**. NEVER slow the voice down for 'gravitas' - that is how a short reads as sluggish. Then ALWAYS measure the rendered VO and set video duration from the measured length (never the estimate). Rules: first line is the hook verbatim, no windups, sensory verbs, narration never describes what the visual already shows, end on the twist with the final line reconnecting to the opening (the narrative loop). Include the text-overlay track alongside narration; the story must survive muted viewing.
 
 ### Step 5: The EDIT - a shot list of 10-15 DISTINCT shots (read shot-design.md)
 
@@ -52,7 +52,7 @@ NOT one scene stretched to 30s (that is the boring failure). Design the video as
 
 Fill in the recipe template from production-stack.md concretely: per-shot image prompt + DYNAMIC motion prompt (9:16, channel style anchor, no baked text), TTS settings, music/SFX, hard-cut assembly order, 1080p->4K. Build the upload package (3 titles, description, hashtags, audience flag) per packaging.md. Style anchor reused verbatim in every prompt.
 
-Video model: use production-stack.md's locked source of truth - **Kling 3.0 via fal.ai** is the workhorse (dynamic, native multi-shot, ~$2-4/video); Veo 3.1 for the one hero shot only. NOT Hailuo image-to-video for anything that needs drama - its gentle drift is why videos read as "crap little animation". Voice: ElevenLabs with an explicitly selected regional accent and delivery; audition the exact script before full generation and reject generic American social-media cadence. Prefer the provider's timestamped endpoint for the final take. Captions: exact-script white semibold/bold subtitles with dark outline, no more than two balanced lines, horizontally centered with the text block around 75% of frame height unless the plan explicitly calls for another safe zone. Do not substitute conceptual overlay copy for subtitles.
+Video model: **DEFAULT = $0 (founder constraint, current-playbook.md): free ffmpeg kinetic still-motion on keyframes, NO paid video model, unless the founder explicitly approves spend.** Known tradeoff: still-motion reads flatter than real i2v - if the plan needs real motion, say so and ASK before assuming budget. Paid tier (on approval only): use production-stack.md's locked source of truth - **Kling 3.0 via fal.ai** is the workhorse (dynamic, native multi-shot, ~$2-4/video); Veo 3.1 for the one hero shot only. NOT Hailuo image-to-video for anything that needs drama - its gentle drift is why videos read as "crap little animation". Voice (DEFAULT = $0 while pre-traction, per current-playbook.md's locked production model): **edge-tts neural** via `pipeline/gen-vo-edge.py` (en-GB-RyanNeural), rate raised to land ~2.9 w/s. ElevenLabs George is the UPGRADE once the founder explicitly approves spend - do not default to it. Whichever is used: select the regional accent explicitly, audition the exact script, reject generic American social-media cadence, and never slow the rate for 'gravitas'. Prefer the provider's timestamped endpoint for the final take. Captions: exact-script white semibold/bold subtitles with dark outline, no more than two balanced lines, horizontally centered with the text block around 75% of frame height unless the plan explicitly calls for another safe zone. Do not substitute conceptual overlay copy for subtitles.
 
 **Production discipline (hard rules - these exist because ignoring them burned real money on 2 rejected videos):**
 1. **I cannot see motion or hear audio.** NEVER claim a generated video is "smooth/gripping/good" from extracted still frames - stills cannot show jumpy motion, morphing, pacing, or a bad voice. State only what stills CAN show (composition, style, captions). The USER is the sole judge of the played video.
@@ -64,11 +64,14 @@ Video model: use production-stack.md's locked source of truth - **Kling 3.0 via 
 7. **QA the encoded delivery, not only the mix graph.** Measure integrated loudness and true peak after AAC encoding; target roughly -14 to -16 LUFS for spoken social video and keep true peak at or below -1.5 dBTP.
 8. **Inspect every join and the reported defect times frame-by-frame.** Contact sheets can verify composition, expressions, captions, and transition continuity, but the full video still requires a played-with-sound review before posting.
 
-Provenance (traceability): any measured or cost figure the plan states (cut counts, LUFS, per-clip price, monthly budget) names its source reference inline, e.g. "0-3 hard cuts (reference-corpus.md)" or "~$32-37/mo (production-stack.md)". The all-in cost total must equal the sum of its own line items - add them up and check, never state a rounded total that does not reconcile.
+Provenance (traceability): any measured or cost figure the plan states (cut counts, LUFS, per-clip price, monthly budget) names its source reference inline, e.g. "10-15 shots, hard cut every 1.5-3s (shot-design.md)" or "~$32-37/mo (production-stack.md)". The all-in cost total must equal the sum of its own line items - add them up and check, never state a rounded total that does not reconcile.
 
 ### Step 7: Differentiation + compliance gates (hard stop)
 
-First run the differentiation test from differentiation.md: the video must use the channel's OWN locked visual medium, voice register, and topic angle - never the reference creator's signature look/voice/topics (swap test: could a viewer tell this from the reference by visuals alone?). Then run the ship checklist from compliance-gates.md and include it filled-in. The unique-angle line must name the video's own creative decision - "AI-generated" is not an answer. Any unchecked box or failed differentiation test blocks the plan from shipping.
+**FIRST - the independent entertainment review (hard stop, no exceptions).** Before finalizing, spawn a FRESH `general-purpose` Agent (or `Skill('rate')`) with ONLY the finished VIDEO-PLAN.md and this question: *"Would this hold a 15-year-old on YouTube Shorts? Score 0-100. Be harsh."* Do NOT show it the planning conversation, do NOT tell it your intent, do NOT mention prior scores (see [[feedback_never_prime_reviewers]]). **Score under 70 = REWORK the plan. Do not proceed to the production recipe. Do not spend.**
+This exists because self-grading measurably fails: on 2026-07-15 self-assessment of this skill returned 67/100 against an independent cold score of 38/100 - a 29-point inflation - and two videos that passed every self-graded box were rejected outright by the founder. Gate 8 in compliance-gates.md is NOT satisfied by writing plausible prose in its boxes.
+
+Then run the differentiation test from differentiation.md: the video must use the channel's OWN locked visual medium, voice register, and topic angle - never the reference creator's signature look/voice/topics (swap test: could a viewer tell this from the reference by visuals alone?). Then run the ship checklist from compliance-gates.md and include it filled-in. The unique-angle line must name the video's own creative decision - "AI-generated" is not an answer. Any unchecked box or failed differentiation test blocks the plan from shipping.
 
 ## Output format
 
@@ -86,7 +89,14 @@ A (recommended): VO "[line]" | Frame: [visual] | Overlay: "[4-8 words]" | Why: [
 B: ...
 C: ...
 
-## Script ([N] words / [N]s)
+## Character (REQUIRED - the #1 ranked format)
+[Name the distinctive recurring character and confirm they appear in every non-anatomy shot. A plan of disembodied objects is a REWORK, not a plan - current-playbook.md ranks the recurring character the #1 winning faceless format AND the anti-slop shield.]
+
+## Entertainment gate (REQUIRED - paste the filled Gate 8 boxes from compliance-gates.md)
+Most charged line (verbatim): "..." | Why it is not fact-recitation: ...
+Stakes: ... | Payoff resolves into: ... | Final-beat persona line: "..."
+
+## Script ([N] words / [N]s at the TARGET ~2.9 w/s - raise the TTS rate to hit it; then set duration from the MEASURED render)
 [narration with (overlay: ...) markers]
 
 ## Shot list
@@ -110,10 +120,10 @@ When asked why a published video underperformed, read retention-playbook.md and 
 ## Anti-patterns (do NOT do these)
 
 - **Opening with a question to camera** ("Why do your ears pop?"). The corpus rule is a premise-drop; the narrator never asks the question, the premise creates it in the viewer's head. See reference-corpus.md.
-- **Wearing the reference creator's skin** - soft-3D look, default American TTS voice, or his topic rotation. The channel's locked identity (paper-cutout collage + calm non-American narrator) is non-negotiable; a swap-test fail is a rework before any generation spend. See differentiation.md.
+- **Wearing the reference creator's skin** - soft-3D look, default American TTS voice, or his topic rotation. The channel's locked identity (claymation recurring character 'Pip' + calm non-American narrator; paper-cutout is RETIRED - see current-playbook.md) is non-negotiable; a swap-test fail is a rework before any generation spend. See differentiation.md.
 - **Naming an avoided tool** - OpenArt-for-video, Suno-as-default, or native Kling/Hailuo subscriptions. production-stack.md is the tool source of truth and lists what to avoid and why.
 - **Asserting a measured number without provenance** - cut counts, LUFS, per-clip price, or monthly budget stated with no source reference, or an all-in cost total that does not equal the sum of its line items.
-- **Underfilling the word budget** - a 30s script at ~75 words reads as dead air next to the feed. Measured pace is 2.9-3.0 words/sec = 82-90 words for 30s. Cut explanation before payoff, never pad.
+- **Underfilling the word budget OR slowing the voice** - a 30s script at ~75 words reads as dead air next to the feed, and lowering the TTS rate for "gravitas" is the same failure. Winning channels run 2.78-3.65 w/s. Target ~2.9 w/s = 82-90 words for 30s (raise the TTS rate to hit it). Cut explanation before payoff, never pad. See Step 4 for the canonical pace.
 - **Overlay text under the Shorts engagement rail** - the most common postability failure; keep text out of the bottom ~300px and right ~140px. See packaging.md.
 
 ## Scope limits

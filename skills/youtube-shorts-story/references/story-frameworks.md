@@ -4,7 +4,7 @@ Every framework below exists to serve one KPI: average view duration (AVD) great
 
 ## Script word budget (measured from the reference, 2026-07-13)
 
-A real Zack D. Films short measured 85 words in 28.8s = **2.96 words/second**, wall-to-wall with zero dead air; the only silence was 0.34s after the final payoff. Write to ~2.9-3.0 words/sec delivered pace:
+A real Zack D. Films short measured 85 words in 28.8s = **2.96 words/second**, wall-to-wall with zero dead air; the only silence was 0.34s after the final payoff. This is the TARGET pace and it is universal across measured channels. Our TTS defaults ~2.4-2.5 w/s (too slow) - raise the rate to hit ~2.9. Write to ~2.9-3.0 words/sec delivered pace:
 
 | Target length | Word budget | Delivery |
 |---|---|---|
@@ -83,7 +83,7 @@ Pick topics where the QUESTION is instantly understood by a 10-year-old but the 
 ## Hook quality bar
 
 A hook passes only if all seven are true:
-1. Complete within 2.5 seconds (the drop-off cliff is at 3s).
+1. Complete within 1 SECOND (current-playbook.md: the first 1s is the swipe-away gate and the #1 ranked view-driver). 2.5s is the OLD bar and is superseded - the 3s cliff is where you are already dead, not the target.
 2. Phrased in words a 10-year-old knows.
 3. The first FRAME alone (no audio) makes someone stop scrolling; it doubles as the de facto thumbnail.
 4. The video actually answers it. Curiosity gap, never clickbait; a broken promise trains the audience to skip the channel.

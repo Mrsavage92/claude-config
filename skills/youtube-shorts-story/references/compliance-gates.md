@@ -80,4 +80,26 @@ Titles and first frames promise only what the video delivers. Misleading metadat
 - [ ] Title/first frame promise = what the video delivers
 - [ ] Facts verified against a credible source before scripting
 - [ ] Human reviewed this plan before any spend (no prompt-to-upload automation)
+- [ ] INDEPENDENT Gate 8 review completed by a fresh unprimed agent, score >= 70 (see Gate 8). Self-graded prose does NOT satisfy this. Under 70 = rework, do not generate.
 ```
+
+## Gate 8: The entertainment gate (hard stop - added 2026-07-15 after a 38/100 cold review)
+
+Every gate above tests whether the video is LEGAL. None tested whether it is WATCHABLE, so plans passed all 15 boxes and shipped dull. These are hard stops with the same authority as the safety boxes: an unchecked box blocks the plan.
+
+```text
+- [ ] HOOK LANDS IN 1 SECOND (arithmetic, not opinion): hook word count / 2.9 w/s <= 1.0s -> so the spoken hook is <= ~3 words, OR the premise lands on the FIRST FRAME + overlay alone. Write the arithmetic here. A 3.3s spoken hook fails.
+- [ ] FRAME 0 IS NOT A FADE: the first frame is the strongest image, never a fade-in from white/black - platforms grab frame 0 as the preview. Verify with signalstats YAVG (white ~235+ = fail).
+- [ ] WILD-OR-DARK CONTENT: quote the single most surprising, charged or dark line in the script VERBATIM here, and name why it is not generic fact-recitation. "It's interesting" is not an answer.
+      -> The channel voice is CALM DEADPAN DELIVERY ON TOP OF WILD OR DARK CONTENT (reference-corpus.md). Deadpan over GENTLE content is just flat. If the most charged line is wistful or merely tidy, the topic is a KILL.
+- [ ] STAKES NAMED: state what is at risk / what goes wrong / what the viewer should be unsettled by, in one line. A vestigial-trivia shrug ("it does nothing, isn't that sad") is NOT stakes.
+- [ ] RECURRING CHARACTER PRESENT: name the character and confirm they appear in every non-anatomy shot (current-playbook.md ranks a distinctive recurring character the #1 winning format). A plan of disembodied objects fails.
+- [ ] PAYOFF RESOLVES: name how the tension resolves into relief/awe/a dark landing. An unresolved melancholy fade is NOT a payoff.
+- [ ] PERSONALITY FLASH: name the final-beat persona line (reference-corpus.md ending taxonomy #5). Personality is quarantined to the final beat BY DESIGN - but it must exist.
+```
+
+**Gate 8 MUST NOT be self-graded (added after the gate itself failed review).** The agent that wrote the plan cannot score the plan - measured on 2026-07-15, self-assessment of this very skill came in at 67/100 against an independent cold score of 38/100, a 29-point inflation. Filling these boxes in with plausible prose is not passing them.
+
+**Required mechanism:** before any generation spend, route the finished VIDEO-PLAN.md through an INDEPENDENT pass - `Skill('rate')` or a fresh `general-purpose` Agent that has NOT seen the planning conversation - asking one question: *"would this hold a 15-year-old on Shorts? Score 0-100, be harsh."* **Under 70 = rework the plan, do not generate.** Do not prime the reviewer (no prior scores, no "after fixes", no defending the plan). See [[feedback_never_prime_reviewers]].
+
+**Failure this gate exists to catch (2026-07-15):** two videos passed every compliance box and were rejected outright by the founder ("just fucking awful... boring content I would wipe"). Both had deadpan delivery over gentle content, no recurring character, no stakes, and an unresolved wistful ending. Every one of those is now a blocking box above.

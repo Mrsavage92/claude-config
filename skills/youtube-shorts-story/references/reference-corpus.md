@@ -11,7 +11,7 @@ The table below was measured from Zack D only. Tearing down the top Shorts of Th
 **CONFIRMED UNIVERSAL (held across channels - keep as hard rules):**
 - Fast wall-to-wall narration: Infographics measured 2.78-3.65 words/sec (Zack D 2.96). Fast pace is universal.
 - Tiny VO end-gap: Infographics 0.31-0.67s (Zack D 0.65-0.93). Narration ends <1s before the video ends; no outro. Universal.
-- Continuous flow / low cut count: Infographics ran 0 hard cuts on 3 of its 5 top videos (Zack D 0-3). Universal.
+- Continuous flow / low cut count: Infographics ran 0 hard cuts on 3 of its 5 top videos (Zack D 0-3). **SUPERSEDED for this channel (2026-07-15):** that measured a live-action/continuous-render production model. Our AI-shot-edit model mandates 10-15 distinct shots with a cut every 1.5-3s (shot-design.md + SKILL.md Step 5), which is the documented fix for one-scene boredom. Do NOT cite 0-3 cuts in a plan.
 - Tension-beat pauses: 6-14 per video on both channels. Universal.
 
 **NOT UNIVERSAL - Zack-D-specific, previously overstated here (loosen these):**
@@ -28,9 +28,9 @@ The table below was measured from Zack D only. Tearing down the top Shorts of Th
 
 | Dimension | Measured | Rule |
 |---|---|---|
-| Hard cuts | 0-3 per video (three had ZERO; one screen-record subformat had 14) | Continuous morphing camera flow; cuts only at act boundaries |
+| Hard cuts | **[SUPERSEDED - see line 14, do NOT cite]** 0-3 per video (three had ZERO; one screen-record subformat had 14) | Continuous morphing camera flow; cuts only at act boundaries |
 | Loudness | -7.5 to -11.8 LUFS, LRA 1.0-3.6 | Master hot: -11 LUFS floor, compression heavy |
-| Speech rate | 2.33-3.19 words/sec, median ~2.6 | 30s script = 75-90 words; 40s = 100-120 |
+| Speech rate | TARGET ~2.9 w/s (universal band 2.78-3.65; this row's older median ~2.6 is superseded) | 30s script = 82-90 words; 40s = 110-120 |
 | Pauses | 4-11 per 30-40s, 0.4-0.7s each, after tension beats | Punctuation-placed, never rhythmic filler |
 | VO end gap | 0.65-0.93s in 9 of 10 | Narration ends <1s before video ends; no outro |
 | Duration | 28-41s core band (top performer 34s); 55-75s only for interactive/stunt formats | Default 30-40s, not under 30 |

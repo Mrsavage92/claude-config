@@ -8,7 +8,7 @@ The owner is a business owner, not an editor. Every recipe below must be executa
 
 | Layer | Tool | Cost | Real yield | Why this one |
 |---|---|---|---|---|
-| Keyframe stills (stylized) | Seedream 4 via fal.ai | ~$0.08/still | 6-8 keyframes/video | Better STYLIZED-style-lock than photoreal-biased Nano Banana 2 (verified 2026-07-14); holds the paper-cutout anchor across the set via reference-card trait-locking |
+| Keyframe stills (stylized) | Seedream 4 via fal.ai | ~$0.08/still | 6-8 keyframes/video | Better STYLIZED-style-lock than photoreal-biased Nano Banana 2 (verified 2026-07-14); holds the channel's current style anchor (claymation - paper-cutout RETIRED) across the set via reference-card trait-locking |
 | Video generation (PRIMARY workhorse) | Kling 3.0 via fal.ai | ~$0.03/s = ~$2-4 per 12-shot video | one DYNAMIC shot per clip, 10-15 shots/video | Current best value (2026-07). Native multi-shot "AI Director" + character-lock "Elements 3.0" + 4K. This is the default. |
 | Video generation (hero shot only) | Veo 3.1 via fal.ai | ~$0.40/s (10x Kling) | the ONE audio-critical/realism shot | Best color/audio realism; too pricey for every shot |
 | Video generation (AVOID for hero) | Hailuo 02 image-to-video | cheap | gentle drift only | Too weak for drama - its subtle motion is why videos read as "crap little animation". OK only for calm b-roll |
@@ -37,7 +37,7 @@ Every VIDEO-PLAN.md ends with this section, filled in concretely:
 1. Visuals: for each shot in the shot list, one generation prompt
    (model: Hailuo 02 via Krea or fal.ai, duration 5s, aspect 9:16,
    style anchor: [channel style phrase], no text in frame)
-2. Voiceover: paste script into OpenAI TTS, voice [name], speed [0.95-1.1],
+2. Voiceover: DEFAULT $0 = edge-tts (gen-vo-edge.py, en-GB-RyanNeural, rate +15% to hit ~2.9 w/s). Upgrade tier only on explicit founder approval = ElevenLabs George. (Legacy: OpenAI TTS, voice [name], speed [0.95-1.1],
    export WAV
 3. Music: free track from YouTube Audio Library [mood] OR none (SFX-only)
 4. SFX list: [moment -> sound, source]
@@ -52,7 +52,7 @@ Keep one consistent visual style anchor phrase across all videos so the channel 
 
 ## Delivery audio spec (measured 2026-07-13, cross-channel checked 2026-07-14)
 
-Target master loudness **-11 to -14 LUFS integrated, LRA ~2-4, true peak <= -1.5 dB** for our punchy ~30s curiosity format. Note (cross-channel): hot audio is a CHOICE, not a universal law - Zack D masters at -7.5 to -11.8 (very hot), The Infographics Show at -13.7 to -21.6 (moderate/quiet) on longer explainers. Both work at millions of views. -11 to -14 fits short punchy content; do not treat -11 as mandatory. Voiceover wall-to-wall at ~2.8-3.6 words/sec (cross-channel confirmed universal) with punctuation-placed micro-pauses; SFX and ambience woven continuously under it; music optional and only if it loops seamlessly.
+Target master loudness **-11 to -14 LUFS integrated, LRA ~2-4, true peak <= -1.5 dB** for our punchy ~30s curiosity format. Note (cross-channel): hot audio is a CHOICE, not a universal law - Zack D masters at -7.5 to -11.8 (very hot), The Infographics Show at -13.7 to -21.6 (moderate/quiet) on longer explainers. Both work at millions of views. -11 to -14 fits short punchy content; do not treat -11 as mandatory. Voiceover wall-to-wall at ~2.8-3.6 words/sec (cross-channel confirmed universal; our TTS defaults ~2.4-2.5 = TOO SLOW, raise the rate to land ~2.9) with punctuation-placed micro-pauses; SFX and ambience woven continuously under it; music optional and only if it loops seamlessly.
 
 ## Cost discipline
 

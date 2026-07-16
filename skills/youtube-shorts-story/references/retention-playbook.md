@@ -4,7 +4,7 @@ AVD greater than video length means the average viewer watches past one full pla
 
 ## Layer 1: the first 3 seconds
 
-- Deliver the complete hook within 2-2.5 seconds. Aggregated creator data puts a hard drop-off cliff at 3s; hooks that land under 2s correlate with materially higher AVD (directional stat from creator-tool blogs, not a YouTube-published study, but consistent across sources).
+- Deliver the complete hook within 1 SECOND (superseded 2026-07-15; current-playbook.md ranks the first 1s as the swipe-away gate and #1 view-driver). Older guidance said 2-2.5s. Aggregated creator data puts a hard drop-off cliff at 3s; hooks that land under 2s correlate with materially higher AVD (directional stat from creator-tool blogs, not a YouTube-published study, but consistent across sources).
 - **Three-channel rule:** hit all three simultaneously in frame one:
   - Visual: motion, a face, or a striking object already mid-action
   - Audio: the first spoken words ARE the point; no intro music swell, no "so..."
@@ -13,7 +13,7 @@ AVD greater than video length means the average viewer watches past one full pla
 
 ## Layer 2: the middle (seconds 3 to N-4)
 
-- **Continuous-flow grammar, not cut grammar (measured 2026-07-13):** a reference Zack D. short contained ONE hard cut in 29.6 seconds. The style is a single continuously evolving camera flow that morphs between story beats - the "new visual event every 3 seconds" requirement is satisfied by motion WITHIN the flow (something always moving, transforming, or revealing), never by cut frequency. Hard cuts and added Ken Burns zooms break the single-shot illusion; assembly-level pans/zooms also introduce jitter that reads as shake. New visual information must come from the generated footage itself.
+- **[SUPERSEDED 2026-07-15 - do NOT follow for this channel]** Continuous-flow is Zack D's grammar and we CANNOT execute it: our pipeline generates discrete ~5s clips, so a 'single continuously evolving flow' is not producible. Our mandated model is 10-15 distinct shots, hard cut every 1.5-3s (shot-design.md + SKILL.md Step 5), which is the documented fix for one-scene boredom. The paragraph below is retained only as measurement history. **Continuous-flow grammar, not cut grammar (measured 2026-07-13):** a reference Zack D. short contained ONE hard cut in 29.6 seconds. The style is a single continuously evolving camera flow that morphs between story beats - the "new visual event every 3 seconds" requirement is satisfied by motion WITHIN the flow (something always moving, transforming, or revealing), never by cut frequency. Hard cuts and added Ken Burns zooms break the single-shot illusion; assembly-level pans/zooms also introduce jitter that reads as shake. New visual information must come from the generated footage itself.
 - **One pattern interrupt** around the 25-35s mark in longer shorts: a scene morph, angle change within the flow, or SFX spike, placed exactly where viewers have "mapped" the video's rhythm and start to leave.
 - **Muted-viewing insurance:** a large share of feed viewing starts muted. Captions/text overlays must carry the story alone. Test: scrub the plan silently; if the story is lost, add or rewrite overlays.
 - **Sound design over music:** SFX synced to visual beats (a pop, a whoosh, a heartbeat) does more for retention than any background track. Music sits at -18dB under the voiceover or is absent.

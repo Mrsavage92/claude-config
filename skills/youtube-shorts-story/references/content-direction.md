@@ -14,7 +14,7 @@ If an idea is a calm walkthrough of a mechanism with no stakes, no "you", and no
 ## The proven high-arousal lanes (build these)
 
 Ranked by measured ceiling in the corpus:
-- **Second-person survival / wonder hypothetical** - "What if you...", "Imagine you...", "You're [in a situation]." Highest ceiling (18M plane, 10M megalodon). Kid-safe, advertiser-safe, renders beautifully in paper-cutout.
+- **Second-person survival / wonder hypothetical** - "What if you...", "Imagine you...", "You're [in a situation]." Highest ceiling (18M plane, 10M megalodon). Kid-safe, advertiser-safe, renders beautifully in the channel's current locked medium (claymation - paper-cutout is RETIRED, see current-playbook.md).
 - **Survival rules / hidden dark rules of real systems** - the counterintuitive rule that keeps you alive or that a system runs on ("The Scariest Safari Rule" 9.7M). Often genuinely useful = shareable. Fear -> reassuring-twist arcs are gold.
 - **Animal survival drama** - a creature's brutal or ingenious survival tactic, told as drama with a wow (catfish adoption 19M, pistol shrimp). Kid-safe, no faces.
 - **Safe-morbid "what happens to your body if..."** - the viewer's own body made strange, kept bloodless.
@@ -35,7 +35,7 @@ A recurring-character channel dies if every episode is the same feeling. "Stakes
 ## The differentiated package (this is the moat, not the topic)
 
 No topic is virgin territory - differentiation is the PACKAGE, held consistent every video:
-- **Visual:** paper-cutout collage (anti-AI-slop tactile, distinct from Zack D's 3D).
+- **Visual:** the channel's CURRENT locked medium per current-playbook.md + differentiation.md (claymation recurring character; paper-cutout is RETIRED - do not use).
 - **Voice:** calm storyteller, non-American - unsettling-calm while the content is wild; the contrast is the signature.
 - **Framing:** default to SECOND PERSON ("you") where the lane allows - it is both higher-arousal AND a consistent POV that becomes recognizable.
 - **Title:** question OR claim (both proven); question titles double as a Zack-D differentiator.
@@ -47,4 +47,4 @@ No topic is virgin territory - differentiation is the PACKAGE, held consistent e
 
 ## The arousal test (run at ideation, before scripting)
 
-Score each candidate 1-5 on: STAKES/wonder, second-person immersion potential, twist strength, shareability ("would someone send this to a friend"), paper-cutout visual fit. An idea that can't clear ~3/5 on stakes AND twist is a kill, no matter how factually interesting. This REPLACES the old "comprehension/surprise/visual/loopability" score, which selected for safe-but-boring.
+Score each candidate 1-5 on: STAKES/wonder, second-person immersion potential, twist strength, shareability ("would someone send this to a friend"), fit with the channel's CURRENT locked visual identity (see differentiation.md + current-playbook.md - paper-cutout is RETIRED, do not score against it). ALSO run current-playbook.md's scorecard (Relatability, Curiosity, Hook, Tension, Payoff, Shareability, Loop) and KILL anything under 3 on Relatability OR Hook - those are the two ranked view-drivers. An idea that can't clear ~3/5 on stakes AND twist is a kill, no matter how factually interesting. This REPLACES the old "comprehension/surprise/visual/loopability" score, which selected for safe-but-boring.
