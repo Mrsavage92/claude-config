@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Claude Certification Trainer — an independent, local-first study and exam-preparation platform for the Claude Certified Associate – Foundations (CCAO-F) exam. Not affiliated with Anthropic."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Claude Certification Trainer — CCAO-F Study Platform</title>
+    <script>
+      // Apply the persisted theme before first paint to avoid a flash.
+      (function () {
+        try {
+          var stored = localStorage.getItem('cct.theme');
+          var theme = stored ? JSON.parse(stored) : null;
+          var mode = theme && theme.mode ? theme.mode : 'system';
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var dark = mode === 'dark' || (mode === 'system' && prefersDark);
+          document.documentElement.classList.toggle('dark', dark);
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
+  </head>
+  <body class="h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
