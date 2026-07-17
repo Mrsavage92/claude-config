@@ -161,7 +161,7 @@ Aligns the video to what actually gets PUSHED and what avoids the inauthentic-co
 
 **SURVIVE THE PURGE (what the survivors do - Kurzgesagt, Simon Whistler's stable, Wendover/Infographics/RealLifeLore):** "AI as AMPLIFIER survives; AI as REPLACER gets purged." Human editorial judgment on topic/hook/cut every upload; format VARIATION not template cloning; original research not scrape-to-TTS; editorial cadence not 12+/day; a recurring OWNABLE identity.
 
-**SOBERING NUANCE (flag for Adam, 2026-07-16):** the current environment is rewarding VISIBLE HUMAN PRESENCE generally - faceless creators report demonetization even WITHOUT AI (Doctor NOS, on-record), and the research could NOT verify a single AI-voice/visual channel PUSHED post-purge with growth data. Every clear survivor is a human-team-researched faceless channel that predates the AI-slop category. Faceless-AI is a real headwind; the durable edge is strong originality + human editorial judgment + a distinct recurring identity - and adding some human presence may eventually be necessary.
+**CORRECTED 2026-07-16 (do NOT read this as "AI is a headwind" - that was wrong):** fully-AI faceless channels DO get pushed to millions of views daily - that is the winning norm. The purge killed GENERIC TEMPLATED SLOP (same situation repeated, no original angle, 12+/day mass production), NOT AI. The dividing line is DISTINCTIVENESS + QUALITY + an original hook, not human-vs-AI. So: AI + a distinct format + real quality gets pushed hard. No human face required.
 
 **6-ITEM PRE-PUBLISH CHECKLIST (all must be true):**
 ```text
