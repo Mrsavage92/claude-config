@@ -29,8 +29,11 @@ sf data query --target-org <alias> --query "SELECT Field, PermissionsRead, Permi
 
 ## Setup Audit Trail - "what changed and when" (NOT in the snapshot repo yet)
 
+SetupAuditTrail is a standard Data API object - do NOT pass `--use-tooling-api` (that returns
+INVALID_TYPE "not supported"). DeployRequest below IS a Tooling object and DOES need the flag.
+
 ```powershell
-sf data query --target-org <alias> --use-tooling-api --query "SELECT Action, Section, CreatedDate, CreatedBy.Name, Display FROM SetupAuditTrail ORDER BY CreatedDate DESC LIMIT 50"
+sf data query --target-org <alias> --query "SELECT Action, Section, CreatedDate, CreatedBy.Name, Display FROM SetupAuditTrail ORDER BY CreatedDate DESC LIMIT 50"
 ```
 
 Narrow by date once you know the incident window:
