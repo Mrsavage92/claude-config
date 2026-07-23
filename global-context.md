@@ -80,6 +80,19 @@ If a new project is validated and built, the `/product-validator` appends it to 
 
 See `~/Documents/Claude/retrospectives/validator-learnings.md` — every new KILL appends a line there automatically as part of validator step 5.
 
+## Platform Behavior Changes (verified 2026-07-23)
+
+Claude Code behavior that changed in 2026 and affects how skills/agents run — both machines should assume these:
+
+- **Subagents run in the BACKGROUND by default.** Spawning an agent no longer blocks — Claude keeps working and is re-invoked when the agent finishes. Don't poll for a running agent; wait for the notification. Pass `run_in_background: false` only when the result is needed before continuing.
+- **Subagent caps per session:** 200 total (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`), 20 concurrent (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`). Subagents do NOT spawn nested subagents by default. Relevant to `/saas-build`, `/full-audit`, `/parallel-audit` fan-out.
+- **`/fork` vs `/subtask`:** `/fork` now copies the whole conversation into a new background session; the old in-session subagent is `/subtask`.
+- **Plan mode auto-runs read-only commands** (a static analyzer decides read-only vs state-changing) — fewer prompts. `/verify` and `/code-review` no longer fire automatically; invoke explicitly.
+- **Auto mode uses a classifier, not permission dialogs,** for dangerous patterns (`rm -rf`, `terraform/pulumi/cdk destroy`, suspicious paths) — blocked only when work wasn't asked to be discarded.
+- **The `/agents` wizard was removed** — edit `.claude/agents/` directly (already how this setup works).
+- **macOS computer use:** Claude Code can control Mac apps via Apple Events; opt-in via `sandbox.allowAppleEvents`. iOS simulator testing is available in the desktop app (macOS + Xcode).
+- Useful new commands: `/rewind` (resume from before `/clear`), `/doctor` (setup diagnosis + fix), `/config key=value` (inline settings).
+
 ## Machine Context
 
 - **Mac** — `Savagess-MacBook-Air.local`, macOS Sequoia, zsh, Python 3.9.6, Git 2.50.1. Homebrew available. Node v25.8.1 via Homebrew (/opt/homebrew/bin/node). npm 11.11.0. vercel 54.12.2 (npm global).
@@ -115,7 +128,9 @@ Run `/sync-knowledge-base` after adding new skills/commands to update Notion doc
 
 Claude Max has a finite token budget per period. Route subagents to the cheapest model that can do the job.
 
-**Current model aliases (2026-07):** `haiku` → Haiku 4.5 | `sonnet` → Sonnet 5 | `opus` → Opus 4.8. Use aliases, not hardcoded IDs — they auto-resolve on release.
+**Current model aliases (2026-07):** `haiku` → Haiku 4.5 | `sonnet` → Sonnet 5 | `opus` → Opus 4.8 | `fable` → Fable 5. Use aliases, not hardcoded IDs — they auto-resolve on release.
+
+**Sonnet 5 note (through Aug 31 2026):** Sonnet 5 has a native 1M-token context window and promo pricing ($2/$10 per Mtok). Until the promo ends, bias the routing below MORE aggressively toward `sonnet` — it now handles large-context and multi-step judgment work that previously needed Opus, at a fraction of the cost. Re-evaluate this line after 2026-08-31.
 
 **Use `model: "haiku"` for Agent calls that:**
 - Search/explore codebases (subagent_type: Explore)
